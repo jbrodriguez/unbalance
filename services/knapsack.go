@@ -2,22 +2,14 @@ package services
 
 import (
 	"apertoire.net/unbalance/bus"
+	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
-	"bufio"
 	"fmt"
-	"io"
 	"log"
-	"os/exec"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
 )
 
 type Knapsack struct {
-	Bus         *bus.Bus
-	reFreeSpace *regexp.Regexp
-	reItems     *regexp.Regexp
+	Bus *bus.Bus
 }
 
 func (self *Knapsack) Start() {
@@ -43,22 +35,21 @@ func (self *Knapsack) react() {
 }
 
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
-	freespace, _ := self.getFreespace(msg.TargetDisk)
+	packer := helper.NewPacker(msg.SourceDisk, msg.TargetDisk)
 
-	packer := &Packer{Name: msg.TargetDisk, Size: freespace}
-
-	items := self.getItems(msg.SourceDisk, "films/bluray")
-	for _, item := range items {
-		packer.add(item)
+	free, err := packer.GetFreeSpace()
+	if err != nil {
+		log.Println(fmt.Sprintf("Available Space on %s: %d", msg.TargetDisk, free))
 	}
+
+	packer.GetItems("films/bluray")
+	packer.GetItems("films/blurip")
 
 	// packer.print()
 
-	packer.bestFit()
+	packer.BestFit()
 
-	packer.sortBins()
-
-	packer.printBins()
+	packer.Print()
 
 	// items := self.getItems(msg.SourceDisk, "films/blurip")
 	// for item := range items {

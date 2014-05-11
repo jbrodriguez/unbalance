@@ -12,8 +12,58 @@ import (
 	"strconv"
 )
 
-func (self *Knapsack) getFreespace(disk string) (size uint64, err error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("df --block-size=1 %s", disk))
+type Item struct {
+	Name string
+	Size uint64
+	Path string
+}
+
+type Bin struct {
+	Size uint64
+	list []Item
+}
+
+func (self *Bin) add(item Item) {
+	self.list = append(self.list, item)
+	self.Size += item.Size
+}
+
+func (self *Bin) print() {
+	for _, item := range self.list {
+		fmt.Println(fmt.Sprintf("[%d] %s", item.Size, item.Name))
+	}
+}
+
+type Packer struct {
+	SourceDisk string
+	TargetDisk string
+	MaxSize    uint64
+
+	Bins []Bin
+	list []Item
+	over []Item
+
+	reFreeSpace *regexp.Regexp
+	reItems     *regexp.Regexp
+}
+
+func NewPacker(src string, dst string) *Packer {
+	p := new(Packer)
+	p.SourceDisk = src
+	p.TargetDisk = dst
+	p.MaxSize = 0
+
+	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
+	p.reFreeSpace = re
+
+	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
+	p.reItems = re
+
+	return p
+}
+
+func (self *Packer) GetFreeSpace() (size uint64, err error) {
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("df --block-size=1 %s", self.TargetDisk))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal("Unable to stdoutpipe df: ", err)
@@ -47,17 +97,14 @@ func (self *Knapsack) getFreespace(disk string) (size uint64, err error) {
 		log.Fatal("Unable to wait for process to finish: ", err)
 	}
 
-	log.Println("before.freespace: ", line)
 	result := self.reFreeSpace.FindStringSubmatch(line)
-	log.Printf("%s freespace: %s", disk, result[4])
-
-	return strconv.ParseUint(result[4], 10, 64)
+	free, err := strconv.ParseUint(result[4], 10, 64)
+	self.MaxSize = free
+	return free, err
 }
 
-func (self *Knapsack) getItems(disk string, folder string) []Item {
-	var items []Item
-
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(disk, folder, "*")))
+func (self *Packer) GetItems(folder string) {
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(self.SourceDisk, folder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal("Unable to stdoutpipe du: ", err)
@@ -88,7 +135,7 @@ func (self *Knapsack) getItems(disk string, folder string) []Item {
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 
-		items = append(items, Item{Name: result[2], Size: size})
+		self.add(Item{Name: result[2], Size: size, Path: folder})
 
 		// fmt.Println(line)
 	}
@@ -106,95 +153,21 @@ func (self *Knapsack) getItems(disk string, folder string) []Item {
 
 	// log.Println(string(out))
 	log.Println("done")
-	return items
 }
 
-type Item struct {
-	Name string
-	Size uint64
-}
-
-type Bin struct {
-	Size uint64
-	list []Item
-}
-
-func (self *Bin) add(item Item) {
-	self.list = append(self.list, item)
-	self.Size += item.Size
-}
-
-func (self *Bin) print() {
-	for _, item := range self.list {
-		fmt.Println(fmt.Sprintf("[%d] %s", item.Size, item.Name))
-	}
-}
-
-type Packer struct {
-	SourceDisk string
-	TargetDisk string
-	MaxSize    uint64
-	Bins       []Bin
-	list       []Item
-	over       []Item
-}
-
-func NewPacker(src string, dst string, size uint64) *Packer {
-	p := new(Packer)
-	p.SourceDisk := src
-	p.TargetDisk := dst
-	p.MaxSize := size
-
-
-	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
-	self.reFreeSpace = re
-
-	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
-	self.reItems = re	
-}
-
-func (self *Packer) add(item Item) {
-	if item.Size > self.Size {
-		self.over = append(self.over, item)
-	} else {
-		self.list = append(self.list, item)
-	}
-}
-
-func (self *Packer) print() {
-	for _, item := range self.list {
-		log.Println(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
-	}
-}
-
-func (self *Packer) sortBins() {
-	sort.Sort(ByFilled(self.bins))
-}
-
-func (self *Packer) printBins() {
-	for i, bin := range self.bins {
-		fmt.Println("=========================================================")
-		fmt.Println(fmt.Sprintf("%0d [%d/%d] %2.1f%% (%s)", i, bin.Size, self.Size, (float64(bin.Size)/float64(self.Size))*100, self.Name))
-		fmt.Println("---------------------------------------------------------")
-		bin.print()
-		fmt.Println("---------------------------------------------------------")
-		fmt.Println("")
-	}
-}
-
-func (self *Packer) bestFit() {
+func (self *Packer) BestFit() {
 	sort.Sort(BySize(self.list))
 
 	for _, item := range self.list {
-		if item.Size > self.Size {
+		if item.Size > self.MaxSize {
 			self.over = append(self.over, item)
 		} else {
 			targetBin := -1
-			remainingSpace := self.Size
+			remainingSpace := self.MaxSize
 
-			for i, bin := range self.bins {
+			for i, bin := range self.Bins {
 				binSpaceUsed := bin.Size
-				binSpaceLeft := self.Size - binSpaceUsed - item.Size
+				binSpaceLeft := self.MaxSize - binSpaceUsed - item.Size
 
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= 0 {
 					remainingSpace = binSpaceLeft
@@ -203,14 +176,44 @@ func (self *Packer) bestFit() {
 			}
 
 			if targetBin >= 0 {
-				self.bins[targetBin].add(item)
+				self.Bins[targetBin].add(item)
 			} else {
 				newbin := Bin{}
 				newbin.add(item)
-				self.bins = append(self.bins, newbin)
+				self.Bins = append(self.Bins, newbin)
 			}
-
 		}
+	}
+
+	sort.Sort(ByFilled(self.Bins))
+}
+
+func (self *Packer) add(item Item) {
+	if item.Size > self.MaxSize {
+		self.over = append(self.over, item)
+	} else {
+		self.list = append(self.list, item)
+	}
+}
+
+func (self *Packer) printList() {
+	for _, item := range self.list {
+		log.Println(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
+	}
+}
+
+func (self *Packer) sortBins() {
+	sort.Sort(ByFilled(self.Bins))
+}
+
+func (self *Packer) Print() {
+	for i, bin := range self.Bins {
+		fmt.Println("=========================================================")
+		fmt.Println(fmt.Sprintf("%0d [%d/%d] %2.2f%% (%s)", i, bin.Size, self.MaxSize, (float64(bin.Size)/float64(self.MaxSize))*100, self.TargetDisk))
+		fmt.Println("---------------------------------------------------------")
+		bin.print()
+		fmt.Println("---------------------------------------------------------")
+		fmt.Println("")
 	}
 }
 
