@@ -11,25 +11,26 @@ type Packer struct {
 	// TargetDisk string
 	// MaxSize    uint64
 
-	disk Disk
+	disk *Disk
 
-	Bins []Bin
-	list []Item
-	over []Item
+	Bins []*Bin
+	list []*Item
+	over []*Item
 }
 
-func NewPacker(disk Disk, items []Item) *Packer {
+func NewPacker(disk *Disk, items []*Item) *Packer {
 	p := new(Packer)
 	p.disk = disk
 	p.list = items
 	return p
 }
 
-func (self *Packer) BestFit() (bin Bin) {
+func (self *Packer) BestFit() (bin *Bin) {
 	sort.Sort(BySize(self.list))
 
 	for _, item := range self.list {
 		if item.Size > self.disk.Free {
+			log.Println(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
 			self.over = append(self.over, item)
 		} else {
 			targetBin := -1
@@ -48,20 +49,23 @@ func (self *Packer) BestFit() (bin Bin) {
 			if targetBin >= 0 {
 				self.Bins[targetBin].add(item)
 			} else {
-				newbin := Bin{}
+				newbin := &Bin{}
 				newbin.add(item)
 				self.Bins = append(self.Bins, newbin)
 			}
 		}
 	}
 
-	sort.Sort(ByFilled(self.Bins))
+	if len(self.Bins) > 0 {
+		sort.Sort(ByFilled(self.Bins))
+		self.disk.Bin = self.Bins[0]
+		bin = self.disk.Bin
+	}
 
-	self.disk.Bin = self.Bins[0]
-	return self.disk.Bin
+	return bin
 }
 
-func (self *Packer) add(item Item) {
+func (self *Packer) add(item *Item) {
 	if item.Size > self.disk.Free {
 		self.over = append(self.over, item)
 	} else {

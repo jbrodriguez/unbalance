@@ -49,26 +49,55 @@ func (self *Knapsack) react() {
 	}
 }
 
+func (self *Knapsack) removeFolder(folders []*helper.Item, list []*helper.Item) []*helper.Item {
+	w := 0 // write index
+
+loop:
+	for _, fld := range folders {
+		for _, itm := range list {
+			if itm.Name == fld.Name {
+				continue loop
+			}
+		}
+		folders[w] = fld
+		w++
+	}
+
+	return folders[:w]
+}
+
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
-	disks, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
+	// disks, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
-	var folders []helper.Item
-	paths := []string{"films/bluray", "films/blurip"}
+	folders := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &helper.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &helper.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
+	// items := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
+	items := []*helper.Item{&helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
 
-	for _, path := range paths {
-		list := self.GetFolders(msg.SourceDisk, path)
-		folders = append(folders, list...)
+	folders = self.removeFolder(folders, items)
+
+	for _, itm := range folders {
+		log.Println("yes: ", itm.Name)
 	}
 
-	for _, disk := range disks {
-		packer := helper.NewPacker(disk, folders)
-		packer.BestFit()
-		// self.RemoveFolders(bin)
-	}
+	// var folders []*helper.Item
+	// paths := []string{"films/bluray", "films/blurip"}
 
-	for _, disk := range disks {
-		disk.Print()
-	}
+	// for _, path := range paths {
+	// 	list := self.GetFolders(msg.SourceDisk, path)
+	// 	folders = append(folders, list...)
+	// }
+
+	// for _, disk := range disks {
+	// 	packer := helper.NewPacker(disk, folders)
+	// 	bin := packer.BestFit()
+	// 	if bin != nil {
+	// 		self.removeFolders(folders, bin.Items)
+	// 	}
+	// }
+
+	// for _, disk := range disks {
+	// 	disk.Print()
+	// }
 
 	// free, err := packer.GetFreeSpace()
 	// if err != nil {
@@ -100,7 +129,7 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	// }
 }
 
-func (self *Knapsack) GetDisks(src string, dst string) (disks []helper.Disk, err error) {
+func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, err error) {
 	// var disks []Disk
 
 	cmd := exec.Command("sh", "-c", "df --block-size=1 /mnt/disk*")
@@ -137,12 +166,12 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []helper.Disk, err
 
 		if dst != "" {
 			if dst == result[6] {
-				disks = append(disks, helper.Disk{Path: result[6], Free: free})
+				disks = append(disks, &helper.Disk{Path: result[6], Free: free})
 				break
 			}
 		} else {
 			if src != result[6] {
-				disks = append(disks, helper.Disk{Path: result[6], Free: free})
+				disks = append(disks, &helper.Disk{Path: result[6], Free: free})
 			}
 		}
 	}
@@ -156,7 +185,7 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []helper.Disk, err
 	return disks, nil
 }
 
-func (self *Knapsack) GetFolders(src string, folder string) (items []helper.Item) {
+func (self *Knapsack) GetFolders(src string, folder string) (items []*helper.Item) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(src, folder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
@@ -188,7 +217,7 @@ func (self *Knapsack) GetFolders(src string, folder string) (items []helper.Item
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 
-		items = append(items, helper.Item{Name: result[2], Size: size, Path: folder})
+		items = append(items, &helper.Item{Name: result[2], Size: size, Path: folder})
 		// fmt.Println(line)
 	}
 
