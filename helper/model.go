@@ -54,7 +54,7 @@ func (self *Disk) Print() {
 		fmt.Println("")
 	} else {
 		fmt.Println("=========================================================")
-		fmt.Println(fmt.Sprintf("[0/%d] 0% (%s)", self.Free, self.Path))
+		fmt.Println(fmt.Sprintf("[0/%d] 0%% (%s)", self.Free, self.Path))
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("")

@@ -30,7 +30,7 @@ func (self *Packer) BestFit() (bin *Bin) {
 
 	for _, item := range self.list {
 		if item.Size > self.disk.Free {
-			log.Println(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
+			// log.Println(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
 			self.over = append(self.over, item)
 		} else {
 			targetBin := -1

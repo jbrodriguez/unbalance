@@ -49,7 +49,7 @@ func (self *Knapsack) react() {
 	}
 }
 
-func (self *Knapsack) removeFolder(folders []*helper.Item, list []*helper.Item) []*helper.Item {
+func (self *Knapsack) removeFolders(folders []*helper.Item, list []*helper.Item) []*helper.Item {
 	w := 0 // write index
 
 loop:
@@ -67,37 +67,37 @@ loop:
 }
 
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
-	// disks, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
+	disks, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
-	folders := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &helper.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &helper.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
-	// items := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
-	items := []*helper.Item{&helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
+	// folders := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &helper.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &helper.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
+	// // items := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
+	// items := []*helper.Item{&helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
 
-	folders = self.removeFolder(folders, items)
+	// folders = self.removeFolder(folders, items)
 
-	for _, itm := range folders {
-		log.Println("yes: ", itm.Name)
+	// for _, itm := range folders {
+	// 	log.Println("yes: ", itm.Name)
+	// }
+
+	var folders []*helper.Item
+	paths := []string{"films/bluray", "films/blurip"}
+
+	for _, path := range paths {
+		list := self.GetFolders(msg.SourceDisk, path)
+		folders = append(folders, list...)
 	}
 
-	// var folders []*helper.Item
-	// paths := []string{"films/bluray", "films/blurip"}
+	for _, disk := range disks {
+		packer := helper.NewPacker(disk, folders)
+		bin := packer.BestFit()
+		if bin != nil {
+			self.removeFolders(folders, bin.Items)
+		}
+	}
 
-	// for _, path := range paths {
-	// 	list := self.GetFolders(msg.SourceDisk, path)
-	// 	folders = append(folders, list...)
-	// }
-
-	// for _, disk := range disks {
-	// 	packer := helper.NewPacker(disk, folders)
-	// 	bin := packer.BestFit()
-	// 	if bin != nil {
-	// 		self.removeFolders(folders, bin.Items)
-	// 	}
-	// }
-
-	// for _, disk := range disks {
-	// 	disk.Print()
-	// }
+	for _, disk := range disks {
+		disk.Print()
+	}
 
 	// free, err := packer.GetFreeSpace()
 	// if err != nil {
