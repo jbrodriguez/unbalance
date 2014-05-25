@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -67,7 +68,7 @@ loop:
 }
 
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
-	disks, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
+	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
 	// folders := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &helper.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &helper.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
 	// // items := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
@@ -79,6 +80,8 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	// 	log.Println("yes: ", itm.Name)
 	// }
 
+	sort.Sort(helper.ByFree(disks))
+
 	var folders []*helper.Item
 	paths := []string{"films/bluray", "films/blurip"}
 
@@ -87,10 +90,13 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 		folders = append(folders, list...)
 	}
 
+	srcDiskSizeFreeFinal := srcDiskSizeFreeOriginal
+
 	for _, disk := range disks {
 		packer := helper.NewPacker(disk, folders)
 		bin := packer.BestFit()
 		if bin != nil {
+			srcDiskSizeFreeFinal += bin.Size
 			self.removeFolders(folders, bin.Items)
 		}
 	}
@@ -98,6 +104,13 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	for _, disk := range disks {
 		disk.Print()
 	}
+
+	fmt.Println("=========================================================")
+	fmt.Println(fmt.Sprintf("Results for %s", msg.SourceDisk))
+	fmt.Println(fmt.Sprintf("Original Free Space: %s", helper.ByteSize(srcDiskSizeFreeOriginal)))
+	fmt.Println(fmt.Sprintf("Final Free Space: %s", helper.ByteSize(srcDiskSizeFreeFinal)))
+	fmt.Println(fmt.Sprintf("Gained Space: %s", helper.ByteSize(srcDiskSizeFreeFinal-srcDiskSizeFreeOriginal)))
+	fmt.Println("---------------------------------------------------------")
 
 	// free, err := packer.GetFreeSpace()
 	// if err != nil {
@@ -129,7 +142,7 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	// }
 }
 
-func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, err error) {
+func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, srcDiskFree uint64, err error) {
 	// var disks []Disk
 
 	cmd := exec.Command("sh", "-c", "df --block-size=1 /mnt/disk*")
@@ -161,13 +174,20 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, er
 			line = line[:len(line)-1] // drop the '\r'
 		}
 
+		// Filesystem           1B-blocks      Used Available Use% Mounted on
+		// /dev/md1             2000337846272 1998411968512 1925877760 100% /mnt/disk1
+
 		result := self.reFreeSpace.FindStringSubmatch(line)
 		free, _ := strconv.ParseUint(result[4], 10, 64)
+
+		if result[6] == src {
+			srcDiskFree = free
+		}
 
 		if dst != "" {
 			if dst == result[6] {
 				disks = append(disks, &helper.Disk{Path: result[6], Free: free})
-				break
+				// break
 			}
 		} else {
 			if src != result[6] {
@@ -182,7 +202,7 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, er
 		log.Fatal("Unable to wait for process to finish: ", err)
 	}
 
-	return disks, nil
+	return disks, srcDiskFree, nil
 }
 
 func (self *Knapsack) GetFolders(src string, folder string) (items []*helper.Item) {

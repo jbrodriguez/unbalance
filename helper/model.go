@@ -60,3 +60,9 @@ func (self *Disk) Print() {
 		fmt.Println("")
 	}
 }
+
+type ByFree []*Disk
+
+func (s ByFree) Len() int           { return len(s) }
+func (s ByFree) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s ByFree) Less(i, j int) bool { return s[i].Free > s[j].Free }
