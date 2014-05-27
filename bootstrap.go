@@ -38,7 +38,8 @@ func main() {
 	// cache.Start()
 	// core.Start()
 
-	msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "/mnt/disk19", Reply: make(chan string)}
+	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "/mnt/disk11", Reply: make(chan string)}
+	msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
 	bus.GetBestFit <- &msg
 
 	log.Printf("press enter to stop ...")
