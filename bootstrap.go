@@ -2,7 +2,7 @@ package main
 
 import (
 	"apertoire.net/unbalance/bus"
-	"apertoire.net/unbalance/message"
+	// "apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/services"
 	"fmt"
 	"log"
@@ -16,6 +16,7 @@ func main() {
 
 	bus := bus.Bus{}
 	ks := services.Knapsack{Bus: &bus}
+	server := services.Server{Bus: &bus}
 
 	// logger := services.Logger{Bus: &bus, Config: &config}
 	// dal := services.Dal{Bus: &bus, Config: &config}
@@ -28,6 +29,7 @@ func main() {
 
 	bus.Start()
 	ks.Start()
+	server.Start()
 
 	// logger.Start()
 	// dal.Start()
@@ -39,8 +41,8 @@ func main() {
 	// core.Start()
 
 	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "/mnt/disk11", Reply: make(chan string)}
-	msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
-	bus.GetBestFit <- &msg
+	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
+	// bus.GetBestFit <- &msg
 
 	log.Printf("press enter to stop ...")
 	var input string
@@ -55,6 +57,7 @@ func main() {
 	// dal.Stop()
 	// logger.Stop()
 
+	server.Stop()
 	ks.Stop()
 	// // bus.Stop()
 }

@@ -24,6 +24,7 @@ type Server struct {
 
 func (self *Server) getDisks(id int, msg *message.Message) {
 	// fire this message onto the bus, fire and forget
+	log.Println("Omaha !!!")
 }
 
 func (self *Server) Start() {
@@ -32,24 +33,32 @@ func (self *Server) Start() {
 	self.sockets = make(map[int]*Socket)
 	self.vtable = make(map[string]Handler)
 
-	self.Handle("/v1/get/disks", self.getDisks)
+	self.addCh = make(chan *Socket)
+	self.delCh = make(chan *Socket)
+	self.errCh = make(chan error)
 
+	self.Handle("/api/v1/get/disks", self.getDisks)
+
+	// start the websocket listener, and handles incoming websocket connections
 	go self.react()
 
-	http.Handle("/", http.FileServer(http.Dir("webroot")))
+	http.Handle("/", http.FileServer(http.Dir("ui")))
 
 	go func() {
 		log.Fatal(http.ListenAndServe(":6237", nil))
 	}()
 
-	log.Printf("Server service started")
+	log.Printf("Server service listening on :6237")
 }
 
 func (self *Server) Stop() {
+	log.Printf("Server service stopped")
 }
 
 func (self *Server) Add(socket *Socket) {
+	// go func() {
 	self.addCh <- socket
+	// }()
 }
 
 func (self *Server) Del(socket *Socket) {
@@ -66,13 +75,17 @@ func (self *Server) Handle(pattern string, handler Handler) {
 
 func (self *Server) Dispatch(id int, msg *message.Message) {
 	pattern := msg.Method
-
 	handler := self.vtable[pattern]
+
+	log.Println("amma dispatch you: ", pattern)
+
 	handler(id, msg)
 }
 
 func (self *Server) react() {
 	onConnected := func(ws *websocket.Conn) {
+		log.Println("socket connected")
+
 		defer func() {
 			err := ws.Close()
 			if err != nil {
@@ -85,7 +98,8 @@ func (self *Server) react() {
 		socket.Listen()
 	}
 
-	http.Handle("/v1/", websocket.Handler(onConnected))
+	http.Handle("/api", websocket.Handler(onConnected))
+	log.Println("created Handler")
 
 	for {
 		select {

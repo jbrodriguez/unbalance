@@ -1,6 +1,4 @@
-'use strict';
-
-angular.module('unbalance'. [
+angular.module('unbalance', [
 	'unbalance.services'
 ])
 
@@ -16,9 +14,14 @@ angular.module('unbalance'. [
 }])
 
 .run( function run () {
+	console.log("Im alive");
 })
 
-.controller('AppCtrl', function AppCtrl() {
-})
+.controller('AppCtrl', ['core', '$scope', function AppCtrl(core, $scope) {
+	$scope.getDisks = function() {
+		console.log("modofoco");
+		core.getDisks();
+	}	
+}])
 
-);
+;

@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en" ng-app="unbalance" ng-controller="AppCtrl">
     <head>
         <meta charset="UTF-8">
         <title>unBalance</title>
@@ -264,13 +264,10 @@
         </header>
         <div class="wrapper row-offcanvas row-offcanvas-left">
                 <!-- Main content -->
-<!--                 <section class="content">
- -->                    <div class="row">
+                  <div class="row">
                         <div class="col-xs-12">
                             <div class="box">
-                                <div class="box-header">
-                                    &nbsp;
-                                </div><!-- /.box-header -->
+                                &nbsp;
                                 <div class="box-body no-padding">
                                     <table class="table table-striped">
                                         <tr>
@@ -375,7 +372,17 @@
                             </div><!-- /.box -->
                         </div>
                     </div>
-<!--                 </section>/.content                
- -->        </div><!-- ./wrapper -->
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <a class="btn btn-success btn-flat" ng-click="getDisks()"> <i class="fa fa-bullhorn"> </i> &nbsp; Test Your Engine ! </a>
+                        </div>
+                    </div>
+        </div><!-- ./wrapper -->
     </body>
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.10/angular.min.js"></script> 
+    <script type="text/javascript" src="common/socket.js"></script>
+    <script type="text/javascript" src="common/core.js"></script>
+    <script type="text/javascript" src="app/app.js"></script>
+
 </html>

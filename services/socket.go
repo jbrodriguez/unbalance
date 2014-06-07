@@ -36,6 +36,7 @@ func NewSocket(ws *websocket.Conn, server *Server) *Socket {
 }
 
 func (self *Socket) Listen() {
+	log.Println("are we on the listen")
 	go self.listenWrite()
 	self.listenRead()
 }
@@ -68,6 +69,7 @@ func (self *Socket) listenRead() {
 		default:
 			var msg message.Message
 			err := websocket.JSON.Receive(self.ws, &msg)
+			log.Println("is there anybody out there?: ", err)
 			if err == io.EOF {
 				self.doneCh <- true
 			} else if err != nil {

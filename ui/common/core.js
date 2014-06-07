@@ -1,18 +1,19 @@
-'use strict';
-
 angular.module('unbalance.services', [
 	'unbalance.socket'
 ])
 
 .factory('core', ['socket', function(socket) {
-	var api = '/v1/'
+	var api = '/api/v1/'
 	var bus = {};
 
 	bus.getDisks = function() {
 		var msg = {
-			type: api + 'get/disks'
+			id: 0,
+			method: api + 'get/disks',
+			params: [],
+			data: [],
 		}
-		return socket.request()
+		return socket.request(msg)
 	};
 
 	return bus;

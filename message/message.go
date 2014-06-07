@@ -7,8 +7,8 @@ type FitData struct {
 }
 
 type Message struct {
-	Id     int
-	Method string
-	Params string
-	Data   string
+	Id     int      `json: "id"`
+	Method string   `json: "method"`
+	Params []string `json: "params"`
+	Data   []string `json: "data"`
 }
