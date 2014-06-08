@@ -4,15 +4,18 @@ import (
 	"apertoire.net/unbalance/bus"
 	// "apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/services"
+	"flag"
 	"fmt"
-	"log"
+	"github.com/golang/glog"
 )
 
 func main() {
-	log.Printf("Unbalance starting up ...")
+	glog.Info("Unbalance starting up ...")
 
 	// config := helper.Config{}
 	// config.Init()
+
+	flag.Parse()
 
 	bus := bus.Bus{}
 	ks := services.Knapsack{Bus: &bus}
@@ -44,7 +47,7 @@ func main() {
 	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
 	// bus.GetBestFit <- &msg
 
-	log.Printf("press enter to stop ...")
+	glog.Info("press enter to stop ...")
 	var input string
 	fmt.Scanln(&input)
 

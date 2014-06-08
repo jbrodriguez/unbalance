@@ -4,10 +4,11 @@ import (
 	"apertoire.net/unbalance/bus"
 	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
+	"apertoire.net/unbalance/model"
 	"bufio"
 	"fmt"
+	"github.com/golang/glog"
 	"io"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -23,7 +24,7 @@ type Knapsack struct {
 }
 
 func (self *Knapsack) Start() {
-	log.Printf("starting Knapsack service ...")
+	glog.Info("starting Knapsack service ...")
 
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	self.reFreeSpace = re
@@ -33,24 +34,26 @@ func (self *Knapsack) Start() {
 
 	go self.react()
 
-	log.Printf("Knapsack service started")
+	glog.Info("Knapsack service started")
 }
 
 func (self *Knapsack) Stop() {
 	// nothing right now
-	log.Printf("Knapsack service stopped")
+	glog.Info("Knapsack service stopped")
 }
 
 func (self *Knapsack) react() {
 	for {
 		select {
+		case msg := <-self.Bus.GetDisks:
+			go self.doGetDisks(msg)
 		case msg := <-self.Bus.GetBestFit:
 			go self.doGetBestFit(msg)
 		}
 	}
 }
 
-func (self *Knapsack) removeFolders(folders []*helper.Item, list []*helper.Item) []*helper.Item {
+func (self *Knapsack) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
 	w := 0 // write index
 
 loop:
@@ -67,22 +70,33 @@ loop:
 	return folders[:w]
 }
 
+func (self *Knapsack) doGetDisks(msg *message.Disks) {
+	glog.Info("talk to me goose")
+	// disks, _, _ := self.GetDisks("", "")
+	var disks []*model.Disk
+	disks = append(disks, &model.Disk{Path: "/mnt/disk1", Free: 8239734985})
+	disks = append(disks, &model.Disk{Path: "/mnt/disk2", Free: 9748340223})
+	disks = append(disks, &model.Disk{Path: "/mnt/disk3", Free: 4782940394})
+
+	msg.Reply <- disks
+}
+
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
-	// folders := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &helper.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &helper.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
-	// // items := []*helper.Item{&helper.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
-	// items := []*helper.Item{&helper.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
+	// folders := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &model.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &model.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
+	// // items := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
+	// items := []*model.Item{&model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
 
 	// folders = self.removeFolder(folders, items)
 
 	// for _, itm := range folders {
-	// 	log.Println("yes: ", itm.Name)
+	// 	glog.Info("yes: ", itm.Name)
 	// }
 
-	sort.Sort(helper.ByFree(disks))
+	sort.Sort(model.ByFree(disks))
 
-	var folders []*helper.Item
+	var folders []*model.Item
 	paths := []string{"films/bluray", "films/blurip"}
 
 	for _, path := range paths {
@@ -114,7 +128,7 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 
 	// free, err := packer.GetFreeSpace()
 	// if err != nil {
-	// 	log.Println(fmt.Sprintf("Available Space on %s: %d", msg.TargetDisk, free))
+	// 	glog.Info(fmt.Sprintf("Available Space on %s: %d", msg.TargetDisk, free))
 	// }
 
 	// packer.GetItems("films/bluray")
@@ -142,19 +156,19 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	// }
 }
 
-func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, srcDiskFree uint64, err error) {
+func (self *Knapsack) GetDisks(src string, dst string) (disks []*model.Disk, srcDiskFree uint64, err error) {
 	// var disks []Disk
 
 	cmd := exec.Command("sh", "-c", "df --block-size=1 /mnt/disk*")
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal("Unable to stdoutpipe df: ", err)
+		glog.Fatal("Unable to stdoutpipe df: ", err)
 	}
 
 	rd := bufio.NewReader(out)
 
 	if err := cmd.Start(); err != nil {
-		log.Fatal("Unable to start df: ", err)
+		glog.Fatal("Unable to start df: ", err)
 	}
 
 	// ignore first line since it's just headers
@@ -167,7 +181,7 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, sr
 			break
 		}
 		if err == io.EOF {
-			log.Fatal("Last line not terminated: ", err)
+			glog.Fatal("Last line not terminated: ", err)
 		}
 		line = line[:len(line)-1] // drop the '\n'
 		if line[len(line)-1] == '\r' {
@@ -186,12 +200,12 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, sr
 
 		if dst != "" {
 			if dst == result[6] {
-				disks = append(disks, &helper.Disk{Path: result[6], Free: free})
+				disks = append(disks, &model.Disk{Path: result[6], Free: free})
 				// break
 			}
 		} else {
 			if src != result[6] {
-				disks = append(disks, &helper.Disk{Path: result[6], Free: free})
+				disks = append(disks, &model.Disk{Path: result[6], Free: free})
 			}
 		}
 	}
@@ -199,23 +213,23 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*helper.Disk, sr
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
-		log.Fatal("Unable to wait for process to finish: ", err)
+		glog.Fatal("Unable to wait for process to finish: ", err)
 	}
 
 	return disks, srcDiskFree, nil
 }
 
-func (self *Knapsack) GetFolders(src string, folder string) (items []*helper.Item) {
+func (self *Knapsack) GetFolders(src string, folder string) (items []*model.Item) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(src, folder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal("Unable to stdoutpipe du: ", err)
+		glog.Fatal("Unable to stdoutpipe du: ", err)
 	}
 
 	rd := bufio.NewReader(out)
 
 	if err := cmd.Start(); err != nil {
-		log.Fatal("Unable to start du: ", err)
+		glog.Fatal("Unable to start du: ", err)
 	}
 
 	for {
@@ -225,7 +239,7 @@ func (self *Knapsack) GetFolders(src string, folder string) (items []*helper.Ite
 			break
 		}
 		if err == io.EOF {
-			log.Fatal("Last line not terminated: ", err)
+			glog.Fatal("Last line not terminated: ", err)
 		}
 		line = line[:len(line)-1] // drop the '\n'
 		if line[len(line)-1] == '\r' {
@@ -233,26 +247,26 @@ func (self *Knapsack) GetFolders(src string, folder string) (items []*helper.Ite
 		}
 
 		result := self.reItems.FindStringSubmatch(line)
-		log.Printf("[%s] %s", result[1], result[2])
+		glog.Info("[%s] %s", result[1], result[2])
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 
-		items = append(items, &helper.Item{Name: result[2], Size: size, Path: folder})
+		items = append(items, &model.Item{Name: result[2], Size: size, Path: folder})
 		// fmt.Println(line)
 	}
 
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
-		log.Fatal("Unable to wait for process to finish: ", err)
+		glog.Fatal("Unable to wait for process to finish: ", err)
 	}
 
 	// out, err := helper.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	glog.Fatal(err)
 	// }
 
-	// log.Println(string(out))
-	log.Println("done")
+	// glog.Info(string(out))
+	glog.Info("done")
 	return items
 }

@@ -12,7 +12,12 @@ angular.module('unbalance.socket', [
 	};
 
 	ws.onmessage = function(message) {
+		console.log("message is: ", message)
 		listener(JSON.parse(message.data))
+	}
+
+	ws.onclose = function() {
+		console.log("socket has been closed")
 	}
 
 	var request = function(req) {
@@ -25,7 +30,7 @@ angular.module('unbalance.socket', [
 		};
 		req.id = callbackId;
 
-		console.log('sending request: ', req);
+		console.log('sending request: ', JSON.stringify(req));
 		ws.send(JSON.stringify(req));
 
 		return defer.promise;
@@ -40,12 +45,12 @@ angular.module('unbalance.socket', [
 		var msg = data;
 		console.log("received data from websocket: ", msg);
 
-		if (callbacks.hasOwnProperty(msg.callbackId)) {
-			console.log("callback was: ", JSON.stringify(callbacks[msg.callbackId]));
-			callbacks[msg.callbackId].promise.resolve(msg.data);
+		if (callbacks.hasOwnProperty(msg.Id)) {
+			console.log("callback was: ", JSON.stringify(callbacks[msg.Id]));
+			callbacks[msg.Id].promise.resolve(msg.result);
 		} else {
 			console.log("emitting event");
-			$rootScope.emit(msg.type, msg.data);
+			$rootScope.emit(msg.method, msg);
 		}
 	}
 

@@ -1,8 +1,9 @@
 package helper
 
 import (
+	"apertoire.net/unbalance/model"
 	"fmt"
-	"log"
+	"github.com/golang/glog"
 	"sort"
 )
 
@@ -11,26 +12,26 @@ type Packer struct {
 	// TargetDisk string
 	// MaxSize    uint64
 
-	disk *Disk
+	disk *model.Disk
 
-	Bins []*Bin
-	list []*Item
-	over []*Item
+	Bins []*model.Bin
+	list []*model.Item
+	over []*model.Item
 }
 
-func NewPacker(disk *Disk, items []*Item) *Packer {
+func NewPacker(disk *model.Disk, items []*model.Item) *Packer {
 	p := new(Packer)
 	p.disk = disk
 	p.list = items
 	return p
 }
 
-func (self *Packer) BestFit() (bin *Bin) {
-	sort.Sort(BySize(self.list))
+func (self *Packer) BestFit() (bin *model.Bin) {
+	sort.Sort(model.BySize(self.list))
 
 	for _, item := range self.list {
 		if item.Size > self.disk.Free {
-			// log.Println(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
+			// glog.Info(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
 			self.over = append(self.over, item)
 		} else {
 			targetBin := -1
@@ -47,17 +48,17 @@ func (self *Packer) BestFit() (bin *Bin) {
 			}
 
 			if targetBin >= 0 {
-				self.Bins[targetBin].add(item)
+				self.Bins[targetBin].Add(item)
 			} else {
-				newbin := &Bin{}
-				newbin.add(item)
+				newbin := &model.Bin{}
+				newbin.Add(item)
 				self.Bins = append(self.Bins, newbin)
 			}
 		}
 	}
 
 	if len(self.Bins) > 0 {
-		sort.Sort(ByFilled(self.Bins))
+		sort.Sort(model.ByFilled(self.Bins))
 		self.disk.Bin = self.Bins[0]
 		bin = self.disk.Bin
 	}
@@ -65,7 +66,7 @@ func (self *Packer) BestFit() (bin *Bin) {
 	return bin
 }
 
-func (self *Packer) add(item *Item) {
+func (self *Packer) add(item *model.Item) {
 	if item.Size > self.disk.Free {
 		self.over = append(self.over, item)
 	} else {
@@ -75,12 +76,12 @@ func (self *Packer) add(item *Item) {
 
 func (self *Packer) printList() {
 	for _, item := range self.list {
-		log.Println(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
+		glog.Info(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
 	}
 }
 
 func (self *Packer) sortBins() {
-	sort.Sort(ByFilled(self.Bins))
+	sort.Sort(model.ByFilled(self.Bins))
 }
 
 func (self *Packer) Print() {

@@ -10,8 +10,8 @@ angular.module('unbalance.services', [
 		var msg = {
 			id: 0,
 			method: api + 'get/disks',
-			params: [],
-			data: [],
+			params: {},
+			data: {},
 		}
 		return socket.request(msg)
 	};

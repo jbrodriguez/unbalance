@@ -2,33 +2,58 @@ package services
 
 import (
 	"apertoire.net/unbalance/bus"
+	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
+	"apertoire.net/unbalance/model"
 	"code.google.com/p/go.net/websocket"
-	"log"
+	"github.com/golang/glog"
 	"net/http"
 )
 
-type Handler func(id int, msg *message.Message)
+type Handler func(id int, msg *message.Request)
 
 type Server struct {
 	Bus *bus.Bus
 
 	sockets map[int]*Socket
-
-	vtable map[string]Handler
+	vtable  map[string]Handler
 
 	addCh chan *Socket
 	delCh chan *Socket
 	errCh chan error
 }
 
-func (self *Server) getDisks(id int, msg *message.Message) {
-	// fire this message onto the bus, fire and forget
-	log.Println("Omaha !!!")
+func (self *Server) getDisks(id int, msg *message.Request) {
+	// fire this message onto the bus, wait for the reply
+	glog.Info("Omaha !!!")
+
+	event := &message.Disks{make(chan []*model.Disk)}
+	self.Bus.GetDisks <- event
+	disks := <-event.Reply
+
+	// b, err := json.Marshal(disks)
+	// if err != nil {
+	// 	glog.Info("errored out: ", err)
+	// } else {
+	// 	glog.Info(string(b))
+	// }
+
+	// m := json.RawMessage(b)
+	data, err := helper.WriteJson(disks)
+	if err != nil {
+		glog.Info("errored out: ", err)
+	} else {
+		glog.Info(data)
+	}
+
+	reply := &message.Reply{Id: msg.Id, Result: &data}
+	self.sockets[id].Write(reply)
+	// self.sockets[id].Write(&model.Disk{Path: "/mnt/disk", Free: 434983434})
+
 }
 
 func (self *Server) Start() {
-	log.Printf("starting Server service ...")
+	glog.Info("starting Server service ...")
 
 	self.sockets = make(map[int]*Socket)
 	self.vtable = make(map[string]Handler)
@@ -45,14 +70,14 @@ func (self *Server) Start() {
 	http.Handle("/", http.FileServer(http.Dir("ui")))
 
 	go func() {
-		log.Fatal(http.ListenAndServe(":6237", nil))
+		glog.Fatal(http.ListenAndServe(":6237", nil))
 	}()
 
-	log.Printf("Server service listening on :6237")
+	glog.Info("Server service listening on :6237")
 }
 
 func (self *Server) Stop() {
-	log.Printf("Server service stopped")
+	glog.Info("Server service stopped")
 }
 
 func (self *Server) Add(socket *Socket) {
@@ -73,18 +98,18 @@ func (self *Server) Handle(pattern string, handler Handler) {
 	self.vtable[pattern] = handler
 }
 
-func (self *Server) Dispatch(id int, msg *message.Message) {
+func (self *Server) Dispatch(id int, msg *message.Request) {
 	pattern := msg.Method
 	handler := self.vtable[pattern]
 
-	log.Println("amma dispatch you: ", pattern)
+	glog.Info("amma dispatch you: ", pattern)
 
 	handler(id, msg)
 }
 
 func (self *Server) react() {
 	onConnected := func(ws *websocket.Conn) {
-		log.Println("socket connected")
+		glog.Info("socket connected")
 
 		defer func() {
 			err := ws.Close()
@@ -99,7 +124,7 @@ func (self *Server) react() {
 	}
 
 	http.Handle("/api", websocket.Handler(onConnected))
-	log.Println("created Handler")
+	glog.Info("created Handler")
 
 	for {
 		select {
