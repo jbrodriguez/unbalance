@@ -1,7 +1,7 @@
 package message
 
 import (
-	"apertoire.net/unbalance/model"
+	"apertoire.net/unbalance/helper"
 	"encoding/json"
 )
 
@@ -11,8 +11,8 @@ type FitData struct {
 	Reply      chan string
 }
 
-type Disks struct {
-	Reply chan []*model.Disk
+type Status struct {
+	Reply chan *helper.Unraid
 }
 
 type Request struct {

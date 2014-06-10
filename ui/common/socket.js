@@ -5,14 +5,14 @@ angular.module('unbalance.socket', [
 	var currentCallbackId = 0;
 	var callbacks = {};
 
-	var ws = new WebSocket("ws://blackbeard.apertoire.org:6237/api");
+	var ws = new WebSocket("ws://hal.apertoire.org:6237/api");
 
 	ws.onopen = function() {
 		console.log("socket has been opened");
+		$rootScope.$emit("/api/v1/put/socketOpened");
 	};
 
 	ws.onmessage = function(message) {
-		console.log("message is: ", message)
 		listener(JSON.parse(message.data))
 	}
 
@@ -47,10 +47,11 @@ angular.module('unbalance.socket', [
 
 		if (callbacks.hasOwnProperty(msg.Id)) {
 			console.log("callback was: ", JSON.stringify(callbacks[msg.Id]));
-			callbacks[msg.Id].promise.resolve(msg.result);
+			console.log('data is: ', msg)
+			callbacks[msg.Id].promise.resolve(msg.Result);
 		} else {
 			console.log("emitting event");
-			$rootScope.emit(msg.method, msg);
+			$rootScope.$emit(msg.method, msg);
 		}
 	}
 

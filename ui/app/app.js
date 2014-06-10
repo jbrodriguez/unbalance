@@ -1,5 +1,7 @@
 angular.module('unbalance', [
-	'unbalance.services'
+	'unbalance.services',
+	'unbalance.models',
+	'unbalance.filters'
 ])
 
 .config(['$provide', function($provide) {
@@ -17,11 +19,27 @@ angular.module('unbalance', [
 	console.log("Im alive");
 })
 
-.controller('AppCtrl', ['core', '$scope', function AppCtrl(core, $scope) {
-	$scope.getDisks = function() {
+.controller('AppCtrl', ['core', 'model', '$scope', function AppCtrl(core, model, $scope) {
+	$scope.disks = [];
+
+	$scope.getStatus = function() {
+		core.getStatus()
+			.then(function(data) {
+				console.log(data)
+				$scope.disks = data.disks.map(function(disk) {
+					console.log(disk);
+					return new model.Disk(disk)
+				});
+				console.log($scope.disks)
+			});
+	};
+
+	var onSocketOpened = function() {
 		console.log("modofoco");
-		core.getDisks();
-	}	
+		$scope.getStatus();
+	};
+
+	$scope.$onRootScope("/api/v1/put/socketOpened", onSocketOpened);
 }])
 
 ;

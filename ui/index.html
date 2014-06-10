@@ -20,7 +20,7 @@
           <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
     </head>
-    <body class="skin-blue center-block" style="width: 940px">
+    <body class="skin-blue center-block" style="width: 960px">
         <!-- header logo: style can be found in header.less -->
         <header class="header">
             <a href="index.html" class="logo">
@@ -273,52 +273,29 @@
                                         <tr>
                                             <th style="width: 10px">#</th>
                                             <th style="width: 10px">TO</th>
-                                            <th>DISK</th>
+                                            <th style="width: 100px">DISK</th>
+                                            <th style="width: 350px">SERIAL</th>
                                             <th style="width: 80px">FROM <input type="checkbox" /></th>
-                                            <th style="width: 40px">CURRENT</th>
-                                            <th>PROGRESS</th>
-                                            <th style="width: 40px">EXPECTED</th>
+                                            <th style="width: 65px">FREE</th>
+                                            <th style="width: 40px">%</th>
+                                            <th>FILL</th>
+                                            <th style="width: 40px">PLAN</th>
                                         </tr>
-                                        <tr>
-                                            <td>1.</td>
+                                        <tr ng-repeat="disk in disks">
+                                            <td>{{disk.id}}.</td>
                                             <td> <input type="checkbox" /> </td>
-                                            <td>/mnt/disk1</td>
+                                            <td>{{disk.path}}</td>
+                                            <td>{{disk.serial}} ({{disk.device}})</td>
                                             <td> <input type="checkbox" /> </td>
-                                            <td><span class="label label-primary">91.3%</span></td>
+                                            <td>{{disk.free|humanBytes}}</td>
+                                            <td><span class="label label-primary">{{ (disk.free / disk.size ) | percentage}}</span></td>
                                             <td>
-                                                <div class="progress md progress-striped active">
-                                                    <div class="progress-bar progress-bar-primary" style="width: 91.3%"></div>
+                                                <div class="progress md">
+                                                    <div class="progress-bar progress-bar-primary" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></div>
                                                 </div>
                                             </td>
                                             <td><span class="label label-success">99.7%</span></td>
                                         </tr>
-                                        <tr>
-                                            <td>2.</td>
-                                            <td> <input type="checkbox" /> </td>
-                                            <td>/mnt/disk10</td>
-                                            <td> <input type="checkbox" /> </td>
-                                            <td><span class="badge bg-light-blue">91%</span></td>
-                                            <td>
-                                                <div class="progress md">
-                                                    <div class="progress-bar progress-bar-primary" style="width: 85%"></div>
-                                                </div>
-                                            </td>
-                                            <td><span class="badge bg-green">99%</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>3.</td>
-                                            <td> <input type="checkbox" /> </td>
-                                            <td>/mnt/disk11</td>
-                                            <td> <input type="checkbox" /> </td>
-                                            <td><span class="badge bg-light-blue">91%</span></td>
-                                            <td>
-                                                <div class="progress md">
-                                                    <div class="progress-bar progress-bar-primary" style="width: 85%"></div>
-                                                </div>
-                                            </td>
-                                            <td><span class="badge bg-green">99%</span></td>
-                                        </tr>
-
                                     </table>
                                 </div><!-- /.box-body -->
                             </div><!-- /.box -->
@@ -383,6 +360,8 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.10/angular.min.js"></script> 
     <script type="text/javascript" src="common/socket.js"></script>
     <script type="text/javascript" src="common/core.js"></script>
+    <script type="text/javascript" src="common/model.js"></script>
+    <script type="text/javascript" src="common/filters.js"></script>
     <script type="text/javascript" src="app/app.js"></script>
 
 </html>

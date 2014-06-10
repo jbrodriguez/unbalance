@@ -4,7 +4,6 @@ import (
 	"apertoire.net/unbalance/bus"
 	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
-	"apertoire.net/unbalance/model"
 	"code.google.com/p/go.net/websocket"
 	"github.com/golang/glog"
 	"net/http"
@@ -23,13 +22,13 @@ type Server struct {
 	errCh chan error
 }
 
-func (self *Server) getDisks(id int, msg *message.Request) {
+func (self *Server) getStatus(id int, msg *message.Request) {
 	// fire this message onto the bus, wait for the reply
 	glog.Info("Omaha !!!")
 
-	event := &message.Disks{make(chan []*model.Disk)}
-	self.Bus.GetDisks <- event
-	disks := <-event.Reply
+	event := &message.Status{make(chan *helper.Unraid)}
+	self.Bus.GetStatus <- event
+	unraid := <-event.Reply
 
 	// b, err := json.Marshal(disks)
 	// if err != nil {
@@ -39,11 +38,9 @@ func (self *Server) getDisks(id int, msg *message.Request) {
 	// }
 
 	// m := json.RawMessage(b)
-	data, err := helper.WriteJson(disks)
+	data, err := helper.WriteJson(unraid)
 	if err != nil {
 		glog.Info("errored out: ", err)
-	} else {
-		glog.Info(data)
 	}
 
 	reply := &message.Reply{Id: msg.Id, Result: &data}
@@ -62,7 +59,7 @@ func (self *Server) Start() {
 	self.delCh = make(chan *Socket)
 	self.errCh = make(chan error)
 
-	self.Handle("/api/v1/get/disks", self.getDisks)
+	self.Handle("/api/v1/get/status", self.getStatus)
 
 	// start the websocket listener, and handles incoming websocket connections
 	go self.react()

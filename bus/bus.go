@@ -7,12 +7,12 @@ import (
 
 type Bus struct {
 	GetBestFit chan *message.FitData
-	GetDisks   chan *message.Disks
+	GetStatus  chan *message.Status
 }
 
 func (self *Bus) Start() {
 	glog.Info("Bus starting up ...")
 
 	self.GetBestFit = make(chan *message.FitData)
-	self.GetDisks = make(chan *message.Disks)
+	self.GetStatus = make(chan *message.Status)
 }

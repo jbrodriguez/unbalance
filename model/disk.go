@@ -5,9 +5,15 @@ import (
 )
 
 type Disk struct {
-	Path string `json: "path"`
-	Free uint64 `json: "free"`
-	Bin  *Bin   `json: "-,omitempty"`
+	Id     int    `json:"id"`
+	Name   string `json:"name"`
+	Path   string `json:"path"`
+	Device string `json:"device"`
+	Free   uint64 `json:"free"`
+	Size   uint64 `json:"size"`
+	Serial string `json:"serial"`
+	Status string `json:"status"`
+	Bin    *Bin   `json:"-"`
 }
 
 func (self *Disk) Print() {

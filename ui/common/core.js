@@ -6,10 +6,10 @@ angular.module('unbalance.services', [
 	var api = '/api/v1/'
 	var bus = {};
 
-	bus.getDisks = function() {
+	bus.getStatus = function() {
 		var msg = {
 			id: 0,
-			method: api + 'get/disks',
+			method: api + 'get/status',
 			params: {},
 			data: {},
 		}

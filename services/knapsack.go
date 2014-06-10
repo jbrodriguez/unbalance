@@ -19,6 +19,8 @@ import (
 type Knapsack struct {
 	Bus *bus.Bus
 
+	Unraid *helper.Unraid
+
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
 }
@@ -31,6 +33,9 @@ func (self *Knapsack) Start() {
 
 	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
 	self.reItems = re
+
+	self.Unraid = helper.NewUnraid()
+	self.Unraid.Print()
 
 	go self.react()
 
@@ -45,8 +50,8 @@ func (self *Knapsack) Stop() {
 func (self *Knapsack) react() {
 	for {
 		select {
-		case msg := <-self.Bus.GetDisks:
-			go self.doGetDisks(msg)
+		case msg := <-self.Bus.GetStatus:
+			go self.doGetStatus(msg)
 		case msg := <-self.Bus.GetBestFit:
 			go self.doGetBestFit(msg)
 		}
@@ -70,15 +75,15 @@ loop:
 	return folders[:w]
 }
 
-func (self *Knapsack) doGetDisks(msg *message.Disks) {
+func (self *Knapsack) doGetStatus(msg *message.Status) {
 	glog.Info("talk to me goose")
 	// disks, _, _ := self.GetDisks("", "")
-	var disks []*model.Disk
-	disks = append(disks, &model.Disk{Path: "/mnt/disk1", Free: 8239734985})
-	disks = append(disks, &model.Disk{Path: "/mnt/disk2", Free: 9748340223})
-	disks = append(disks, &model.Disk{Path: "/mnt/disk3", Free: 4782940394})
+	// var disks []*model.Disk
+	// disks = append(disks, &model.Disk{Path: "/mnt/disk1", Free: 8239734985})
+	// disks = append(disks, &model.Disk{Path: "/mnt/disk2", Free: 9748340223})
+	// disks = append(disks, &model.Disk{Path: "/mnt/disk3", Free: 4782940394})
 
-	msg.Reply <- disks
+	msg.Reply <- self.Unraid
 }
 
 func (self *Knapsack) doGetBestFit(msg *message.FitData) {
