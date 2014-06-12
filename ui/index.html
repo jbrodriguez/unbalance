@@ -272,35 +272,58 @@
                                     <table class="table table-striped">
                                         <tr>
                                             <th style="width: 10px">#</th>
-                                            <th style="width: 10px">TO</th>
-                                            <th style="width: 100px">DISK</th>
+                                            <th style="width: 40px">FROM </th>
+                                            <th style="width: 65px">DISK</th>
                                             <th style="width: 350px">SERIAL</th>
-                                            <th style="width: 80px">FROM <input type="checkbox" /></th>
+                                            <th style="width: 10px">TO <input type="checkbox" /></th>
+                                            <th style="width: 65px">SIZE</th>
                                             <th style="width: 65px">FREE</th>
-                                            <th style="width: 40px">%</th>
                                             <th>FILL</th>
-                                            <th style="width: 40px">PLAN</th>
+                                            <th style="width: 65px">PLAN</th>
                                         </tr>
                                         <tr ng-repeat="disk in disks">
                                             <td>{{disk.id}}.</td>
-                                            <td> <input type="checkbox" /> </td>
-                                            <td>{{disk.path}}</td>
+                                            <td> <input type="checkbox" ng-checked="{{fromDisk[disk.path]}}"/> </td>
+                                            <td>{{disk.path|replace:"/mnt/":""}}</td>
                                             <td>{{disk.serial}} ({{disk.device}})</td>
-                                            <td> <input type="checkbox" /> </td>
+                                            <td> <input type="checkbox" ng-checked="{{toDisk[disk.path]}}"/> </td>
+                                            <td>{{disk.size|humanBytes}}</td>
                                             <td>{{disk.free|humanBytes}}</td>
-                                            <td><span class="label label-primary">{{ (disk.free / disk.size ) | percentage}}</span></td>
                                             <td>
                                                 <div class="progress md">
                                                     <div class="progress-bar progress-bar-primary" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></div>
                                                 </div>
                                             </td>
-                                            <td><span class="label label-success">99.7%</span></td>
+                                            <td>{{disk.free|humanBytes}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">TOTAL</td>
+                                            <td>{{size|humanBytes}}</td>
+                                            <td>{{free|humanBytes}}</td>
+                                            <td>
+                                                <div class="progress md">
+                                                    <div class="progress-bar progress-bar-primary" style="width: {{ ((size-free) / size ) | percentage}}"></div>
+                                                </div>
+                                            </td>
+                                            <td>{{free|humanBytes}}</td>
                                         </tr>
                                     </table>
                                 </div><!-- /.box-body -->
                             </div><!-- /.box -->
                         </div><!-- /.col -->
                     </div><!-- /.row -->
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <span>&nbsp;</span>
+                            <button class="btn bg-navy btn-flat pull-right" ng-click="getDisks()"> <i class="fa fa-bullhorn"> </i> &nbsp; Test Your Engine ! </button>
+                            <button class="btn bg-olive btn-flat pull-right margin" style="margin-top:0;" ng-click="getDisks()"> <i class="fa fa-play"> </i> &nbsp; GO for broke ! </button>
+                        </div>
+                        <div class="col-xs-12">
+                        &nbsp;
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-xs-12">
                             <div class="box">
@@ -347,11 +370,6 @@
                                     </table>
                                 </div><!-- /.box-body -->
                             </div><!-- /.box -->
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <a class="btn btn-success btn-flat" ng-click="getDisks()"> <i class="fa fa-bullhorn"> </i> &nbsp; Test Your Engine ! </a>
                         </div>
                     </div>
         </div><!-- ./wrapper -->

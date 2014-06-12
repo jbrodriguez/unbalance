@@ -26,4 +26,10 @@ angular.module('unbalance.filters', [
 	}
 })
 
+.filter('replace', function() {
+	return function(text, fromString, toString) {
+		return text.split(fromString).join(toString);
+	}
+})
+
 ;

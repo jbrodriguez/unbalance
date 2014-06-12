@@ -216,9 +216,12 @@ func NewUnraid() (unraid *Unraid) {
 	}
 
 	for _, disk := range _disks {
-		if disk != nil && disk.Name != "Parity" {
+		if disk != nil && disk.Name != "Parity" && disk.Status == "DISK_OK" {
 			disk.Size = size[disk.Path]
 			disk.Free = free[disk.Path]
+
+			box.Size += disk.Size
+			box.Free += disk.Free
 
 			disks = append(disks, disk)
 		}
