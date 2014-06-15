@@ -11,10 +11,21 @@ angular.module('unbalance.services', [
 			id: 0,
 			method: api + 'get/status',
 			params: {},
-			data: {},
+			data: {}
 		}
 		return socket.request(msg)
 	};
+
+	bus.getBestFit = function(fromDisk, toDisk) {
+		var msg = {
+			id: 0,
+			method: api + 'get/bestFit',
+			params: { "fromDisk": fromDisk, "toDisk": toDisk },
+			data: {}
+		}
+
+		return socket.request(msg);
+	}
 
 	return bus;
 }])

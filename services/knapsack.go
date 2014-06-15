@@ -86,8 +86,8 @@ func (self *Knapsack) doGetStatus(msg *message.Status) {
 	msg.Reply <- self.Unraid
 }
 
-func (self *Knapsack) doGetBestFit(msg *message.FitData) {
-	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
+func (self *Knapsack) doGetBestFit(msg *message.BestFit) {
+	//	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
 	// folders := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &model.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &model.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
 	// // items := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}}
@@ -99,6 +99,16 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	// 	glog.Info("yes: ", itm.Name)
 	// }
 
+	disks := make([]*model.Disk, len(self.Unraid.Disks))
+	copy(disks, self.Unraid.Disks)
+
+	var srcDisk *model.Disk
+	for _, disk := range disks {
+		if disk.Path == msg.SourceDisk {
+			srcDisk = disk
+		}
+	}
+
 	sort.Sort(model.ByFree(disks))
 
 	var folders []*model.Item
@@ -109,14 +119,21 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 		folders = append(folders, list...)
 	}
 
-	srcDiskSizeFreeFinal := srcDiskSizeFreeOriginal
+	// srcDiskSizeFreeFinal := srcDiskSizeFreeOriginal
+	srcDisk.NewFree = srcDisk.Free
 
 	for _, disk := range disks {
-		packer := helper.NewPacker(disk, folders)
-		bin := packer.BestFit()
-		if bin != nil {
-			srcDiskSizeFreeFinal += bin.Size
-			self.removeFolders(folders, bin.Items)
+		disk.NewFree = disk.Free
+		if disk.Path != srcDisk.Path {
+			packer := helper.NewPacker(disk, folders)
+			bin := packer.BestFit()
+			if bin != nil {
+				// srcDiskSizeFreeFinal += bin.Size
+				srcDisk.NewFree += bin.Size
+				disk.NewFree -= bin.Size
+
+				self.removeFolders(folders, bin.Items)
+			}
 		}
 	}
 
@@ -125,11 +142,13 @@ func (self *Knapsack) doGetBestFit(msg *message.FitData) {
 	}
 
 	fmt.Println("=========================================================")
-	fmt.Println(fmt.Sprintf("Results for %s", msg.SourceDisk))
-	fmt.Println(fmt.Sprintf("Original Free Space: %s", helper.ByteSize(srcDiskSizeFreeOriginal)))
-	fmt.Println(fmt.Sprintf("Final Free Space: %s", helper.ByteSize(srcDiskSizeFreeFinal)))
-	fmt.Println(fmt.Sprintf("Gained Space: %s", helper.ByteSize(srcDiskSizeFreeFinal-srcDiskSizeFreeOriginal)))
+	fmt.Println(fmt.Sprintf("Results for %s", srcDisk.Path))
+	fmt.Println(fmt.Sprintf("Original Free Space: %s", helper.ByteSize(srcDisk.Free)))
+	fmt.Println(fmt.Sprintf("Final Free Space: %s", helper.ByteSize(srcDisk.NewFree)))
+	fmt.Println(fmt.Sprintf("Gained Space: %s", helper.ByteSize(srcDisk.NewFree-srcDisk.Free)))
 	fmt.Println("---------------------------------------------------------")
+
+	msg.Reply <- self.Unraid
 
 	// free, err := packer.GetFreeSpace()
 	// if err != nil {
@@ -252,7 +271,7 @@ func (self *Knapsack) GetFolders(src string, folder string) (items []*model.Item
 		}
 
 		result := self.reItems.FindStringSubmatch(line)
-		glog.Info("[%s] %s", result[1], result[2])
+		glog.Infof("[%s] %s", result[1], result[2])
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 

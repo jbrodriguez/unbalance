@@ -219,13 +219,17 @@ func NewUnraid() (unraid *Unraid) {
 		if disk != nil && disk.Name != "Parity" && disk.Status == "DISK_OK" {
 			disk.Size = size[disk.Path]
 			disk.Free = free[disk.Path]
+			disk.NewFree = disk.Free
 
 			box.Size += disk.Size
 			box.Free += disk.Free
+			box.NewFree += disk.Free
 
 			disks = append(disks, disk)
 		}
 	}
+
+	// file, _ := os.Open("/var/local/emhttp/var.ini")
 
 	return &Unraid{Box: &box, Disks: disks}
 }

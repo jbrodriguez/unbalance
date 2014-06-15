@@ -10,12 +10,13 @@ import (
 )
 
 func main() {
+	flag.Parse()
+	defer glog.Flush()
+
 	glog.Info("Unbalance starting up ...")
 
 	// config := helper.Config{}
 	// config.Init()
-
-	flag.Parse()
 
 	bus := bus.Bus{}
 	ks := services.Knapsack{Bus: &bus}

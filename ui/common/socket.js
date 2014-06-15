@@ -45,10 +45,10 @@ angular.module('unbalance.socket', [
 		var msg = data;
 		console.log("received data from websocket: ", msg);
 
-		if (callbacks.hasOwnProperty(msg.Id)) {
-			console.log("callback was: ", JSON.stringify(callbacks[msg.Id]));
+		if (callbacks.hasOwnProperty(msg.id)) {
+			console.log("callback was: ", JSON.stringify(callbacks[msg.id]));
 			console.log('data is: ', msg)
-			callbacks[msg.Id].promise.resolve(msg.Result);
+			callbacks[msg.id].promise.resolve(msg.result);
 		} else {
 			console.log("emitting event");
 			$rootScope.$emit(msg.method, msg);

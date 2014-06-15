@@ -38,6 +38,7 @@ angular.module('unbalance', [
 
 				$scope.size = data.box.size;
 				$scope.free = data.box.free;
+				$scope.newFree = data.box.newFree;
 
 				$scope.disks = data.disks.map(function(disk) {
 					console.log(disk);
@@ -67,6 +68,41 @@ angular.module('unbalance', [
 			});
 	};
 
+	$scope.getBestFit = function() {
+		fromDisk = "";
+
+		for (var key in $scope.fromDisk) {
+			if ($scope.fromDisk.hasOwnProperty(key)) {
+				if ($scope.fromDisk[key]) {
+					fromDisk = key;
+					break;
+				}
+			}
+		}
+
+		if (fromDisk == "") {
+			alert("I won't take that !");
+			return;
+		}
+
+		core.getBestFit(fromDisk, "")
+			.then(function(data) {
+				console.log(data)
+
+				$scope.size = data.box.size;
+				$scope.free = data.box.free;
+				$scope.newFree = data.box.newFree;
+
+				$scope.disks = data.disks.map(function(disk) {
+					console.log(disk);
+					return new model.Disk(disk)
+				});
+
+				console.log($scope.disks)				
+			});
+	}
+
+	// event handlers
 	var onSocketOpened = function() {
 		console.log("modofoco");
 		$scope.getStatus();

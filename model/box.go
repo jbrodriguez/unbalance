@@ -15,4 +15,5 @@ type Box struct {
 	State        string    `json:"state"`
 	Size         uint64    `json:"size"`
 	Free         uint64    `json:"free"`
+	NewFree      uint64    `json:"newFree"`
 }

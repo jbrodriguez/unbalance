@@ -5,18 +5,20 @@ import (
 )
 
 type Disk struct {
-	Id     int    `json:"id"`
-	Name   string `json:"name"`
-	Path   string `json:"path"`
-	Device string `json:"device"`
-	Free   uint64 `json:"free"`
-	Size   uint64 `json:"size"`
-	Serial string `json:"serial"`
-	Status string `json:"status"`
-	Bin    *Bin   `json:"-"`
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	Device  string `json:"device"`
+	Free    uint64 `json:"free"`
+	NewFree uint64 `json:"newFree"`
+	Size    uint64 `json:"size"`
+	Serial  string `json:"serial"`
+	Status  string `json:"status"`
+	Bin     *Bin   `json:"-"`
 }
 
 func (self *Disk) Print() {
+	// this disk was not assigned to a bin
 	if self.Bin != nil {
 		fmt.Println("=========================================================")
 		fmt.Println(fmt.Sprintf("[%d/%d] %2.2f%% (%s)", self.Bin.Size, self.Free, (float64(self.Bin.Size)/float64(self.Free))*100, self.Path))

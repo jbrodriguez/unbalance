@@ -5,6 +5,7 @@ import (
 	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
 	"code.google.com/p/go.net/websocket"
+	"encoding/json"
 	"github.com/golang/glog"
 	"net/http"
 )
@@ -49,6 +50,28 @@ func (self *Server) getStatus(id int, msg *message.Request) {
 
 }
 
+func (self *Server) getBestFit(id int, msg *message.Request) {
+	params := new(message.BestFit)
+	err := json.Unmarshal(*msg.Params, params)
+	if err != nil {
+		glog.Fatal("motherfucker: ", err)
+	}
+	glog.Infof("this is all you: %+v", params)
+
+	params.Reply = make(chan *helper.Unraid)
+
+	self.Bus.GetBestFit <- params
+	unraid := <-params.Reply
+
+	data, err := helper.WriteJson(unraid)
+	if err != nil {
+		glog.Info("errored out: ", err)
+	}
+
+	reply := &message.Reply{Id: msg.Id, Result: &data}
+	self.sockets[id].Write(reply)
+}
+
 func (self *Server) Start() {
 	glog.Info("starting Server service ...")
 
@@ -60,6 +83,7 @@ func (self *Server) Start() {
 	self.errCh = make(chan error)
 
 	self.Handle("/api/v1/get/status", self.getStatus)
+	self.Handle("/api/v1/get/bestFit", self.getBestFit)
 
 	// start the websocket listener, and handles incoming websocket connections
 	go self.react()

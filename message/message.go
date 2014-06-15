@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 )
 
-type FitData struct {
-	SourceDisk string
-	TargetDisk string
-	Reply      chan string
+type BestFit struct {
+	SourceDisk string              `json:"fromDisk"`
+	TargetDisk string              `json:"toDisk"`
+	Reply      chan *helper.Unraid `json:"-"`
 }
 
 type Status struct {
@@ -16,15 +16,15 @@ type Status struct {
 }
 
 type Request struct {
-	Id     int              `json: "id"`
-	Method string           `json: "method"`
-	Params *json.RawMessage `json: "params"`
+	Id     int              `json:"id"`
+	Method string           `json:"method"`
+	Params *json.RawMessage `json:"params"`
 }
 
 type Reply struct {
-	Id     int              `json: "id"`
-	Result *json.RawMessage `json: "result"`
-	Error  *json.RawMessage `json: "error"`
+	Id     int              `json:"id"`
+	Result *json.RawMessage `json:"result"`
+	Error  *json.RawMessage `json:"error"`
 }
 
 // type DiskReply struct {
