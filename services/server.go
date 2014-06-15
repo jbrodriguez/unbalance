@@ -2,54 +2,109 @@ package services
 
 import (
 	"apertoire.net/unbalance/bus"
+	"apertoire.net/unbalance/helper"
 	"apertoire.net/unbalance/message"
 	"code.google.com/p/go.net/websocket"
-	"log"
+	"encoding/json"
+	"github.com/golang/glog"
 	"net/http"
 )
 
-type Handler func(id int, msg *message.Message)
+type Handler func(id int, msg *message.Request)
 
 type Server struct {
 	Bus *bus.Bus
 
 	sockets map[int]*Socket
-
-	vtable map[string]Handler
+	vtable  map[string]Handler
 
 	addCh chan *Socket
 	delCh chan *Socket
 	errCh chan error
 }
 
-func (self *Server) getDisks(id int, msg *message.Message) {
-	// fire this message onto the bus, fire and forget
+func (self *Server) getStatus(id int, msg *message.Request) {
+	// fire this message onto the bus, wait for the reply
+	glog.Info("Omaha !!!")
+
+	event := &message.Status{make(chan *helper.Unraid)}
+	self.Bus.GetStatus <- event
+	unraid := <-event.Reply
+
+	// b, err := json.Marshal(disks)
+	// if err != nil {
+	// 	glog.Info("errored out: ", err)
+	// } else {
+	// 	glog.Info(string(b))
+	// }
+
+	// m := json.RawMessage(b)
+	data, err := helper.WriteJson(unraid)
+	if err != nil {
+		glog.Info("errored out: ", err)
+	}
+
+	reply := &message.Reply{Id: msg.Id, Result: &data}
+	self.sockets[id].Write(reply)
+	// self.sockets[id].Write(&model.Disk{Path: "/mnt/disk", Free: 434983434})
+
+}
+
+func (self *Server) getBestFit(id int, msg *message.Request) {
+	params := new(message.BestFit)
+	err := json.Unmarshal(*msg.Params, params)
+	if err != nil {
+		glog.Fatal("motherfucker: ", err)
+	}
+	glog.Infof("this is all you: %+v", params)
+
+	params.Reply = make(chan *helper.Unraid)
+
+	self.Bus.GetBestFit <- params
+	unraid := <-params.Reply
+
+	data, err := helper.WriteJson(unraid)
+	if err != nil {
+		glog.Info("errored out: ", err)
+	}
+
+	reply := &message.Reply{Id: msg.Id, Result: &data}
+	self.sockets[id].Write(reply)
 }
 
 func (self *Server) Start() {
-	log.Printf("starting Server service ...")
+	glog.Info("starting Server service ...")
 
 	self.sockets = make(map[int]*Socket)
 	self.vtable = make(map[string]Handler)
 
-	self.Handle("/v1/get/disks", self.getDisks)
+	self.addCh = make(chan *Socket)
+	self.delCh = make(chan *Socket)
+	self.errCh = make(chan error)
 
+	self.Handle("/api/v1/get/status", self.getStatus)
+	self.Handle("/api/v1/get/bestFit", self.getBestFit)
+
+	// start the websocket listener, and handles incoming websocket connections
 	go self.react()
 
-	http.Handle("/", http.FileServer(http.Dir("webroot")))
+	http.Handle("/", http.FileServer(http.Dir("ui")))
 
 	go func() {
-		log.Fatal(http.ListenAndServe(":6237", nil))
+		glog.Fatal(http.ListenAndServe(":6237", nil))
 	}()
 
-	log.Printf("Server service started")
+	glog.Info("Server service listening on :6237")
 }
 
 func (self *Server) Stop() {
+	glog.Info("Server service stopped")
 }
 
 func (self *Server) Add(socket *Socket) {
+	// go func() {
 	self.addCh <- socket
+	// }()
 }
 
 func (self *Server) Del(socket *Socket) {
@@ -64,15 +119,19 @@ func (self *Server) Handle(pattern string, handler Handler) {
 	self.vtable[pattern] = handler
 }
 
-func (self *Server) Dispatch(id int, msg *message.Message) {
+func (self *Server) Dispatch(id int, msg *message.Request) {
 	pattern := msg.Method
-
 	handler := self.vtable[pattern]
+
+	glog.Info("amma dispatch you: ", pattern)
+
 	handler(id, msg)
 }
 
 func (self *Server) react() {
 	onConnected := func(ws *websocket.Conn) {
+		glog.Info("socket connected")
+
 		defer func() {
 			err := ws.Close()
 			if err != nil {
@@ -85,7 +144,8 @@ func (self *Server) react() {
 		socket.Listen()
 	}
 
-	http.Handle("/v1/", websocket.Handler(onConnected))
+	http.Handle("/api", websocket.Handler(onConnected))
+	glog.Info("created Handler")
 
 	for {
 		select {

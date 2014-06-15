@@ -2,15 +2,17 @@ package bus
 
 import (
 	"apertoire.net/unbalance/message"
-	"log"
+	"github.com/golang/glog"
 )
 
 type Bus struct {
-	GetBestFit chan *message.FitData
+	GetBestFit chan *message.BestFit
+	GetStatus  chan *message.Status
 }
 
 func (self *Bus) Start() {
-	log.Println("Bus starting up ...")
+	glog.Info("Bus starting up ...")
 
-	self.GetBestFit = make(chan *message.FitData)
+	self.GetBestFit = make(chan *message.BestFit)
+	self.GetStatus = make(chan *message.Status)
 }

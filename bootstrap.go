@@ -2,20 +2,25 @@ package main
 
 import (
 	"apertoire.net/unbalance/bus"
-	"apertoire.net/unbalance/message"
+	// "apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/services"
+	"flag"
 	"fmt"
-	"log"
+	"github.com/golang/glog"
 )
 
 func main() {
-	log.Printf("Unbalance starting up ...")
+	flag.Parse()
+	defer glog.Flush()
+
+	glog.Info("Unbalance starting up ...")
 
 	// config := helper.Config{}
 	// config.Init()
 
 	bus := bus.Bus{}
 	ks := services.Knapsack{Bus: &bus}
+	server := services.Server{Bus: &bus}
 
 	// logger := services.Logger{Bus: &bus, Config: &config}
 	// dal := services.Dal{Bus: &bus, Config: &config}
@@ -28,6 +33,7 @@ func main() {
 
 	bus.Start()
 	ks.Start()
+	server.Start()
 
 	// logger.Start()
 	// dal.Start()
@@ -39,10 +45,10 @@ func main() {
 	// core.Start()
 
 	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "/mnt/disk11", Reply: make(chan string)}
-	msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
-	bus.GetBestFit <- &msg
+	// msg := message.FitData{SourceDisk: "/mnt/disk20", TargetDisk: "", Reply: make(chan string)}
+	// bus.GetBestFit <- &msg
 
-	log.Printf("press enter to stop ...")
+	glog.Info("press enter to stop ...")
 	var input string
 	fmt.Scanln(&input)
 
@@ -55,6 +61,7 @@ func main() {
 	// dal.Stop()
 	// logger.Stop()
 
+	server.Stop()
 	ks.Stop()
 	// // bus.Stop()
 }

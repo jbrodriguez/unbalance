@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -39,13 +40,24 @@ func ByteSize(bytes uint64) string {
 	return fmt.Sprintf("%s%s", stringValue, unit)
 }
 
+func WriteJson(data interface{}) (raw json.RawMessage, err error) {
+	var out error
+
+	tmp, out := json.Marshal(data)
+	if out == nil {
+		raw = json.RawMessage(tmp)
+	}
+
+	return raw, out
+}
+
 // func GetFreeSpace(disk string) {
 // }
 
 // func GetFolderSize(disk string, folder string) {
 // 	out, err := process(fmt.Sprintf("du -s %s", disk+folder+"/*"))
 // 	if err != nil {
-// 		log.Fatal(err)
+// 		glog.Fatal(err)
 // 	}
 
 // }

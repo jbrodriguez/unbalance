@@ -1,19 +1,31 @@
-'use strict';
-
 angular.module('unbalance.services', [
 	'unbalance.socket'
 ])
 
 .factory('core', ['socket', function(socket) {
-	var api = '/v1/'
+	var api = '/api/v1/'
 	var bus = {};
 
-	bus.getDisks = function() {
+	bus.getStatus = function() {
 		var msg = {
-			type: api + 'get/disks'
+			id: 0,
+			method: api + 'get/status',
+			params: {},
+			data: {}
 		}
-		return socket.request()
+		return socket.request(msg)
 	};
+
+	bus.getBestFit = function(fromDisk, toDisk) {
+		var msg = {
+			id: 0,
+			method: api + 'get/bestFit',
+			params: { "fromDisk": fromDisk, "toDisk": toDisk },
+			data: {}
+		}
+
+		return socket.request(msg);
+	}
 
 	return bus;
 }])
