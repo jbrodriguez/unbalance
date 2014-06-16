@@ -1,4 +1,4 @@
-package helper
+package lib
 
 import (
 	"apertoire.net/unbalance/model"
@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-type Packer struct {
+type Knapsack struct {
 	// SourceDisk string
 	// TargetDisk string
 	// MaxSize    uint64
@@ -19,14 +19,14 @@ type Packer struct {
 	over []*model.Item
 }
 
-func NewPacker(disk *model.Disk, items []*model.Item) *Packer {
-	p := new(Packer)
+func NewKnapsack(disk *model.Disk, items []*model.Item) *Knapsack {
+	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
 	return p
 }
 
-func (self *Packer) BestFit() (bin *model.Bin) {
+func (self *Knapsack) BestFit() (bin *model.Bin) {
 	sort.Sort(model.BySize(self.list))
 
 	for _, item := range self.list {
@@ -66,7 +66,7 @@ func (self *Packer) BestFit() (bin *model.Bin) {
 	return bin
 }
 
-func (self *Packer) add(item *model.Item) {
+func (self *Knapsack) add(item *model.Item) {
 	if item.Size > self.disk.Free {
 		self.over = append(self.over, item)
 	} else {
@@ -74,17 +74,17 @@ func (self *Packer) add(item *model.Item) {
 	}
 }
 
-func (self *Packer) printList() {
+func (self *Knapsack) printList() {
 	for _, item := range self.list {
 		glog.Info(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
 	}
 }
 
-func (self *Packer) sortBins() {
+func (self *Knapsack) sortBins() {
 	sort.Sort(model.ByFilled(self.Bins))
 }
 
-func (self *Packer) Print() {
+func (self *Knapsack) Print() {
 	for i, bin := range self.Bins {
 		fmt.Println("=========================================================")
 		fmt.Println(fmt.Sprintf("%0d [%d/%d] %2.2f%% (%s)", i, bin.Size, self.disk.Free, (float64(bin.Size)/float64(self.disk.Free))*100, self.disk.Path))

@@ -2,7 +2,7 @@ package services
 
 import (
 	"apertoire.net/unbalance/bus"
-	"apertoire.net/unbalance/helper"
+	"apertoire.net/unbalance/lib"
 	"apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/model"
 	"bufio"
@@ -16,17 +16,17 @@ import (
 	"strconv"
 )
 
-type Knapsack struct {
+type Storage struct {
 	Bus *bus.Bus
 
-	Unraid *helper.Unraid
+	Unraid *lib.Unraid
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
 }
 
-func (self *Knapsack) Start() {
-	glog.Info("starting Knapsack service ...")
+func (self *Storage) Start() {
+	glog.Info("starting Storage service ...")
 
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	self.reFreeSpace = re
@@ -34,20 +34,20 @@ func (self *Knapsack) Start() {
 	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
 	self.reItems = re
 
-	self.Unraid = helper.NewUnraid()
+	self.Unraid = lib.NewUnraid()
 	self.Unraid.Print()
 
 	go self.react()
 
-	glog.Info("Knapsack service started")
+	glog.Info("Storage service started")
 }
 
-func (self *Knapsack) Stop() {
+func (self *Storage) Stop() {
 	// nothing right now
-	glog.Info("Knapsack service stopped")
+	glog.Info("Storage service stopped")
 }
 
-func (self *Knapsack) react() {
+func (self *Storage) react() {
 	for {
 		select {
 		case msg := <-self.Bus.GetStatus:
@@ -58,7 +58,7 @@ func (self *Knapsack) react() {
 	}
 }
 
-func (self *Knapsack) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
+func (self *Storage) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
 	w := 0 // write index
 
 loop:
@@ -75,7 +75,7 @@ loop:
 	return folders[:w]
 }
 
-func (self *Knapsack) doGetStatus(msg *message.Status) {
+func (self *Storage) doGetStatus(msg *message.Status) {
 	glog.Info("talk to me goose")
 	// disks, _, _ := self.GetDisks("", "")
 	// var disks []*model.Disk
@@ -86,7 +86,7 @@ func (self *Knapsack) doGetStatus(msg *message.Status) {
 	msg.Reply <- self.Unraid
 }
 
-func (self *Knapsack) doGetBestFit(msg *message.BestFit) {
+func (self *Storage) doGetBestFit(msg *message.BestFit) {
 	//	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
 	// folders := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &model.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &model.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
@@ -125,7 +125,7 @@ func (self *Knapsack) doGetBestFit(msg *message.BestFit) {
 	for _, disk := range disks {
 		disk.NewFree = disk.Free
 		if disk.Path != srcDisk.Path {
-			packer := helper.NewPacker(disk, folders)
+			packer := lib.NewKnapsack(disk, folders)
 			bin := packer.BestFit()
 			if bin != nil {
 				// srcDiskSizeFreeFinal += bin.Size
@@ -143,9 +143,9 @@ func (self *Knapsack) doGetBestFit(msg *message.BestFit) {
 
 	fmt.Println("=========================================================")
 	fmt.Println(fmt.Sprintf("Results for %s", srcDisk.Path))
-	fmt.Println(fmt.Sprintf("Original Free Space: %s", helper.ByteSize(srcDisk.Free)))
-	fmt.Println(fmt.Sprintf("Final Free Space: %s", helper.ByteSize(srcDisk.NewFree)))
-	fmt.Println(fmt.Sprintf("Gained Space: %s", helper.ByteSize(srcDisk.NewFree-srcDisk.Free)))
+	fmt.Println(fmt.Sprintf("Original Free Space: %s", lib.ByteSize(srcDisk.Free)))
+	fmt.Println(fmt.Sprintf("Final Free Space: %s", lib.ByteSize(srcDisk.NewFree)))
+	fmt.Println(fmt.Sprintf("Gained Space: %s", lib.ByteSize(srcDisk.NewFree-srcDisk.Free)))
 	fmt.Println("---------------------------------------------------------")
 
 	msg.Reply <- self.Unraid
@@ -180,7 +180,7 @@ func (self *Knapsack) doGetBestFit(msg *message.BestFit) {
 	// }
 }
 
-func (self *Knapsack) GetDisks(src string, dst string) (disks []*model.Disk, srcDiskFree uint64, err error) {
+func (self *Storage) GetDisks(src string, dst string) (disks []*model.Disk, srcDiskFree uint64, err error) {
 	// var disks []Disk
 
 	cmd := exec.Command("sh", "-c", "df --block-size=1 /mnt/disk*")
@@ -243,7 +243,7 @@ func (self *Knapsack) GetDisks(src string, dst string) (disks []*model.Disk, src
 	return disks, srcDiskFree, nil
 }
 
-func (self *Knapsack) GetFolders(src string, folder string) (items []*model.Item) {
+func (self *Storage) GetFolders(src string, folder string) (items []*model.Item) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(src, folder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
@@ -285,7 +285,7 @@ func (self *Knapsack) GetFolders(src string, folder string) (items []*model.Item
 		glog.Fatal("Unable to wait for process to finish: ", err)
 	}
 
-	// out, err := helper.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
+	// out, err := lib.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
 	// if err != nil {
 	// 	glog.Fatal(err)
 	// }
