@@ -3,6 +3,8 @@ package services
 import (
 	"apertoire.net/unbalance/bus"
 	"apertoire.net/unbalance/lib"
+	"apertoire.net/unbalance/message"
+	"apertoire.net/unbalance/model"
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
 	"fmt"
@@ -84,7 +86,7 @@ func (self *Socket) listenRead() {
 			return
 
 		default:
-			var msg lib.Request
+			var msg message.Request
 			err := websocket.JSON.Receive(self.ws, &msg)
 			glog.Info("is there anybody out there?: ", err)
 			if err == io.EOF {
@@ -99,7 +101,7 @@ func (self *Socket) listenRead() {
 	}
 }
 
-type Handler func(id int, msg *lib.Request)
+type Handler func(id int, msg *message.Request)
 
 type Server struct {
 	Bus *bus.Bus
@@ -112,11 +114,11 @@ type Server struct {
 	errCh chan error
 }
 
-func (self *Server) getStatus(id int, msg *lib.Request) {
+func (self *Server) getStatus(id int, msg *message.Request) {
 	// fire this message onto the bus, wait for the reply
 	glog.Info("Omaha !!!")
 
-	event := &lib.Status{make(chan *lib.Unraid)}
+	event := &message.StorageStatus{make(chan *model.Unraid)}
 	self.Bus.GetStatus <- event
 	unraid := <-event.Reply
 
@@ -133,21 +135,21 @@ func (self *Server) getStatus(id int, msg *lib.Request) {
 		glog.Info("errored out: ", err)
 	}
 
-	reply := &lib.Reply{Id: msg.Id, Result: &data}
+	reply := &message.Reply{Id: msg.Id, Result: &data}
 	self.sockets[id].Write(reply)
 	// self.sockets[id].Write(&model.Disk{Path: "/mnt/disk", Free: 434983434})
 
 }
 
-func (self *Server) getBestFit(id int, msg *lib.Request) {
-	params := new(lib.BestFit)
+func (self *Server) getBestFit(id int, msg *message.Request) {
+	params := new(message.BestFit)
 	err := json.Unmarshal(*msg.Params, params)
 	if err != nil {
 		glog.Fatal("motherfucker: ", err)
 	}
 	glog.Infof("this is all you: %+v", params)
 
-	params.Reply = make(chan *lib.Unraid)
+	params.Reply = make(chan *model.Unraid)
 
 	self.Bus.GetBestFit <- params
 	unraid := <-params.Reply
@@ -157,7 +159,7 @@ func (self *Server) getBestFit(id int, msg *lib.Request) {
 		glog.Info("errored out: ", err)
 	}
 
-	reply := &lib.Reply{Id: msg.Id, Result: &data}
+	reply := &message.Reply{Id: msg.Id, Result: &data}
 	self.sockets[id].Write(reply)
 }
 
@@ -208,7 +210,7 @@ func (self *Server) Handle(pattern string, handler Handler) {
 	self.vtable[pattern] = handler
 }
 
-func (self *Server) Dispatch(id int, msg *lib.Request) {
+func (self *Server) Dispatch(id int, msg *message.Request) {
 	pattern := msg.Method
 	handler := self.vtable[pattern]
 

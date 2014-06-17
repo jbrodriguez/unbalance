@@ -3,6 +3,7 @@ package services
 import (
 	"apertoire.net/unbalance/bus"
 	"apertoire.net/unbalance/lib"
+	"apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/model"
 	"bufio"
 	"fmt"
@@ -18,7 +19,7 @@ import (
 type Storage struct {
 	Bus *bus.Bus
 
-	Unraid *lib.Unraid
+	Unraid *model.Unraid
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -33,7 +34,7 @@ func (self *Storage) Start() {
 	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
 	self.reItems = re
 
-	self.Unraid = lib.NewUnraid()
+	self.Unraid = model.NewUnraid()
 	self.Unraid.Print()
 
 	go self.react()
@@ -74,7 +75,7 @@ loop:
 	return folders[:w]
 }
 
-func (self *Storage) doGetStatus(msg *lib.Status) {
+func (self *Storage) doGetStatus(msg *message.StorageStatus) {
 	glog.Info("talk to me goose")
 	// disks, _, _ := self.GetDisks("", "")
 	// var disks []*model.Disk
@@ -85,7 +86,7 @@ func (self *Storage) doGetStatus(msg *lib.Status) {
 	msg.Reply <- self.Unraid
 }
 
-func (self *Storage) doGetBestFit(msg *lib.BestFit) {
+func (self *Storage) doGetBestFit(msg *message.BestFit) {
 	//	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
 	// folders := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &model.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &model.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}

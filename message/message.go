@@ -1,17 +1,18 @@
-package lib
+package message
 
 import (
+	"apertoire.net/unbalance/model"
 	"encoding/json"
 )
 
 type BestFit struct {
-	SourceDisk string       `json:"fromDisk"`
-	TargetDisk string       `json:"toDisk"`
-	Reply      chan *Unraid `json:"-"`
+	SourceDisk string             `json:"fromDisk"`
+	TargetDisk string             `json:"toDisk"`
+	Reply      chan *model.Unraid `json:"-"`
 }
 
-type Status struct {
-	Reply chan *Unraid
+type StorageStatus struct {
+	Reply chan *model.Unraid
 }
 
 type Request struct {

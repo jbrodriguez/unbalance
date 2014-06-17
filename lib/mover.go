@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"apertoire.net/unbalance/message"
 	// "github.com/golang/glog"
 	"io"
 	"os"
@@ -9,8 +10,8 @@ import (
 
 type PassThru struct {
 	io.Reader
-	Progress *ProgressStatus
-	Ch       chan *ProgressStatus
+	Progress *message.ProgressStatus
+	Ch       chan *message.ProgressStatus
 }
 
 func (pt *PassThru) Read(p []byte) (int, error) {
@@ -27,9 +28,9 @@ type Mover struct {
 	Src      string
 	Dst      string
 	err      error
-	Progress *ProgressStatus
+	Progress *message.ProgressStatus
 
-	progressCh chan *ProgressStatus
+	progressCh chan *message.ProgressStatus
 	doneCh     chan bool
 }
 
@@ -69,8 +70,8 @@ func (self *Mover) visit(path string, info os.FileInfo, err error) (e error) {
 	return nil
 }
 
-func (self *Mover) Copy() (chan *ProgressStatus, chan bool) {
-	self.progressCh = make(chan *ProgressStatus)
+func (self *Mover) Copy() (chan *message.ProgressStatus, chan bool) {
+	self.progressCh = make(chan *message.ProgressStatus)
 	self.doneCh = make(chan bool)
 
 	go func() {
