@@ -1,8 +1,7 @@
 package lib
 
 import (
-	"apertoire.net/unbalance/message"
-	"github.com/golang/glog"
+	// "github.com/golang/glog"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,8 +9,8 @@ import (
 
 type PassThru struct {
 	io.Reader
-	Progress *message.Progress
-	Ch       chan *message.Progress
+	Progress *ProgressStatus
+	Ch       chan *ProgressStatus
 }
 
 func (pt *PassThru) Read(p []byte) (int, error) {
@@ -20,15 +19,17 @@ func (pt *PassThru) Read(p []byte) (int, error) {
 		pt.Progress.CurrentCopied += uint64(n)
 		pt.Ch <- pt.Progress
 	}
+
+	return n, err
 }
 
 type Mover struct {
 	Src      string
 	Dst      string
 	err      error
-	Progress *message.Progress
+	Progress *ProgressStatus
 
-	progressCh chan *message.Progress
+	progressCh chan *ProgressStatus
 	doneCh     chan bool
 }
 
@@ -36,19 +37,40 @@ func (self *Mover) visit(path string, info os.FileInfo, err error) (e error) {
 	if info.IsDir() {
 
 	} else {
-		out := "\nPath: " + path + "\nSource: " + self.Dst
+		// out := "\nPath: " + path + "\nSource: " + self.Dst
 
-		Progress.CurrentFile = path
-		Progress.CurrentSize = info.Size()
+		self.Progress.CurrentFile = path
+		self.Progress.CurrentSize = uint64(info.Size())
 
-		self.ch <- self.Progress
+		in, err := os.Open(self.Src)
+		if err != nil {
+			return
+		}
+
+		defer in.Close()
+		out, err := os.Create(self.Dst)
+		if err != nil {
+			return
+		}
+		defer func() {
+			cerr := out.Close()
+			if err == nil {
+				err = cerr
+			}
+		}()
+		if _, err = io.Copy(out, in); err != nil {
+			return
+		}
+		err = out.Sync()
+
+		self.progressCh <- self.Progress
 	}
 
 	return nil
 }
 
-func (self *Mover) Copy() (chan *message.Progress, chan bool) {
-	self.progressCh = make(chan *message.Progress)
+func (self *Mover) Copy() (chan *ProgressStatus, chan bool) {
+	self.progressCh = make(chan *ProgressStatus)
 	self.doneCh = make(chan bool)
 
 	go func() {

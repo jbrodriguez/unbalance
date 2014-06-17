@@ -3,7 +3,6 @@ package services
 import (
 	"apertoire.net/unbalance/bus"
 	"apertoire.net/unbalance/lib"
-	"apertoire.net/unbalance/message"
 	"apertoire.net/unbalance/model"
 	"bufio"
 	"fmt"
@@ -75,7 +74,7 @@ loop:
 	return folders[:w]
 }
 
-func (self *Storage) doGetStatus(msg *message.Status) {
+func (self *Storage) doGetStatus(msg *lib.Status) {
 	glog.Info("talk to me goose")
 	// disks, _, _ := self.GetDisks("", "")
 	// var disks []*model.Disk
@@ -86,7 +85,7 @@ func (self *Storage) doGetStatus(msg *message.Status) {
 	msg.Reply <- self.Unraid
 }
 
-func (self *Storage) doGetBestFit(msg *message.BestFit) {
+func (self *Storage) doGetBestFit(msg *lib.BestFit) {
 	//	disks, srcDiskSizeFreeOriginal, _ := self.GetDisks(msg.SourceDisk, msg.TargetDisk)
 
 	// folders := []*model.Item{&model.Item{Name: "/The Godfather (1974)", Size: 34, Path: "films/bluray"}, &model.Item{Name: "/The Mist (2010)", Size: 423, Path: "films/bluray"}, &model.Item{Name: "/Aventador (1974)", Size: 3524, Path: "films/bluray"}, &model.Item{Name: "/Countach (1974)", Size: 3432, Path: "films/bluray"}, &model.Item{Name: "/Iroc-Z (1974)", Size: 6433, Path: "films/bluray"}}
@@ -115,7 +114,7 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 	paths := []string{"films/bluray", "films/blurip"}
 
 	for _, path := range paths {
-		list := self.GetFolders(msg.SourceDisk, path)
+		list := self.getFolders(msg.SourceDisk, path)
 		folders = append(folders, list...)
 	}
 
@@ -180,7 +179,7 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 	// }
 }
 
-func (self *Storage) GetDisks(src string, dst string) (disks []*model.Disk, srcDiskFree uint64, err error) {
+func (self *Storage) getDisks(src string, dst string) (disks []*model.Disk, srcDiskFree uint64, err error) {
 	// var disks []Disk
 
 	cmd := exec.Command("sh", "-c", "df --block-size=1 /mnt/disk*")
@@ -243,7 +242,7 @@ func (self *Storage) GetDisks(src string, dst string) (disks []*model.Disk, srcD
 	return disks, srcDiskFree, nil
 }
 
-func (self *Storage) GetFolders(src string, folder string) (items []*model.Item) {
+func (self *Storage) getFolders(src string, folder string) (items []*model.Item) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(src, folder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {

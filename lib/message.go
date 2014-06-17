@@ -1,18 +1,17 @@
-package message
+package lib
 
 import (
-	"apertoire.net/unbalance/lib"
 	"encoding/json"
 )
 
 type BestFit struct {
-	SourceDisk string           `json:"fromDisk"`
-	TargetDisk string           `json:"toDisk"`
-	Reply      chan *lib.Unraid `json:"-"`
+	SourceDisk string       `json:"fromDisk"`
+	TargetDisk string       `json:"toDisk"`
+	Reply      chan *Unraid `json:"-"`
 }
 
 type Status struct {
-	Reply chan *lib.Unraid
+	Reply chan *Unraid
 }
 
 type Request struct {
@@ -27,11 +26,11 @@ type Reply struct {
 	Error  *json.RawMessage `json:"error"`
 }
 
-type Progress {
-	TotalSize uint64
-	TotalCopied uint64
-	CurrentFile string
-	CurrentSize uint64
+type ProgressStatus struct {
+	TotalSize     uint64
+	TotalCopied   uint64
+	CurrentFile   string
+	CurrentSize   uint64
 	CurrentCopied uint64
 }
 

@@ -1,18 +1,18 @@
 package bus
 
 import (
-	"apertoire.net/unbalance/message"
+	"apertoire.net/unbalance/lib"
 	"github.com/golang/glog"
 )
 
 type Bus struct {
-	GetBestFit chan *message.BestFit
-	GetStatus  chan *message.Status
+	GetBestFit chan *lib.BestFit
+	GetStatus  chan *lib.Status
 }
 
 func (self *Bus) Start() {
 	glog.Info("Bus starting up ...")
 
-	self.GetBestFit = make(chan *message.BestFit)
-	self.GetStatus = make(chan *message.Status)
+	self.GetBestFit = make(chan *lib.BestFit)
+	self.GetStatus = make(chan *lib.Status)
 }
