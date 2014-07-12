@@ -163,6 +163,12 @@ func (self *Server) getBestFit(id int, msg *message.Request) {
 	self.sockets[id].Write(reply)
 }
 
+func (self *Server) move(id int, msg *message.Request) {
+	glog.Info("yes, im ready")
+	self.Bus.Move <- true
+	glog.Info("hold on to love")
+}
+
 func (self *Server) Start() {
 	glog.Info("starting Server service ...")
 
@@ -175,6 +181,7 @@ func (self *Server) Start() {
 
 	self.Handle("/api/v1/get/status", self.getStatus)
 	self.Handle("/api/v1/get/bestFit", self.getBestFit)
+	self.Handle("/api/v1/post/move", self.move)
 
 	// start the websocket listener, and handles incoming websocket connections
 	go self.react()

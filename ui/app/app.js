@@ -102,6 +102,10 @@ angular.module('unbalance', [
 			});
 	}
 
+	$scope.move = function() {
+		core.move();
+	}
+	
 	// event handlers
 	var onSocketOpened = function() {
 		console.log("modofoco");

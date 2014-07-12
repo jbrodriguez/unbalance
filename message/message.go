@@ -15,6 +15,10 @@ type StorageStatus struct {
 	Reply chan *model.Unraid
 }
 
+type MoveCommand struct {
+	Reply chan string
+}
+
 type Request struct {
 	Id     int              `json:"id"`
 	Method string           `json:"method"`

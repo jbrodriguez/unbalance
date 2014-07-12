@@ -13,6 +13,9 @@ import (
 type Unraid struct {
 	Box   *Box    `json:"box"`
 	Disks []*Disk `json:"disks"`
+
+	SourceDiskName string
+	BytesToMove    uint64
 }
 
 func delim(r rune) bool {

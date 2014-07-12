@@ -8,6 +8,7 @@ import (
 type Bus struct {
 	GetBestFit chan *message.BestFit
 	GetStatus  chan *message.StorageStatus
+	Move       chan bool
 }
 
 func (self *Bus) Start() {
@@ -15,4 +16,5 @@ func (self *Bus) Start() {
 
 	self.GetBestFit = make(chan *message.BestFit)
 	self.GetStatus = make(chan *message.StorageStatus)
+	self.Move = make(chan bool)
 }

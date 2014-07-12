@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/golang/glog"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -54,6 +55,8 @@ func (self *Storage) react() {
 			go self.doGetStatus(msg)
 		case msg := <-self.Bus.GetBestFit:
 			go self.doGetBestFit(msg)
+		case msg := <-self.Bus.Move:
+			go self.doMove(msg)
 		}
 	}
 }
@@ -73,6 +76,44 @@ loop:
 	}
 
 	return folders[:w]
+}
+
+func (self *Storage) doMove(msg bool) {
+	glog.Info("incomunicado")
+	mover := lib.NewMover()
+	glog.Info("incomunicado 2")
+	progress := &message.ProgressStatus{TotalSize: self.Unraid.BytesToMove}
+	glog.Info("incomunicado 3", self.Unraid.BytesToMove)
+
+	disks := self.Unraid.Disks
+	for _, disk := range disks {
+		if disk.Bin == nil || disk.Path == self.Unraid.SourceDiskName {
+			continue
+		}
+
+		for _, item := range disk.Bin.Items {
+			dst := filepath.Join(disk.Path, item.Path)
+
+			glog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+
+			mover.Src = item.Name
+			mover.Dst = dst
+			mover.Progress = progress
+
+			glog.Infof("mover: %+v", mover)
+
+			mover.Copy()
+			for {
+				select {
+				case msg := <-mover.ProgressCh:
+					glog.Infof("Progress: %+v", msg)
+				case <-mover.DoneCh:
+					return
+				}
+			}
+		}
+
+	}
 }
 
 func (self *Storage) doGetStatus(msg *message.StorageStatus) {
@@ -109,6 +150,8 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 		}
 	}
 
+	self.Unraid.SourceDiskName = srcDisk.Path
+
 	sort.Sort(model.ByFree(disks))
 
 	var folders []*model.Item
@@ -116,7 +159,10 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 
 	for _, path := range paths {
 		list := self.getFolders(msg.SourceDisk, path)
-		folders = append(folders, list...)
+
+		if list != nil {
+			folders = append(folders, list...)
+		}
 	}
 
 	// srcDiskSizeFreeFinal := srcDiskSizeFreeOriginal
@@ -131,6 +177,7 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 				// srcDiskSizeFreeFinal += bin.Size
 				srcDisk.NewFree += bin.Size
 				disk.NewFree -= bin.Size
+				self.Unraid.BytesToMove += bin.Size
 
 				self.removeFolders(folders, bin.Items)
 			}
@@ -244,7 +291,13 @@ func (self *Storage) getDisks(src string, dst string) (disks []*model.Disk, srcD
 }
 
 func (self *Storage) getFolders(src string, folder string) (items []*model.Item) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(src, folder, "*")))
+	srcFolder := filepath.Join(src, folder)
+	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+		glog.Info("Folder does not exist ", srcFolder)
+		return nil
+	}
+
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(srcFolder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		glog.Fatal("Unable to stdoutpipe du: ", err)
@@ -275,7 +328,7 @@ func (self *Storage) getFolders(src string, folder string) (items []*model.Item)
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 
-		items = append(items, &model.Item{Name: result[2], Size: size, Path: folder})
+		items = append(items, &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))})
 		// fmt.Println(line)
 	}
 
