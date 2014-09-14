@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/golang/glog"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -55,8 +56,8 @@ func (self *Storage) react() {
 			go self.doGetStatus(msg)
 		case msg := <-self.Bus.GetBestFit:
 			go self.doGetBestFit(msg)
-		case msg := <-self.Bus.Move:
-			go self.doMove(msg)
+			// case msg := <-self.Bus.Move:
+			// 	go self.doMove(msg)
 		}
 	}
 }
@@ -149,6 +150,8 @@ func (self *Storage) doGetBestFit(msg *message.BestFit) {
 			srcDisk = disk
 		}
 	}
+
+	log.Println("srcDisk = ", msg.SourceDisk)
 
 	self.Unraid.SourceDiskName = srcDisk.Path
 
@@ -328,8 +331,10 @@ func (self *Storage) getFolders(src string, folder string) (items []*model.Item)
 
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 
-		items = append(items, &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))})
+		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
+		items = append(items, item)
 		// fmt.Println(line)
+		log.Printf("item: %+v", item)
 	}
 
 	// Wait for the result of the command; also closes our end of the pipe

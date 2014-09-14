@@ -4,6 +4,7 @@ import (
 	"apertoire.net/unbalance/model"
 	"fmt"
 	"github.com/golang/glog"
+	"log"
 	"sort"
 )
 
@@ -17,12 +18,15 @@ type Knapsack struct {
 	Bins []*model.Bin
 	list []*model.Item
 	over []*model.Item
+
+	buffer uint64
 }
 
 func NewKnapsack(disk *model.Disk, items []*model.Item) *Knapsack {
 	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
+	p.buffer = 250000000
 	return p
 }
 
@@ -37,11 +41,20 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 			targetBin := -1
 			remainingSpace := self.disk.Free
 
+			// log.Printf("Disk [%s]: remainingSpace: %d\n", self.disk.Name, remainingSpace)
+
 			for i, bin := range self.Bins {
 				binSpaceUsed := bin.Size
 				binSpaceLeft := self.disk.Free - binSpaceUsed - item.Size
 
-				if binSpaceLeft < remainingSpace && binSpaceLeft >= 0 {
+				// if self.disk.Path == "/mnt/disk8" {
+				// 	log.Printf("[/mnt/disk/8] Bin: %d ", i)
+				// }
+
+				if binSpaceLeft < remainingSpace && binSpaceLeft >= self.buffer {
+					// log.Printf("[%s] Used: %d | Left: %d\n", self.disk.Path, binSpaceUsed, binSpaceLeft)
+					log.Printf("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
+
 					remainingSpace = binSpaceLeft
 					targetBin = i
 				}
@@ -66,13 +79,13 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 	return bin
 }
 
-func (self *Knapsack) add(item *model.Item) {
-	if item.Size > self.disk.Free {
-		self.over = append(self.over, item)
-	} else {
-		self.list = append(self.list, item)
-	}
-}
+// func (self *Knapsack) add(item *model.Item) {
+// 	if item.Size > self.disk.Free {
+// 		self.over = append(self.over, item)
+// 	} else {
+// 		self.list = append(self.list, item)
+// 	}
+// }
 
 func (self *Knapsack) printList() {
 	for _, item := range self.list {
