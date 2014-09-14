@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-const (
-	BYTE     = 1.0
-	KILOBYTE = 1000 * BYTE
-	MEGABYTE = 1000 * KILOBYTE
-	GIGABYTE = 1000 * MEGABYTE
-	TERABYTE = 1000 * GIGABYTE
-)
-
 type Disk struct {
 	Id              int    `json:"id"`
 	Name            string `json:"name"`
@@ -58,29 +50,3 @@ type ByFree []*Disk
 func (s ByFree) Len() int           { return len(s) }
 func (s ByFree) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s ByFree) Less(i, j int) bool { return s[i].Free > s[j].Free }
-
-func HumanBytes(bytes uint64) string {
-	unit := ""
-	value := float32(bytes)
-
-	switch {
-	case bytes >= TERABYTE:
-		unit = "T"
-		value = value / TERABYTE
-	case bytes >= GIGABYTE:
-		unit = "G"
-		value = value / GIGABYTE
-	case bytes >= MEGABYTE:
-		unit = "M"
-		value = value / MEGABYTE
-	case bytes >= KILOBYTE:
-		unit = "K"
-		value = value / KILOBYTE
-	case bytes == 0:
-		return "0"
-	}
-
-	stringValue := fmt.Sprintf("%.1f", value)
-	stringValue = strings.TrimSuffix(stringValue, ".0")
-	return fmt.Sprintf("%s%s", stringValue, unit)
-}
