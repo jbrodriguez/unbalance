@@ -7,12 +7,14 @@ import (
 
 type Bus struct {
 	GetBestFit chan *message.BestFit
-	GetStatus  chan *message.Status
+	GetStatus  chan *message.StorageStatus
+	Move       chan bool
 }
 
 func (self *Bus) Start() {
 	glog.Info("Bus starting up ...")
 
 	self.GetBestFit = make(chan *message.BestFit)
-	self.GetStatus = make(chan *message.Status)
+	self.GetStatus = make(chan *message.StorageStatus)
+	self.Move = make(chan bool)
 }

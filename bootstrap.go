@@ -19,7 +19,7 @@ func main() {
 	// config.Init()
 
 	bus := bus.Bus{}
-	ks := services.Knapsack{Bus: &bus}
+	storage := services.Storage{Bus: &bus}
 	server := services.Server{Bus: &bus}
 
 	// logger := services.Logger{Bus: &bus, Config: &config}
@@ -32,7 +32,7 @@ func main() {
 	// core := services.Core{Bus: &bus, Config: &config}
 
 	bus.Start()
-	ks.Start()
+	storage.Start()
 	server.Start()
 
 	// logger.Start()
@@ -62,6 +62,6 @@ func main() {
 	// logger.Stop()
 
 	server.Stop()
-	ks.Stop()
+	storage.Stop()
 	// // bus.Stop()
 }

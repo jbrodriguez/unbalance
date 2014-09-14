@@ -1,7 +1,6 @@
-package helper
+package model
 
 import (
-	"apertoire.net/unbalance/model"
 	"bufio"
 	"github.com/golang/glog"
 	"io"
@@ -12,8 +11,11 @@ import (
 )
 
 type Unraid struct {
-	Box   *model.Box    `json:"box"`
-	Disks []*model.Disk `json:"disks"`
+	Box   *Box    `json:"box"`
+	Disks []*Disk `json:"disks"`
+
+	SourceDiskName string
+	BytesToMove    uint64
 }
 
 func delim(r rune) bool {
@@ -21,11 +23,11 @@ func delim(r rune) bool {
 }
 
 func NewUnraid() (unraid *Unraid) {
-	var box model.Box
-	var _disks [25]*model.Disk
+	var box Box
+	var _disks [25]*Disk
 	var free map[string]uint64 = make(map[string]uint64)
 	var size map[string]uint64 = make(map[string]uint64)
-	var disks []*model.Disk
+	var disks []*Disk
 
 	txt := "/root/mdcmd status|strings"
 	cmd := exec.Command("sh", "-c", txt)
@@ -118,7 +120,7 @@ func NewUnraid() (unraid *Unraid) {
 
 			diskId, _ := strconv.Atoi(dn[2])
 			if _disks[diskId] == nil {
-				_disks[diskId] = &model.Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
+				_disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
 			}
 		}
 

@@ -27,5 +27,16 @@ angular.module('unbalance.services', [
 		return socket.request(msg);
 	}
 
+	bus.move = function() {
+		var msg = {
+			id: 0,
+			method: api + 'post/move',
+			params: {},
+			data: {}
+		}
+
+		return socket.signal(msg);
+	}
+
 	return bus;
 }])

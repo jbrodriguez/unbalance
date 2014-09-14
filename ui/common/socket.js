@@ -5,7 +5,7 @@ angular.module('unbalance.socket', [
 	var currentCallbackId = 0;
 	var callbacks = {};
 
-	var ws = new WebSocket("ws://hal.apertoire.org:6237/api");
+	var ws = new WebSocket("ws://wopr.apertoire.org:6237/api");
 
 	ws.onopen = function() {
 		console.log("socket has been opened");

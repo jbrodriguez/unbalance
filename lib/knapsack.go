@@ -1,13 +1,14 @@
-package helper
+package lib
 
 import (
 	"apertoire.net/unbalance/model"
 	"fmt"
 	"github.com/golang/glog"
+	// "log"
 	"sort"
 )
 
-type Packer struct {
+type Knapsack struct {
 	// SourceDisk string
 	// TargetDisk string
 	// MaxSize    uint64
@@ -17,16 +18,19 @@ type Packer struct {
 	Bins []*model.Bin
 	list []*model.Item
 	over []*model.Item
+
+	buffer uint64
 }
 
-func NewPacker(disk *model.Disk, items []*model.Item) *Packer {
-	p := new(Packer)
+func NewKnapsack(disk *model.Disk, items []*model.Item) *Knapsack {
+	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
+	p.buffer = 250000000
 	return p
 }
 
-func (self *Packer) BestFit() (bin *model.Bin) {
+func (self *Knapsack) BestFit() (bin *model.Bin) {
 	sort.Sort(model.BySize(self.list))
 
 	for _, item := range self.list {
@@ -37,11 +41,20 @@ func (self *Packer) BestFit() (bin *model.Bin) {
 			targetBin := -1
 			remainingSpace := self.disk.Free
 
+			// log.Printf("Disk [%s]: remainingSpace: %d\n", self.disk.Name, remainingSpace)
+
 			for i, bin := range self.Bins {
 				binSpaceUsed := bin.Size
 				binSpaceLeft := self.disk.Free - binSpaceUsed - item.Size
 
-				if binSpaceLeft < remainingSpace && binSpaceLeft >= 0 {
+				// if self.disk.Path == "/mnt/disk8" {
+				// 	log.Printf("[/mnt/disk/8] Bin: %d ", i)
+				// }
+
+				if binSpaceLeft < remainingSpace && binSpaceLeft >= self.buffer {
+					// log.Printf("[%s] Used: %d | Left: %d\n", self.disk.Path, binSpaceUsed, binSpaceLeft)
+					// log.Printf("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
+
 					remainingSpace = binSpaceLeft
 					targetBin = i
 				}
@@ -66,25 +79,25 @@ func (self *Packer) BestFit() (bin *model.Bin) {
 	return bin
 }
 
-func (self *Packer) add(item *model.Item) {
-	if item.Size > self.disk.Free {
-		self.over = append(self.over, item)
-	} else {
-		self.list = append(self.list, item)
-	}
-}
+// func (self *Knapsack) add(item *model.Item) {
+// 	if item.Size > self.disk.Free {
+// 		self.over = append(self.over, item)
+// 	} else {
+// 		self.list = append(self.list, item)
+// 	}
+// }
 
-func (self *Packer) printList() {
+func (self *Knapsack) printList() {
 	for _, item := range self.list {
 		glog.Info(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
 	}
 }
 
-func (self *Packer) sortBins() {
+func (self *Knapsack) sortBins() {
 	sort.Sort(model.ByFilled(self.Bins))
 }
 
-func (self *Packer) Print() {
+func (self *Knapsack) Print() {
 	for i, bin := range self.Bins {
 		fmt.Println("=========================================================")
 		fmt.Println(fmt.Sprintf("%0d [%d/%d] %2.2f%% (%s)", i, bin.Size, self.disk.Free, (float64(bin.Size)/float64(self.disk.Free))*100, self.disk.Path))

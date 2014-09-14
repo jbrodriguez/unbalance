@@ -35,6 +35,14 @@ func (self *Disk) Print() {
 	}
 }
 
+// func (self *Disk) Print() {
+// 	if self.Bin != nil {
+// 		fmt.Printf("Disk %s: %s\n", self.Path, HumanBytes(self.Free-self.Bin.Size))
+// 	} else {
+// 		fmt.Printf("Disk %s: no diggity (%s)\n", self.Path, HumanBytes(self.Free))
+// 	}
+// }
+
 type ByFree []*Disk
 
 func (s ByFree) Len() int           { return len(s) }
