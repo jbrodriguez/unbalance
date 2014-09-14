@@ -4,7 +4,7 @@ import (
 	"apertoire.net/unbalance/model"
 	"fmt"
 	"github.com/golang/glog"
-	"log"
+	// "log"
 	"sort"
 )
 
@@ -53,7 +53,7 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= self.buffer {
 					// log.Printf("[%s] Used: %d | Left: %d\n", self.disk.Path, binSpaceUsed, binSpaceLeft)
-					log.Printf("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
+					// log.Printf("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
 
 					remainingSpace = binSpaceLeft
 					targetBin = i

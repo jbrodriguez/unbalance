@@ -56,8 +56,8 @@ func (self *Storage) react() {
 			go self.doGetStatus(msg)
 		case msg := <-self.Bus.GetBestFit:
 			go self.doGetBestFit(msg)
-			// case msg := <-self.Bus.Move:
-			// 	go self.doMove(msg)
+		case msg := <-self.Bus.Move:
+			go self.doMove(msg)
 		}
 	}
 }
@@ -80,11 +80,11 @@ loop:
 }
 
 func (self *Storage) doMove(msg bool) {
-	glog.Info("incomunicado")
-	mover := lib.NewMover()
-	glog.Info("incomunicado 2")
-	progress := &message.ProgressStatus{TotalSize: self.Unraid.BytesToMove}
-	glog.Info("incomunicado 3", self.Unraid.BytesToMove)
+	// glog.Info("incomunicado")
+	// mover := lib.NewMover()
+	// glog.Info("incomunicado 2")
+	// progress := &message.ProgressStatus{TotalSize: self.Unraid.BytesToMove}
+	// glog.Info("incomunicado 3", self.Unraid.BytesToMove)
 
 	disks := self.Unraid.Disks
 	for _, disk := range disks {
@@ -95,23 +95,24 @@ func (self *Storage) doMove(msg bool) {
 		for _, item := range disk.Bin.Items {
 			dst := filepath.Join(disk.Path, item.Path)
 
-			glog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			// glog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			log.Printf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
 
-			mover.Src = item.Name
-			mover.Dst = dst
-			mover.Progress = progress
+			// mover.Src = item.Name
+			// mover.Dst = dst
+			// mover.Progress = progress
 
-			glog.Infof("mover: %+v", mover)
+			// glog.Infof("mover: %+v", mover)
 
-			mover.Copy()
-			for {
-				select {
-				case msg := <-mover.ProgressCh:
-					glog.Infof("Progress: %+v", msg)
-				case <-mover.DoneCh:
-					return
-				}
-			}
+			// mover.Copy()
+			// for {
+			// 	select {
+			// 	case msg := <-mover.ProgressCh:
+			// 		glog.Infof("Progress: %+v", msg)
+			// 	case <-mover.DoneCh:
+			// 		return
+			// 	}
+			// }
 		}
 
 	}

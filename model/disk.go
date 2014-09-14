@@ -2,48 +2,46 @@ package model
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Disk struct {
-	Id              int    `json:"id"`
-	Name            string `json:"name"`
-	Path            string `json:"path"`
-	Device          string `json:"device"`
-	Free            uint64 `json:"free"`
-	FreeMinusBuffer uint64 `json:"freeMinusBuffer"`
-	NewFree         uint64 `json:"newFree"`
-	Size            uint64 `json:"size"`
-	Serial          string `json:"serial"`
-	Status          string `json:"status"`
-	Bin             *Bin   `json:"-"`
+	Id      int    `json:"id"`
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	Device  string `json:"device"`
+	Free    uint64 `json:"free"`
+	NewFree uint64 `json:"newFree"`
+	Size    uint64 `json:"size"`
+	Serial  string `json:"serial"`
+	Status  string `json:"status"`
+	Bin     *Bin   `json:"-"`
+}
+
+func (self *Disk) Print() {
+	// this disk was not assigned to a bin
+	if self.Bin != nil {
+		fmt.Println("=========================================================")
+		fmt.Println(fmt.Sprintf("[%d/%d] %2.2f%% (%s)", self.Bin.Size, self.Free, (float64(self.Bin.Size)/float64(self.Free))*100, self.Path))
+		fmt.Println("---------------------------------------------------------")
+		self.Bin.Print()
+		fmt.Println("---------------------------------------------------------")
+		fmt.Println("")
+	} else {
+		fmt.Println("=========================================================")
+		fmt.Println(fmt.Sprintf("[0/%d] 0%% (%s)", self.Free, self.Path))
+		fmt.Println("---------------------------------------------------------")
+		fmt.Println("---------------------------------------------------------")
+		fmt.Println("")
+	}
 }
 
 // func (self *Disk) Print() {
-// 	// this disk was not assigned to a bin
 // 	if self.Bin != nil {
-// 		fmt.Println("=========================================================")
-// 		fmt.Println(fmt.Sprintf("[%d/%d] %2.2f%% (%s)", self.Bin.Size, self.Free, (float64(self.Bin.Size)/float64(self.Free))*100, self.Path))
-// 		fmt.Println("---------------------------------------------------------")
-// 		self.Bin.Print()
-// 		fmt.Println("---------------------------------------------------------")
-// 		fmt.Println("")
+// 		fmt.Printf("Disk %s: %s\n", self.Path, HumanBytes(self.Free-self.Bin.Size))
 // 	} else {
-// 		fmt.Println("=========================================================")
-// 		fmt.Println(fmt.Sprintf("[0/%d] 0%% (%s)", self.Free, self.Path))
-// 		fmt.Println("---------------------------------------------------------")
-// 		fmt.Println("---------------------------------------------------------")
-// 		fmt.Println("")
+// 		fmt.Printf("Disk %s: no diggity (%s)\n", self.Path, HumanBytes(self.Free))
 // 	}
 // }
-
-func (self *Disk) Print() {
-	if self.Bin != nil {
-		fmt.Printf("Disk %s: %s\n", self.Path, HumanBytes(self.Free-self.Bin.Size))
-	} else {
-		fmt.Printf("Disk %s: no diggity (%s)\n", self.Path, HumanBytes(self.Free))
-	}
-}
 
 type ByFree []*Disk
 
