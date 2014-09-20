@@ -1,0 +1,59 @@
+		<article class="container row">
+			<div class="large-12 column overview">
+				<div class="left">
+					<h4>{{vm.condition.state}}</h4>
+				</div>
+				<div class="right">
+					<a href="#" ng-click="getBestFit()" class="button tiny best-fit">Get Best Fit</a>
+					<a href="#" ng-click="move()" class="button tiny">Move</a>
+				</div>
+			</div>
+
+			<div class="large-12 column">
+			<table>
+				<thead>
+				<tr>
+	                <th width="10">#</th>
+	                <th width="70">FROM </th>
+	                <th width="65">DISK</th>
+	                <th width="400">SERIAL</th>
+	                <th width="50">TO <input type="checkbox" /></th>
+	                <th width="90">SIZE</th>
+	                <th width="90">FREE</th>
+	                <th>FILL</th>
+	                <th width="85">PLAN</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr data-ng-repeat="disk in vm.disks">
+	                <td>{{disk.id}}.</td>
+	                <td> <input type="checkbox" ng-checked="{{vm.fromDisk[disk.path]}}"/> </td>
+	                <td>{{disk.path|replace:"/mnt/":""}}</td>
+	                <td>{{disk.serial}} ({{disk.device}})</td>
+	                <td> <input type="checkbox" ng-checked="{{vm.toDisk[disk.path]}}"/> </td>
+	                <td>{{disk.size|humanBytes}}</td>
+	                <td>{{disk.free|humanBytes}}</td>
+	                <td>
+	                    <div class="progress">
+	                        <span class="meter" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></span>
+	                    </div>
+	                </td>
+	                <td>
+	                    <span ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+	                </td>				
+				</tr>
+                <tr>
+                    <td colspan="5">TOTAL</td>
+                    <td>{{vm.condition.size|humanBytes}}</td>
+                    <td>{{vm.condition.free|humanBytes}}</td>
+                    <td>
+                        <div class="progress success">
+                            <span class="meter" style="width: {{ ((vm.condition.size-vm.condition.free) / vm.condition.size ) | percentage}}"></span>
+                        </div>
+                    </td>
+                    <td>{{vm.condition.free|humanBytes}}</td>
+                </tr>				
+				</tbody>
+			</table>
+			</div>
+		</article>	
