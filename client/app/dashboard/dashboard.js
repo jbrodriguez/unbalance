@@ -13,6 +13,7 @@
 
         vm.condition = {};
         vm.disks = [];
+        vm.commands = [];
 
         vm.toDisk = [];
         vm.fromDisk = [];
@@ -22,6 +23,7 @@
 
         vm.getStatus = getStatus;
         vm.calculateBestFit = calculateBestFit;
+        vm.move = move;
 
         activate();
 
@@ -103,6 +105,14 @@
 
                 return vm.disks;                
             });
-        }
+        };
+
+        function move() {
+            return api.move().then(function(data) {
+                vm.commands = data;
+                logger.info("Scroll down to see list of commands");
+                return vm.commands;
+            });
+        };
     }
 })();

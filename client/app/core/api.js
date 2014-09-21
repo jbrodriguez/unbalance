@@ -14,6 +14,7 @@
     	var service = {
             getStatus: getStatus,
             calculateBestFit: calculateBestFit,
+            move: move,
     	};
 
     	return service;
@@ -27,7 +28,6 @@
                 });
 
     		function getStatusEnd(data, status, headers, config) {
-                logger.info('this is what i got: ', data);
     			return data.data;
     		}
     	};
@@ -41,10 +41,23 @@
                 });
 
             function calculateBestFitEnd(data, status, headers, config) {
-                logger.info('this is what i got: ', data);
                 return data.data;
             }
-        };        
+        };
+
+        function move() {
+            return $http.post(ep + '/storage/move')
+                .then(moveEnd)
+                .catch(function(message) {
+                    exception.catcher('XHR Failed for move')(message);
+                    $location.url('/');
+                });
+
+            function moveEnd(data, status, headers, config) {
+                console.log("this is what i got: ", data.data);
+                return data.data;
+            }
+        }
 
     }
 

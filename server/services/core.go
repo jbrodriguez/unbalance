@@ -23,6 +23,7 @@ type Core struct {
 
 	chanStorageInfo      chan *pubsub.Message
 	chanCalculateBestFit chan *pubsub.Message
+	chanMove             chan *pubsub.Message
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -47,6 +48,7 @@ func (self *Core) Start() {
 
 	self.chanStorageInfo = self.bus.Sub("cmd.getStorageInfo")
 	self.chanCalculateBestFit = self.bus.Sub("cmd.calculateBestFit")
+	self.chanMove = self.bus.Sub("cmd.move")
 
 	go self.react()
 }
@@ -62,6 +64,8 @@ func (self *Core) react() {
 			go self.getStorageInfo(msg)
 		case msg := <-self.chanCalculateBestFit:
 			go self.calculateBestFit(msg)
+		case msg := <-self.chanMove:
+			go self.move(msg)
 		}
 	}
 }
@@ -210,4 +214,43 @@ loop:
 	}
 
 	return folders[:w]
+}
+
+func (self *Core) move(msg *pubsub.Message) {
+	var commands []*dto.Move
+
+	commands = make([]*dto.Move, 0)
+
+	for _, disk := range self.storage.Disks {
+		if disk.Bin == nil || disk.Path == self.storage.SourceDiskName {
+			continue
+		}
+
+		for _, item := range disk.Bin.Items {
+			dst := filepath.Join(disk.Path, item.Path)
+
+			// glog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
+			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
+			commands = append(commands, command)
+
+			// mover.Src = item.Name
+			// mover.Dst = dst
+			// mover.Progress = progress
+
+			// glog.Infof("mover: %+v", mover)
+
+			// mover.Copy()
+			// for {
+			// 	select {
+			// 	case msg := <-mover.ProgressCh:
+			// 		glog.Infof("Progress: %+v", msg)
+			// 	case <-mover.DoneCh:
+			// 		return
+			// 	}
+			// }
+		}
+	}
+
+	msg.Reply <- commands
 }

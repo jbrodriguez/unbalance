@@ -5,7 +5,7 @@
 				</div>
 				<div class="right">
 					<a href="#" ng-click="vm.calculateBestFit()" class="button tiny best-fit">Calculate Best Fit</a>
-					<a href="#" ng-click="move()" class="button tiny">Move</a>
+					<a href="#" ng-click="vm.move()" class="button tiny">Move</a>
 				</div>
 			</div>
 
@@ -27,10 +27,10 @@
 				<tbody>
 				<tr data-ng-repeat="disk in vm.disks">
 	                <td>{{disk.id}}.</td>
-	                <td> <input type="checkbox" ng-checked="{{vm.fromDisk[disk.path]}}"/> </td>
+	                <td> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}"/> </td>
 	                <td>{{disk.path|replace:"/mnt/":""}}</td>
 	                <td>{{disk.serial}} ({{disk.device}})</td>
-	                <td> <input type="checkbox" ng-checked="{{vm.toDisk[disk.path]}}"/> </td>
+	                <td> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}"/> </td>
 	                <td>{{disk.size|humanBytes}}</td>
 	                <td>{{disk.free|humanBytes}}</td>
 	                <td>
@@ -39,7 +39,7 @@
 	                    </div>
 	                </td>
 	                <td>
-	                    <span ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+	                    <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
 	                </td>				
 				</tr>
                 <tr>
@@ -53,6 +53,21 @@
                     </td>
                     <td>{{vm.condition.free|humanBytes}}</td>
                 </tr>				
+				</tbody>
+			</table>
+			</div>
+
+			<div class="large-12 column" data-ng-show="vm.commands.length>0">
+			<table>
+				<thead>
+				<tr>
+					<th>COMMANDS</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr data-ng-repeat="cmd in vm.commands">
+					<td>{{cmd.command}}</td>
+				</tr>
 				</tbody>
 			</table>
 			</div>

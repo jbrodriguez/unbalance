@@ -36,6 +36,7 @@ func (self *Server) Start() {
 	{
 		api.GET("/storage", self.getStorageInfo)
 		api.POST("/storage/bestfit", self.calculateBestFit)
+		api.POST("/storage/move", self.move)
 	}
 
 	mlog.Info("started listening on :6237")
@@ -66,5 +67,15 @@ func (self *Server) calculateBestFit(c *gin.Context) {
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+}
+
+func (self *Server) move(c *gin.Context) {
+	msg := &pubsub.Message{Reply: make(chan interface{})}
+	self.bus.Pub(msg, "cmd.move")
+
+	reply := <-msg.Reply
+	resp := reply.([]*dto.Move)
+
 	c.JSON(200, &resp)
 }
