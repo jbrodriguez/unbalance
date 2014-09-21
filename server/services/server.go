@@ -1,6 +1,7 @@
 package services
 
 import (
+	"apertoire.net/unbalance/server/dto"
 	"apertoire.net/unbalance/server/model"
 	"apertoire.net/unbalance/server/static"
 	"github.com/apertoire/mlog"
@@ -34,6 +35,7 @@ func (self *Server) Start() {
 	api := self.engine.Group(apiVersion)
 	{
 		api.GET("/storage", self.getStorageInfo)
+		api.POST("/storage/bestfit", self.calculateBestFit)
 	}
 
 	mlog.Info("started listening on :6237")
@@ -48,6 +50,19 @@ func (self *Server) Stop() {
 func (self *Server) getStorageInfo(c *gin.Context) {
 	msg := &pubsub.Message{Reply: make(chan interface{})}
 	self.bus.Pub(msg, "cmd.getStorageInfo")
+
+	reply := <-msg.Reply
+	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+}
+
+func (self *Server) calculateBestFit(c *gin.Context) {
+	var bestFit dto.BestFit
+
+	c.Bind(&bestFit)
+
+	msg := &pubsub.Message{Payload: &bestFit, Reply: make(chan interface{})}
+	self.bus.Pub(msg, "cmd.calculateBestFit")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)

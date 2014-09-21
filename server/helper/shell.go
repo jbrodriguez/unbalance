@@ -1,4 +1,4 @@
-package lib
+package helper
 
 import (
 	"bufio"

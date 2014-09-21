@@ -13,6 +13,7 @@
 
     	var service = {
             getStatus: getStatus,
+            calculateBestFit: calculateBestFit,
     	};
 
     	return service;
@@ -30,6 +31,20 @@
     			return data.data;
     		}
     	};
+
+        function calculateBestFit(params) {
+            return $http.post(ep + '/storage/bestfit', params)
+                .then(calculateBestFitEnd)
+                .catch(function(message) {
+                    exception.catcher('XHR Failed for calculateBestFit')(message);
+                    $location.url('/');
+                });
+
+            function calculateBestFitEnd(data, status, headers, config) {
+                logger.info('this is what i got: ', data);
+                return data.data;
+            }
+        };        
 
     }
 
