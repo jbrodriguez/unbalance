@@ -34,6 +34,7 @@ func (self *Server) Start() {
 
 	api := self.engine.Group(apiVersion)
 	{
+		api.GET("/config", self.getConfig)
 		api.GET("/storage", self.getStorageInfo)
 		api.POST("/storage/bestfit", self.calculateBestFit)
 		api.POST("/storage/move", self.move)
@@ -46,6 +47,15 @@ func (self *Server) Start() {
 
 func (self *Server) Stop() {
 	mlog.Info("stopped service Server ...")
+}
+
+func (self *Server) getConfig(c *gin.Context) {
+	msg := &pubsub.Message(Reply: make(chan interface{}))
+	self.bus.Pub(msg, "cmd.getConfig")
+
+	reply := <= msg.Reply
+	resp := reply.(*model.Config)
+	c.JSON(200, &resp)
 }
 
 func (self *Server) getStorageInfo(c *gin.Context) {

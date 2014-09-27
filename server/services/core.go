@@ -20,6 +20,7 @@ import (
 type Core struct {
 	bus     *pubsub.PubSub
 	storage *model.Unraid
+	config  *model.Config
 
 	chanStorageInfo      chan *pubsub.Message
 	chanCalculateBestFit chan *pubsub.Message
