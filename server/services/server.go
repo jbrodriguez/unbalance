@@ -1,6 +1,7 @@
 package services
 
 import (
+	"apertoire.net/unbalance/server/dto"
 	"apertoire.net/unbalance/server/model"
 	"apertoire.net/unbalance/server/static"
 	"github.com/apertoire/mlog"
@@ -33,7 +34,10 @@ func (self *Server) Start() {
 
 	api := self.engine.Group(apiVersion)
 	{
+		api.GET("/config", self.getConfig)
 		api.GET("/storage", self.getStorageInfo)
+		api.POST("/storage/bestfit", self.calculateBestFit)
+		api.POST("/storage/move", self.move)
 	}
 
 	mlog.Info("started listening on :6237")
@@ -45,11 +49,43 @@ func (self *Server) Stop() {
 	mlog.Info("stopped service Server ...")
 }
 
+func (self *Server) getConfig(c *gin.Context) {
+	msg := &pubsub.Message(Reply: make(chan interface{}))
+	self.bus.Pub(msg, "cmd.getConfig")
+
+	reply := <= msg.Reply
+	resp := reply.(*model.Config)
+	c.JSON(200, &resp)
+}
+
 func (self *Server) getStorageInfo(c *gin.Context) {
 	msg := &pubsub.Message{Reply: make(chan interface{})}
 	self.bus.Pub(msg, "cmd.getStorageInfo")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+}
+
+func (self *Server) calculateBestFit(c *gin.Context) {
+	var bestFit dto.BestFit
+
+	c.Bind(&bestFit)
+
+	msg := &pubsub.Message{Payload: &bestFit, Reply: make(chan interface{})}
+	self.bus.Pub(msg, "cmd.calculateBestFit")
+
+	reply := <-msg.Reply
+	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+}
+
+func (self *Server) move(c *gin.Context) {
+	msg := &pubsub.Message{Reply: make(chan interface{})}
+	self.bus.Pub(msg, "cmd.move")
+
+	reply := <-msg.Reply
+	resp := reply.([]*dto.Move)
+
 	c.JSON(200, &resp)
 }
