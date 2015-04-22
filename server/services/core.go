@@ -9,7 +9,8 @@ import (
 	"github.com/apertoire/mlog"
 	"github.com/apertoire/pubsub"
 	"io"
-	"os"
+	"io/ioutil"
+	// "os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -142,8 +143,25 @@ func (self *Core) calculateBestFit(msg *pubsub.Message) {
 
 func (self *Core) getFolders(src string, folder string) (items []*model.Item) {
 	srcFolder := filepath.Join(src, folder)
-	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-		mlog.Info("Folder does not exist ", srcFolder)
+
+	// mlog.Info("Folder is: %s", srcFolder)
+	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
+	// mlog.Info("Error: %s", err)
+
+	// if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+	// 	mlog.Info("Folder does not exist ", srcFolder)
+	// 	return nil
+	// }
+
+	dirs, err := ioutil.ReadDir(srcFolder)
+	if err != nil {
+		mlog.Fatalf("Unable to readdir: %s", err)
+	}
+
+	mlog.Info("Dirs: %+v", dirs)
+
+	if len(dirs) == 0 {
+		mlog.Info("No subdirectories under %s", srcFolder)
 		return nil
 	}
 

@@ -50,10 +50,10 @@ func (self *Server) Stop() {
 }
 
 func (self *Server) getConfig(c *gin.Context) {
-	msg := &pubsub.Message(Reply: make(chan interface{}))
+	msg := &pubsub.Message{Reply: make(chan interface{})}
 	self.bus.Pub(msg, "cmd.getConfig")
 
-	reply := <= msg.Reply
+	reply := <-msg.Reply
 	resp := reply.(*model.Config)
 	c.JSON(200, &resp)
 }
