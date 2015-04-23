@@ -9,25 +9,10 @@
 
     /* @ngInject */
     function options(exception, logger) {
-    	var searchTerm = '';
-
-        var filterByOptions = ['title', 'genre'];
-        var filterBy = '';
-
-        var sortByOptions = ['title', 'runtime', 'added', 'last_watched'];
-        var sortBy = '';
-
-        var sortOrderOptions = ['asc', 'desc'];
-        var sortOrder = '';
+        var config = {};
 
     	var service = {
-            searchTerm: searchTerm,
-            filterByOptions: filterByOptions,
-            filterBy: filterBy,
-            sortByOptions: sortByOptions,
-            sortBy: sortBy,
-            sortOrderOptions: sortOrderOptions,
-            sortOrder: sortOrder
+            config: config
     	};
 
     	return service;

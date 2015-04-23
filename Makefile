@@ -11,7 +11,7 @@ clean:
 
 install: clean buildx
 	cp -r client/* dist
-	scp -pr ./dist/* hal:/boot/custom/unbalance
+	scp -pr ./dist/* wopr:/boot/custom/unbalance
 
 run: clean build
 	cp -r client/ dist

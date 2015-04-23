@@ -6,7 +6,7 @@
         .controller('Home', Home)
 
     /* @ngInject */
-    function Home($state, $scope, $rootScope, options, api) {
+    function Home($state, $scope, $rootScope, options, api, logger) {
 
         /*jshint validthis: true */
         var vm = this;
@@ -23,9 +23,11 @@
 
         function getConfig() {
             return api.getConfig().then(function(data) {
-                vm.options.config = data;
+                options.config = data;
 
-                if (vm.options.config.mediaPath === []) {
+                console.log('opts: ' + options.config.folders);
+
+                if (options.config.folders.length === 0) {
                     $state.go('settings');
                 } else {
                     $state.go('dashboard');

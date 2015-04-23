@@ -144,3 +144,8 @@ input.watched {
     height: 12.2em;
     overflow: hidden;	
 }
+
+.alert {
+	margin-top: 20px;
+	color: red;
+}

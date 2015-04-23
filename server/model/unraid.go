@@ -2,7 +2,7 @@ package model
 
 import (
 	"apertoire.net/unbalance/server/helper"
-	"github.com/apertoire/mlog"
+	"github.com/jbrodriguez/mlog"
 	"strconv"
 	"strings"
 	"time"

@@ -3,7 +3,7 @@ package lib
 import (
 	"apertoire.net/unbalance/server/model"
 	"fmt"
-	"github.com/apertoire/mlog"
+	"github.com/jbrodriguez/mlog"
 	"sort"
 )
 
@@ -21,11 +21,11 @@ type Knapsack struct {
 	buffer uint64
 }
 
-func NewKnapsack(disk *model.Disk, items []*model.Item) *Knapsack {
+func NewKnapsack(disk *model.Disk, items []*model.Item, reserved uint64) *Knapsack {
 	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
-	p.buffer = 250000000
+	p.buffer = reserved
 	return p
 }
 
