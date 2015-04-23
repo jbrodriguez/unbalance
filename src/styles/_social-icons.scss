@@ -1,0 +1,32 @@
+.icon {
+//	margin-right: 5px;
+	height: 20px;
+	width: 20px;
+	display: inline-block;
+//	fill: #fff;
+	fill: currentColor;
+}
+
+.icon-facebook {
+	background-color: $backgroundFacebook;
+}
+
+.icon-twitter {
+	background-color: $backgroundTwitter;
+}
+
+.icon-google-plus {
+	background-color: $backgroundPlus;
+}
+
+.icon-linkedin {
+	background-color: $backgroundLinkedin;
+}
+
+.icon-github {
+	background-color: $backgroundGithub;	
+}
+
+.icon-rss {
+	background-color: $backgroundRss;
+}

@@ -17,5 +17,9 @@ run: clean build
 	cp -r client/ dist
 	cd dist && ./unbalance
 
+dev: clean build
+	cp -r client/* dist
+	cd dist && http-server
+
 vet:
 	go vet ./server/...

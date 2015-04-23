@@ -1,0 +1,22 @@
+.social-bottom {
+	padding: 1em 0;
+	margin-bottom: 1em;
+
+	border-top: 1px solid $borderColor;
+	border-bottom: 1px solid $borderColor;
+
+	@include flexbox(flex, row, flex-start, stretch);
+
+	a {
+		@include flexbox(flex, row, center, center);
+		
+		color: white;
+		font-size: 0.9em;
+		padding: 5px 1em;
+		margin-right: 5px;
+	}
+
+	.icon {
+		margin-right: 5px;
+	}
+}

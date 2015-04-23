@@ -1,100 +1,68 @@
-<!DOCTYPE HTML>
-<html data-ng-app="app">
+<!doctype html>
+<html class="no-js" lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+        <title>unBalance - unRaid tool</title>
+ 
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <!-- Place favicon.ico in the root directory -->
 
-	<base href="/">
+        <base href="/">
+        
+        <link rel="stylesheet" href="css/styles.css" />
+        <link rel="canonical" href="http://localhost/" />
+ 
+        <meta name="description" content="Unbalance - a tool to create as much space possible on a given unRaid disk, by moving files to other disks">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <header>
+            <section>
+                <ul>
+                    <li><a href="/" class="logo"><img src="/img/unbalance-logo.png" alt="unBalance logo" /></a></li>
+                </ul>
+                <ul>
+                    <li><a ui-sref="settings">Settings</a></li>
+                    <li><a href="https://twitter.com/jbrodriguezio" class="social icon-twitter"><svg class="icon"><title>Twitter follow</title><use xlink:href="/img/icons.svg#icon-twitter"></use></svg></a></li>
+                    <li><a href="https://github.com/jbrodriguez" class="social icon-github"><svg class="icon"><title>Github star</title><use xlink:href="/img/icons.svg#icon-github"></use></svg></a></li>
+                </ul>
+            </section>
+        </header>
 
-	<title>unBalance</title>
+        <div class="wrapper">
+            <div class="container">
 
-	<link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css' />
-	<link href='http://fonts.googleapis.com/css?family=Amaranth' rel='stylesheet' type='text/css' />
-	<link rel='stylesheet' href='css/normalize.css' />
-	<link rel='stylesheet' href='css/foundation.css' />
-	<link rel='stylesheet' href='css/unbalance.css' />
-	<link href='//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css' rel='stylesheet' type='text/css' />
-	<link href='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css' rel='stylesheet' type='text/css' />
-	
+                <div class="main">
+                    <section class="content">
+                        <article class="home">
+                            <section class="image">
+                                <img src="http://placehold.it/400x250.gif" alt="Article 1">
+                            </section>
+                            <section class="titles">
+                                <h2>
+                                <a href="/article1">Article 1</a>
+                                </h2>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut posuere risus ultricies felis congue dictum. Fusce ac volutpat tortor, sodales mollis elit</p>
+                            </section>
+                        </article>
+                    </section>
 
-	<script src="js/vendor/modernizr.js"></script>
-</head>
-
-<body>
-	<header class="sticky" data-ng-controller="Home as home">
-		<nav class="top-bar container row">
-			<ul class="title-area">
-				<li class="name">
-					<h1><a ui-sref="home"  ui-sref-active="active">unBalance</a></h1>
-				</li>
-			</ul>
-
-			<section class="top-bar-section">
-				<ul class="left">
-					<li><a ui-sref="import" ui-sref-active="active">Import</a></li>
-					<li><a ui-sref="all" ui-sref-active="active">All</a></li>
-				</ul>
-
-				<ul class="right">
-					<li><a ui-sref="settings" ui-sref-active="active">Settings</a></li>
-				</ul>
-			</section>
-		</nav>
-	</header>
-
-	<main ui-view></main>
-
-	<footer>
-		<section class="container row">
-			<div class="large-12 column">
-				<small>&copy; 2015 Juan B. Rodriguez</small>
-			</div>
-		</section>
-	</footer>
-
-    <!-- inject-vendor:js -->
-	<script src="http://code.jquery.com/jquery.min.js"></script>
-	<script src="https://code.angularjs.org/1.3.15/angular.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.13/angular-ui-router.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.js"></script>
-    <!-- endinject -->
-
-
-    <!-- inject:js -->
-    <!-- Bootstrapping -->
-	<script type="text/javascript" src="app/app.module.js"></script>
-	<script type="text/javascript" src="app/replace.filter.js"></script>
-	<script type="text/javascript" src="app/humanbytes.filter.js"></script>
-	<script type="text/javascript" src="app/percentage.filter.js"></script>
-	<script type="text/javascript" src="app/home.js"></script>
-
-
-    <!-- Reusable Blocks/Modules -->
-    <script src="app/blocks/exception/exception.module.js"></script>
-    <script src="app/blocks/exception/exception-handler.js"></script>
-    <script src="app/blocks/exception/exception.js"></script>
-    <script src="app/blocks/logger/logger.module.js"></script>
-    <script src="app/blocks/logger/logger.js"></script>
-    <script src="app/blocks/storage/storage.module.js"></script>
-    <script src="app/blocks/storage/storage.js"></script>
-
-    <!-- core module -->
-    <script src="app/core/core.module.js"></script>
-    <script src="app/core/constants.js"></script>
-    <script src="app/core/options.js"></script>
-    <script src="app/core/config.js"></script>
-    <script src="app/core/api.js"></script>
-
-    <!-- dashboard -->
-    <script src="app/dashboard/dashboard.module.js"></script>
-    <script src="app/dashboard/config.route.js"></script>
-    <script src="app/dashboard/dashboard.js"></script>
-
-    <!-- settings -->
-    <script src="app/settings/settings.module.js"></script>
-    <script src="app/settings/config.route.js"></script>
-    <script src="app/settings/settings.js"></script>    
-</body>
-
+                </div>
+            </div>
+        </div>
+ 
+        <footer>
+            <section>
+                <span>Copyright &copy; 2015 &nbsp; <a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a></span>
+                <span>
+                    <a href="/privacy">Settings</a>
+                </span>
+                <span><a href="/" class="logo"><img src="/img/logo-small.png" alt="{{ .Site.Params.author }}" /></a></span>
+            </section>
+        </footer>
+ 
+    </body>
 </html>

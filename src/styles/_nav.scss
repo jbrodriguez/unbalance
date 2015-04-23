@@ -1,0 +1,32 @@
+nav {
+	border-top: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+	margin-bottom: 1em;
+
+	@include flexbox(flex, row, space-between);
+
+    ul {
+        @include flexbox(flex, row, center, center);
+
+        margin: 0;
+        padding: 0;
+    }
+}
+ 
+nav ul li {
+    list-style: none;
+    flex-grow: 1;
+    text-align: center;
+    padding: 5px;
+}
+
+nav ul li a {
+    @include flexbox(flex, row, center, center);
+
+    padding: 0.3em;
+    border-radius: 15px;
+
+    &.social {
+        color: #fff;
+    }
+}

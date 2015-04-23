@@ -1,0 +1,45 @@
+footer {
+	color: $footerColor;
+	background-color: $footerBackground;
+
+	font-size: 0.75em;
+	font-weight: 700;
+
+	width: 100%;
+
+	@include flexbox();
+
+	a, img, span {
+		display: flex;
+	}
+
+	a {
+		color: $headerBackground;
+	}
+
+	section {
+		@include flexbox(flex, row, space-between, center);
+
+		width: 100%;
+		max-width: $maxWidth;
+
+		padding: 1em;
+
+		span {
+			flex-grow: 1;
+			@include flexbox(flex, row, center, center);
+		}
+
+		span:first-of-type {
+			justify-content: flex-start;
+		}
+
+		span:last-of-type {
+			justify-content: flex-end;
+		}
+	}	
+}
+
+
+
+
