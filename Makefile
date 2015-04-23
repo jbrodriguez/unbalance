@@ -10,7 +10,7 @@ clean:
 	rm -rf ./dist
 
 install: clean buildx
-	cp -r client/ dist
+	cp -r client/* dist
 	scp -pr ./dist/* hal:/boot/custom/unbalance
 
 run: clean build

@@ -24,6 +24,8 @@
         vm.getStatus = getStatus;
         vm.calculateBestFit = calculateBestFit;
         vm.move = move;
+        vm.checkFrom = checkFrom;
+        vm.checkTo = checkTo;
 
         activate();
 
@@ -75,6 +77,8 @@
                 }
             }
 
+            console.log("src: " + srcDisk);
+
             if (srcDisk === "") {
                 alert("I won't take that !");
                 return;
@@ -83,25 +87,26 @@
             return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": ""}).then(function(data) {
                 vm.condition = data.condition;
 
-                vm.maxFreeSize = 0;
-                vm.maxFreePath = 0;                
+                // vm.maxFreeSize = 0;
+                // vm.maxFreePath = 0;                
 
-                vm.disks = data.disks.map(function(disk) {
-                    vm.toDisk[disk.path] = true;
-                    vm.fromDisk[disk.path] = false;
+                // vm.disks = data.disks.map(function(disk) {
+                //     vm.toDisk[disk.path] = true;
+                //     vm.fromDisk[disk.path] = false;
 
-                    if (disk.free > vm.maxFreeSize) {
-                        vm.maxFreeSize = disk.free;
-                        vm.maxFreePath = disk.path;
-                    }
+                //     if (disk.free > vm.maxFreeSize) {
+                //         vm.maxFreeSize = disk.free;
+                //         vm.maxFreePath = disk.path;
+                //     }
 
-                    return disk;
-                });
+                //     return disk;
+                // });
 
-                if (vm.maxFreePath != "") {
-                    vm.toDisk[vm.maxFreePath] = false;
-                    vm.fromDisk[vm.maxFreePath] = true;
-                }                
+                // // if (vm.maxFreePath != "") {
+                // //     vm.toDisk[vm.maxFreePath] = false;
+                // //     vm.fromDisk[vm.maxFreePath] = true;
+                // // }
+                vm.disks = data.disks;
 
                 return vm.disks;                
             });
@@ -114,5 +119,24 @@
                 return vm.commands;
             });
         };
+
+        function checkFrom(from) {
+            console.log("something changed: " + from);
+            for (var key in vm.fromDisk) {
+                if (key !== from) {
+                    vm.fromDisk[key] = false;
+                }
+            };
+
+            for (var key in vm.toDisk) {
+                vm.toDisk[key] = !(key === from);
+            };            
+
+//            vm.toDisk[from] = false;
+        };
+
+        function checkTo(to) {
+            return;
+        }
     }
 })();

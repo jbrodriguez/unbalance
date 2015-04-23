@@ -6,7 +6,7 @@
         .controller('Home', Home)
 
     /* @ngInject */
-    function Home($state, $scope, $rootScope, options) {
+    function Home($state, $scope, $rootScope, options, api) {
 
         /*jshint validthis: true */
         var vm = this;
