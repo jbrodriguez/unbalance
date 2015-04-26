@@ -1,74 +1,45 @@
-		<article class="container row">
-			<div class="large-12 column overview">
-				<div class="left">
-					<h4>{{vm.condition.state}}</h4>
-				</div>
-				<div class="right">
-					<a href="#" ng-click="vm.calculateBestFit()" class="button tiny best-fit">Calculate Best Fit</a>
-					<a href="#" ng-click="vm.move()" class="button tiny">Move</a>
-				</div>
-			</div>
-
-			<div class="large-12 column">
-			<table>
-				<thead>
+		<section class="column">
+			<table class="dashboard">
+			<thead>
 				<tr>
-	                <th width="10">#</th>
-	                <th width="70">FROM </th>
-	                <th width="65">DISK</th>
-	                <th width="400">SERIAL</th>
-	                <th width="50">TO <input type="checkbox" /></th>
-	                <th width="90">SIZE</th>
-	                <th width="90">FREE</th>
-	                <th>FILL</th>
-	                <th width="85">PLAN</th>
+			        <th>DISK</th>
+			        <th>SERIAL</th>
+			        <th>FROM </th>
+			        <th>TO</th>
+			        <th>SIZE</th>
+			        <th>FREE</th>
+			        <th>FILL</th>
+			        <th>PLAN</th>
 				</tr>
-				</thead>
-				<tbody>
+			</thead>
+			<tbody>
 				<tr data-ng-repeat="disk in vm.disks">
-	                <td>{{disk.id}}.</td>
-	                <td> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
-	                <td>{{disk.path|replace:"/mnt/":""}}</td>
-	                <td>{{disk.serial}} ({{disk.device}})</td>
-	                <td> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
-	                <td>{{disk.size|humanBytes}}</td>
-	                <td>{{disk.free|humanBytes}}</td>
-	                <td>
-	                    <div class="progress">
-	                        <span class="meter" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></span>
-	                    </div>
-	                </td>
-	                <td>
-	                    <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
-	                </td>				
+			        <td>{{disk.path|replace:"/mnt/":""}}</td>
+			        <td>{{disk.serial}} ({{disk.device}})</td>
+			        <td><input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td><input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td>{{disk.size|humanBytes}}</td>
+			        <td>{{disk.free|humanBytes}}</td>
+			        <td>
+			            <div class="progress">
+			                <span style="width: {{ ((disk.size - disk.free) / disk.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td>
+			            <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+			        </td>				
 				</tr>
                 <tr>
-                    <td colspan="5">TOTAL</td>
+                    <td colspan="4">TOTAL</td>
                     <td>{{vm.condition.size|humanBytes}}</td>
                     <td>{{vm.condition.free|humanBytes}}</td>
                     <td>
-                        <div class="progress success">
-                            <span class="meter" style="width: {{ ((vm.condition.size-vm.condition.free) / vm.condition.size ) | percentage}}"></span>
+                        <div class="progress">
+                            <span style="width: {{ ((vm.condition.size-vm.condition.free) / vm.condition.size ) | percentage}}"></span>
                         </div>
                     </td>
                     <td>{{vm.condition.free|humanBytes}}</td>
-                </tr>				
-				</tbody>
+                </tr>
+			</tbody>
 			</table>
-			</div>
-
-			<div class="large-12 column" data-ng-show="vm.commands.length>0">
-			<table>
-				<thead>
-				<tr>
-					<th>COMMANDS</th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr data-ng-repeat="cmd in vm.commands">
-					<td>{{cmd.command}}</td>
-				</tr>
-				</tbody>
-			</table>
-			</div>
-		</article>	
+		</section>
