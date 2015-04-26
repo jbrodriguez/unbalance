@@ -1,68 +1,305 @@
 <!doctype html>
-<html class="no-js" lang="en-us">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
 
- 
-        <title>unBalance - unRaid tool</title>
- 
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <!-- Place favicon.ico in the root directory -->
+	<title>unBALANCE - unRAID plugin</title>
 
-        <base href="/">
-        
-        <link rel="stylesheet" href="css/styles.css" />
-        <link rel="canonical" href="http://localhost/" />
- 
-        <meta name="description" content="Unbalance - a tool to create as much space possible on a given unRaid disk, by moving files to other disks">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
-    <body>
-        <header>
-            <section>
-                <ul>
-                    <li><a href="/" class="logo"><img src="/img/unbalance-logo.png" alt="unBalance logo" /></a></li>
-                </ul>
-                <ul>
-                    <li><a ui-sref="settings">Settings</a></li>
-                    <li><a href="https://twitter.com/jbrodriguezio" class="social icon-twitter"><svg class="icon"><title>Twitter follow</title><use xlink:href="/img/icons.svg#icon-twitter"></use></svg></a></li>
-                    <li><a href="https://github.com/jbrodriguez" class="social icon-github"><svg class="icon"><title>Github star</title><use xlink:href="/img/icons.svg#icon-github"></use></svg></a></li>
-                </ul>
-            </section>
-        </header>
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+	<!-- Place favicon.ico in the root directory -->
 
-        <div class="wrapper">
-            <div class="container">
+	<base href="/">
 
-                <div class="main">
-                    <section class="content">
-                        <article class="home">
-                            <section class="image">
-                                <img src="http://placehold.it/400x250.gif" alt="Article 1">
-                            </section>
-                            <section class="titles">
-                                <h2>
-                                <a href="/article1">Article 1</a>
-                                </h2>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut posuere risus ultricies felis congue dictum. Fusce ac volutpat tortor, sodales mollis elit</p>
-                            </section>
-                        </article>
-                    </section>
+	<link rel="stylesheet" href="css/styles.css">
 
-                </div>
-            </div>
-        </div>
- 
-        <footer>
-            <section>
-                <span>Copyright &copy; 2015 &nbsp; <a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a></span>
-                <span>
-                    <a href="/privacy">Settings</a>
-                </span>
-                <span><a href="/" class="logo"><img src="/img/logo-small.png" alt="{{ .Site.Params.author }}" /></a></span>
-            </section>
-        </footer>
- 
-    </body>
+	<meta name="description" content="Unbalance - a tool to create as much space possible on a given unRaid disk, by moving files to other disks">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+	<header>
+		<nav class="column">
+			<ul class="header-logo">
+				<li><a href="/" class="logo"><img src="/img/unbalance-logo.png" alt="unBALANCE logo" /></a></li>
+			</ul>
+			<ul class="header-menu">
+				<li><a href="#" class="btn btn-default">CALCULATE</a></li>
+				<li>&nbsp;</li>
+				<li><a ui-sref="move" class="btn btn-default">MOVE</a></li>
+				<li>&nbsp; | &nbsp;</li>
+				<li><a ui-sref="settings" class="btn btn-default">SETTINGS</a></li>
+			</ul>
+			<ul>
+                <li><a href="https://twitter.com/jbrodriguezio"><svg class="icon"><title>Twitter follow</title><use xlink:href="/img/icons.svg#icon-twitter"></use></svg></a></li>
+                <li>&nbsp;</li>
+                <li><a href="https://github.com/jbrodriguez"><svg class="icon"><title>Github star</title><use xlink:href="/img/icons.svg#icon-github"></use></svg></a></li>
+			</ul>
+		</nav>
+	</header>
+
+	<main>
+		<section class="column">
+			<table class="nextg">
+			<thead>
+				<tr>
+			        <th>DISK</th>
+			        <th>SERIAL</th>
+			        <th>FROM </th>
+			        <th>TO</th>
+			        <th>SIZE</th>
+			        <th>FREE</th>
+			        <th>FILL</th>
+			        <th>PLAN</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+			        <td>disk1</td>
+			        <td>WDM024323029_2342 (sdj)</td>
+			        <td> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td>4TB</td>
+			        <td>4TB</td>
+			        <td>
+			        	<div class="progress">
+			                <span style="width: 40%"></span>
+			            </div>
+			        </td>
+			        <td>
+			            <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">3.76TB</span>
+			        </td>					
+				</tr>
+
+				<tr data-ng-repeat="disk in vm.disks">
+			        <td>disk1</td>
+			        <td>WDM024323029_2342 (sdj)</td>
+			        <td> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td>4TB</td>
+			        <td>4TB</td>
+			        <td>
+			            <div class="progress">
+			                <span class="meter" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td>
+			            <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">3.86TB</span>
+			        </td>				
+				</tr>						
+			</tbody>
+			</table>
+
+
+			<table id="miyazaki">
+				<caption>The Films of Hayao Miyazaki</caption>
+				<thead>
+					<tr>
+						<th>Film</th>
+						<th>Year</th>
+						<th>Honor</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>My Neighbor Totoro
+						<td>1988
+						<td>Blue Ribbon Award (Special)
+						<tr>
+						<td>Princess Mononoke
+						<td>1997
+						<td>Nebula Award (Best Script)
+					</tr>
+					<tr>
+						<td>Spirited Away
+						<td>2001
+						<td>Academy Award (Best Animated Feature)
+						<tr>
+						<td>Howl’s Moving Castle
+						<td>2004
+						<td>Hollywood Film Festival (Animation OTY)
+					</tr>
+				</tbody>
+			</table>
+
+
+		  <table class="responsive-table">
+		    <caption>Top 10 Grossing Animated Films of All Time</caption>
+		    <thead>
+		      <tr>
+		        <th scope="col">Film Title</th>
+		        <th scope="col">Released</th>
+		        <th scope="col">Studio</th>
+		        <th scope="col">Worldwide Gross</th>
+		        <th scope="col">Domestic Gross</th>
+		        <th scope="col">Foreign Gross</th>
+		        <th scope="col">Budget</th>
+		      </tr>
+		    </thead>
+		    <tfoot>
+		      <tr>
+		        <td colspan="7">Sources: <a href="http://en.wikipedia.org/wiki/List_of_highest-grossing_animated_films" rel="external">Wikipedia</a> &amp; <a href="http://www.boxofficemojo.com/genres/chart/?id=animation.htm" rel="external">Box Office Mojo</a>. Data is current as of June 2, 2014</td>
+		      </tr>
+		    </tfoot>
+		    <tbody>
+		      <tr>
+		        <th scope="row">Frozen</th>
+		        <td data-title="Released">2013</td>
+		        <td data-title="Studio">Disney</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$1,232,617,000</td>
+		        <td data-title="Domestic Gross" data-type="currency">$400,617,000</td>
+		        <td data-title="Foreign Gross" data-type="currency">$832,000,000</td>
+		        <td data-title="Budget" data-type="currency">$150,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Toy Story 3</th>
+		        <td data-title="Released">2010</td>
+		        <td data-title="Studio">Disney Pixar</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$1,063,171,911</td>
+		        <td data-title="Domestic Gross" data-type="currency">$415,004,880</td>
+		        <td data-title="Foreign Gross" data-type="currency">$648,167,031</td>
+		        <td data-title="Budget" data-type="currency">$200,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">The Lion King</th>
+		        <td data-title="Released">1994</td>
+		        <td data-title="Studio">Disney</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$987,483,777</td>
+		        <td data-title="Domestic Gross" data-type="currency">$422,783,777</td>
+		        <td data-title="Foreign Gross" data-type="currency">$564,700,000</td>
+		        <td data-title="Budget" data-type="currency">$45,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Despicable Me 2</th>
+		        <td data-title="Released">2013</td>
+		        <td data-title="Studio">Universal</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$970,761,885</td>
+		        <td data-title="Domestic Gross" data-type="currency">$368,061,265</td>
+		        <td data-title="Foreign Gross" data-type="currency">$602,700,620</td>
+		        <td data-title="Budget" data-type="currency">$76,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Finding Nemo</th>
+		        <td data-title="Released">2003</td>
+		        <td data-title="Studio">Pixar</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$936,743,261</td>
+		        <td data-title="Domestic Gross" data-type="currency">$380,843,261</td>
+		        <td data-title="Foreign Gross" data-type="currency">$555,900,000</td>
+		        <td data-title="Budget" data-type="currency">$94,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Shrek 2</th>
+		        <td data-title="Released">2004</td>
+		        <td data-title="Studio">Dreamworks</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$919,838,758</td>
+		        <td data-title="Domestic Gross" data-type="currency">$441,226,247</td>
+		        <td data-title="Foreign Gross" data-type="currency">$478,612,511</td>
+		        <td data-title="Budget" data-type="currency">$150,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Ice Age: Dawn of the Dinosaurs</th>
+		        <td data-title="Released">2009</td>
+		        <td data-title="Studio">Fox</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$886,686,817</td>
+		        <td data-title="Domestic Gross" data-type="currency">$196,573,705</td>
+		        <td data-title="Foreign Gross" data-type="currency">$690,113,112	</td>
+		        <td data-title="Budget" data-type="currency">$90,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Ice Age: Continental Drift</th>
+		        <td data-title="Released">2012</td>
+		        <td data-title="Studio">Fox</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$877,244,782</td>
+		        <td data-title="Domestic Gross" data-type="currency">$161,321,843</td>
+		        <td data-title="Foreign Gross" data-type="currency">$715,922,939</td>
+		        <td data-title="Budget" data-type="currency">$95,000,000</td>   
+		      </tr>
+		      <tr>
+		        <th scope="row">Shrek the Third</th>
+		        <td data-title="Released">2007</td>
+		        <td data-title="Studio">Dreamworks</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$798,958,162</td>
+		        <td data-title="Domestic Gross" data-type="currency">$322,719,944</td>
+		        <td data-title="Foreign Gross" data-type="currency">$476,238,218</td>
+		        <td data-title="Budget" data-type="currency">$160,000,000</td>
+		      </tr>
+		      <tr>
+		        <th scope="row">Shrek Forever After</th>
+		        <td data-title="Released">2010</td>
+		        <td data-title="Studio">Dreamworks</td>
+		        <td data-title="Worldwide Gross" data-type="currency">$752,600,867</td>
+		        <td data-title="Domestic Gross" data-type="currency">$238,736,787</td>
+		        <td data-title="Foreign Gross" data-type="currency">$513,864,080	</td>
+		        <td data-title="Budget" data-type="currency">$165,000,000</td>
+		      </tr>
+		    </tbody>
+		  </table>		
+
+			<table class="dashboard">
+				<tr>
+			        <th>DISK</th>
+			        <th>SERIAL</th>
+			        <th>FROM </th>
+			        <th>TO</th>
+			        <th>SIZE</th>
+			        <th>FREE</th>
+			        <th>FILL</th>
+			        <th>PLAN</th>
+				</tr>
+<!-- 				<tr data-ng-repeat="disk in vm.disks">
+			        <td data-th="DISK">{{disk.path|replace:"/mnt/":""}}</td>
+			        <td data-th="SERIAL">{{disk.serial}} ({{disk.device}})</td>
+			        <td data-th="FROM"> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td data-th="TO"> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td data-th="SIZE">{{disk.size|humanBytes}}</td>
+			        <td data-th="FREE">{{disk.free|humanBytes}}</td>
+			        <td data-th="FILL">
+			            <div class="progress">
+			                <span class="meter" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td data-th="PLAN">
+			            <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+			        </td>				
+				</tr> -->
+				<tr data-ng-repeat="disk in vm.disks">
+			        <td data-th="DISK">disk1</td>
+			        <td data-th="SERIAL">WDM024323029_2342 (sdj)</td>
+			        <td data-th="FROM"> <input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td data-th="TO"> <input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td data-th="SIZE">4TB</td>
+			        <td data-th="FREE">4TB</td>
+			        <td data-th="FILL">
+			            <div class="progress">
+			                <span class="meter" style="width: {{ ((disk.size -disk.free) / disk.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td data-th="PLAN">
+			            <span data-ng-class="{label: disk.newFree !== disk.free, success: disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+			        </td>				
+				</tr>
+<!-- 			    <tr>
+			        <td colspan="5">TOTAL</td>
+			        <td>{{vm.condition.size|humanBytes}}</td>
+			        <td>{{vm.condition.free|humanBytes}}</td>
+			        <td>
+			            <div class="progress success">
+			                <span class="meter" style="width: {{ ((vm.condition.size-vm.condition.free) / vm.condition.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td>{{vm.condition.free|humanBytes}}</td>
+			    </tr>		 -->		
+			</table>
+		</section>
+	</main>
+
+	<footer>
+	    <section class="legal column">
+	        <span class="copyright">Copyright &copy; 2015 &nbsp; <a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a></span>
+	        <span class="logo"><a href="/" class="logo"><img src="/img/logo-small.png" alt="{{ .Site.Params.author }}" /></a></span>
+	    </section>	
+	</footer>
+
+</body>
+
 </html>

@@ -1,18 +1,16 @@
 body {
 	font: 100%/1.625em 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
 	color: $primaryColor;
-	
-	@include flexbox(flex, column, center, stretch);
-/*	display: flex;
+
+	display: flex;
 	flex-direction: column;
-*/
-	min-height: 100vh;	
+
+	min-height: 100vh;
 }
 
 h1,
 h2,
 h3 {
-//	font-family: "Montserrat";
 	font-family: Lato;
 	color: $primaryHeadersColor;
 	font-weight: bold;
@@ -40,29 +38,8 @@ ol {
 	margin-bottom: 1.5em;
 }
 
-code {
-	font-size: 1.25em;
-}
-
-strong {
-	color: $strongColor;
-	background-color: $strongBackground;
-
-	font-size: 0.9em;
-	font-weight: bold;
-	font-style: normal;
-
-	padding: 0.15em 0.5em;
-}
-
-em {
-	font-weight: bold;
-	font-style: normal;
-}
-
 a {
-  text-decoration: none;
-  color: $primaryAnchorColor;
+	color: $primaryAnchorColor;
 }
 
 ul {

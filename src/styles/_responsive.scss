@@ -1,137 +1,35 @@
-@media screen and (min-width: 350px) {
-	.container {
-		padding: 1em;
-		padding-bottom: 0;
-	}
-
-	header .adtop {
-		width: 320px;
-		height: 100px;
-	}	
-}
-
 @media screen and (min-width: 600px) {
-	.main .home {
-		@include flexbox(flex, row, flex-start, stretch);
+	nav, .legal {
+		flex-direction: row;
+		justify-content: space-between;
+	}
 
-		.cover {
-			width: $homeCoverWidth;
-			margin-right: 1.5em;
-//			flex: 1
+	.copyright {
+		margin: 0;
+	}
+
+	.header-logo, 
+	.header-menu {
+		margin: 0;
+	}
+
+	.dashboard {
+		td:before {
+			display: none;
 		}
 
-		.entry {
-			width: $homeEntryWidth;
-			flex: 1;
-		}
-	}
-
-	.social-bottom i {
-		margin-right: 5px;
-	}
-	
-}
-
-@media screen and (min-width: 776px) {
-	header .adtop {
-		width: 728px;
-		height: 90px;
-	}
-
-	.main .adbottom {
-		width: 728px;
-		height: 90px;
-
-		margin: 0 auto 1em auto;
-	}
-
-	.flow {
-		tr {
-			display: table-row;
-		}
-
-		td {
-			display: table-cell;
-
-			&:before {
-				display: none;
-			}
-		}
-
-		.task:before {
-			content: "&laquo;";
-			margin-right: 0.25em;
-		}
-
-
-	}
-
-
-}
-
-@media screen and (min-width: 900px) {
-	footer section {
-		@include flexbox(flex, row, space-between, center);
-
-		width: 100%;
-		max-width: $maxWidth;
-	}
-
-	footer section span {
-		flex-grow: 1;
-		text-align: center;
-	}
-
-	footer section span:first-of-type {
-		text-align: left;
-	}
-
-	footer section span:last-of-type {
-		text-align: right;
-	}
-
-	.main {
-		@include flexbox(flex, row, flex-start, stretch);
-
-		.content {
-			width: $contentWidth;
-			padding-right: 1.5em;
-		}
-
-		aside {
-			width: $asideWidth;
-			flex: 1;
-
-			.adnav {
-				width: 160px;
-				height: 600px;
-			}
-
-			.newsletter form {
-				margin: 0;
-			}
-		}
-	}
-}
-
-@media screen and (min-width: 1040px) {
-	header {
-		@include flexbox(flex, row, space-between, center);
-
-		a {
-			margin: 0;
+		th, td {
+		  display: table-cell;
+		  padding: .25em .5em;
+		  
+		  &:first-child {
+		    padding-left: 0;
+		  }
+		  
+		  &:last-child {
+		    padding-right: 0;
+		  }
 		}
 	}
 
-	.main .adbottom {
-		width: 728px;
-		height: 90px;
-	}
-}
-
-@media screen and (min-width: 1250px) {
-	.main aside .adnav {
-		width: 300px;
-		height: 600px;
-	}
 }

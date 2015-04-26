@@ -2,44 +2,23 @@ footer {
 	color: $footerColor;
 	background-color: $footerBackground;
 
-	font-size: 0.75em;
-	font-weight: 700;
+	font-size: 0.75em;	
 
-	width: 100%;
+	@include flexbox(flex, row, center, stretch);
+}
 
-	@include flexbox();
+.legal {
+	@include flexbox(flex, column, center, center);
 
-	a, img, span {
+	a, span {
 		display: flex;
 	}
 
 	a {
 		color: $headerBackground;
 	}
-
-	section {
-		@include flexbox(flex, row, space-between, center);
-
-		width: 100%;
-		max-width: $maxWidth;
-
-		padding: 1em;
-
-		span {
-			flex-grow: 1;
-			@include flexbox(flex, row, center, center);
-		}
-
-		span:first-of-type {
-			justify-content: flex-start;
-		}
-
-		span:last-of-type {
-			justify-content: flex-end;
-		}
-	}	
 }
 
-
-
-
+.copyright {
+	@extend %spacer;
+}	

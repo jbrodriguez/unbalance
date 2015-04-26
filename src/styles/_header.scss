@@ -2,53 +2,30 @@ header {
 	color: $headerColor;
 	background-color: $headerBackground;
 
-	width: 100%;
-	@include flexbox();	
+	@include flexbox(flex, row, center, stretch);
+}
 
-	section {
-		width: 100%;
-		max-width: $maxWidth;
-		padding: 0.5em;
-
-		@include flexbox(flex, row, space-between);	
-	}
+nav {
+	@include flexbox(flex, column, center, stretch);
 
 	ul {
         @include flexbox(flex, row, center, center);
 
         margin: 0;
-//        padding: 0;
 
-        li {
-		    list-style: none;
-		    flex-grow: 1;
-		    text-align: center;
+		li {
+			list-style: none;
 
-		    a {
-		    	display: flex;
-		    }
-        }
+			a {
+				display: flex;
+			}
+		}
 	}
 }
 
-
-
-/*
-header {
-	@include flexbox(flex, column, stretch, center);
-	margin-bottom: 1em;
-
-	a {
-		display: flex;
-		margin-bottom: 1em;
-	}
-
-	.adtop {
-		flex: 1;
-		width: 300px;
-		height: 250px;
-		margin-right: auto;
-		margin-left: auto;
-	}
+.header-logo, 
+.header-menu {
+	@extend %spacer;
 }
-*/
+
+@import 'social-follow';

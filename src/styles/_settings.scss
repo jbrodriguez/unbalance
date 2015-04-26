@@ -1,0 +1,43 @@
+// Fonts
+@import url(http://fonts.googleapis.com/css?family=Lato);
+
+// Dimensions
+$maxWidth: 1250px;
+$pad: 1em;
+
+$padding-button-vertical: 0.5em;
+$padding-button-horizontal: 0.75em;
+
+$breakpoint-1: 480px;
+$breakpoint-2: 600px;
+
+// Colors
+//$primaryColor: #555;
+$primaryColor: #666;
+//$primaryAnchorColor: #415571;
+$primaryAnchorColor: #333;
+$primaryHeadersColor: #204862;
+
+$postMetaColor: #b3b3b3;
+
+$postAnchorColor: #089E00;
+
+$strongColor: white;
+$strongBackground: #2E688C;
+
+$headerColor: #333;
+//$headerBackground: #FCD33F;
+$headerBackground: #0BD43B;
+
+$footerColor: #7c7c72;
+//$footerBackground: #333;
+$footerBackground: #1E446F;
+
+$button-color: $footerBackground;
+$button-default-background: #09be35;
+
+$progress-background: #f6f6f6;
+
+$socialColor: white;
+
+$borderColor: #eee;

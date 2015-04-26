@@ -1,13 +1,14 @@
 @import 'foundation';
 
-@import url(http://fonts.googleapis.com/css?family=Lato);
+@import 'settings';
 
-@import 'mixin';
-
-@import 'variables';
+@import 'helpers';
 
 @import 'base';
 
+@import 'components';
+
 @import 'layout';
 
+@import 'responsive';
 

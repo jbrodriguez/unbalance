@@ -1,22 +1,5 @@
-// DOCUMENT STRUCTURE: div.container | footer
-@import 'container';
-
-@import 'footer';
-
-// CONTAINER STRUCTURE: header | nav | main
-
-// include social icons style
-@import 'social-icons';
-
-// ----------------------------------------
 @import 'header';
 
-// ----------------------------------------
-@import 'nav';
-
-// ----------------------------------------
 @import 'main';
 
-@import 'contact-form';
-
-/* @import 'responsive'; */
+@import 'footer';

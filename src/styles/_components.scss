@@ -1,0 +1,606 @@
+// BUTTONS
+.btn {
+//	display: inline-block;
+//	font-weight: @btn-font-weight;
+	cursor: pointer;
+	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+	border: 1px solid transparent;
+	white-space: nowrap;
+	padding: $padding-button-vertical $padding-button-horizontal;
+	font-size: 0.75em;
+}
+
+.btn-default {
+	color: $button-color;
+	background-color: $button-default-background;
+	border-color: darken($button-default-background, 5%);
+
+	&:focus,
+	&.focus {
+		background-color: darken($button-default-background, 5%);
+		border-color: darken($button-default-background, 12%);
+	}
+
+	&:hover {
+		background-color: darken($button-default-background, 5%);
+		border-color: darken($button-default-background, 7%);
+	}
+}
+
+// PROGRESS BAR
+.meter {
+	@include flexbox(flex, column, center, center);
+}
+
+.progress {
+	background-color: $progress-background;
+	height: 1.5625rem;
+	border: 1px solid white;
+//	padding: 0.125rem;
+//	margin-bottom: 0.625rem;
+
+// 	display: inline-block;
+//     background-color: #777;
+//     height: 20px;
+// //    padding: 5px;
+// //	padding-top: 5px;
+// 	width: 250px;
+//     // margin: 50px 0;         
+//     // border-radius: 5px;
+//     // box-shadow: 0 1px 5px #000 inset, 0 1px 0 #444;
+
+    span {
+		background: #008cba;
+		height: 100%;
+		display: block;    	
+    	// display: inline-block;
+    	// height: 100%;
+    }
+}
+
+
+// TABLES
+.dashboard {
+	min-width: 300px; // adjust to your needs
+	max-width: $maxWidth;
+
+	tr {
+		border-top: 1px solid #ddd;
+		border-bottom: 1px solid #ddd;
+	}
+
+	th {
+		display: none; // for accessibility, use a visually hidden method here instead! Thanks, reddit!   
+	}
+
+	td {
+		display: block; 
+
+		&:first-child {
+		  padding-top: .5em;
+		}
+		&:last-child {
+		  padding-bottom: .5em;
+		}
+
+		&:before {
+		  content: attr(data-th)": "; // who knew you could do this? The internet, that's who.
+		  font-weight: bold;
+
+		  // optional stuff to make it look nicer
+		  width: 6.5em; // magic number :( adjust according to your own content
+		  display: inline-block;
+		  // end options
+		}
+	}
+
+	th, td {
+		text-align: left;
+	}
+}
+
+
+$breakpoint-alpha: 480px; // adjust to your needs
+
+.rwd-table {
+  margin: 1em 0;
+  min-width: 300px; // adjust to your needs
+  
+  tr {
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    display: none; // for accessibility, use a visually hidden method here instead! Thanks, reddit!   
+  }
+  
+  td {
+    display: block; 
+    
+    &:first-child {
+      padding-top: .5em;
+    }
+    &:last-child {
+      padding-bottom: .5em;
+    }
+
+    &:before {
+      content: attr(data-th)": "; // who knew you could do this? The internet, that's who.
+      font-weight: bold;
+
+      // optional stuff to make it look nicer
+      width: 6.5em; // magic number :( adjust according to your own content
+      display: inline-block;
+      // end options
+      
+      @media (min-width: $breakpoint-alpha) {
+        display: none;
+      }
+    }
+  }
+  
+  th, td {
+    text-align: left;
+    
+    @media (min-width: $breakpoint-alpha) {
+      display: table-cell;
+      padding: .25em .5em;
+      
+      &:first-child {
+        padding-left: 0;
+      }
+      
+      &:last-child {
+        padding-right: 0;
+      }
+    }
+
+  }
+}
+
+.rwd-table {
+  background: #34495E;
+  color: #fff;
+  border-radius: .4em;
+  overflow: hidden;
+  tr {
+    border-color: lighten(#34495E, 10%);
+  }
+  th, td {
+    margin: .5em 1em;
+    @media (min-width: $breakpoint-alpha) { 
+      padding: 1em !important; 
+    }
+  }
+  th, td:before {
+    color: #dd5;
+  }
+}
+
+.csstricks {
+	/* Force table to not be like tables anymore */
+	table, thead, tbody, th, td, tr {
+		display: block;
+	}
+
+	/* Hide table headers (but not display: none;, for accessibility) */
+	thead tr {
+		position: absolute;
+		top: -9999px;
+		left: -9999px;
+	}
+
+	tr { border: 1px solid #ccc; }
+
+	td {
+		/* Behave  like a "row" */
+		border: none;
+		border-bottom: 1px solid #eee;
+		position: relative;
+		padding-left: 50%;
+	}
+
+	td:before {
+		/* Now like a table header */
+//		position: absolute;
+		/* Top/left values mimic padding */
+		top: 6px;
+		left: 6px;
+		width: 45%;
+		padding-right: 10px;
+		white-space: nowrap;
+	}
+
+	/*
+	Label the data
+	*/
+	td:nth-of-type(1):before { content: "First Name"; }
+	td:nth-of-type(2):before { content: "Last Name"; }
+	td:nth-of-type(3):before { content: "Job Title"; }
+	td:nth-of-type(4):before { content: "Favorite Color"; }
+	td:nth-of-type(5):before { content: "Wars of Trek?"; }
+	td:nth-of-type(6):before { content: "Porn Name"; }
+	td:nth-of-type(7):before { content: "Date of Birth"; }
+	td:nth-of-type(8):before { content: "Dream Vacation City"; }
+	td:nth-of-type(9):before { content: "GPA"; }
+	td:nth-of-type(10):before { content: "Arbitrary Data"; }
+}
+
+@media screen and (min-width: 600px) {
+	/* 
+	Generic Styling, for Desktops/Laptops 
+	*/
+	.csstricks { 
+		width: 100%; 
+		border-collapse: collapse;
+
+		tr {
+			display: table-row;
+		}
+		/* Zebra striping */
+		tr:nth-of-type(odd) { 
+			background: #eee; 
+		}
+		th { 
+			background: #333; 
+			color: white; 
+			font-weight: bold; 
+		}
+		td, th { 
+			display: table-cell;
+			padding: 6px; 
+			border: 1px solid #ccc; 
+			text-align: left; 
+		}	
+
+	}
+}
+
+// Breakpoints
+$bp-maggie: 15em; 
+$bp-lisa: 30em;
+$bp-bart: 48em;
+$bp-marge: 62em;
+$bp-homer: 75em;
+
+// Styles
+
+// .container {
+//   margin: 5% 3%;
+  
+//   @media (min-width: $bp-bart) {
+//     margin: 2%; 
+//   }
+  
+//   @media (min-width: $bp-homer) {
+//     margin: 2em auto;
+//     max-width: $bp-homer;
+//   }
+// }
+
+.responsive-table {
+  width: 100%;
+  margin-bottom: 1.5em;
+  
+  @media (min-width: $bp-bart) {
+    font-size: .9em; 
+  }
+  
+  @media (min-width: $bp-marge) {
+    font-size: 1em; 
+  }
+  
+  thead {
+    // Accessibly hide <thead> on narrow viewports
+    position: absolute;
+    clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+    clip: rect(1px, 1px, 1px, 1px);
+    padding: 0;
+    border: 0;
+    height: 1px; 
+    width: 1px; 
+    overflow: hidden;
+    
+    @media (min-width: $bp-bart) {
+      // Unhide <thead> on wide viewports
+      position: relative;
+      clip: auto;
+      height: auto;
+      width: auto;
+      overflow: auto;
+    }
+    
+    th {
+      background-color: rgba(29,150,178,1);
+      border: 1px solid rgba(29,150,178,1);
+      font-weight: normal;
+      text-align: center;
+      color: white;
+      
+      &:first-of-type {
+        text-align: left; 
+      }
+    }
+  }
+  
+  // Set these items to display: block for narrow viewports
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+    padding: 0;
+    text-align: left;
+    white-space: normal;
+  }
+  
+  tr {   
+    @media (min-width: $bp-bart) {
+      // Undo display: block 
+      display: table-row; 
+    }
+  }
+  
+  th,
+  td {
+    padding: .5em;
+    vertical-align: middle;
+    
+    @media (min-width: $bp-lisa) {
+      padding: .75em .5em; 
+    }
+    
+    @media (min-width: $bp-bart) {
+      // Undo display: block 
+      display: table-cell;
+      padding: .5em;
+    }
+    
+    @media (min-width: $bp-marge) {
+      padding: .75em .5em; 
+    }
+    
+    @media (min-width: $bp-homer) {
+      padding: .75em; 
+    }
+  }
+  
+  caption {
+    margin-bottom: 1em;
+    font-size: 1em;
+    font-weight: bold;
+    text-align: center;
+    
+    @media (min-width: $bp-bart) {
+      font-size: 1.5em;
+    }
+  }
+  
+  tfoot {
+    font-size: .8em;
+    font-style: italic;
+    
+    @media (min-width: $bp-marge) {
+      font-size: .9em;
+    }
+  }
+  
+  tbody {
+    @media (min-width: $bp-bart) {
+      // Undo display: block 
+      display: table-row-group; 
+    }
+    
+    tr {
+      margin-bottom: 1em;
+      border: 2px solid rgba(29,150,178,1);
+      
+      @media (min-width: $bp-bart) {
+        // Undo display: block 
+        display: table-row;
+        border-width: 1px;
+      }
+      
+      &:last-of-type {
+        margin-bottom: 0; 
+      }
+      
+      &:nth-of-type(even) {
+        @media (min-width: $bp-bart) {
+          background-color: rgba(94,93,82,.1);
+        }
+      }
+    }
+    
+    th[scope="row"] {
+      background-color: rgba(29,150,178,1);
+      color: white;
+      
+      @media (min-width: $bp-bart) {
+        background-color: transparent;
+        color: rgba(94,93,82,1);
+        text-align: left;
+      }
+    }
+    
+    td {
+      text-align: right;
+      
+      @media (min-width: $bp-lisa) {
+        border-bottom: 1px solid  rgba(29,150,178,1);
+      }
+      
+      @media (min-width: $bp-bart) {
+        text-align: center; 
+      }
+    }
+    
+    td[data-type=currency] {
+      text-align: right; 
+    }
+    
+    td[data-title]:before {
+      content: attr(data-title);
+      float: left;
+      font-size: .8em;
+      color: rgba(94,93,82,.75);
+      
+      @media (min-width: $bp-lisa) {
+        font-size: .9em; 
+      }
+      
+      @media (min-width: $bp-bart) {
+        // Don’t show data-title labels 
+        content: none; 
+      }
+    } 
+  }
+}
+
+table#miyazaki { 
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-family: Agenda-Light, sans-serif;
+  font-weight: 100; 
+  background: #333; color: #fff;
+  text-rendering: optimizeLegibility;
+  border-radius: 5px; 
+}
+table#miyazaki caption { 
+  font-size: 2rem; color: #444;
+  margin: 1rem;
+  background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/miyazaki.png), url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/miyazaki2.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center left, center right; 
+}
+table#miyazaki thead th { font-weight: 600; }
+table#miyazaki thead th, table#miyazaki tbody td { 
+  padding: .8rem; font-size: 1.4rem;
+}
+table#miyazaki tbody td { 
+  padding: .8rem; font-size: 1.4rem;
+  color: #444; background: #eee; 
+}
+table#miyazaki tbody tr:not(:last-child) { 
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;  
+}
+
+@media screen and (max-width: 600px) {
+  table#miyazaki caption { background-image: none; }
+  table#miyazaki thead { display: none; }
+  table#miyazaki tbody td { 
+    display: block; padding: .6rem; 
+  }
+  table#miyazaki tbody tr td:first-child { 
+    background: #666; color: #fff; 
+  }
+	table#miyazaki tbody td:before { 
+    content: attr(data-th); 
+    font-weight: bold;
+    display: inline-block;
+    width: 6rem;  
+  }
+}
+
+.nextg {
+//	display: block;
+	width: 100%;
+//	overflow: auto;
+
+	@media (min-width: $breakpoint-2) {
+		border-collapse: collapse;
+		font-size: 0.9em; 
+	}
+
+	thead {
+		display: none;
+
+	    @media (min-width: $breakpoint-2) {
+	      // Undo display: block 
+	      border-bottom: 1px solid $borderColor;
+	      display: table-header-group; 
+	    }		
+	}
+
+	th, td, tr {
+		display: block;
+	}
+
+	th, td {
+	    text-align: left;
+
+		@media (min-width: $breakpoint-2) {
+			color: $headerBackground;
+			display: table-cell;
+		}
+	}
+
+	tr {
+		margin-bottom: 1em;
+
+	    @media (min-width: $breakpoint-2) {
+			// Undo display: block 
+			display: table-row;
+//			background-color: transparent;
+
+			&:nth-of-type(even) { 
+				background-color: $borderColor; 
+			}	      
+	    }
+	}
+
+	td {
+		color: $primaryColor;
+		background-color: $borderColor;
+		font-size: 0.75em;
+		padding: .5rem .25rem;
+
+		@media (min-width: $breakpoint-2) {
+			font-size: 1em;
+			background-color: transparent;
+//			padding: .5rem 0;
+		}			
+
+		&:first-child {
+			color: white;
+		    background-color: $footerBackground;
+
+		    @media (min-width: $breakpoint-2) {
+		      // Undo display: block 
+		      color: $primaryColor;
+		      background-color: transparent;
+		    }		    
+
+		    &:before {
+		    	width: auto;
+		    }
+		}
+
+		&:before {
+//			content: attr(data-th); // who knew you could do this? The internet, that's who.
+//			font-weight: bold;
+//			font-size: 0.75em;
+
+			// optional stuff to make it look nicer
+			width: 6.5em; // magic number :( adjust according to your own content
+			display: inline-block;
+			// end options
+
+			@media (min-width: $breakpoint-2) {
+				display: none;
+			}			
+		}
+
+//		&:nth-of-type(1):before { content: "Disk" }
+		&:nth-of-type(2):before { content: "Serial" }
+		&:nth-of-type(3):before { content: "From" }
+		&:nth-of-type(4):before { content: "To" }
+		&:nth-of-type(5):before { content: "Size" }
+		&:nth-of-type(6):before { content: "Free" }
+		&:nth-of-type(7):before { content: "Fill" }
+		&:nth-of-type(8):before { content: "Plan" }
+	}
+}
