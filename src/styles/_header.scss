@@ -8,6 +8,11 @@ header {
 nav {
 	@include flexbox(flex, column, center, stretch);
 
+    @media (min-width: $breakpoint-2) {
+		flex-direction: row;
+		justify-content: space-between;
+    }	
+
 	ul {
         @include flexbox(flex, row, center, center);
 
@@ -26,6 +31,10 @@ nav {
 .header-logo, 
 .header-menu {
 	@extend %spacer;
+
+    @media (min-width: $breakpoint-2) {
+		margin: 0;
+    }
 }
 
 @import 'social-follow';

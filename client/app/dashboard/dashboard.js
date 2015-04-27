@@ -27,6 +27,9 @@
         vm.checkFrom = checkFrom;
         vm.checkTo = checkTo;
 
+        $scope.$onRootScope('/dashboard/calculate', calculateBestFit);
+        $scope.$onRootScope('/dashboard/move', move);
+
         activate();
 
         function activate() {

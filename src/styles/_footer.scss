@@ -10,6 +10,11 @@ footer {
 .legal {
 	@include flexbox(flex, column, center, center);
 
+    @media (min-width: $breakpoint-2) {
+		flex-direction: row;
+		justify-content: space-between;
+    }	
+
 	a, span {
 		display: flex;
 	}
@@ -21,4 +26,8 @@ footer {
 
 .copyright {
 	@extend %spacer;
+
+    @media (min-width: $breakpoint-2) {
+		margin: 0;
+    }	
 }	

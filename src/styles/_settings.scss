@@ -25,6 +25,9 @@ $postAnchorColor: #089E00;
 $strongColor: white;
 $strongBackground: #2E688C;
 
+$progress-background: #f6f6f6;
+$progress-meter: #008cba;
+
 $headerColor: #333;
 //$headerBackground: #FCD33F;
 $headerBackground: #0BD43B;
@@ -33,11 +36,14 @@ $footerColor: #7c7c72;
 //$footerBackground: #333;
 $footerBackground: #1E446F;
 
-$button-color: $footerBackground;
+$button-default-color: $footerBackground;
 $button-default-background: #09be35;
 
-$progress-background: #f6f6f6;
+$button-primary-color: white;
+$button-primary-background: $progress-meter;
 
 $socialColor: white;
 
 $borderColor: #eee;
+
+$badge-bg: #FEF5C4;

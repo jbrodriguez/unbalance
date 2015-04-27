@@ -33,3 +33,20 @@
 %padder {
 	padding: $pad;
 }
+
+@mixin button-variant($color: $button-default-color, $background: $button-default-background) {
+	color: $color;
+	background-color: $background;
+	border-color: darken($background, 5%);
+
+	&:focus,
+	&.focus {
+		background-color: darken($background, 5%);
+		border-color: darken($background, 12%);
+	}
+
+	&:hover {
+		background-color: darken($background, 5%);
+		border-color: darken($background, 7%);
+	}	
+}

@@ -13,6 +13,9 @@
 
         vm.options = options;
 
+        vm.calculateBestFit = calculateBestFit;
+        vm.move = move;        
+
         activate();
 
         function activate() {
@@ -33,7 +36,15 @@
                     $state.go('dashboard');
                 };
             });
-        };        
+        };
+
+        function calculateBestFit() {
+            $rootScope.$emit('/dashboard/calculate');                
+        }
+
+        function move() {
+            $rootScope.$emit('/dashboard/move');
+        }
     };
 
 })();

@@ -1,66 +1,29 @@
-		<section class="container">
-			<div class="row" data-ng-if="vm.options.config.folders.length === 0">
-				<div class="large-12 columns">
-					<h6 class="alert">There are no folders elegible for moving. Please enter them, in the input box below</h6>
-				</div>
+		<section class="column">
+			<p class="badge warning">There are no folders elegible for moving. Please enter them, in the input box below</p>
+
+			<div class="row badge warning" data-ng-if="vm.options.config.folders.length === 0">
+				<span>There are no folders elegible for moving. Please enter them, in the input box below</span>
 			</div>
 
 			<div class="row">
-				<form>
+				<form class="cd-form">
 				<fieldset>
-				<legend>Folders elegible for the moving process</legend>
-				
-				<div class="row">
-					<div class="large-12 columns">
+					<legend>Folders elegible for the moving process</legend>
+
 					<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
 					<p>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
-					</div>
-				</div>
 
-				<div class="row">
-					<div class="large-12 columns">
-						<div class="row collapse">
-							<div class="small-1 columns">
-								<span class="prefix">Folder</a>
-							</div>
-							<div class="small-10 columns">
-								<input type="text" placeholder="enter folder elegible for moving" data-ng-model="vm.folder">
-							</div>
-							<div class="small-1 columns">
-								<a href="#" class="button postfix" data-ng-click="vm.addFolder()">Add</a>
-							</div>
-						</div>
+					<div>
+						<label>Folder</label>
+						<input type="text" placeholder="folder elegible for moving" data-ng-model="vm.folder">
 					</div>
-				</div>
-				<div class="row">
-					<div class="large-12 columns">
-					<table>
-					<thead>
-						<th width="50">#</th>
-						<th>Folder</th>
-					</thead>
-					<tbody>
-						<tr data-ng-repeat="folder in vm.options.config.folders">
-						<td><i class="fa fa-times"></i></td>
-						<td>{{folder}}</td>
-						</tr>
-					</tbody>
-					</table>
-					</div>
-				</div>
 
-				<div class="row">
-					<div class="large-12 columns">
-						<p>Other examples</p>
-						<ul>
-							<li>/mnt/user/Movies, /mnt/user/TVShows -> Movies, TVShows</li>
-							<li>/mnt/user/Bluray -> Bluray</li>
-							<li>/mnt/user/films/bluray -> films/bluray</li>
-						</ul>
-					</div>
-				</div>
-
+					<div>
+						<a href="#" class="btn btn-primary" data-ng-click="vm.addFolder()">Add</a>
+					</div>				
 				</fieldset>
 				</form>
 			</div>
+			</form>
+
 		</section>
