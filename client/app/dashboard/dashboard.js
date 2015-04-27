@@ -6,7 +6,7 @@
         .controller('Dashboard', Dashboard);
 
     /* @ngInject */
-    function Dashboard($state, $q, api, logger) {
+    function Dashboard($scope, $state, $q, api, logger) {
 
         /*jshint validthis: true */
         var vm = this;

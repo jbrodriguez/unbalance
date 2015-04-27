@@ -159,67 +159,6 @@ ol {
   background-color: #FEF5C4;
   border: 1px solid #fdec92; }
 
-.unb-form input[type="text"] {
-  padding: 0.5em 0.6em;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-shadow: inset 0 1px 3px #ddd;
-  vertical-align: middle; }
-
-.unb-form input[type="text"]:focus {
-  outline: 0;
-  border-color: #129FEA; }
-
-.unb-form input[type="text"][disabled] {
-  cursor: not-allowed;
-  background-color: #eaeded;
-  color: #cad2d3; }
-
-.unb-form input:focus:invalid {
-  color: #b94a48;
-  border-color: #e9322d; }
-
-.unb-form fieldset {
-  margin: 0;
-  padding: 0.35em 0 0.75em;
-  border: 0; }
-
-.unb-form legend {
-  width: 100%;
-  padding: 0.3em 0;
-  margin-bottom: 0.3em;
-  color: #333;
-  border-bottom: 1px solid #e5e5e5; }
-
-.unb-form label {
-  margin: 0.5em 0 0.2em; }
-
-.unb-form-group {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-pack: start;
-  -webkit-justify-content: flex-start;
-      -ms-flex-pack: start;
-          justify-content: flex-start;
-  -webkit-box-align: start;
-  -webkit-align-items: flex-start;
-      -ms-flex-align: start;
-          align-items: flex-start; }
-  @media (min-width: 600px) {
-    .unb-form-group {
-      -webkit-box-orient: horizontal;
-      -webkit-box-direction: normal;
-      -webkit-flex-direction: row;
-          -ms-flex-direction: row;
-              flex-direction: row; } }
-
 .cd-form {
   display: -webkit-box;
   display: -webkit-flex;
@@ -238,8 +177,7 @@ ol {
   -webkit-align-items: stretch;
       -ms-flex-align: stretch;
           align-items: stretch;
-  margin-bottom: 1em;
-  border-bottom: 1px #eee solid; }
+  margin-bottom: 1em; }
   .cd-form div {
     /* form element wrapper */
     margin: 0.8em 0; }
@@ -364,6 +302,72 @@ ol {
     .dashboard td:nth-of-type(7):before {
       content: "Fill"; }
     .dashboard td:nth-of-type(8):before {
+      content: "Plan"; }
+
+.settings {
+  width: 100%; }
+  @media (min-width: 600px) {
+    .settings {
+      border-collapse: collapse;
+      font-size: 0.9em; } }
+  .settings thead {
+    display: none; }
+    @media (min-width: 600px) {
+      .settings thead {
+        border-bottom: 1px solid #eee;
+        display: table-header-group; } }
+  .settings th, .settings td, .settings tr {
+    display: block; }
+  .settings th, .settings td {
+    text-align: left; }
+    @media (min-width: 600px) {
+      .settings th, .settings td {
+        color: #1E446F;
+        display: table-cell; } }
+  .settings tr {
+    margin-bottom: 1em; }
+    @media (min-width: 600px) {
+      .settings tr {
+        display: table-row; }
+        .settings tr:nth-of-type(even) {
+          background-color: #eee; } }
+  .settings td {
+    color: #666;
+    background-color: #eee;
+    font-size: 0.75em;
+    padding: .5rem .25rem; }
+    @media (min-width: 600px) {
+      .settings td {
+        font-size: 1em;
+        background-color: transparent; } }
+    .settings td:first-child {
+      color: white;
+      background-color: #1E446F; }
+      @media (min-width: 600px) {
+        .settings td:first-child {
+          color: #666;
+          background-color: transparent; } }
+      .settings td:first-child:before {
+        width: auto; }
+    .settings td:before {
+      width: 6.5em;
+      display: inline-block; }
+      @media (min-width: 600px) {
+        .settings td:before {
+          display: none; } }
+    .settings td:nth-of-type(2):before {
+      content: "Serial"; }
+    .settings td:nth-of-type(3):before {
+      content: "From"; }
+    .settings td:nth-of-type(4):before {
+      content: "To"; }
+    .settings td:nth-of-type(5):before {
+      content: "Size"; }
+    .settings td:nth-of-type(6):before {
+      content: "Free"; }
+    .settings td:nth-of-type(7):before {
+      content: "Fill"; }
+    .settings td:nth-of-type(8):before {
       content: "Plan"; }
 
 header {

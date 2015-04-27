@@ -15,12 +15,31 @@
 
 					<div>
 						<label>Folder</label>
-						<input type="text" placeholder="folder elegible for moving" data-ng-model="vm.folder">
+						<input type="text" placeholder="folder elegible for moving" data-ng-model="vm.folder" data-ng-keyup="$event.keyCode == 13 && vm.addFolder()">
 					</div>
 
 					<div>
 						<a href="#" class="btn btn-primary" data-ng-click="vm.addFolder()">Add</a>
-					</div>				
+					</div>
+
+					<legend>Folders Selected</legend>
+
+					<div>
+						<table class="settings">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Folder</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr data-ng-repeat="folder in vm.options.config.folders">
+								<td><i class="fa fa-times"></i></td>
+								<td>{{folder}}</td>
+							</tr>
+						</tbody>
+						</table>
+					</div>
 				</fieldset>
 				</form>
 			</div>
