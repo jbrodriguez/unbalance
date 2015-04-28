@@ -32,6 +32,20 @@ gulp.task('scripts', ['templates'], function() {
         .pipe(gulp.dest(folder.dist));
 });
 
+gulp.task('vendor-scripts', function() {
+    gutil.log('Bundling, minifying, and copying the vendor JavaScript');
+
+    return gulp
+        .src(folder.vendorjs)
+        // .pipe(plug.sourcemaps.init()) // get screwed up in the file rev process
+        .pipe(concat('vendor.min.js'))
+        .pipe(bytediff.start())
+        .pipe(uglify())
+        .pipe(bytediff.stop(bytediffFormatter))
+        // .pipe(plug.sourcemaps.write('./'))
+        .pipe(gulp.dest(folder.dist));
+});
+
 function bytediffFormatter(data) {
     var difference = (data.savings > 0) ? ' smaller.' : ' larger.';
     return data.fileName + ' went from ' +

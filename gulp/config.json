@@ -18,5 +18,8 @@
 	    "./src/svg/*"
 	],
 
+	"vendorjs":	"./client/vendor/**/*.js",
+	"vendorcss": "./client/vendor/**/*.css",
+
 	"dist": "./dist"
 }

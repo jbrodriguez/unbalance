@@ -19,15 +19,24 @@ gulp.task('styles', function() {
     gutil.log('Bundling, minifying, and copying the app\'s CSS');
 
     return gulp.src(folder.styles)
-        .pipe(plumber())
 		.pipe(sass())
         .pipe(concat('app.min.css')) // Before bytediff or after
         .pipe(autoprefixer('last 2 version', '> 5%'))
         .pipe(bytediff.start())
-        .pipe(minifyCss({}))
+        .pipe(minifyCss())
         .pipe(bytediff.stop(bytediffFormatter))
         //        .pipe(plug.concat('all.min.css')) // Before bytediff or after
-        .pipe(plumber.stop())        
+        .pipe(gulp.dest(folder.dist));
+});
+
+gulp.task('vendor-styles', function() {
+    gutil.log('Bundling, minifying, and copying the vendor CSS');
+
+    return gulp.src(folder.vendorcss)
+        .pipe(plumber())
+        .pipe(concat('vendor.min.css')) // Before bytediff or after
+        //        .pipe(plug.concat('all.min.css')) // Before bytediff or after
+        .pipe(plumber.stop())
         .pipe(gulp.dest(folder.dist));
 });
 

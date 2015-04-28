@@ -14,7 +14,7 @@ var debug = require('gulp-debug');
  * rev, but no map
  * @return {Stream}
  */
-gulp.task('rev-inject', ['scripts', 'styles', 'images', 'svg'], function() {
+gulp.task('rev-inject', ['scripts', 'vendor-scripts', 'styles', 'vendor-styles', 'images', 'svg'], function() {
     gutil.log('Rev\'ing files and building index.html');
 
     var minified = path.join(folder.dist, '*.min.*');
@@ -25,24 +25,16 @@ gulp.task('rev-inject', ['scripts', 'styles', 'images', 'svg'], function() {
     var stream = gulp
         // Write the revisioned files
         .src([].concat(minified, index)) // add all built min files and index.html
-        .pipe(debug({title: '1'}))        
-
         .pipe(minFilter) // filter the stream to minified css and js
-        .pipe(debug({title: '2'}))        
-
         .pipe(rev()) // create files with rev's
-        .pipe(debug({title: '3'}))        
-
         .pipe(gulp.dest(folder.dist)) // write the rev files
-        .pipe(debug({title: '4'}))        
-
         .pipe(minFilter.restore()) // remove filter, back to original stream
 
         // inject the files into index.html
         .pipe(indexFilter) // filter to index.html
-//        .pipe(inject('content/vendor.min.css', 'inject-vendor'))
+        .pipe(doInject('vendor.min.css', 'inject-vendor'))
         .pipe(doInject('app.min.css'))
-//        .pipe(inject('vendor.min.js', 'inject-vendor'))
+        .pipe(doInject('vendor.min.js', 'inject-vendor'))
         .pipe(doInject('app.min.js'))
         .pipe(gulp.dest(folder.dist)) // write the rev files
         .pipe(indexFilter.restore()) // remove filter, back to original stream
