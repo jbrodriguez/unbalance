@@ -4,7 +4,8 @@ var path = require('path');
 var	imagemin = require('gulp-imagemin');
 var changed = require('gulp-changed');
 var cache = require('gulp-cache');
-var folder = require('./config.json');
+var config= require('./config.js');
+var debug = require('gulp-debug');
 
 // gulp.task('images', function () {
 //   return gulp.src('src/img/*.*')
@@ -18,14 +19,18 @@ var folder = require('./config.json');
  * @return {Stream}
  */
 gulp.task('images', function() {
-    var dest = path.join(folder.dist,'img');
-    var custom = new cache.Cache({ tmpDir: folder.staging, cacheDirName: 'img' })
+    gutil.log('Compressing, caching, and copying images ');
 
-    gutil.log('Compressing, caching, and copying images');
+    gutil.log('cache: ' + gutil.colors.green(config.images.cache));
+    gutil.log('src: ' + gutil.colors.green(config.images.src));
+    gutil.log('dst: ' + gutil.colors.green(config.images.dst));
+
+    var custom = new cache.Cache({ tmpDir: config.images.cache, cacheDirName: '' })
 
     return gulp
-		.src(folder.images)
+		.src(config.images.src)
+		.pipe(debug({title: '1'}))
 		// .pipe(changed(stage))
         .pipe(cache(imagemin({optimizationLevel: 3}), {fileCache: custom, name: ''}))
-        .pipe(gulp.dest(dest));
+        .pipe(gulp.dest(config.images.dst));
 });

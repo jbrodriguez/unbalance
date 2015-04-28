@@ -1,7 +1,7 @@
 var gulp = require("gulp");
 var gutil = require('gulp-util');
 var del = require('del');
-var folder = require('./config.json');
+var config = require('./config.js');
 
 /**
  * Remove all files from the build folder
@@ -10,7 +10,8 @@ var folder = require('./config.json');
  * @return {Stream}
  */
 gulp.task('clean', function() {
-    gutil.log('Cleaning: ' + gutil.colors.blue(folder.dist));
+    gutil.log('Cleaning: ' + gutil.colors.blue(config.clean.dist) + ' ' + gutil.colors.blue(config.clean.staging));
 
-    del.sync(folder.dist);
+    del.sync(config.clean.staging);
+    del.sync(config.clean.dist);
 });

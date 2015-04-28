@@ -5,7 +5,7 @@ var	autoprefixer = require('gulp-autoprefixer');
 var concat = require('gulp-concat');
 var	minifyCss = require('gulp-minify-css');
 var bytediff = require('gulp-bytediff');
-var folder = require('./config.json');
+var config = require('./config.js');
 var plumber = require('gulp-plumber');
 
 // gulp.task('styles', function() {
@@ -18,7 +18,7 @@ var plumber = require('gulp-plumber');
 gulp.task('styles', function() {
     gutil.log('Bundling, minifying, and copying the app\'s CSS');
 
-    return gulp.src(folder.styles)
+    return gulp.src(config.styles.src)
 		.pipe(sass())
         .pipe(concat('app.min.css')) // Before bytediff or after
         .pipe(autoprefixer('last 2 version', '> 5%'))
@@ -26,18 +26,18 @@ gulp.task('styles', function() {
         .pipe(minifyCss())
         .pipe(bytediff.stop(bytediffFormatter))
         //        .pipe(plug.concat('all.min.css')) // Before bytediff or after
-        .pipe(gulp.dest(folder.dist));
+        .pipe(gulp.dest(config.styles.dst));
 });
 
 gulp.task('vendor-styles', function() {
     gutil.log('Bundling, minifying, and copying the vendor CSS');
 
-    return gulp.src(folder.vendorcss)
+    return gulp.src(config.styles.vendors)
         .pipe(plumber())
         .pipe(concat('vendor.min.css')) // Before bytediff or after
         //        .pipe(plug.concat('all.min.css')) // Before bytediff or after
         .pipe(plumber.stop())
-        .pipe(gulp.dest(folder.dist));
+        .pipe(gulp.dest(config.styles.dst));
 });
 
 function bytediffFormatter(data) {

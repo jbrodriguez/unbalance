@@ -11,16 +11,8 @@
 
 	<base href="/">
 
-    <!-- inject:css -->
-	<link rel="stylesheet" href="styles.css">
-    <!-- endinject -->
-
-    <!-- inject-vendor:css -->
-    <link href="/vendor/css/font-awesome.min.css" rel="stylesheet" />
-    <link href="/vendor/css/toastr.css" rel="stylesheet" />    
-    <!-- endinject -->        
-
-	<link href='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css' rel='stylesheet' type='text/css' />
+	<link rel="stylesheet" href="css/vendor.min.css">
+	<link rel="stylesheet" href="css/app.min.css">
 
 	<meta name="description" content="Unbalance - a tool to create as much space possible on a given unRaid disk, by moving files to other disks">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,48 +47,9 @@
 	    </section>	
 	</footer>
 
-    <!-- inject-vendor:js -->
-	<script src="https://code.angularjs.org/1.3.15/angular.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.13/angular-ui-router.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.js"></script>
-    <!-- endinject -->
 
-
-    <!-- inject:js -->
-    <!-- Bootstrapping -->
-	<script type="text/javascript" src="app/app.module.js"></script>
-	<script type="text/javascript" src="app/replace.filter.js"></script>
-	<script type="text/javascript" src="app/humanbytes.filter.js"></script>
-	<script type="text/javascript" src="app/percentage.filter.js"></script>
-	<script type="text/javascript" src="app/home.js"></script>
-
-
-    <!-- Reusable Blocks/Modules -->
-    <script src="app/blocks/exception/exception.module.js"></script>
-    <script src="app/blocks/exception/exception-handler.js"></script>
-    <script src="app/blocks/exception/exception.js"></script>
-    <script src="app/blocks/logger/logger.module.js"></script>
-    <script src="app/blocks/logger/logger.js"></script>
-    <script src="app/blocks/storage/storage.module.js"></script>
-    <script src="app/blocks/storage/storage.js"></script>
-
-    <!-- core module -->
-    <script src="app/core/core.module.js"></script>
-    <script src="app/core/constants.js"></script>
-    <script src="app/core/options.js"></script>
-    <script src="app/core/config.js"></script>
-    <script src="app/core/api.js"></script>
-
-    <!-- dashboard -->
-    <script src="app/dashboard/dashboard.module.js"></script>
-    <script src="app/dashboard/config.route.js"></script>
-    <script src="app/dashboard/dashboard.js"></script>
-
-    <!-- settings -->
-    <script src="app/settings/settings.module.js"></script>
-    <script src="app/settings/config.route.js"></script>
-    <script src="app/settings/settings.js"></script>
-    <!-- endinject -->    
+	<script src="js/vendor.min.js"></script>
+	<script src="js/app.min.js"></script>
 </body>
 
 </html>

@@ -19,7 +19,7 @@ gulp.task('build:server', function() {
 	command('build', 'GOOS=linux GOARCH=amd64 go build -v -o ' + path.join(dst, 'unbalance') + ' ' + path.join(src, 'boot.go'));
 });
 
-gulp.task('build:client', ['rev-inject'], function() {
+gulp.task('build:client', ['reference'], function() {
 	gutil.log('Revved and injected');
 });
 

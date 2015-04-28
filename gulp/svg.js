@@ -1,11 +1,11 @@
 var gulp = require('gulp');
 var path = require('path');
-var folder = require('./config.json');
+var config = require('./config.js');
 
 
 // SVG optimization task
 gulp.task('svg', function () {
-  return gulp.src(folder.svg)
+  return gulp.src(config.svg.src)
 //    .pipe(svgmin())
-    .pipe(gulp.dest(path.join(folder.dist, 'img')));
+    .pipe(gulp.dest(config.svg.dst));
 });

@@ -2,12 +2,12 @@ var gulp = require('gulp');
 var templatecache = require('gulp-angular-templatecache');
 var gutil = require('gulp-util');
 var path = require('path');
-var folder = require('./config.json');
+var config = require('./config.js');
 
 gulp.task('templates', function() {
-    gutil.log('Creating an AngularJS $templateCache');
+    gutil.log('Creating an AngularJS $templateCache ' + config.templates.src);
 
-	return gulp.src(folder.templates)
+	return gulp.src(config.templates.src)
 
         // // .pipe(plug.bytediff.start())
         // .pipe(plug.minifyHtml({
@@ -19,5 +19,5 @@ gulp.task('templates', function() {
             standalone: false,
             root: 'app/'
         }))
-        .pipe(gulp.dest(path.join(folder.staging, 'scripts')));
+        .pipe(gulp.dest(config.templates.dst));
 });

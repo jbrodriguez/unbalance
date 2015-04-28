@@ -5,7 +5,7 @@ var concat = require('gulp-concat');
 var annotate = require('gulp-ng-annotate');
 var bytediff = require('gulp-bytediff');
 var uglify = require('gulp-uglify');
-var folder = require('./config.json');
+var config = require('./config.js');
 var debug = require('gulp-debug');
 
 /**
@@ -15,10 +15,7 @@ var debug = require('gulp-debug');
 gulp.task('scripts', ['templates'], function() {
     gutil.log('Bundling, minifying, and copying the app\'s JavaScript');
 
-    var source = [].concat(folder.scripts, path.join(folder.staging, 'scripts', 'templates.js'));
-//    var source = [].concat(folder.scripts, './staging/scripts/templates.js');
-
-    gutil.log('Source: ' + gutil.colors.red(source));
+    var source = [].concat(config.scripts.src, path.join(config.templates.dst, 'templates.js'));
 
     return gulp
         .src(source)
@@ -29,21 +26,21 @@ gulp.task('scripts', ['templates'], function() {
         .pipe(uglify({ mangle: true }))
         .pipe(bytediff.stop(bytediffFormatter))
         // .pipe(plug.sourcemaps.write('./'))
-        .pipe(gulp.dest(folder.dist));
+        .pipe(gulp.dest(config.scripts.dst));
 });
 
 gulp.task('vendor-scripts', function() {
     gutil.log('Bundling, minifying, and copying the vendor JavaScript');
 
     return gulp
-        .src(folder.vendorjs)
+        .src(config.scripts.vendors)
         // .pipe(plug.sourcemaps.init()) // get screwed up in the file rev process
         .pipe(concat('vendor.min.js'))
         .pipe(bytediff.start())
         .pipe(uglify())
         .pipe(bytediff.stop(bytediffFormatter))
         // .pipe(plug.sourcemaps.write('./'))
-        .pipe(gulp.dest(folder.dist));
+        .pipe(gulp.dest(config.scripts.dst));
 });
 
 function bytediffFormatter(data) {
