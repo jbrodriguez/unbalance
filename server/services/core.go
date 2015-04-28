@@ -177,10 +177,10 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
 	// mlog.Info("Error: %s", err)
 
-	// if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-	// 	mlog.Info("Folder does not exist ", srcFolder)
-	// 	return nil
-	// }
+	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+		mlog.Warning("Folder does not exist ", srcFolder)
+		return nil
+	}
 
 	dirs, err := ioutil.ReadDir(srcFolder)
 	if err != nil {
