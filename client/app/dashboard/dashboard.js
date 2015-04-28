@@ -6,10 +6,12 @@
         .controller('Dashboard', Dashboard);
 
     /* @ngInject */
-    function Dashboard($scope, $state, $q, api, logger) {
+    function Dashboard($scope, $state, $q, api, logger, options) {
 
         /*jshint validthis: true */
         var vm = this;
+
+        vm.options = options;
 
         vm.condition = {};
         vm.disks = [];
@@ -26,9 +28,7 @@
         vm.move = move;
         vm.checkFrom = checkFrom;
         vm.checkTo = checkTo;
-
-        $scope.$onRootScope('/dashboard/calculate', calculateBestFit);
-        $scope.$onRootScope('/dashboard/move', move);
+        vm.flipDryRun = flipDryRun;
 
         activate();
 
@@ -140,6 +140,16 @@
 
         function checkTo(to) {
             return;
+        }
+
+        function flipDryRun() {
+            vm.options.config.dryRun != vm.options.config.dryRun;
+
+            console.log('vm.options.config.dryRun: ' + vm.options.config.dryRun);
+
+            return api.saveConfig(vm.options.config).then(function(data) {
+                logger.success('config saved succesfully');
+            });            
         }
     }
 })();

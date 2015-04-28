@@ -1,0 +1,22 @@
+{
+	"client": "./client/",
+	"server": "./server/",
+	"staging": "./staging/",
+
+	"templates": "./client/app/**/*.html",
+	"scripts": [
+		"./client/app/**/*module*.js",
+		"./client/app/**/*.js"
+	],
+	"styles": [
+	    "./src/styles/styles.scss"	
+	],
+	"images": [
+	    "./src/img/*"
+	],
+	"svg": [
+	    "./src/svg/*"
+	],
+
+	"dist": "./dist"
+}

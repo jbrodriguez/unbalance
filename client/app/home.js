@@ -13,8 +13,8 @@
 
         vm.options = options;
 
-        vm.calculateBestFit = calculateBestFit;
-        vm.move = move;        
+        // vm.calculateBestFit = calculateBestFit;
+        // vm.move = move;        
 
         activate();
 
@@ -38,13 +38,13 @@
             });
         };
 
-        function calculateBestFit() {
-            $rootScope.$emit('/dashboard/calculate');                
-        }
+        // function calculateBestFit() {
+        //     $rootScope.$emit('/dashboard/calculate');                
+        // }
 
-        function move() {
-            $rootScope.$emit('/dashboard/move');
-        }
+        // function move() {
+        //     $rootScope.$emit('/dashboard/move');
+        // }
     };
 
 })();

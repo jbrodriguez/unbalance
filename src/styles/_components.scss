@@ -1,3 +1,11 @@
+// LAYOUT
+.row {
+//	display: block;
+	width: 100%;
+	margin-bottom: 1em;
+}
+
+
 // BUTTONS
 .btn {
 //	display: inline-block;
@@ -50,14 +58,14 @@
 }
 
 // BADGES
-.row {
-	display: block;
-//	width: 100%;
-	margin-bottom: 1em;
-}
 
 .badge {
 	padding: 1em;
+}
+
+.success {
+	background-color: green;
+	border: 1px solid darken(green, 10%);
 }
 
 .warning {
@@ -188,8 +196,6 @@
 
 // TABLES
 .dashboard {
-	width: 100%;
-
 	@media (min-width: $breakpoint-2) {
 		border-collapse: collapse;
 		font-size: 0.9em; 

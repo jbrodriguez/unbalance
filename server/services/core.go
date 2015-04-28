@@ -10,7 +10,7 @@ import (
 	"github.com/jbrodriguez/pubsub"
 	"io"
 	"io/ioutil"
-	// "os"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -277,7 +277,7 @@ func (c *Core) move(msg *pubsub.Message) {
 		for _, item := range disk.Bin.Items {
 			dst := filepath.Join(disk.Path, item.Path)
 
-			// glog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			// mlog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
 			mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
 			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			commands = append(commands, command)

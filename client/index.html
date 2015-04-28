@@ -11,7 +11,10 @@
 
 	<base href="/">
 
-	<link rel="stylesheet" href="css/styles.css">
+    <!-- inject:css -->
+	<link rel="stylesheet" href="styles.css">
+    <!-- endinject -->
+
 	<link href='//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css' rel='stylesheet' type='text/css' />
 
 	<meta name="description" content="Unbalance - a tool to create as much space possible on a given unRaid disk, by moving files to other disks">
@@ -25,9 +28,7 @@
 				<li><a ui-sref="dashboard" class="logo"><img src="/img/unbalance-logo.png" alt="unBALANCE logo" /></a></li>
 			</ul>
 			<ul class="header-menu">
-				<li><a href="#" ng-click="vm.calculateBestFit()" class="btn btn-default">CALCULATE</a></li>
-				<li>&nbsp;</li>
-				<li><a href="#" ng-click="vm.move()" class="btn btn-default">MOVE</a></li>
+				<li><a ui-sref="dashboard">HOME</a></li>
 				<li>&nbsp; | &nbsp;</li>
 				<li><a ui-sref="settings" class="btn btn-default">SETTINGS</a></li>
 			</ul>
@@ -90,7 +91,8 @@
     <!-- settings -->
     <script src="app/settings/settings.module.js"></script>
     <script src="app/settings/config.route.js"></script>
-    <script src="app/settings/settings.js"></script>    
+    <script src="app/settings/settings.js"></script>
+    <!-- endinject -->    
 </body>
 
 </html>

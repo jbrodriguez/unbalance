@@ -11,6 +11,7 @@ import (
 type Config struct {
 	ReservedSpace uint64   `json:"reservedSpace"`
 	Folders       []string `json:"folders"`
+	DryRun        bool     `json:"dryRun"`
 
 	ConfigDir string `json:"-"`
 	LogDir    string `json:"-"`
@@ -49,6 +50,7 @@ func (c *Config) LoadConfig() {
 
 		c.ReservedSpace = 250000000
 		c.Folders = make([]string, 0)
+		c.DryRun = true
 
 		c.Save()
 
