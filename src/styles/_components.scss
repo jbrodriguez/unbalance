@@ -57,20 +57,32 @@
     }
 }
 
+// STATUS
+.label {
+	// display: inline;
+	padding: .3em .6em .3em;
+	font-size: 75%;
+	// font-weight: bold;
+	line-height: 1;
+	color: $label-color;
+	// text-align: center;
+	// white-space: nowrap;
+	// vertical-align: baseline;
+	border-radius: .25em;
+}
+
+.label-success {
+	background-color: $label-success-bg;
+}
+
 // BADGES
 
 .badge {
 	padding: 1em;
 }
-
-.status {
-	color: white;
-	padding: $padding-button-vertical $padding-button-horizontal;
-}
-
 .success {
 	background-color: green;
-	border: 1px solid darken(green, 10%);
+	border: 1px solid lighten(green, 10%);
 }
 
 .warning {

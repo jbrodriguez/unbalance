@@ -19,7 +19,7 @@ gulp.task('styles', function() {
         .pipe(concat('app.min.css')) // Before bytediff or after
         .pipe(autoprefixer('last 2 version', '> 5%'))
         .pipe(bytediff.start())
-//        .pipe(minifyCss())
+        .pipe(minifyCss({processImport: false}))
         .pipe(bytediff.stop(helper.bytediffFormatter))
         //        .pipe(plug.concat('all.min.css')) // Before bytediff or after
         .pipe(plumber.stop())

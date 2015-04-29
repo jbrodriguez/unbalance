@@ -68,6 +68,7 @@ func (c *Config) LoadConfig() {
 
 	c.ReservedSpace = config.ReservedSpace
 	c.Folders = config.Folders
+	c.DryRun = config.DryRun
 }
 
 func (c *Config) Save() {

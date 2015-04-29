@@ -10,7 +10,7 @@ function publish(server) {
 
 	cmd = new rsync()
 //		.dry()
-	    .flags('avzhPX')
+	    .flags('rlptDvzhPX')
 	    .shell('ssh')
 	    .delete()
 	    .exclude('.htaccess')
@@ -32,9 +32,8 @@ function publish(server) {
 
 	cmd.execute(function(error, code, cmd) {
 	    gutil.log('rysnc: All done executing', cmd);
+		gutil.log('Deployed to ' + gutil.colors.blue(server));
 	});		
-
-	gutil.log('Deployed to ' + gutil.colors.blue(server));
 }
 
 gulp.task('publish:wopr', ['build:server', 'build:client'], function() {

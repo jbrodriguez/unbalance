@@ -13,11 +13,21 @@ main {
     }	
 }
 
+.dashboard-status {
+	margin-bottom: 1em;
+
+	@media (min-width: $breakpoint-2) {
+		margin-bottom: 0;
+	}
+}
+
 .dashboard-status,
 .dashboard-commands {
-	display: flex;
+	@include flexbox(flex, row, center, center);
 }
 
 .dryrun {
 	@include flexbox(flex, column, center, center);
+	margin-left: 1em;
+	font-size: 0.5em;
 }
