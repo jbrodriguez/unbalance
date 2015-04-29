@@ -9,7 +9,8 @@ var sources = {
 		images: "./src/images/",
 		scripts: "./src/scripts/",
 		svg: "./src/svg/",
-		cache: "./src/cache/"
+		cache: "./src/cache/",
+		tools: "./src/tools/"
 };
 
 var	staging = {
@@ -23,6 +24,11 @@ module.exports = {
 	clean: {
 		staging: staging.root,
 		dist: dist
+	},
+
+	tools: {
+		src: sources.tools + '*',
+		dst: dist
 	},
 
 	build: {

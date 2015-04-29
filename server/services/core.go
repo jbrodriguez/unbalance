@@ -178,7 +178,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	// mlog.Info("Error: %s", err)
 
 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-		mlog.Warning("Folder does not exist ", srcFolder)
+		mlog.Warning("Folder does not exist: %s", srcFolder)
 		return nil
 	}
 
@@ -277,10 +277,16 @@ func (c *Core) move(msg *pubsub.Message) {
 		for _, item := range disk.Bin.Items {
 			dst := filepath.Join(disk.Path, item.Path)
 
-			// mlog.Infof("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
-			mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
+			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
+			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
 			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			commands = append(commands, command)
+
+			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
+			mlog.Info("cmd = %s", cmd)
+
+			lib.Shell(cmd, processDiskMv)
 
 			// mover.Src = item.Name
 			// mover.Dst = dst
@@ -301,4 +307,8 @@ func (c *Core) move(msg *pubsub.Message) {
 	}
 
 	msg.Reply <- commands
+}
+
+func processDiskMv(line string) {
+	mlog.Info(line)
 }

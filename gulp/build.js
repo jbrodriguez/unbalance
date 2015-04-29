@@ -9,7 +9,7 @@ function command(tag, cmd) {
 	gutil.log(gutil.colors.yellow('tag: ' + tag) + gutil.colors.green(result));
 }
 
-gulp.task('build:server', function() {
+gulp.task('build:server', ['tools'], function() {
 	// var src = path.join(process.cwd(), 'server');
 	// var dst = path.join(process.cwd(), 'dist');
 	var src = config.build.server;
