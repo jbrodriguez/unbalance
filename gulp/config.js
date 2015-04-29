@@ -1,10 +1,10 @@
 var client = "./client/";
 var server = "./server/";
-
-var stage = "./staging/";
 var dist = "./dist/";
 
-var assets = {
+//var stage = "./staging/";
+
+var sources = {
 		styles: "./src/styles/",
 		images: "./src/images/",
 		scripts: "./src/scripts/",
@@ -13,20 +13,26 @@ var assets = {
 };
 
 var	staging = {
-		styles: stage + "css/",
-		images: stage + "img/",
-		scripts: stage + "js/",
+		root: "./staging/",
+		styles: "./staging/css/",
+		images: "./staging/img/",
+		scripts: "./staging/js/",
 };
 
 module.exports = {
 	clean: {
-		staging: stage,
+		staging: staging.root,
+		dist: dist
+	},
+
+	build: {
+		server: server,
 		dist: dist
 	},
 
 	templates: {
 		src: client + "app/**/*.html",
-		dst: assets.cache
+		dst: sources.cache
 	},
 
 	scripts: {
@@ -40,27 +46,27 @@ module.exports = {
 
 	styles: {
 		vendors: client + "vendor/**/*.css",
-		src: assets.images + "styles.scss",
+		src: sources.styles + "styles.scss",
 		dst: staging.styles
 	},
 
 	images: {
-		cache: assets.cache,
-		src: assets.images + "*",
+		cache: sources.cache,
+		src: sources.images + "*",
 		dst: staging.images
 	},
 
 	svg: {
-		src: assets.svg + "*.svg",
+		src: sources.svg + "*.svg",
 		dst: staging.images
 	},
 
 	fingerprint: {
-		minFilter: "**/*.{css,js,jpg,png,svg}",
+		revFilter: "**/*.{css,js,jpg,png,svg}",
 		index: "index.html",
 
 		src: [
-			stage + "**/*.{css,js,jpg,png,svg}",
+			staging.root + "**/*.{css,js,jpg,png,svg}",
 			client + "index.html"
 		],
 		dst: dist
@@ -73,25 +79,10 @@ module.exports = {
 		],
 		src: dist + "**/*.{html,js}",
 		dst: dist
+	},
+
+	publish: {
+		src: dist,
+		dst: "/boot/custom/unbalance"
 	}
-
-	// "templates": "./client/app/**/*.html",
-	// "scripts": [
-	// 	"./client/app/**/*module*.js",
-	// 	"./client/app/**/*.js"
-	// ],
-	// "styles": [
-	//     "./src/styles/styles.scss"	
-	// ],
-	// "images": [
-	//     "./src/img/*"
-	// ],
-	// "svg": [
-	//     "./src/svg/*"
-	// ],
-
-	// "vendorjs":	"./client/vendor/**/*.js",
-	// "vendorcss": "./client/vendor/**/*.css",
-
-	// "dist": "./dist"
 }

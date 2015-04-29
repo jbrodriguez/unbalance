@@ -63,6 +63,11 @@
 	padding: 1em;
 }
 
+.status {
+	color: white;
+	padding: $padding-button-vertical $padding-button-horizontal;
+}
+
 .success {
 	background-color: green;
 	border: 1px solid darken(green, 10%);

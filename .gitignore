@@ -1,6 +1,7 @@
 unbalance
 
 dist/
+staging/
 log/
 
 .DS_Store

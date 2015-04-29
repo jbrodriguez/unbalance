@@ -5,10 +5,19 @@ main {
 }
 
 .dashboard-header {
-	@include flexbox(flex, column, center, stretch);
+	@include flexbox(flex, column, center, center);
 
     @media (min-width: $breakpoint-2) {
 		flex-direction: row;
 		justify-content: space-between;
     }	
+}
+
+.dashboard-status,
+.dashboard-commands {
+	display: flex;
+}
+
+.dryrun {
+	@include flexbox(flex, column, center, center);
 }

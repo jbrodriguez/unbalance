@@ -1,14 +1,14 @@
 		<section class="column">
 			<div class="row dashboard-header">
 				<div class="dashboard-status">
-					<span class="badge success">{{vm.condition.state}}</span>
+					<span class="status success">{{vm.condition.state}}</span>
 				</div>
 
 				<div class="dashboard-commands">
 					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-default">CALCULATE</a>
 					<span>&nbsp; | &nbsp;</span>
 					<a href="#" ng-click="vm.move()" class="btn btn-default">MOVE</a>
-					<div> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun" /> <span>dry-run </span> </div>
+					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun" /> <span>dry-run </span> </div>
 				</div>				
 			</div>
 
