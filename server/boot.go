@@ -16,9 +16,11 @@ func main() {
 
 	bus := pubsub.New(1)
 
-	server := services.NewServer(bus, &config)
+	socket := services.NewSocket(bus, &config)
+	server := services.NewServer(bus, &config, socket)
 	core := services.NewCore(bus, &config)
 
+	socket.Start()
 	server.Start()
 	core.Start()
 
@@ -28,4 +30,5 @@ func main() {
 
 	core.Stop()
 	server.Stop()
+	socket.Stop()
 }

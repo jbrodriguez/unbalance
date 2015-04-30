@@ -15,10 +15,11 @@ type Server struct {
 	bus    *pubsub.PubSub
 	config *model.Config
 	engine *gin.Engine
+	socket *Socket
 }
 
-func NewServer(bus *pubsub.PubSub, config *model.Config) *Server {
-	server := &Server{bus: bus, config: config}
+func NewServer(bus *pubsub.PubSub, config *model.Config, socket *Socket) *Server {
+	server := &Server{bus: bus, config: config, socket: socket}
 	return server
 }
 
@@ -32,6 +33,11 @@ func (s *Server) Start() {
 
 	s.engine.Use(static.Serve("./"))
 	s.engine.NoRoute(static.Serve("./"))
+
+	// websocket handler
+	s.engine.GET("/ws", func(c *gin.Context) {
+		s.socket.handler(c.Writer, c.Request)
+	})
 
 	api := s.engine.Group(apiVersion)
 	{

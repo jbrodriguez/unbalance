@@ -44,18 +44,17 @@ func NewCore(bus *pubsub.PubSub, config *model.Config) *Core {
 
 	core.storage = &model.Unraid{}
 
+	core.chanConfigInfo = core.bus.Sub("cmd.getConfig")
+	core.chanSaveConfig = core.bus.Sub("cmd.saveConfig")
+	core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
+	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
+	core.chanMove = core.bus.Sub("cmd.move")
+
 	return core
 }
 
 func (c *Core) Start() {
 	mlog.Info("starting service Core ...")
-
-	c.chanConfigInfo = c.bus.Sub("cmd.getConfig")
-	c.chanSaveConfig = c.bus.Sub("cmd.saveConfig")
-	c.chanStorageInfo = c.bus.Sub("cmd.getStorageInfo")
-	c.chanCalculateBestFit = c.bus.Sub("cmd.calculateBestFit")
-	c.chanMove = c.bus.Sub("cmd.move")
-
 	go c.react()
 }
 
