@@ -6,7 +6,7 @@
         .controller('Dashboard', Dashboard);
 
     /* @ngInject */
-    function Dashboard($scope, $state, $q, api, logger, options) {
+    function Dashboard($scope, $state, $q, api, socket, logger, options) {
 
         /*jshint validthis: true */
         var vm = this;
@@ -116,11 +116,13 @@
         };
 
         function move() {
-            return api.move().then(function(data) {
-                vm.commands = data;
-                logger.info("Scroll down to see list of commands");
-                return vm.commands;
-            });
+            socket.send("storage:move");
+
+            // return api.move().then(function(data) {
+            //     vm.commands = data;
+            //     logger.info("Scroll down to see list of commands");
+            //     return vm.commands;
+            // });
         };
 
         function checkFrom(from) {

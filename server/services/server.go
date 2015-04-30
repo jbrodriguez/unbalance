@@ -3,10 +3,12 @@ package services
 import (
 	"apertoire.net/unbalance/server/dto"
 	"apertoire.net/unbalance/server/model"
-	"apertoire.net/unbalance/server/static"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+
+	"path/filepath"
 )
 
 const apiVersion string = "/api/v1"
@@ -31,8 +33,20 @@ func (s *Server) Start() {
 	s.engine.Use(gin.Recovery())
 	// s.engine.Use(helper.Logging())
 
-	s.engine.Use(static.Serve("./"))
-	s.engine.NoRoute(static.Serve("./"))
+	root1, err := filepath.Abs("./")
+	if err != nil {
+		panic(err)
+	}
+	mlog.Info("absolute for: %s", root1)
+
+	root2, err := filepath.Abs("/")
+	if err != nil {
+		panic(err)
+	}
+	mlog.Info("absolute for: %s", root2)
+
+	s.engine.Use(static.Serve("/", static.LocalFile("./", true)))
+	s.engine.NoRoute(static.Serve("/", static.LocalFile("./", true)))
 
 	// websocket handler
 	s.engine.GET("/ws", func(c *gin.Context) {

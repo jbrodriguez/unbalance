@@ -27,15 +27,19 @@ func (c *Connection) writer() {
 }
 
 func (c *Connection) reader() {
+	mlog.Info("before for loop")
+
 	for {
+		mlog.Info("after for loop")
 		var msgIn dto.MessageIn
 		err := c.ws.ReadJSON(&msgIn)
 		if err != nil {
+			mlog.Info("error is: %s", err.Error())
 			break
 		}
 
 		// if DEBUG {
-		mlog.Info("client type is:", msgIn)
+		mlog.Info("client type is: %s", msgIn)
 		// }
 
 		//		c.client = msgIn

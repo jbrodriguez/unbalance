@@ -28,6 +28,7 @@ type Core struct {
 	chanStorageInfo      chan *pubsub.Message
 	chanCalculateBestFit chan *pubsub.Message
 	chanMove             chan *pubsub.Message
+	storageMove          chan *pubsub.Message
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -49,6 +50,7 @@ func NewCore(bus *pubsub.PubSub, config *model.Config) *Core {
 	core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
 	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
 	core.chanMove = core.bus.Sub("cmd.move")
+	core.storageMove = core.bus.Sub("cmd.storageMove")
 
 	return core
 }
@@ -75,6 +77,9 @@ func (c *Core) react() {
 			go c.calculateBestFit(msg)
 		case msg := <-c.chanMove:
 			go c.move(msg)
+		case msg := <-c.storageMove:
+			go c.doStorageMove(msg)
+
 		}
 	}
 }
@@ -263,6 +268,13 @@ loop:
 	return folders[:w]
 }
 
+func (c *Core) processDiskMv(line string) {
+	outbound := &dto.MessageOut{Topic: "storage:move:progress", Payload: line}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	mlog.Info(line)
+}
+
 func (c *Core) move(msg *pubsub.Message) {
 	var commands []*dto.Move
 
@@ -285,7 +297,7 @@ func (c *Core) move(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd = %s", cmd)
 
-			lib.Shell(cmd, processDiskMv)
+			lib.Shell(cmd, c.processDiskMv)
 
 			// mover.Src = item.Name
 			// mover.Dst = dst
@@ -308,6 +320,55 @@ func (c *Core) move(msg *pubsub.Message) {
 	msg.Reply <- commands
 }
 
-func processDiskMv(line string) {
-	mlog.Info(line)
+func (c *Core) doStorageMove(msg *pubsub.Message) {
+	// var commands []*dto.Move
+
+	// commands = make([]*dto.Move, 0)
+
+	outbound := &dto.MessageOut{Topic: "storage:move:begin", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	for _, disk := range c.storage.Disks {
+		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
+			continue
+		}
+
+		for _, item := range disk.Bin.Items {
+			//			dst := filepath.Join(disk.Path, item.Path)
+
+			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
+			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
+			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
+			//			commands = append(commands, command)
+
+			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
+			mlog.Info("cmd = %s", cmd)
+
+			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+			lib.Shell(cmd, c.processDiskMv)
+
+			// mover.Src = item.Name
+			// mover.Dst = dst
+			// mover.Progress = progress
+
+			// glog.Infof("mover: %+v", mover)
+
+			// mover.Copy()
+			// for {
+			// 	select {
+			// 	case msg := <-mover.ProgressCh:
+			// 		glog.Infof("Progress: %+v", msg)
+			// 	case <-mover.DoneCh:
+			// 		return
+			// 	}
+			// }
+		}
+	}
+
+	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 }

@@ -5,6 +5,7 @@ var concat = require('gulp-concat');
 var annotate = require('gulp-ng-annotate');
 var bytediff = require('gulp-bytediff');
 var uglify = require('gulp-uglify');
+var plumber = require('gulp-plumber');
 
 var config = require('./config.js');
 var helper = require('./helper.js')
@@ -20,6 +21,7 @@ gulp.task('scripts', ['templates'], function() {
 
     return gulp
         .src(source)
+        .pipe(plumber())
         // .pipe(plug.sourcemaps.init()) // get screwed up in the file rev process
         .pipe(concat('app.min.js'))
         .pipe(annotate({ add: true, single_quotes: true }))
@@ -27,6 +29,8 @@ gulp.task('scripts', ['templates'], function() {
 //        .pipe(uglify({ mangle: true }))
         .pipe(bytediff.stop(helper.bytediffFormatter))
         // .pipe(plug.sourcemaps.write('./'))
+
+        .pipe(plumber.stop())
         .pipe(gulp.dest(config.scripts.dst));
 });
 
