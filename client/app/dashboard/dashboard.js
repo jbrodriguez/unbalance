@@ -37,13 +37,11 @@
         socket.register("storage:move:begin", storageMoveBegin);
         socket.register("storage:move:progress", storageMoveProgress);
         socket.register("storage:move:end", storageMoveEnd);
+        socket.register("storage:update:completed", storageUpdate);
 
         activate();
 
         function activate() {
-            vm.moveInProgress = false;
-            vm.moveStarted = false;
-
             return getStatus().then(function() {
                 logger.info('activated dashboard view');
             });
@@ -51,7 +49,10 @@
 
         function getStatus() {
             return api.getStatus().then(function (data) {
-                logger.info('what is: ', data)
+                logger.info('what is: ', data);
+
+                vm.moveInProgress = false;
+                vm.moveStarted = false;                
 
                 vm.condition = data.condition;
 
@@ -166,8 +167,11 @@
         };
 
         function storageMoveBegin(data) {
+            vm.lines.push("Move operation started ...");
+            
             vm.moveInProgress = true;
             vm.moveStarted = true;
+
         };
 
         function storageMoveProgress(data) {
@@ -176,6 +180,40 @@
 
         function storageMoveEnd(data) {
             vm.moveInProgress = false;
+
+            vm.lines.push("Move operation completed.");
+
+            if (!vm.options.config.dryRun) {
+                socket.send("storage:update");
+            }
         };
+
+        function storageUpdate(data) {
+            logger.info('the prize: ', data);
+
+            vm.condition = data.condition;
+
+            vm.maxFreeSize = 0;
+            vm.maxFreePath = 0;
+
+            vm.disks = [];
+            vm.disks = data.disks.map(function(disk) {
+                vm.toDisk[disk.path] = true;
+                vm.fromDisk[disk.path] = false;
+
+                if (disk.free > vm.maxFreeSize) {
+                    vm.maxFreeSize = disk.free;
+                    vm.maxFreePath = disk.path;
+                }
+
+                return disk;
+            });
+
+            if (vm.maxFreePath != "") {
+                vm.toDisk[vm.maxFreePath] = false;
+                vm.fromDisk[vm.maxFreePath] = true;
+            }
+        }
+
     }
 })();
