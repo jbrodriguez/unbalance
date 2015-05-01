@@ -20,6 +20,12 @@
 				</div>				
 			</div>
 
+			<div class="row console" data-ng-if="vm.moveStarted">
+				<div class="console__lines" unb-scroll-bottom="vm.lines">
+					<p ng-repeat="line in vm.lines track by $index" class="console__line">{{line}}</p>
+				</div>
+			</div>
+
 			<table class="row dashboard">
 			<thead>
 				<tr>
@@ -63,11 +69,4 @@
                 </tr>
 			</tbody>
 			</table>
-
-			<div class="row console" data-ng-if="vm.moveStarted">
-				<h3>Console</h3>
-				<div class="console__lines" unb-scroll-bottom="vm.lines">
-					<p ng-repeat="line in vm.lines track by $index" class="console__line">{{line}}</p>
-				</div>
-			</div>
 		</section>
