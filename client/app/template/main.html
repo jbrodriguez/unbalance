@@ -1,0 +1,73 @@
+		<section class="column">
+			<div class="row dashboard-header">
+				<div class="dashboard-status">
+					STATUS: &nbsp; <span class="label label-success">{{vm.condition.state | lowercase}}</span>
+				</div>
+
+				<div class="loading" data-ng-if="vm.moveInProgress">
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				</div>		
+
+				<div class="dashboard-commands">
+					<span>&nbsp;</span>
+					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">CALCULATE</a>
+					<span>&nbsp; | &nbsp;</span>
+					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">MOVE</a>
+					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.moveInProgress}" /> <span>dry-run </span> </div>
+				</div>				
+			</div>
+
+			<table class="row dashboard">
+			<thead>
+				<tr>
+			        <th>DISK</th>
+			        <th>SERIAL</th>
+			        <th>FROM </th>
+			        <th>TO</th>
+			        <th>SIZE</th>
+			        <th>FREE</th>
+			        <th>FILL</th>
+			        <th>PLAN</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr data-ng-repeat="disk in vm.disks">
+			        <td>{{disk.path|replace:"/mnt/":""}}</td>
+			        <td>{{disk.serial}} ({{disk.device}})</td>
+			        <td><input type="checkbox" data-ng-checked="{{vm.fromDisk[disk.path]}}" data-ng-model="vm.fromDisk[disk.path]" data-ng-change="vm.checkFrom(disk.path)"/> </td>
+			        <td><input type="checkbox" data-ng-checked="{{vm.toDisk[disk.path]}}" data-ng-model="vm.toDisk[disk.path]" data-ng-change="vm.checkTo(disk.path)"/> </td>
+			        <td>{{disk.size|humanBytes}}</td>
+			        <td>{{disk.free|humanBytes}}</td>
+			        <td>
+			            <div class="progress">
+			                <span style="width: {{ ((disk.size - disk.free) / disk.size ) | percentage}}"></span>
+			            </div>
+			        </td>
+			        <td>
+			            <span data-ng-class="{label: disk.newFree !== disk.free, 'label-success': disk.newFree !== disk.free}">{{disk.newFree|humanBytes}}</span>
+			        </td>				
+				</tr>
+                <tr>
+                    <td colspan="4">TOTAL</td>
+                    <td>{{vm.condition.size|humanBytes}}</td>
+                    <td>{{vm.condition.free|humanBytes}}</td>
+                    <td>
+                        <div class="progress">
+                            <span style="width: {{ ((vm.condition.size-vm.condition.free) / vm.condition.size ) | percentage}}"></span>
+                        </div>
+                    </td>
+                    <td>{{vm.condition.free|humanBytes}}</td>
+                </tr>
+			</tbody>
+			</table>
+
+			<div class="row console" data-ng-if="vm.moveStarted">
+				<h3>Console</h3>
+				<div class="console__lines" unb-scroll-bottom="vm.lines">
+					<p ng-repeat="line in vm.lines track by $index" class="console__line">{{line}}</p>
+				</div>
+			</div>
+		</section>

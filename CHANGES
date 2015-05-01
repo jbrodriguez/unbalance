@@ -1,0 +1,72 @@
+Version 0.1.0 - 2015-05-01
+    initial commit
+    completed work on refactoring the packer service provider. mapped it to a separate object with better functionality separation. will now work on refactor the concept itself, adding an option to let the code work against all disks. so i will iterate over disks in desc order of freespace, run a bestfit on it, pick the first solution, simulate a decrease of space on the disk, repeat, rinse
+    not working commit, have to change everything to references instead of copy, doesnt work that way
+    prototyped a removeFolder function based off stackoverflow, need to test against the real thing (currently mocking in osx)
+    first working version, need to sort disks by free space (desc)
+    preparing to replace ui
+    static ui prototype
+    ignore unbalance binary
+    really ignore unbalance binary
+    first steps for frontend ui, now will work on backed websocket server
+    base websocket functionality in backend, so i will now merge both features and work on integration from here on
+    * feature/ui:
+      first steps for frontend ui, now will work on backed websocket server
+    first stage of integration is completed, messages to the server are working, so now i'll work on a reply to the frontend, to close the integration feature
+    communicatio between both parties is working, now need to complete proof of concept for gui, adding models and such to make angular actually render a dynamic ui
+    first version with basic functionality going for it ... way to go !!
+    + include only healthy disks in output (DISK_OK)
+    + correct json tags for box object
+    + rearrange ui columns and data (changing both html and js code)
+    + added a replace filter (to remove '/mnt/' from output)
+    showing which disks would be changed as part of the best fit scenario
+    still work in progress and unstable, but will get to here today, will continue later
+    had to move messages into lib, to prevent import cycle not allowed error , but i'm coming back with a vengeance to solve this once and for all
+    it compiles, which is a good thing ! will work on finally getting that copying functionality home
+    testing core move functionality, looks fine so far
+    - Implemented a test to reserve some space, beyond which the knapsack algorithm shouldn't go
+    - Cleaned up testing code
+    - Defined the output of the move to be the commands that would be executed if the move actually took place (think of it as a dry run)
+    yeah.
+    we're starting from scratch
+    - Created new app structure
+    - Added calculation of best fit functionality
+    - Added move functionality (shows the list of commands that would eventually be executed)
+    - Added html5 localStorage functionality
+    - Added foundation to implement a settings feature
+    - Define new logic for getting folders
+    - Upgrade angularjs and ui-router
+    - Add controller semantics for selecting/deselecting to/from disks
+    - Complete first functional draft
+    - Create first iteration of redesigned interface
+    - Add gulpjs (still partially)
+    - Create new logo
+    - Create new overall theme
+    - Add new UI. It breaks the build, because I haven't implemented the angularjs hooks yet.
+    - Create first functional version (still need to check settings page)
+    - Create first working version of new UI. Still missing a part of the settings page
+    - Add "submit" on enter
+    - Fix state name on main logo anchor
+    - Fix error when the elegible folders didnt exist in the source folder
+    - Add gulp tasks to control full lifecycle
+    - Add vendor injections
+    - Fingerprint images (the same as the other assets)
+    - Reorganize folder structure to support all assets fingerprinting
+    - Add rsync task to send distribution folder to server
+    - Create first functional version, only missing diskmv functionality.
+    - Modify visual cue for when a disk will be changed, to a label (same as the "started" text)
+    - Add diskmv to the dist folder
+    - Reuse shell library from simplenas project
+    - Invoke diskmv, but only log to console for now
+    - Add websocket server functionality (untested)
+    - Fix websocket functionality (duplex communication is working)
+    - Add scroll to bottom directive (to simulate console)
+    - Apply scope the data incoming from the websocket
+    - Create logic to handle data incoming from the websocket
+    - Add dryrun support
+    - Add css spinner
+    - Add folder to gitignore
+    - Add LICENSE (MIT)
+    - Add semver scripts to handle app versioning
+
+

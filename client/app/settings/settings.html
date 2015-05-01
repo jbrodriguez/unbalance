@@ -1,0 +1,46 @@
+		<section class="column">
+			<div class="row badge warning" data-ng-if="vm.options.config.folders.length === 0">
+				<span>There are no folders elegible for moving. Please enter them, in the input box below</span>
+			</div>
+
+			<div class="row">
+				<form class="cd-form">
+				<fieldset>
+					<legend>Folders elegible for the moving process</legend>
+
+					<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
+					<p>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
+
+					<div>
+						<label>Folder</label>
+						<input type="text" placeholder="folder elegible for moving" data-ng-model="vm.folder" data-ng-keyup="$event.keyCode == 13 && vm.addFolder()">
+					</div>
+
+					<div>
+						<a href="#" class="btn btn-primary" data-ng-click="vm.addFolder()">Add</a>
+					</div>
+
+					<legend>Folders Selected</legend>
+
+					<div>
+						<table class="settings">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Folder</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr data-ng-repeat="folder in vm.options.config.folders">
+								<td><i class="fa fa-times"></i></td>
+								<td>{{folder}}</td>
+							</tr>
+						</tbody>
+						</table>
+					</div>
+				</fieldset>
+				</form>
+			</div>
+			</form>
+
+		</section>
