@@ -8,11 +8,12 @@
     // api.$inject = ['$http', '$location', exception, logger];
 
     /* @ngInject */
-    function api($http, exception, logger) {
+    function api($http, $location, exception, logger) {
     	var ep = "/api/v1";
 
     	var service = {
             getConfig: getConfig,
+            saveConfig: saveConfig,
             getStatus: getStatus,
             calculateBestFit: calculateBestFit,
             move: move,
@@ -32,6 +33,19 @@
                 return data.data
             }
         };
+
+        function saveConfig(arg) {
+            return $http.put(ep + '/config', arg)
+                .then(saveConfigEnd)
+                .catch(function(message) {
+                    exception.catcher('XHR Failed for saveConfig')(message);
+                    $location.url('/');
+                });
+
+            function saveConfigEnd(data, status, header, config) {
+                return data.data
+            };
+        };        
 
     	function getStatus() {
     		return $http.get(ep + '/storage')

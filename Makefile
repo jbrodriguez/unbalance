@@ -10,12 +10,16 @@ clean:
 	rm -rf ./dist
 
 install: clean buildx
-	cp -r client/ dist
-	scp -pr ./dist/* hal:/boot/custom/unbalance
+	cp -r client/* dist
+	scp -pr ./dist/* wopr:/boot/custom/unbalance
 
 run: clean build
 	cp -r client/ dist
 	cd dist && ./unbalance
+
+dev: clean build
+	cp -r client/* dist
+	cd dist && http-server
 
 vet:
 	go vet ./server/...

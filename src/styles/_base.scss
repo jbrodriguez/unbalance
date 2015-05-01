@@ -1,0 +1,59 @@
+body {
+	font: 100%/1.625em 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	color: $primaryColor;
+
+	display: flex;
+	flex-direction: column;
+
+	min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+	font-family: Lato;
+	color: $primaryHeadersColor;
+	font-weight: bold;
+	line-height: 1.2;
+}
+
+h1 {
+	font-size: 2em;
+	margin-bottom: 0.17em;
+}
+
+h2 {
+	font-size: 1.5em;
+	margin-bottom: 0.33em;
+}
+
+h3 { 
+    font-size: 1.17em;
+    margin-bottom: 0.5em;
+}
+
+p,
+ul,
+ol {
+	margin-bottom: 1.5em;
+}
+
+a {
+	color: $primaryAnchorColor;
+}
+
+ul {
+	list-style-position: inside;
+
+	li {
+		list-style-type: square;
+	}	
+}
+
+ol {
+	list-style-position: inside;
+
+	li {
+		list-style-type: decimal;
+	}	
+}

@@ -1,21 +1,26 @@
 package main
 
 import (
+	"apertoire.net/unbalance/server/model"
 	"apertoire.net/unbalance/server/services"
 	"fmt"
-	"github.com/apertoire/mlog"
-	"github.com/apertoire/pubsub"
+	"github.com/jbrodriguez/mlog"
+	"github.com/jbrodriguez/pubsub"
 )
 
+var Version string
+
 func main() {
-	mlog.Start(mlog.LevelInfo, "./log/app.log")
-	mlog.Info("starting up ...")
+	config := model.Config{}
+	config.Init(Version)
 
 	bus := pubsub.New(1)
 
-	server := services.NewServer(bus)
-	core := services.NewCore(bus)
+	socket := services.NewSocket(bus, &config)
+	server := services.NewServer(bus, &config, socket)
+	core := services.NewCore(bus, &config)
 
+	socket.Start()
 	server.Start()
 	core.Start()
 
@@ -25,4 +30,5 @@ func main() {
 
 	core.Stop()
 	server.Stop()
+	socket.Stop()
 }

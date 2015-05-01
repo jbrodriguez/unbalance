@@ -1,0 +1,33 @@
+footer {
+	color: $footerColor;
+	background-color: $footerBackground;
+
+	font-size: 0.75em;	
+
+	@include flexbox(flex, row, center, stretch);
+}
+
+.legal {
+	@include flexbox(flex, column, center, center);
+
+    @media (min-width: $breakpoint-2) {
+		flex-direction: row;
+		justify-content: space-between;
+    }	
+
+	a, span {
+		display: flex;
+	}
+
+	a {
+		color: $headerBackground;
+	}
+}
+
+.copyright {
+	@extend %spacer;
+
+    @media (min-width: $breakpoint-2) {
+		margin: 0;
+    }	
+}	

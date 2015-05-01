@@ -20,6 +20,7 @@
          * Feature areas
          */
         'app.dashboard',
+        'app.settings'
     ]);
 
     angular
