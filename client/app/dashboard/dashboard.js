@@ -30,9 +30,20 @@
         vm.checkTo = checkTo;
         vm.flipDryRun = flipDryRun;
 
+        vm.moveStarted = false
+        vm.moveInProgress = false;
+        vm.lines = [];
+
+        socket.register("storage:move:begin", storageMoveBegin);
+        socket.register("storage:move:progress", storageMoveProgress);
+        socket.register("storage:move:end", storageMoveEnd);
+
         activate();
 
         function activate() {
+            vm.moveInProgress = false;
+            vm.moveStarted = false;
+
             return getStatus().then(function() {
                 logger.info('activated dashboard view');
             });
@@ -142,7 +153,7 @@
 
         function checkTo(to) {
             return;
-        }
+        };
 
         function flipDryRun() {
             vm.options.config.dryRun != vm.options.config.dryRun;
@@ -152,6 +163,19 @@
             return api.saveConfig(vm.options.config).then(function(data) {
                 logger.success('config saved succesfully');
             });            
-        }
+        };
+
+        function storageMoveBegin(data) {
+            vm.moveInProgress = true;
+            vm.moveStarted = true;
+        };
+
+        function storageMoveProgress(data) {
+            vm.lines.push(data);
+        };
+
+        function storageMoveEnd(data) {
+            vm.moveInProgress = false;
+        };
     }
 })();

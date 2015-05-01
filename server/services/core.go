@@ -95,6 +95,7 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 
 	config := msg.Payload.(*model.Config)
 	c.config.Folders = config.Folders
+	c.config.DryRun = config.DryRun
 
 	c.config.Save()
 
@@ -102,7 +103,7 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 }
 
 func (c *Core) getStorageInfo(msg *pubsub.Message) {
-	mlog.Info("La vita e bella")
+	//	mlog.Info("La vita e bella")
 
 	msg.Reply <- c.storage.Refresh()
 }
@@ -325,6 +326,13 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 
 	// commands = make([]*dto.Move, 0)
 
+	var dry string
+	if c.config.DryRun {
+		dry = "-t"
+	} else {
+		dry = "-f"
+	}
+
 	outbound := &dto.MessageOut{Topic: "storage:move:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -342,7 +350,7 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
-			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("./diskmv %s \"%s\" %s %s", dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd = %s", cmd)
 
 			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}

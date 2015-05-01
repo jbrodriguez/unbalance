@@ -6,9 +6,8 @@
         .factory('socket', socket);
 
     /* @ngInject */
-    function socket($location) {
+    function socket($location, $rootScope) {
 		// Open a WebSocket connection
-//		var ws = $websocket('ws://localhost:/data');
 		var url = $location.host() + ":" + $location.port();
 
 		var skt = new WebSocket("ws://" + url + "/ws");
@@ -22,8 +21,8 @@
 		skt.onmessage = function(evt) {
 			var msg = JSON.parse(event.data);
 			console.log(msg);
-			if (actions[msg.topic])
-				actions[msg.topic](msg.payload);
+			if (actions.hasOwnProperty(msg.topic))
+				$rootScope.$apply(actions[msg.topic](msg.payload));
 		};
 
 		skt.onclose = function(evt) {

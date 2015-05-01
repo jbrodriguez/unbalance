@@ -5,6 +5,11 @@
 	margin-bottom: 1em;
 }
 
+// TYPOGRAPHY
+.lead {
+	border: 1px solid $borderColor;
+}
+
 
 // BUTTONS
 .btn {
@@ -16,6 +21,14 @@
 	white-space: nowrap;
 	padding: $padding-button-vertical $padding-button-horizontal;
 	font-size: 0.75em;
+
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
+		cursor: not-allowed;
+		opacity: .65;
+		box-shadow: none;
+	}	
 }
 
 .btn-default {
@@ -399,4 +412,56 @@
 		&:nth-of-type(8):before { content: "Plan" }			
 	}
 
+}
+
+// SPINNERS
+.loading {
+	// position: absolute;
+	// top: 50%;
+	// left: 50%;
+	margin-bottom: 1em;
+
+	@media (min-width: $breakpoint-2) {
+		margin: 0;
+	}
+}
+
+.loading-bar {
+	display: inline-block;
+	width: 4px;
+	height: 18px;
+	border-radius: 4px;
+	animation: loading 1s ease-in-out infinite;
+
+	&:nth-child(1) {
+		background-color: #3498db;
+		animation-delay: 0;
+	}
+
+	&:nth-child(2) {
+		background-color: #c0392b;
+		animation-delay: 0.09s;
+  	}
+
+	&:nth-child(3) {
+		background-color: #f1c40f;
+		animation-delay: .18s;
+	}
+
+	&:nth-child(4) {
+		background-color: #27ae60;
+		animation-delay: .27s;
+	}
+}
+
+@keyframes loading {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1, 2.2);
+  }
+  40% {
+    transform: scale(1);
+  }
 }

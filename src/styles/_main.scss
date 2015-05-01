@@ -7,6 +7,9 @@ main {
 .dashboard-header {
 	@include flexbox(flex, column, center, center);
 
+	background-color: $dashboard-header-bg;
+	padding: 0.5em;
+
     @media (min-width: $breakpoint-2) {
 		flex-direction: row;
 		justify-content: space-between;
@@ -30,4 +33,26 @@ main {
 	@include flexbox(flex, column, center, center);
 	margin-left: 1em;
 	font-size: 0.5em;
+}
+
+
+.console {
+    @include e('lines') {
+	    overflow: scroll;
+	    width: 100%;
+	    height: 450px;
+	    border: 1px solid $borderColor;
+	    padding: 0.75em;
+	    color: $console-color;
+	    background-color: $console-bg;
+    };
+
+    @include e('line') {
+		font-size: 0.8em;
+		line-height: 0.5em;    	
+    }
+
+    p {
+    	white-space: nowrap;
+    }
 }

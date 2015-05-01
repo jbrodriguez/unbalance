@@ -4,11 +4,19 @@
 					STATUS: &nbsp; <span class="label label-success">{{vm.condition.state | lowercase}}</span>
 				</div>
 
+				<div class="loading" data-ng-if="vm.moveInProgress">
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				  <div class="loading-bar"></div>
+				</div>		
+
 				<div class="dashboard-commands">
-					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary">CALCULATE</a>
+					<span>&nbsp;</span>
+					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">CALCULATE</a>
 					<span>&nbsp; | &nbsp;</span>
-					<a href="#" ng-click="vm.move()" class="btn btn-primary">MOVE</a>
-					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun" /> <span>dry-run </span> </div>
+					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">MOVE</a>
+					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.moveInProgress}" /> <span>dry-run </span> </div>
 				</div>				
 			</div>
 
@@ -55,4 +63,11 @@
                 </tr>
 			</tbody>
 			</table>
+
+			<div class="row console" data-ng-if="vm.moveStarted">
+				<h3>Console</h3>
+				<div class="console__lines" unb-scroll-bottom="vm.lines">
+					<p ng-repeat="line in vm.lines track by $index" class="console__line">{{line}}</p>
+				</div>
+			</div>
 		</section>
