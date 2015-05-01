@@ -18,8 +18,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body>
-	<header data-ng-controller="Home as vm">
+<body data-ng-controller="Home as vm">
+	<header>
 		<nav class="column">
 			<ul class="header-logo">
 				<li><a ui-sref="dashboard" class="logo"><img src="/img/unbalance-logo.png" alt="unBALANCE logo" /></a></li>
@@ -30,9 +30,9 @@
 				<li><a ui-sref="settings">SETTINGS</a></li>
 			</ul>
 			<ul>
-                <li><a href="https://twitter.com/jbrodriguezio"><svg class="icon"><title>Twitter follow</title><use xlink:href="/img/icons.svg#icon-twitter"></use></svg></a></li>
+                <li><a href="https://twitter.com/jbrodriguezio" target="_blank"><svg class="icon"><title>Twitter follow</title><use xlink:href="/img/icons.svg#icon-twitter"></use></svg></a></li>
                 <li>&nbsp;</li>
-                <li><a href="https://github.com/jbrodriguez"><svg class="icon"><title>Github star</title><use xlink:href="/img/icons.svg#icon-github"></use></svg></a></li>
+                <li><a href="https://github.com/jbrodriguez" target="_blank"><svg class="icon"><title>Github star</title><use xlink:href="/img/icons.svg#icon-github"></use></svg></a></li>
 			</ul>
 		</nav>
 	</header>
@@ -43,7 +43,11 @@
 	<footer>
 	    <section class="legal column">
 	        <span class="copyright">Copyright &copy; 2015 &nbsp; <a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a></span>
-	        <span class="logo"><a href="http://jbrodriguez.io/" class="logo"><img src="/img/logo-small.png" alt="Logo for Juan B. Rodriguez" /></a></span>
+	        <span class="version">unBALANCE v{{vm.options.config.version}}</span>
+	        <div class="logos">
+		        <span><a href="http://lime-technology.com/" target="_blank"><img src="/img/unraid.png" alt="Logo for unRAID" /></a></span>
+		        <span><a href="http://jbrodriguez.io/" target="_blank"><img src="/img/logo-small.png" alt="Logo for Juan B. Rodriguez" /></a></span>
+	       </div>
 	    </section>	
 	</footer>
 

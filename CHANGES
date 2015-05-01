@@ -1,3 +1,13 @@
+Version 0.2.0 - 2015-05-01
+    -Remove staging and art folders
+    - Display app version in footer
+    - Add Lime Technologies logo
+    - Make links to open in a new tab
+    - Move "console" above the dashboard
+    - Refresh dashboard when the move operation has completed (via websocket)
+    - Prevent duplication of entries when refreshing the dashboard
+
+
 Version 0.1.1 - 2015-05-01
     -Remove staging and art folders
     - Add version string to binary
