@@ -194,8 +194,9 @@
             vm.condition = data.condition;
 
             vm.maxFreeSize = 0;
-            vm.maxFreePath = 0;                
+            vm.maxFreePath = 0;
 
+            vm.disks = [];
             vm.disks = data.disks.map(function(disk) {
                 vm.toDisk[disk.path] = true;
                 vm.fromDisk[disk.path] = false;
