@@ -49,6 +49,10 @@ func (c *Connection) reader() {
 			msg := &pubsub.Message{}
 			c.hub.bus.Pub(msg, "cmd.storageMove")
 
+		case "storage:update":
+			msg := &pubsub.Message{}
+			c.hub.bus.Pub(msg, "cmd.storageUpdate")
+
 		default:
 			mlog.Info("Unexpected Topic: " + msgIn.Topic)
 		}

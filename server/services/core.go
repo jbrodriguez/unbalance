@@ -29,6 +29,7 @@ type Core struct {
 	chanCalculateBestFit chan *pubsub.Message
 	chanMove             chan *pubsub.Message
 	storageMove          chan *pubsub.Message
+	storageUpdate        chan *pubsub.Message
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -51,6 +52,7 @@ func NewCore(bus *pubsub.PubSub, config *model.Config) *Core {
 	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
 	core.chanMove = core.bus.Sub("cmd.move")
 	core.storageMove = core.bus.Sub("cmd.storageMove")
+	core.storageUpdate = core.bus.Sub("cmd.storageUpdate")
 
 	return core
 }
@@ -79,7 +81,8 @@ func (c *Core) react() {
 			go c.move(msg)
 		case msg := <-c.storageMove:
 			go c.doStorageMove(msg)
-
+		case msg := <-c.storageUpdate:
+			go c.doStorageUpdate(msg)
 		}
 	}
 }
@@ -379,4 +382,9 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+}
+
+func (c *Core) doStorageUpdate(msg *pubsub.Message) {
+	outbound := &dto.MessageOut{Topic: "storage:update:completed", Payload: c.storage.Refresh()}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 }
