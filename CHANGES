@@ -1,3 +1,8 @@
+Version 0.1.1 - 2015-05-01
+    -Remove staging and art folders
+    - Add version string to binary
+
+
 Version 0.1.0 - 2015-05-01
     initial commit
     completed work on refactoring the packer service provider. mapped it to a separate object with better functionality separation. will now work on refactor the concept itself, adding an option to let the code work against all disks. so i will iterate over disks in desc order of freespace, run a bestfit on it, pick the first solution, simulate a decrease of space on the disk, repeat, rinse
