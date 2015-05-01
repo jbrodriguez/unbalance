@@ -3,6 +3,7 @@ unbalance
 dist/
 staging/
 log/
+art/
 
 .DS_Store
 
