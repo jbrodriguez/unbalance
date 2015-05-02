@@ -1,10 +1,14 @@
 		<section class="column">
+			<div class="row badge warning" data-ng-if="!vm.ok">
+				<span>The array is not operational. Please start the array first.</span>
+			</div>
+
 			<div class="row dashboard-header">
 				<div class="dashboard-status">
-					STATUS: &nbsp; <span class="label label-success">{{vm.condition.state | lowercase}}</span>
+					STATUS: &nbsp; <span class="label" data-ng-class="$vm.ok ? 'label-success' : 'label-warning'">{{vm.condition.state | lowercase}}</span>
 				</div>
 
-				<div class="loading" data-ng-if="vm.moveInProgress">
+				<div class="loading" data-ng-if="vm.showProgress">
 				  <div class="loading-bar"></div>
 				  <div class="loading-bar"></div>
 				  <div class="loading-bar"></div>
@@ -13,10 +17,10 @@
 
 				<div class="dashboard-commands">
 					<span>&nbsp;</span>
-					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">CALCULATE</a>
+					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.disableControls}">CALCULATE</a>
 					<span>&nbsp; | &nbsp;</span>
-					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.moveInProgress}">MOVE</a>
-					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.moveInProgress}" /> <span>dry-run </span> </div>
+					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.disableControls}">MOVE</a>
+					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.disableControls}" /> <span>dry-run </span> </div>
 				</div>				
 			</div>
 
@@ -26,7 +30,7 @@
 				</div>
 			</div>
 
-			<table class="row dashboard">
+			<table class="row dashboard" data-ng-if="vm.ok">
 			<thead>
 				<tr>
 			        <th>DISK</th>

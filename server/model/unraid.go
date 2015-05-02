@@ -34,6 +34,11 @@ func (self *Unraid) Refresh() *Unraid {
 
 	helper.Shell("/root/mdcmd status|strings", self.readUnraidConfig, nil)
 
+	if self.Condition.State != "STARTED" {
+		self.Print()
+		return self
+	}
+
 	di := &DiskInfoDTO{Free: make(map[string]uint64), Size: make(map[string]uint64)}
 	helper.Shell("df --block-size=1 /mnt/disk*", self.getDiskInfo, di)
 

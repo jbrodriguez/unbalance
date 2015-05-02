@@ -24,13 +24,14 @@ footer {
 	}
 }
 
-.copyright {
+.copyright,
+.version {
 	@extend %spacer;
 
     @media (min-width: $breakpoint-2) {
 		margin: 0;
     }	
-}	
+}
 
 .logos {
 	@include flexbox(flex, row, flex-end, center);
