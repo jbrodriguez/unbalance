@@ -1,3 +1,11 @@
+Version 0.3.0 - 2015-05-02
+    -Remove staging and art folders
+    - Handle the fact that the array may not be started
+    - Use the correct field to determine whether the array is started or not
+    - Fix syntax issue in markup
+    - Count all commits (instead of counting since the last tag)
+
+
 Version 0.2.0 - 2015-05-01
     -Remove staging and art folders
     - Display app version in footer
