@@ -3,6 +3,7 @@ package main
 import (
 	"apertoire.net/unbalance/server/model"
 	"apertoire.net/unbalance/server/services"
+	"flag"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
@@ -10,9 +11,26 @@ import (
 
 var Version string
 
+const (
+	defaultCfgLocation = "/boot/config/plugins/unbalance"
+	defaultCfgUsage    = "location of the config file"
+	defaultLogLocation = ""
+	defaultLogUsage    = "location of the log file"
+)
+
 func main() {
+	var cfg, log string
+
+	flag.StringVar(&cfg, "config", defaultCfgLocation, defaultCfgUsage)
+	flag.StringVar(&cfg, "c", defaultCfgLocation, defaultCfgUsage+" (shorthand)")
+
+	flag.StringVar(&log, "log", defaultLogLocation, defaultLogUsage)
+	flag.StringVar(&log, "l", defaultLogLocation, defaultLogUsage+" (shorthand)")
+
+	flag.Parse()
+
 	config := model.Config{}
-	config.Init(Version)
+	config.Init(Version, cfg, log)
 
 	bus := pubsub.New(1)
 
