@@ -13,11 +13,9 @@
 
         vm.options = options;
         vm.folder = '';
-        vm.context = {};
-        vm.running = false;
 
         vm.addFolder = addFolder;
-        vm.importer = importer;
+        vm.removeFolder = removeFolder;
 
         activate();
 
@@ -30,57 +28,24 @@
                 return;
             };
 
-            vm.options.config.folders.push(vm.folder);
+            if (vm.options.config.folders.indexOf(vm.folder) != -1) {
+                logger.warning('Folder already selected');
+                return;
+            }
 
-            console.log('vm.options.config.folders: ' + vm.options.config.folders);
-            console.log('options.config.folders: ' + options.config.folders);
+            vm.options.config.folders.push(vm.folder);
 
             return api.saveConfig(vm.options.config).then(function(data) {
                 logger.success('config saved succesfully');
             });
         };
 
-        function importer() {
-            return startImport().then(function() {
-                logger.info('started import function');
-                update();
+        function removeFolder(index) {
+            vm.options.config.folders.splice(index, 1);
+
+            return api.saveConfig(vm.options.config).then(function(data) {
+                logger.success('config saved succesfully');
             });
         };
-
-        function startImport() {
-            return api.startImport().then(function (data) {
-                vm.context = null;
-                vm.context = data;
-                vm.running = true;
-                return vm.context;
-            });
-        };
-
-        function update() {
-            getStatus();
-            if (!vm.context.completed) {
-                schedule(update, 1000);
-            } else {
-                vm.running = false;
-                $state.go('cover');
-            };
-        };
-
-        function getStatus() {
-            return api.getStatus().then(function (data) {
-                vm.context = null;
-                vm.context = data;
-                return vm.context;
-            });
-        };        
-
-        function schedule(fn, delay) {
-            var promise = $timeout(fn, delay);
-            var deregister = $scope.$on('$destroy', function() {
-                $timeout.cancel(promise);
-            });
-            promise.then(deregister);
-        };        
-
     }
 })();

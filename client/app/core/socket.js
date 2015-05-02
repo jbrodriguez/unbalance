@@ -41,7 +41,7 @@
     	};
 
     	function send(topic, data) {
-    		console.log("are we there yet: " + topic + " " + data)
+//    		console.log("are we there yet: " + topic + " " + data)
     		var message = {
     			topic: topic,
     			data: angular.toJson(data)
