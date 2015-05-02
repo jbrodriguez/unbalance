@@ -20,7 +20,7 @@ gulp.task('build:server', ['tools'], function() {
 	var dst = config.build.dist;
 
 	version = command('version', 'cat VERSION');
-	count = command('count', 'git rev-list --count ' + version + '..')
+	count = command('count', 'git rev-list HEAD --count')
 	hash = command('hash', 'git rev-parse --short HEAD')
 
 	gutil.log('\n src: ' + src + '\n dst: ' + dst);
