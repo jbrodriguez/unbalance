@@ -5,7 +5,7 @@
 
 			<div class="row dashboard-header">
 				<div class="dashboard-status">
-					STATUS: &nbsp; <span class="label" data-ng-class="$vm.ok ? 'label-success' : 'label-warning'">{{vm.condition.state | lowercase}}</span>
+					STATUS: &nbsp; <span class="label" data-ng-class="vm.ok ? 'label-success' : 'label-warning'">{{vm.condition.state | lowercase}}</span>
 				</div>
 
 				<div class="loading" data-ng-if="vm.showProgress">

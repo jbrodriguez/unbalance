@@ -53,15 +53,19 @@
 //                logger.info('what is: ', data);
 
                 vm.disableControls = false;
-                vm.moveStarted = false;                
+                vm.moveStarted = false;      
+                vm.showProgress = false;          
 
                 vm.condition = data.condition;
-                vm.ok = vm.condition === "STARTED";
+                vm.ok = vm.condition.state === "STARTED";
+
+                console.log('vm.condition: ' + vm.condition);
+                console.log('vm.ok: ' + vm.ok);
 
                 vm.maxFreeSize = 0;
                 vm.maxFreePath = 0;
 
-                if (vm.condition === "STARTED") {
+                if (vm.ok) {
                     vm.disks = data.disks.map(function(disk) {
                         vm.toDisk[disk.path] = true;
                         vm.fromDisk[disk.path] = false;
