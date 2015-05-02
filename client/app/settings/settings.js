@@ -17,6 +17,7 @@
         vm.running = false;
 
         vm.addFolder = addFolder;
+        vm.removeFolder = removeFolder;
         vm.importer = importer;
 
         activate();
@@ -30,10 +31,23 @@
                 return;
             };
 
+            if (vm.options.config.folders.indexOf(vm.folder) != -1) {
+                logger.warning('Folder already selected');
+                return;
+            }
+
             vm.options.config.folders.push(vm.folder);
 
             console.log('vm.options.config.folders: ' + vm.options.config.folders);
             console.log('options.config.folders: ' + options.config.folders);
+
+            return api.saveConfig(vm.options.config).then(function(data) {
+                logger.success('config saved succesfully');
+            });
+        };
+
+        function removeFolder(index) {
+            vm.options.config.folders.splice(index, 1);
 
             return api.saveConfig(vm.options.config).then(function(data) {
                 logger.success('config saved succesfully');
