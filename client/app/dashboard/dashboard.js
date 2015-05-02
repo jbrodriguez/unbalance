@@ -44,7 +44,7 @@
 
         function activate() {
             return getStatus().then(function() {
-                logger.info('activated dashboard view');
+                console.log('activated dashboard view');
             });
         };
 
@@ -58,9 +58,6 @@
 
                 vm.condition = data.condition;
                 vm.ok = vm.condition.state === "STARTED";
-
-                console.log('vm.condition: ' + vm.condition);
-                console.log('vm.ok: ' + vm.ok);
 
                 vm.maxFreeSize = 0;
                 vm.maxFreePath = 0;
@@ -102,35 +99,18 @@
                 }
             }
 
-            console.log("src: " + srcDisk);
-
             if (srcDisk === "") {
-                alert("I won't take that !");
+                logger.warning("You need to select a source disk");
                 return;
             }
 
             return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": ""}).then(function(data) {
                 vm.condition = data.condition;
 
-                // vm.maxFreeSize = 0;
-                // vm.maxFreePath = 0;                
+                if (vm.condition.free === vm.condition.newFree) {
+                    logger.info("Nothing to do");
+                }
 
-                // vm.disks = data.disks.map(function(disk) {
-                //     vm.toDisk[disk.path] = true;
-                //     vm.fromDisk[disk.path] = false;
-
-                //     if (disk.free > vm.maxFreeSize) {
-                //         vm.maxFreeSize = disk.free;
-                //         vm.maxFreePath = disk.path;
-                //     }
-
-                //     return disk;
-                // });
-
-                // // if (vm.maxFreePath != "") {
-                // //     vm.toDisk[vm.maxFreePath] = false;
-                // //     vm.fromDisk[vm.maxFreePath] = true;
-                // // }
                 vm.disks = data.disks;
 
                 return vm.disks;                
@@ -148,7 +128,6 @@
         };
 
         function checkFrom(from) {
-            console.log("something changed: " + from);
             for (var key in vm.fromDisk) {
                 if (key !== from) {
                     vm.fromDisk[key] = false;
@@ -159,7 +138,6 @@
                 vm.toDisk[key] = !(key === from);
             };            
 
-//            vm.toDisk[from] = false;
         };
 
         function checkTo(to) {
@@ -168,8 +146,6 @@
 
         function flipDryRun() {
             vm.options.config.dryRun != vm.options.config.dryRun;
-
-            console.log('vm.options.config.dryRun: ' + vm.options.config.dryRun);
 
             return api.saveConfig(vm.options.config).then(function(data) {
                 logger.success('config saved succesfully');
@@ -201,8 +177,6 @@
         };
 
         function storageUpdate(data) {
-            logger.info('the prize: ', data);
-
             vm.condition = data.condition;
 
             vm.maxFreeSize = 0;

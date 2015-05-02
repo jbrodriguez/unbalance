@@ -20,15 +20,13 @@
 
         function activate() {
             return getConfig().then(function() {
-                logger.info('initialized state');
+                console.log('Activated Home controller');
             })
         };
 
         function getConfig() {
             return api.getConfig().then(function(data) {
                 options.config = data;
-
-                console.log('opts: ' + options.config.folders);
 
                 if (options.config.folders.length === 0) {
                     $state.go('settings');
@@ -37,14 +35,6 @@
                 };
             });
         };
-
-        // function calculateBestFit() {
-        //     $rootScope.$emit('/dashboard/calculate');                
-        // }
-
-        // function move() {
-        //     $rootScope.$emit('/dashboard/move');
-        // }
     };
 
 })();
