@@ -1,9 +1,13 @@
 unbalance
 
+release/
 dist/
 staging/
 log/
 art/
+
+*.tar.gz
+*.zip
 
 .DS_Store
 

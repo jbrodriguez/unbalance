@@ -1,6 +1,9 @@
 var client = "./client/";
 var server = "./server/";
-var dist = "./dist/";
+var distTar = "unbalance";
+var dist = "./" + distTar + "/";
+var release = "./release";
+
 
 //var stage = "./staging/";
 
@@ -23,7 +26,8 @@ var	staging = {
 module.exports = {
 	clean: {
 		staging: staging.root,
-		dist: dist
+		dist: dist,
+		release: release
 	},
 
 	tools: {
@@ -90,5 +94,9 @@ module.exports = {
 	publish: {
 		src: dist,
 		dst: "/boot/custom/unbalance"
+	},
+
+	release: {
+		src: distTar
 	}
 }

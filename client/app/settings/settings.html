@@ -32,7 +32,7 @@
 						</thead>
 						<tbody>
 							<tr data-ng-repeat="folder in vm.options.config.folders">
-								<td><i class="fa fa-times"></i></td>
+								<td><a href="#" data-ng-click="vm.removeFolder($index)"><img src="/img/no.png"></a></td>
 								<td>{{folder}}</td>
 							</tr>
 						</tbody>
