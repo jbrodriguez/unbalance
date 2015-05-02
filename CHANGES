@@ -1,3 +1,16 @@
+Version 0.3.1 - 2015-05-02
+    -Remove staging and art folders
+    - Add README.md (unfinished)
+    - Add remove folder functionality
+    - Clean up logging in the front end
+    - Remove unneeded code
+    - Add info popup when there's nothing to be done
+    - Add release task (creates a tar.gz of the app)
+    - Fix instructions for unpacking the app
+    - Add runsequence to perform cleanup before all other tasks
+    - Fix first public version in README.md
+
+
 Version 0.3.0 - 2015-05-02
     -Remove staging and art folders
     - Handle the fact that the array may not be started
