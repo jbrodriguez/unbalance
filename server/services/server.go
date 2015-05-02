@@ -7,11 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
-
+	"os"
 	"path/filepath"
 )
 
 const apiVersion string = "/api/v1"
+const guiLocation string = "/usr/local/share/unbalance"
 
 type Server struct {
 	bus    *pubsub.PubSub
@@ -26,27 +27,26 @@ func NewServer(bus *pubsub.PubSub, config *model.Config, socket *Socket) *Server
 }
 
 func (s *Server) Start() {
-	mlog.Info("starting service Server ...")
+	mlog.Info("Starting service Server ...")
+
+	var path string
+	if _, err := os.Stat("./index.html"); err == nil {
+		path = "./"
+	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
+		path = guiLocation
+	} else {
+		slashdot, _ := filepath.Abs("./")
+		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
+	}
+
+	mlog.Info("Serving files from %s", path)
 
 	s.engine = gin.New()
 
 	s.engine.Use(gin.Recovery())
 	// s.engine.Use(helper.Logging())
-
-	root1, err := filepath.Abs("./")
-	if err != nil {
-		panic(err)
-	}
-	mlog.Info("absolute for: %s", root1)
-
-	root2, err := filepath.Abs("/")
-	if err != nil {
-		panic(err)
-	}
-	mlog.Info("absolute for: %s", root2)
-
-	s.engine.Use(static.Serve("/", static.LocalFile("./", true)))
-	s.engine.NoRoute(static.Serve("/", static.LocalFile("./", true)))
+	s.engine.Use(static.Serve("/", static.LocalFile(path, true)))
+	s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
 
 	// websocket handler
 	s.engine.GET("/ws", func(c *gin.Context) {

@@ -19,14 +19,19 @@ type Config struct {
 	Version string `json:"version"`
 }
 
-func (c *Config) Init(version string) {
+func (c *Config) Init(version string, config string, log string) {
 	c.Version = version
 
-	c.ConfigDir = "/boot/config/plugins/unbalance"
-	c.LogDir = "/var/log"
+	c.ConfigDir = config
+	c.LogDir = log
 
 	// os.Setenv("GIN_MODE", "release")
-	mlog.Start(mlog.LevelInfo, filepath.Join(c.LogDir, "unbalance.log"))
+
+	if log != "" {
+		mlog.Start(mlog.LevelInfo, filepath.Join(c.LogDir, "unbalance.log"))
+	} else {
+		mlog.Start(mlog.LevelInfo, "")
+	}
 	mlog.Info("unbalance v%s starting up ...", c.Version)
 
 	c.setupOperatingEnv()
