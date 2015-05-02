@@ -31,7 +31,8 @@
         vm.flipDryRun = flipDryRun;
 
         vm.moveStarted = false
-        vm.moveInProgress = false;
+        vm.disableControls = false;
+        vm.showProgress = false;
         vm.lines = [];
 
         socket.register("storage:move:begin", storageMoveBegin);
@@ -49,34 +50,43 @@
 
         function getStatus() {
             return api.getStatus().then(function (data) {
-                logger.info('what is: ', data);
+//                logger.info('what is: ', data);
 
-                vm.moveInProgress = false;
-                vm.moveStarted = false;                
+                vm.disableControls = false;
+                vm.moveStarted = false;      
+                vm.showProgress = false;          
 
                 vm.condition = data.condition;
+                vm.ok = vm.condition.state === "STARTED";
+
+                console.log('vm.condition: ' + vm.condition);
+                console.log('vm.ok: ' + vm.ok);
 
                 vm.maxFreeSize = 0;
-                vm.maxFreePath = 0;                
+                vm.maxFreePath = 0;
 
-                vm.disks = data.disks.map(function(disk) {
-                    vm.toDisk[disk.path] = true;
-                    vm.fromDisk[disk.path] = false;
+                if (vm.ok) {
+                    vm.disks = data.disks.map(function(disk) {
+                        vm.toDisk[disk.path] = true;
+                        vm.fromDisk[disk.path] = false;
 
-                    if (disk.free > vm.maxFreeSize) {
-                        vm.maxFreeSize = disk.free;
-                        vm.maxFreePath = disk.path;
-                    }
+                        if (disk.free > vm.maxFreeSize) {
+                            vm.maxFreeSize = disk.free;
+                            vm.maxFreePath = disk.path;
+                        }
 
-                    return disk;
-                });
+                        return disk;
+                    });
 
-                if (vm.maxFreePath != "") {
-                    vm.toDisk[vm.maxFreePath] = false;
-                    vm.fromDisk[vm.maxFreePath] = true;
-                }                
+                    if (vm.maxFreePath != "") {
+                        vm.toDisk[vm.maxFreePath] = false;
+                        vm.fromDisk[vm.maxFreePath] = true;
+                    }                
 
-                return vm.disks;
+                    return vm.disks;
+                } else {
+                    vm.disableControls = true;
+                }
             });
         };
 
@@ -169,8 +179,9 @@
         function storageMoveBegin(data) {
             vm.lines.push("Move operation started ...");
             
-            vm.moveInProgress = true;
+            vm.disableControls = true;
             vm.moveStarted = true;
+            vm.showProgress = true;
 
         };
 
@@ -179,7 +190,8 @@
         };
 
         function storageMoveEnd(data) {
-            vm.moveInProgress = false;
+            vm.disableControls = false;
+            vm.showProgress = false;
 
             vm.lines.push("Move operation completed.");
 
