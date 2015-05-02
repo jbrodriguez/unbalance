@@ -50,10 +50,9 @@ Volumes: "/mnt" (required), "/etc/localtime" (to synchronize time with unRAID)
 
 - Manual
 ```Shell
-# mkdir -p /boot/custom/unbalance
-# cd /boot/custom/unbalance
+# mkdir -p /boot/custom
+# cd /boot/custom
 # wget https://github.com/jbrodriguez/unbalance/releases/download/0.3.0/unbalance-0.3.0-linux-amd64.tar.gz -O - | tar -zxf - -C .
-# ./unbalance
 ```
 *NOTE*: If run manually, move operations will be performed as root user. Please take that into consideration.
 

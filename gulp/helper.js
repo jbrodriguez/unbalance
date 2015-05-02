@@ -1,3 +1,7 @@
+var exec = require('child_process').execSync;
+var gutil = require('gulp-util');
+var strings = require('string');
+
 function bytediffFormatter(data) {
     var difference = (data.savings > 0) ? ' smaller.' : ' larger.';
     return data.fileName + ' went from ' +
@@ -8,3 +12,17 @@ function bytediffFormatter(data) {
 function formatPercent(num, precision) {
     return (num * 100).toFixed(precision);
 };
+
+function command(tag, cmd) {
+	gutil.log(gutil.colors.blue('executing ' + cmd))
+	result = exec(cmd, {encoding: 'utf-8'});
+	var output = strings(result).chompRight('\n').toString();
+	gutil.log(gutil.colors.yellow('tag: [' + tag + '] ') + gutil.colors.green(output));
+	return output;
+}
+
+module.exports = {
+	command: command,
+	bytediffFormatter: bytediffFormatter,
+	formatPercent: formatPercent
+}
