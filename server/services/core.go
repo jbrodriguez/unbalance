@@ -106,8 +106,6 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 }
 
 func (c *Core) getStorageInfo(msg *pubsub.Message) {
-	//	mlog.Info("La vita e bella")
-
 	msg.Reply <- c.storage.Refresh()
 }
 

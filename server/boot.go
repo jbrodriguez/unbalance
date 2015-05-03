@@ -32,6 +32,8 @@ func main() {
 	config := model.Config{}
 	config.Init(Version, cfg, log)
 
+	mlog.Info("unBALANCE v%s starting up ...", Version)
+
 	bus := pubsub.New(1)
 
 	socket := services.NewSocket(bus, &config)
@@ -42,7 +44,7 @@ func main() {
 	server.Start()
 	core.Start()
 
-	mlog.Info("press enter to stop ...")
+	mlog.Info("press any key to stop ...")
 	var input string
 	fmt.Scanln(&input)
 

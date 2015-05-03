@@ -25,7 +25,7 @@ func (c *Config) Init(version string, config string, log string) {
 	c.ConfigDir = config
 	c.LogDir = os.Getenv("UNBALANCE_LOGFILEPATH")
 
-	if c.LogDir != "" {
+	if log != "" {
 		c.LogDir = log
 	}
 
@@ -36,7 +36,6 @@ func (c *Config) Init(version string, config string, log string) {
 	} else {
 		mlog.Start(mlog.LevelInfo, "")
 	}
-	mlog.Info("unbalance v%s starting up ...", c.Version)
 
 	c.setupOperatingEnv()
 

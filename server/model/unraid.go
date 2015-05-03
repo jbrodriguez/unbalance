@@ -2,11 +2,16 @@ package model
 
 import (
 	"apertoire.net/unbalance/server/helper"
+	"fmt"
 	"github.com/jbrodriguez/mlog"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+const unraidEnv = "UNBALANCE_CMD"
+const unraidCmd = "/root/mdcmd"
 
 type Unraid struct {
 	Condition *Condition `json:"condition"`
@@ -32,7 +37,14 @@ func (self *Unraid) Refresh() *Unraid {
 	self.Disks = make([]*Disk, 0)
 	self.Condition = &Condition{}
 
-	helper.Shell("/root/mdcmd status|strings", self.readUnraidConfig, nil)
+	cmd := os.Getenv(unraidEnv)
+	if cmd == "" {
+		cmd = unraidCmd
+	}
+
+	// helper.Shell("/root/mdcmd status|strings", self.readUnraidConfig, nil)
+	shell := fmt.Sprintf("%s status", cmd)
+	helper.Shell(shell, self.readUnraidConfig, nil)
 
 	if self.Condition.State != "STARTED" {
 		self.Print()
@@ -95,15 +107,21 @@ func (self *Unraid) Refresh() *Unraid {
 }
 
 func (self *Unraid) readUnraidConfig(line string, arg interface{}) {
+	mlog.Info("uno")
+
 	if strings.HasPrefix(line, "sbNumDisks") {
 		nd := strings.Split(line, "=")
 		self.Condition.NumDisks, _ = strconv.ParseUint(nd[1], 10, 64)
 	}
 
+	mlog.Info("dos")
+
 	if strings.HasPrefix(line, "mdNumProtected") {
 		np := strings.Split(line, "=")
 		self.Condition.NumProtected, _ = strconv.ParseUint(np[1], 10, 64)
 	}
+
+	mlog.Info("tres")
 
 	if strings.HasPrefix(line, "sbSynced") {
 		sd := strings.Split(line, "=")
