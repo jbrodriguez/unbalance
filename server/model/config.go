@@ -23,7 +23,11 @@ func (c *Config) Init(version string, config string, log string) {
 	c.Version = version
 
 	c.ConfigDir = config
-	c.LogDir = log
+	c.LogDir = os.Getenv("UNBALANCE_LOGFILEPATH")
+
+	if c.LogDir != "" {
+		c.LogDir = log
+	}
 
 	// os.Setenv("GIN_MODE", "release")
 

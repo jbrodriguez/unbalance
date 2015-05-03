@@ -12,10 +12,10 @@ import (
 var Version string
 
 const (
-	defaultCfgLocation = "/boot/config/plugins/unbalance"
-	defaultCfgUsage    = "location of the config file"
+	defaultCfgLocation = "/boot/config/plugins/unbalance/"
+	defaultCfgUsage    = "Path to the config file"
 	defaultLogLocation = ""
-	defaultLogUsage    = "location of the log file"
+	defaultLogUsage    = "Path to the log file"
 )
 
 func main() {
