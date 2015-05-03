@@ -1,3 +1,8 @@
+Version 0.5.1 - 2015-05-03
+    -Remove staging and art folders
+    - Fix Readme instructions and some typos.
+
+
 Version 0.5.0 - 2015-05-03
     -Remove staging and art folders
     - Allow mdcmd location to be defined by an environment variable
