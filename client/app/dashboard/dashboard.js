@@ -30,9 +30,13 @@
         vm.checkTo = checkTo;
         vm.flipDryRun = flipDryRun;
 
-        vm.moveStarted = false
-        vm.disableControls = false;
+        // vm.disableControls = false;
+        vm.disableCalcCtrl = false;
+        vm.disableMoveCtrl = true;
+
+        vm.showConsole = false
         vm.showProgress = false;
+
         vm.lines = [];
 
         socket.register("storage:move:begin", storageMoveBegin);
@@ -52,17 +56,23 @@
             return api.getStatus().then(function (data) {
 //                logger.info('what is: ', data);
 
-                vm.disableControls = false;
-                vm.moveStarted = false;      
+                // vm.disableControls = false;
+
+                vm.showConsole = false;      
                 vm.showProgress = false;          
 
                 vm.condition = data.condition;
+                vm.bytesToMove = data.bytesToMove;
+                
                 vm.ok = vm.condition.state === "STARTED";
 
                 vm.maxFreeSize = 0;
                 vm.maxFreePath = 0;
 
                 if (vm.ok) {
+                    vm.disableCalcCtrl = false;
+                    vm.disableMoveCtrl = true;
+
                     vm.disks = data.disks.map(function(disk) {
                         vm.toDisk[disk.path] = true;
                         vm.fromDisk[disk.path] = false;
@@ -82,7 +92,10 @@
 
                     return vm.disks;
                 } else {
-                    vm.disableControls = true;
+                    // vm.disableControls = true;
+
+                    vm.disableCalcCtrl = true;
+                    vm.disableMoveCtrl = true;
                 }
             });
         };
@@ -107,8 +120,16 @@
             return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": ""}).then(function(data) {
                 vm.condition = data.condition;
 
-                if (vm.condition.free === vm.condition.newFree) {
+                console.log("toMove: " + vm.bytesToMove)
+
+                if (vm.bytesToMove === 0) {
                     logger.info("Nothing to do");
+
+                    vm.disableCalcCtrl = false;
+                    vm.disableMoveCtrl = true;
+                } else {
+                    vm.disableCalcCtrl = true;
+                    vm.disableMoveCtrl = false;
                 }
 
                 vm.disks = data.disks;
@@ -138,9 +159,14 @@
                 vm.toDisk[key] = !(key === from);
             };            
 
+            vm.disableCalcCtrl = false;
+            vm.disableMoveCtrl = true;
         };
 
         function checkTo(to) {
+            vm.disableCalcCtrl = false;
+            vm.disableMoveCtrl = true;
+
             return;
         };
 
@@ -155,8 +181,11 @@
         function storageMoveBegin(data) {
             vm.lines.push("Move operation started ...");
             
-            vm.disableControls = true;
-            vm.moveStarted = true;
+            // vm.disableControls = true;
+            vm.disableCalcCtrl = true;
+            vm.disableMoveCtrl = true;
+
+            vm.showConsole = true;
             vm.showProgress = true;
 
         };
@@ -166,7 +195,17 @@
         };
 
         function storageMoveEnd(data) {
-            vm.disableControls = false;
+            // vm.disableControls = false;
+
+            if (vm.options.config.dryRun) {
+                vm.disableCalcCtrl = true;
+                vm.disableMoveCtrl = false;
+            } else {
+                vm.disableCalcCtrl = false;
+                vm.disableMoveCtrl = true;
+            }
+
+
             vm.showProgress = false;
 
             vm.lines.push("Move operation completed.");

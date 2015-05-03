@@ -1,3 +1,14 @@
+Version 0.5.0 - 2015-05-03
+    -Remove staging and art folders
+    - Allow mdcmd location to be defined by an environment variable
+    - Add signal handling as main loop of the application
+    - Add StdErr to command output processing (previously only StdOut was considered)
+    - Add separate flags to disable gui Calculate and Move controls
+    - Fix bug with logdir logic
+    - Add an environment variable to indicate that the app is running under a docker environment, and take action accordingly
+    - Increase size of websocket buffers
+
+
 Version 0.4.1 - 2015-05-02
     -Remove staging and art folders
     - Use environment variable to specify logfile path, but allow it to be overriden by the respective flag

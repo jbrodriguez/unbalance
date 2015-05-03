@@ -18,6 +18,10 @@ import (
 	"strconv"
 )
 
+const dockerEnv = "UNBALANCE_DOCKER"
+const diskmvCmd = "./diskmv"
+const diskmvDockerCmd = "/usr/bin/diskmv"
+
 type Core struct {
 	bus     *pubsub.PubSub
 	storage *model.Unraid
@@ -106,8 +110,6 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 }
 
 func (c *Core) getStorageInfo(msg *pubsub.Message) {
-	//	mlog.Info("La vita e bella")
-
 	msg.Reply <- c.storage.Refresh()
 }
 
@@ -124,16 +126,13 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		}
 	}
 
-	mlog.Info("srcDisk = %s", dto.SourceDisk)
-
+	// Initializae fields
+	c.storage.BytesToMove = 0
 	c.storage.SourceDiskName = srcDisk.Path
 
 	sort.Sort(model.ByFree(disks))
 
 	var folders []*model.Item
-	//	paths := []string{"films/bluray", "films/blurip"}
-	//	for _, path := range paths {
-
 	for _, path := range c.config.Folders {
 		list := c.getFolders(dto.SourceDisk, path)
 
@@ -174,6 +173,8 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	mlog.Info("Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
 	mlog.Info("Gained Space: %s", lib.ByteSize(srcDisk.NewFree-srcDisk.Free))
 	mlog.Info("---------------------------------------------------------")
+
+	c.storage.Print()
 
 	msg.Reply <- c.storage
 }
@@ -251,7 +252,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	// }
 
 	// glog.Info(string(out))
-	mlog.Info("done")
+	// mlog.Info("done")
 	return items
 }
 
@@ -336,6 +337,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 		dry = "-f"
 	}
 
+	var diskmv string
+	env := os.Getenv(dockerEnv)
+	if env == "y" {
+		diskmv = diskmvDockerCmd
+	} else {
+		diskmv = diskmvCmd
+	}
+
 	outbound := &dto.MessageOut{Topic: "storage:move:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -353,7 +362,7 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
-			cmd := fmt.Sprintf("./diskmv %s \"%s\" %s %s", dry, item.Path, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd = %s", cmd)
 
 			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}
