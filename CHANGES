@@ -1,3 +1,9 @@
+Version 0.4.1 - 2015-05-02
+    -Remove staging and art folders
+    - Use environment variable to specify logfile path, but allow it to be overriden by the respective flag
+    - Change usage wording
+
+
 Version 0.4.0 - 2015-05-02
     -Remove staging and art folders
     - Add command line flags support, to specify config file and log file locations
