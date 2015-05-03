@@ -17,14 +17,14 @@
 
 				<div class="dashboard-commands">
 					<span>&nbsp;</span>
-					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.disableControls}">CALCULATE</a>
+					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.disableCalcCtrl}">CALCULATE</a>
 					<span>&nbsp; | &nbsp;</span>
-					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.disableControls}">MOVE</a>
+					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.disableMoveCtrl}">MOVE</a>
 					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.disableControls}" /> <span>dry-run </span> </div>
 				</div>				
 			</div>
 
-			<div class="row console" data-ng-if="vm.moveStarted">
+			<div class="row console" data-ng-if="vm.showConsole">
 				<div class="console__lines" unb-scroll-bottom="vm.lines">
 					<p ng-repeat="line in vm.lines track by $index" class="console__line">{{line}}</p>
 				</div>

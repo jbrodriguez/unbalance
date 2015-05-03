@@ -31,11 +31,13 @@ func (c *Config) Init(version string, config string, log string) {
 
 	// os.Setenv("GIN_MODE", "release")
 
-	if log != "" {
+	if c.LogDir != "" {
 		mlog.Start(mlog.LevelInfo, filepath.Join(c.LogDir, "unbalance.log"))
 	} else {
 		mlog.Start(mlog.LevelInfo, "")
 	}
+
+	//	mlog.Info("logfilePath: %s (%s)", c.LogDir, log)
 
 	c.setupOperatingEnv()
 

@@ -4,9 +4,10 @@ import (
 	"apertoire.net/unbalance/server/model"
 	"apertoire.net/unbalance/server/services"
 	"flag"
-	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+	"os"
+	"os/signal"
 )
 
 var Version string
@@ -44,11 +45,16 @@ func main() {
 	server.Start()
 	core.Start()
 
-	mlog.Info("press any key to stop ...")
-	var input string
-	fmt.Scanln(&input)
+	mlog.Info("Press Ctrl+C to stop ...")
 
-	core.Stop()
-	server.Stop()
-	socket.Stop()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	for _ = range c {
+		mlog.Info("\nReceived an interrupt, stopping services...\n")
+
+		core.Stop()
+		server.Stop()
+		socket.Stop()
+	}
+
 }

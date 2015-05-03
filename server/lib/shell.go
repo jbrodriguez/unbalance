@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"os/exec"
 )
@@ -10,12 +11,19 @@ type Callback func(line string)
 
 func Shell(command string, callback Callback) {
 	cmd := exec.Command("/bin/sh", "-c", command)
-	out, err := cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
 	}
 
-	scanner := bufio.NewScanner(out)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatalf("Unable to stderrpipe %s: %s", command, err)
+	}
+
+	multi := io.MultiReader(stdout, stderr)
+
+	scanner := bufio.NewScanner(multi)
 
 	if err := cmd.Start(); err != nil {
 		log.Fatal("Unable to start command: ", err)
