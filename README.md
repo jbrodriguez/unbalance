@@ -46,15 +46,20 @@ https://github.com/jbrodriguez/docker-containers/tree/templates<br>
 Add the container [jbrodriguez]/unbalance
 The defaults are <br>
 Port: 6237<BR>
-Volumes: "/mnt" (required), "/etc/localtime" (to synchronize time with unRAID)
+Volumes: 
+"/mnt" (required)<br>
+"/root" (required)<br>
+"/path/to/config/dir" (required)<br>
+"/path/to/log/dir" (not required)<br>
+"/etc/localtime" (not required, to synchronize time with unRAID)<br>
 
 - Manual
 ```Shell
 # mkdir -p /boot/custom
 # cd /boot/custom
-# wget https://github.com/jbrodriguez/unbalance/releases/download/0.3.1/unbalance-0.3.1-linux-amd64.tar.gz -O - | tar -zxf - -C .
+# wget https://github.com/jbrodriguez/unbalance/releases/download/0.5.1/unbalance-0.5.1-linux-amd64.tar.gz -O - | tar -zxf - -C .
 ```
-*NOTE*: If run manually, move operations will be performed as root user. Please take that into consideration.
+*NOTE*: If run manually, move operations will be performed as root user. Please take that into account.
 
 ## Running the app
 Start the container or 
@@ -72,7 +77,7 @@ It means that operations are simulated, it only shows what it would actually do.
 To perform the operations, uncheck the dry-run checkbox.
 
 ## Credits
-This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv)
+This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the forum thread for additional information).
 
 It was built with:
 
