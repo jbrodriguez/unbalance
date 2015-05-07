@@ -19,13 +19,13 @@ You need to select which folders are elegible for moving.
 
 Let's say you have the following unRAID shares:
 
-movies
-|_ bluray
-|_ dvd
-tvshows
-games
-pictures
-backup
+movies<br>
+|_ bluray<br>
+|_ dvd<br>
+tvshows<br>
+games<br>
+pictures<br>
+backup<br>
 
 You decide, that you want to make space by moving around only bluray movies, games and pictures.
 

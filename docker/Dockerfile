@@ -1,11 +1,20 @@
-FROM gliderlabs/alpine:3.1
-MAINTAINER Juan B. Rodriguez <jbrodriguez.io@apertoire.net>
+FROM phusion/baseimage:0.9.15
+MAINTAINER Juan B. Rodriguez <jbrodriguez@apertoire.net>
 
-RUN apk --update add wget
+# Set correct environment variables
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 HOME=/root
 
-RUN wget https://raw.github.com/jbrodriguez/unbalance/downloads/unbalance-0.2.tar.gz -O - | tar -xzf - -C /unbalance && \
-	chmod +x /unbalance/unbalance
+# Use baseimage-docker's init system
+# CMD ["/bin/bash"]
+CMD ["/sbin/my_init"]
+# CMD ["/usr/bin/boot.sh"]
 
-WORKDIR /unbalance
+ADD unbalance-0.5.1-linux-amd64.tar.gz /tmp
+ADD boot.sh /usr/bin/boot.sh
+RUN chmod +x /usr/bin/boot.sh
+ADD install.sh /tmp/install.sh
+RUN chmod +x /tmp/install.sh && /tmp/install.sh
 
-ENTRYPOINT ["./unbalance"]
+VOLUME /config /mnt /root
+EXPOSE 6237
+
