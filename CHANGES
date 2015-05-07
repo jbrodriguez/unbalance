@@ -1,3 +1,8 @@
+Version 0.6.1 - 2015-05-07
+    -Remove staging and art folders
+    - Fix instructions in README.md to be independent of current version
+
+
 Version 0.6.0 - 2015-05-07
     -Remove staging and art folders
     - Fix README.md copy
