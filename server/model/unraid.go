@@ -21,6 +21,8 @@ type Unraid struct {
 	SourceDiskName string
 	BytesToMove    uint64 `json:"bytesToMove"`
 
+	InProgress bool `json:"inProgress"`
+
 	disks [25]*Disk
 }
 
@@ -35,6 +37,10 @@ type DiskInfoDTO struct {
 }
 
 func (u *Unraid) Refresh() *Unraid {
+	if u.InProgress {
+		return u
+	}
+
 	u.SourceDiskName = ""
 	u.BytesToMove = 0
 

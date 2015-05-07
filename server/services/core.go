@@ -2,6 +2,7 @@ package services
 
 import (
 	"apertoire.net/unbalance/server/dto"
+	"apertoire.net/unbalance/server/helper"
 	"apertoire.net/unbalance/server/lib"
 	"apertoire.net/unbalance/server/model"
 	"bufio"
@@ -55,8 +56,8 @@ func NewCore(bus *pubsub.PubSub, config *model.Config) *Core {
 	core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
 	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
 	core.chanMove = core.bus.Sub("cmd.move")
-	core.storageMove = core.bus.Sub("cmd.storageMove")
-	core.storageUpdate = core.bus.Sub("cmd.storageUpdate")
+	core.storageMove = core.bus.Sub("storage:move")
+	core.storageUpdate = core.bus.Sub("storage:update")
 
 	return core
 }
@@ -273,7 +274,7 @@ loop:
 	return folders[:w]
 }
 
-func (c *Core) processDiskMv(line string) {
+func (c *Core) processDiskMv(line string, arg interface{}) {
 	outbound := &dto.MessageOut{Topic: "storage:move:progress", Payload: line}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -302,7 +303,7 @@ func (c *Core) move(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd = %s", cmd)
 
-			lib.Shell(cmd, c.processDiskMv)
+			helper.Shell(cmd, c.processDiskMv, nil)
 
 			// mover.Src = item.Name
 			// mover.Dst = dst
@@ -345,6 +346,8 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 		diskmv = diskmvCmd
 	}
 
+	c.storage.InProgress = true
+
 	outbound := &dto.MessageOut{Topic: "storage:move:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -368,25 +371,26 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			lib.Shell(cmd, c.processDiskMv)
+			err := helper.Shell(cmd, c.processDiskMv, nil)
+			if err != nil {
+				mlog.Info("error running the diskmv command: %s", err.Error())
+				c.storage.InProgress = false
 
-			// mover.Src = item.Name
-			// mover.Dst = dst
-			// mover.Progress = progress
+				txt := fmt.Sprintf("Move command was closed prematurely: %s", err.Error())
+				outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: txt}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			// glog.Infof("mover: %+v", mover)
+				outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			// mover.Copy()
-			// for {
-			// 	select {
-			// 	case msg := <-mover.ProgressCh:
-			// 		glog.Infof("Progress: %+v", msg)
-			// 	case <-mover.DoneCh:
-			// 		return
-			// 	}
-			// }
+				mlog.Error(err)
+				return
+			}
+
 		}
 	}
+
+	c.storage.InProgress = false
 
 	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")

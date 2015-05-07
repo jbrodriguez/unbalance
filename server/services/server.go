@@ -42,11 +42,12 @@ func (s *Server) Start() {
 	mlog.Info("Serving files from %s", path)
 
 	s.engine = gin.New()
+	s.engine.RedirectTrailingSlash = false
+	s.engine.RedirectFixedPath = false
 
 	s.engine.Use(gin.Recovery())
 	// s.engine.Use(helper.Logging())
 	s.engine.Use(static.Serve("/", static.LocalFile(path, true)))
-	s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
 
 	// websocket handler
 	s.engine.GET("/ws", func(c *gin.Context) {
@@ -61,6 +62,9 @@ func (s *Server) Start() {
 		api.POST("/storage/bestfit", s.calculateBestFit)
 		api.POST("/storage/move", s.move)
 	}
+
+	// s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
+	s.engine.NoRoute(s.noRoute)
 
 	mlog.Info("started listening on :6237")
 
@@ -123,4 +127,18 @@ func (s *Server) move(c *gin.Context) {
 	resp := reply.([]*dto.Move)
 
 	c.JSON(200, &resp)
+}
+
+func (s *Server) noRoute(c *gin.Context) {
+	var path string
+	if _, err := os.Stat("./index.html"); err == nil {
+		path = "./"
+	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
+		path = guiLocation
+	} else {
+		slashdot, _ := filepath.Abs("./")
+		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
+	}
+
+	c.File(filepath.Join(path, "index.html"))
 }

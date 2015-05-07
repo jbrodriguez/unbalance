@@ -38,6 +38,7 @@
         vm.showProgress = false;
 
         vm.lines = [];
+        // console.log("lines: \n" + vm.lines);
 
         socket.register("storage:move:begin", storageMoveBegin);
         socket.register("storage:move:progress", storageMoveProgress);
@@ -48,7 +49,7 @@
 
         function activate() {
             return getStatus().then(function() {
-                console.log('activated dashboard view');
+                console.log('Activated dashboard controller');
             });
         };
 
@@ -58,13 +59,14 @@
 
                 // vm.disableControls = false;
 
-                vm.showConsole = false;      
-                vm.showProgress = false;          
-
                 vm.condition = data.condition;
                 vm.bytesToMove = data.bytesToMove;
+                vm.inProgress = data.inProgress                
                 
                 vm.ok = vm.condition.state === "STARTED";
+
+                vm.showConsole = false;      
+                vm.showProgress = false;          
 
                 vm.maxFreeSize = 0;
                 vm.maxFreePath = 0;
@@ -89,6 +91,13 @@
                         vm.toDisk[vm.maxFreePath] = false;
                         vm.fromDisk[vm.maxFreePath] = true;
                     }                
+
+                    if (vm.inProgress) {
+                        vm.lines.push("(Logging has restarted ... )")
+
+                        vm.showConsole = true;
+                        vm.showProgress = true;                        
+                    }
 
                     return vm.disks;
                 } else {
@@ -119,6 +128,8 @@
 
             return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": ""}).then(function(data) {
                 vm.condition = data.condition;
+                vm.bytesToMove = data.bytesToMove;
+                vm.inProgress = data.inProgress
 
                 console.log("toMove: " + vm.bytesToMove)
 
