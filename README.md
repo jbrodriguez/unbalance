@@ -57,7 +57,7 @@ Volumes:
 ```Shell
 # mkdir -p /boot/custom
 # cd /boot/custom
-# wget https://github.com/jbrodriguez/unbalance/releases/download/0.5.1/unbalance-0.5.1-linux-amd64.tar.gz -O - | tar -zxf - -C .
+# wget https://github.com/jbrodriguez/unbalance/releases/download/<enter latest version here>/unbalance-<enter latest version here>-linux-amd64.tar.gz -O - | tar -zxf - -C .
 ```
 *NOTE*: If run manually, move operations will be performed as root user. Please take that into account.
 
