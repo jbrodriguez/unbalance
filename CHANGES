@@ -1,3 +1,14 @@
+Version 0.6.0 - 2015-05-07
+    -Remove staging and art folders
+    - Fix README.md copy
+    - Fix html5mode = true, on the server
+    - Add operation in progress support (to allow the url to be changed and still show console output)
+    - Add better support for back end processes output
+    - Fix websocket logic (when writing to the connected sockets)
+    - Add ReconnectingWebSocket to the client
+    - Remove FontAwesome
+
+
 Version 0.5.1 - 2015-05-03
     -Remove staging and art folders
     - Fix Readme instructions and some typos.
