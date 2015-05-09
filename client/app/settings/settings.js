@@ -16,6 +16,7 @@
 
         vm.addFolder = addFolder;
         vm.removeFolder = removeFolder;
+        vm.flipNotifications = flipNotifications;
 
         activate();
 
@@ -36,7 +37,7 @@
             vm.options.config.folders.push(vm.folder);
 
             return api.saveConfig(vm.options.config).then(function(data) {
-                logger.success('config saved succesfully');
+                logger.success('Configuration saved succesfully.');
             });
         };
 
@@ -44,8 +45,17 @@
             vm.options.config.folders.splice(index, 1);
 
             return api.saveConfig(vm.options.config).then(function(data) {
-                logger.success('config saved succesfully');
+                logger.success('Configuration saved succesfully.');
             });
         };
+
+        function flipNotifications() {
+            vm.options.config.notifications != vm.options.config.notifications
+            console.log("notifications: " + vm.options.config.notifications);
+
+            return api.saveConfig(vm.options.config).then(function(data) {
+                logger.success('Configuration saved succesfully.');
+            });
+        }
     }
 })();

@@ -15,5 +15,6 @@ docker run -it \
 -v /mnt/user/data:/log \
 -v /mnt:/mnt \
 -v /root:/root \
+-v /etc:/etc \
 -p 6237:6237 \
 jbrodriguez/unbalance:$VERSION

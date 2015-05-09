@@ -39,6 +39,17 @@
 						</table>
 					</div>
 				</fieldset>
+				<fieldset>
+					<legend>Notifications</legend>
+
+					<p>Notify via email when the moving process ends, as well as any errors that may occurr.</p>
+					<p>For this to work, you need to set up the email information in unRAID > Settings > Email Notifications</p>
+
+					<div>
+						<label>Notifications</label>
+						<input type="checkbox" data-ng-checked="{{vm.options.config.notifications}}" data-ng-model="vm.options.config.notifications" data-ng-change="vm.flipNotifications()"/> 
+					</div>
+				</fieldset>				
 				</form>
 			</div>
 			</form>

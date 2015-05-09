@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 )
 
 const dockerEnv = "UNBALANCE_DOCKER"
@@ -104,6 +105,7 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 	config := msg.Payload.(*model.Config)
 	c.config.Folders = config.Folders
 	c.config.DryRun = config.DryRun
+	c.config.Notifications = config.Notifications
 
 	c.config.Save()
 
@@ -127,7 +129,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		}
 	}
 
-	// Initializae fields
+	// Initialize fields
 	c.storage.BytesToMove = 0
 	c.storage.SourceDiskName = srcDisk.Path
 
@@ -351,6 +353,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 	outbound := &dto.MessageOut{Topic: "storage:move:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	// if err := c.sendmail("Move Operation started"); err != nil {
+	// 	mlog.Error(err)
+	// }
+
+	started := time.Now()
+
+	commands := make([]string, 0)
+
 	for _, disk := range c.storage.Disks {
 		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
 			continue
@@ -368,6 +378,8 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd = %s", cmd)
 
+			commands = append(commands, cmd+"\n")
+
 			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -383,6 +395,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 				outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+				finished := time.Now()
+				elapsed := time.Since(started)
+
+				message := fmt.Sprintf("There was an error when executing\n\n%s\n\nThese are the commands that were executed:\n\n%s\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", cmd, c.printCommands(commands), started, finished, elapsed)
+				if sendErr := c.sendmail(message); sendErr != nil {
+					mlog.Error(sendErr)
+				}
+
 				mlog.Error(err)
 				return
 			}
@@ -395,9 +415,48 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	finished := time.Now()
+	elapsed := time.Since(started)
+
+	message := fmt.Sprintf("Move operation completed.\n\nThese are the commands that were executed:\n\n%s\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", c.printCommands(commands), started, finished, elapsed)
+	if sendErr := c.sendmail(message); sendErr != nil {
+		mlog.Error(sendErr)
+	}
+
 }
 
 func (c *Core) doStorageUpdate(msg *pubsub.Message) {
 	outbound := &dto.MessageOut{Topic: "storage:update:completed", Payload: c.storage.Refresh()}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+}
+
+func (c *Core) sendmail(msg string) error {
+	if !c.config.SsmtpAvailable || !c.config.Notifications {
+		return nil
+	}
+
+	from := "From: " + c.config.Recipient
+	to := "To: " + c.config.Recipient
+	subject := "Subject: unBALANCE Notification"
+
+	mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + msg + "\""
+
+	echo := exec.Command("echo", "-e", mail)
+	ssmtp := exec.Command("ssmtp", c.config.Recipient)
+
+	_, _, err := helper.Pipeline(echo, ssmtp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (c *Core) printCommands(list []string) string {
+	var str string
+	for _, value := range list {
+		str += value
+	}
+	return str
 }
