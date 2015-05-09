@@ -50,11 +50,13 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	for _ = range c {
-		mlog.Info("\nReceived an interrupt, stopping services...\n")
+		mlog.Info("Received an interrupt, shutting the app down ...")
 
 		core.Stop()
 		server.Stop()
 		socket.Stop()
+
+		break
 	}
 
 }
