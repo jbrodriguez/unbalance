@@ -1,3 +1,11 @@
+Version 0.6.2 - 2015-05-09
+    -Remove staging and art folders
+    - Add Notifications functionality, mails user when operation is completed (or any error occurr)
+    - Fix main loop exit logic
+    - Fix README.md copy
+    - Add credits in README.md
+
+
 Version 0.6.1 - 2015-05-07
     -Remove staging and art folders
     - Fix instructions in README.md to be independent of current version
