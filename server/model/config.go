@@ -2,16 +2,23 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/fogcreek/mini"
 	"github.com/jbrodriguez/mlog"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
+const ssmtpConf = "/etc/ssmtp/ssmtp.conf"
+
 type Config struct {
 	ReservedSpace uint64   `json:"reservedSpace"`
 	Folders       []string `json:"folders"`
 	DryRun        bool     `json:"dryRun"`
+	Notifications bool     `json:"notifications"`
+
+	SsmtpAvailable bool   `json:"-"`
+	Recipient      string `json:"-"`
 
 	ConfigDir string `json:"-"`
 	LogDir    string `json:"-"`
@@ -58,9 +65,10 @@ func (c *Config) LoadConfig() {
 	if err != nil {
 		mlog.Warning("Config file %s doesn't exist. Creating one ...", path)
 
-		c.ReservedSpace = 250000000
+		c.ReservedSpace = 350000000
 		c.Folders = make([]string, 0)
 		c.DryRun = true
+		c.Notifications = false
 
 		c.Save()
 
@@ -79,6 +87,20 @@ func (c *Config) LoadConfig() {
 	c.ReservedSpace = config.ReservedSpace
 	c.Folders = config.Folders
 	c.DryRun = config.DryRun
+	c.Notifications = config.Notifications
+
+	if _, err := os.Stat(ssmtpConf); os.IsNotExist(err) {
+		c.SsmtpAvailable = false
+	} else {
+		c.SsmtpAvailable = true
+
+		var ssmtp *mini.Config
+		var err error
+		if ssmtp, err = mini.LoadConfiguration(ssmtpConf); err != nil {
+			mlog.Fatalf("Unable to read ssmtp.conf: %s", err)
+		}
+		c.Recipient = ssmtp.String("Root", "")
+	}
 }
 
 func (c *Config) Save() {

@@ -25,14 +25,14 @@ movies<br>
 tvshows<br>
 games<br>
 pictures<br>
-backup<br>
+backup
 
 You decide, that you want to make space by moving around only bluray movies, games and pictures.
 
 So you will enter 
 
-movies/bluray
-games
+movies/bluray<br>
+games<br>
 pictures
 
 in the Settings page, that opens the first time you run the app.
