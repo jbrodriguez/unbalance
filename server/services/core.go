@@ -106,6 +106,14 @@ func (c *Core) saveConfig(msg *pubsub.Message) {
 	c.config.Folders = config.Folders
 	c.config.DryRun = config.DryRun
 	c.config.Notifications = config.Notifications
+	c.Notifications = config.Notifications
+	c.NotiFrom = config.NotiFrom
+	c.NotiTo = config.NotiTo
+	c.NotiHost = config.NotiHost
+	c.NotiPort = config.NotiPort
+	c.NotiEncrypt = config.NotiEncrypt
+	c.NotiUser = config.NotiUser
+	c.NotiPassword = config.NotiPassword
 
 	c.config.Save()
 
@@ -431,18 +439,18 @@ func (c *Core) doStorageUpdate(msg *pubsub.Message) {
 }
 
 func (c *Core) sendmail(msg string) error {
-	if !c.config.SsmtpAvailable || !c.config.Notifications {
+	if !c.config.Notifications {
 		return nil
 	}
 
-	from := "From: " + c.config.Recipient
-	to := "To: " + c.config.Recipient
+	from := "From: " + c.config.NotiFrom
+	to := "To: " + c.config.NotiTo
 	subject := "Subject: unBALANCE Notification"
 
 	mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + msg + "\""
 
 	echo := exec.Command("echo", "-e", mail)
-	ssmtp := exec.Command("ssmtp", c.config.Recipient)
+	ssmtp := exec.Command("ssmtp", "-C", model.SsmtpConf)
 
 	_, _, err := helper.Pipeline(echo, ssmtp)
 	if err != nil {

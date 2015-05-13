@@ -19,9 +19,9 @@ chown -R nobody:users /usr/local/share/unbalance /config /usr/bin/unbalance /usr
 chmod +x /usr/bin/unbalance /usr/bin/diskmv
 
 if [[ -d /log ]]; then
-	UNBALANCE_LOGFILEPATH=/log UNBALANCE_DOCKER=y /sbin/setuser nobody /usr/bin/unbalance -c /config
+	UNBALANCE_LOGFILEPATH=/log GIN_MODE=release UNBALANCE_DOCKER=y /sbin/setuser nobody /usr/bin/unbalance -c /config
 else
-	UNBALANCE_DOCKER=y /sbin/setuser nobody /usr/bin/unbalance -c /config	
+	GIN_MODE=release UNBALANCE_DOCKER=y /sbin/setuser nobody /usr/bin/unbalance -c /config	
 fi
 
 EOT
@@ -29,11 +29,11 @@ EOT
 chmod -R +x /etc/service/ /etc/my_init.d/
 
 # Dependencies
-apt-get update
-apt-get install -y \
-		rsync \
-		wget \
-		ssmtp
+# apt-get update
+# apt-get install -y \
+# 		rsync \
+# 		wget \
+# 		ssmtp
 
 # wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.5.1/unbalance-0.5.1-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
 
@@ -45,5 +45,5 @@ mv /tmp/unbalance/diskmv /usr/bin
 mv /tmp/unbalance /usr/local/share/
 
 ## Clean up APT when done.
-apt-get clean -y
+# apt-get clean -y
 rm -rf /var/lib/apt/lists/* /var/cache/* /tmp/* /var/tmp/*

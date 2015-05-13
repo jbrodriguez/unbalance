@@ -145,6 +145,12 @@
 		display: block;
 		font-weight: bold;
 		margin-bottom: 0.25em;
+
+		span {
+			font-weight: normal;
+			font-size: 0.65em;
+			color: #2c97de;
+		}
 	}
 
 	input {
@@ -159,6 +165,8 @@
 
 	input[type="text"],
 	input[type="email"],
+	input[type="number"],
+	input[type="password"],
 	textarea {
 		display: block;
 		appearance: none;
@@ -176,6 +184,8 @@
 
 	input[type="text"]:focus,
 	input[type="email"]:focus,
+	input[type="number"]:focus,
+	input[type="password"]:focus,
 	textarea:focus {
 		outline: none;
 		border-color: #2c97de;
