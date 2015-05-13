@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"apertoire.net/unbalance/server/lib"
 )
 
 type Disk struct {
@@ -35,13 +36,21 @@ func (self *Disk) Print() {
 	}
 }
 
-// func (self *Disk) Print() {
-// 	if self.Bin != nil {
-// 		fmt.Printf("Disk %s: %s\n", self.Path, HumanBytes(self.Free-self.Bin.Size))
-// 	} else {
-// 		fmt.Printf("Disk %s: no diggity (%s)\n", self.Path, HumanBytes(self.Free))
-// 	}
-// }
+func (self *Disk) toString() {
+	return fmt.Sprintf("Id(%d); Name(%s); Path(%s); Device(%s), Free(%d); NewFree(%d); Size(%s); Serial(%s); Status(%s); Bin(%v)", 
+			Id, \
+			Name, \
+			Path, \
+			Device, \
+			Free, \
+			NewFree, \
+			lib.ByteSize(Size), \
+			Serial, \
+			Status, \
+			Bin
+			)
+}
+
 
 type ByFree []*Disk
 

@@ -139,6 +139,8 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		}
 	}
 
+	mlog.Info("calculateBestFit:Source Disk = %s", srcDisk)
+
 	// Initialize fields
 	c.storage.BytesToMove = 0
 	c.storage.SourceDiskName = srcDisk.Path
@@ -152,6 +154,10 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		if list != nil {
 			folders = append(folders, list...)
 		}
+	}
+
+	for _, v := range folders {
+		mlog.Info("calculateBestFit:toBeMoved:Name(s) ; Size(%s)", v.Name, lib.ByteSize(v.Size))
 	}
 
 	srcDisk.NewFree = srcDisk.Free
@@ -168,10 +174,12 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 				disk.NewFree -= bin.Size
 				c.storage.BytesToMove += bin.Size
 
-				mlog.Info("Original Free Space: %s", lib.ByteSize(srcDisk.Free))
-				mlog.Info("Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
+				mlog.Info("calculateBestFit:Original Free Space: %s", lib.ByteSize(srcDisk.Free))
+				mlog.Info("calculateBestFit:Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
 
 				folders = c.removeFolders(folders, bin.Items)
+			} else {
+				mlog.Info("calculateBestFit:No space available on (%s)", disk)
 			}
 		}
 	}
@@ -185,6 +193,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	mlog.Info("Original Free Space: %s", lib.ByteSize(srcDisk.Free))
 	mlog.Info("Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
 	mlog.Info("Gained Space: %s", lib.ByteSize(srcDisk.NewFree-srcDisk.Free))
+	mlog.Info("Bytes To Move: %s", lib.ByteSize(c.storage.BytesToMove))
 	mlog.Info("---------------------------------------------------------")
 
 	c.storage.Print()
@@ -195,37 +204,37 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	srcFolder := filepath.Join(src, folder)
 
-	// mlog.Info("Folder is: %s", srcFolder)
+	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
 	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
 	// mlog.Info("Error: %s", err)
 
 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-		mlog.Warning("Folder does not exist: %s", srcFolder)
+		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
 		return nil
 	}
 
 	dirs, err := ioutil.ReadDir(srcFolder)
 	if err != nil {
-		mlog.Fatalf("Unable to readdir: %s", err)
+		mlog.Fatalf("getFolders:Unable to readdir: %s", err)
 	}
 
-	mlog.Info("Dirs: %+v", dirs)
+	// mlog.Info("Dirs: %+v", dirs)
 
 	if len(dirs) == 0 {
-		mlog.Info("No subdirectories under %s", srcFolder)
+		mlog.Info("getFolders:No subdirectories under %s", srcFolder)
 		return nil
 	}
 
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(srcFolder, "*")))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		mlog.Fatalf("Unable to stdoutpipe du: %s", err)
+		mlog.Fatalf("getFolders:Unable to stdoutpipe du: %s", err)
 	}
 
 	rd := bufio.NewReader(out)
 
 	if err := cmd.Start(); err != nil {
-		mlog.Fatalf("Unable to start du: %s", err)
+		mlog.Fatalf("getFolders:Unable to start du: %s", err)
 	}
 
 	for {
@@ -235,12 +244,14 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 			break
 		}
 		if err == io.EOF {
-			mlog.Fatalf("Last line not terminated: %s", err)
+			mlog.Fatalf("getFolders:Last line not terminated: %s", err)
 		}
 		line = line[:len(line)-1] // drop the '\n'
 		if line[len(line)-1] == '\r' {
 			line = line[:len(line)-1] // drop the '\r'
 		}
+
+		mlog.Info("getFolders(%s):du -bs: %s", srcFolder+"*", line)
 
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
@@ -250,13 +261,13 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
 		items = append(items, item)
 		// fmt.Println(line)
-		mlog.Info("item: %+v", item)
+		// mlog.Info("getFolders:item: %+v", item)
 	}
 
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
-		mlog.Fatalf("Unable to wait for process to finish: %s", err)
+		mlog.Fatalf("getFolders:Unable to wait for process to finish: %s", err)
 	}
 
 	// out, err := lib.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
