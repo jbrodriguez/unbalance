@@ -23,11 +23,12 @@ import (
 const dockerEnv = "UNBALANCE_DOCKER"
 const diskmvCmd = "./diskmv"
 const diskmvDockerCmd = "/usr/bin/diskmv"
+const msgLocation string = "/home/msg.txt"
 
 type Core struct {
-	bus     *pubsub.PubSub
-	storage *model.Unraid
-	config  *model.Config
+	bus      *pubsub.PubSub
+	storage  *model.Unraid
+	settings *model.Settings
 
 	chanConfigInfo       chan *pubsub.Message
 	chanSaveConfig       chan *pubsub.Message
@@ -41,8 +42,8 @@ type Core struct {
 	reItems     *regexp.Regexp
 }
 
-func NewCore(bus *pubsub.PubSub, config *model.Config) *Core {
-	core := &Core{bus: bus, config: config}
+func NewCore(bus *pubsub.PubSub, settings *model.Settings) *Core {
+	core := &Core{bus: bus, settings: settings}
 
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reFreeSpace = re
@@ -96,28 +97,29 @@ func (c *Core) react() {
 func (c *Core) getConfigInfo(msg *pubsub.Message) {
 	mlog.Info("Sending config")
 
-	msg.Reply <- c.config
+	msg.Reply <- &c.settings.Config
 }
 
 func (c *Core) saveConfig(msg *pubsub.Message) {
 	mlog.Info("Saving config")
 
 	config := msg.Payload.(*model.Config)
-	c.config.Folders = config.Folders
-	c.config.DryRun = config.DryRun
-	c.config.Notifications = config.Notifications
-	c.Notifications = config.Notifications
-	c.NotiFrom = config.NotiFrom
-	c.NotiTo = config.NotiTo
-	c.NotiHost = config.NotiHost
-	c.NotiPort = config.NotiPort
-	c.NotiEncrypt = config.NotiEncrypt
-	c.NotiUser = config.NotiUser
-	c.NotiPassword = config.NotiPassword
+	c.settings.Config = *config
+	// c.config.Folders = config.Folders
+	// c.config.DryRun = config.DryRun
+	// c.config.Notifications = config.Notifications
+	// c.Notifications = config.Notifications
+	// c.NotiFrom = config.NotiFrom
+	// c.NotiTo = config.NotiTo
+	// c.NotiHost = config.NotiHost
+	// c.NotiPort = config.NotiPort
+	// c.NotiEncrypt = config.NotiEncrypt
+	// c.NotiUser = config.NotiUser
+	// c.NotiPassword = config.NotiPassword
 
-	c.config.Save()
+	c.settings.Save()
 
-	msg.Reply <- c.config
+	msg.Reply <- &c.settings.Config
 }
 
 func (c *Core) getStorageInfo(msg *pubsub.Message) {
@@ -144,7 +146,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	sort.Sort(model.ByFree(disks))
 
 	var folders []*model.Item
-	for _, path := range c.config.Folders {
+	for _, path := range c.settings.Folders {
 		list := c.getFolders(dto.SourceDisk, path)
 
 		if list != nil {
@@ -159,7 +161,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		if disk.Path != srcDisk.Path {
 			disk.NewFree = disk.Free
 
-			packer := lib.NewKnapsack(disk, folders, c.config.ReservedSpace)
+			packer := lib.NewKnapsack(disk, folders, c.settings.ReservedSpace)
 			bin := packer.BestFit()
 			if bin != nil {
 				srcDisk.NewFree += bin.Size
@@ -342,7 +344,7 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 	// commands = make([]*dto.Move, 0)
 
 	var dry string
-	if c.config.DryRun {
+	if c.settings.DryRun {
 		dry = "-t"
 	} else {
 		dry = "-f"
@@ -439,20 +441,36 @@ func (c *Core) doStorageUpdate(msg *pubsub.Message) {
 }
 
 func (c *Core) sendmail(msg string) error {
-	if !c.config.Notifications {
+	if !c.settings.Notifications {
 		return nil
 	}
 
-	from := "From: " + c.config.NotiFrom
-	to := "To: " + c.config.NotiTo
+	from := "From: " + c.settings.NotiFrom
+	to := "To: " + c.settings.NotiTo
 	subject := "Subject: unBALANCE Notification"
 
-	mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + msg + "\""
+	var dry string
+	if c.settings.DryRun {
+		dry = "-------\nDRY RUN\n-------\n"
+	} else {
+		dry = ""
+	}
 
-	echo := exec.Command("echo", "-e", mail)
-	ssmtp := exec.Command("ssmtp", "-C", model.SsmtpConf)
+	// mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + dry + msg + "\""
+	mail := from + "\n" + to + "\n" + subject + "\n\n" + dry + msg
 
-	_, _, err := helper.Pipeline(echo, ssmtp)
+	err := ioutil.WriteFile(msgLocation, []byte(mail), 0644)
+	if err != nil {
+		return err
+	}
+
+	cat := exec.Command("cat", msgLocation)
+	ssmtp := exec.Command("ssmtp", c.settings.NotiTo)
+
+	mlog.Info("sendmail:echo: %s %s (%s)", cat.Path, cat.Args, cat.Dir)
+	mlog.Info("sendmail:ssmtp: %s %s (%s)", ssmtp.Path, ssmtp.Args, ssmtp.Dir)
+
+	_, _, err = helper.Pipeline(cat, ssmtp)
 	if err != nil {
 		return err
 	}
