@@ -37,7 +37,7 @@ chmod -R +x /etc/service/ /etc/my_init.d/
 # 		wget \
 # 		ssmtp
 
-# wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.5.1/unbalance-0.5.1-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
+# wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.6.7/unbalance-0.6.7-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
 
 # ls -al /tmp
 # ls -al /tmp/unbalance
