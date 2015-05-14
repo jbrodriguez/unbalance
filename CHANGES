@@ -1,3 +1,15 @@
+Version 0.6.4 - 2015-05-14
+    -Remove staging and art folders
+    - Add new icon
+    - Manage notification feature internally (do not depend on unRAID's notifications settings)
+    - Remove mini dependency
+    - Reorganize config structure, creating a settings structure that contains an embedded config structure
+    - Set sane defaults for config options
+    - Redefine shell commands in order to be able to send mail properly
+    - Add logging for better debugging
+    - Improve logging to better debug calculateBestFit function
+
+
 Version 0.6.3 - 2015-05-09
     -Remove staging and art folders
     - Fix breadcrumb to unRAID notification settings
