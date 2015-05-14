@@ -1,3 +1,10 @@
+Version 0.6.6 - 2015-05-14
+    -Remove staging and art folders
+    - Add notifications form validation
+    - Fix calculate and move buttons disabled behaviour
+    - Fix settings init function, by ensuring that the sane and current values are being used (and also saved to the config file)
+
+
 Version 0.6.5 - 2015-05-14
     -Remove staging and art folders
     - Fix name of save button in notifications settings
