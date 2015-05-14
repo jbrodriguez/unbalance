@@ -1,6 +1,7 @@
 package model
 
 import (
+	"apertoire.net/unbalance/server/helper"
 	"fmt"
 )
 
@@ -16,7 +17,7 @@ func (self *Bin) Add(item *Item) {
 
 func (self *Bin) Print() {
 	for _, item := range self.Items {
-		fmt.Println(fmt.Sprintf("[%d] %s", item.Size, item.Name))
+		fmt.Printf("[%s] %s\n", helper.ByteSize(item.Size), item.Name)
 	}
 }
 

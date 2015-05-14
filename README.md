@@ -89,7 +89,6 @@ It was built with:
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) (websocket)
 - [semver (fsaintjacques)](https://github.com/fsaintjacques/semver-tool) (slightly modified)
 - [Gulpjs](http://gulpjs.com/)
-- [Mini](https://github.com/FogCreek/mini)
 
 ## License
 [MIT license](http://jbrodriguez.mit-license.org)

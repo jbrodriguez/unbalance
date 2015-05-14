@@ -223,7 +223,7 @@ func (u *Unraid) getDiskInfo(line string, arg interface{}) {
 func (u *Unraid) Print() {
 	mlog.Info("Unraid Box Condition: %+v", u.Condition)
 	mlog.Info("Unraid Box SourceDiskName: %+v", u.SourceDiskName)
-	mlog.Info("Unraid Box BytesToMove: %+v", u.BytesToMove)
+	mlog.Info("Unraid Box BytesToMove: %+v", helper.ByteSize(u.BytesToMove))
 	// glog.Info("NumDisks: ", u.Box.NumDisks)
 	// glog.Info("NumProtected: ", u.Box.NumProtected)
 	// glog.Info("Synced: ", u.Box.Synced)
@@ -234,6 +234,6 @@ func (u *Unraid) Print() {
 	// glog.Info("State: ", u.Box.State)
 
 	for _, disk := range u.Disks {
-		mlog.Info("%+v", disk)
+		mlog.Info("%s", disk.toString())
 	}
 }
