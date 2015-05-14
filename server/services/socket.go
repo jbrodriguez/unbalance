@@ -15,8 +15,8 @@ const (
 )
 
 type Socket struct {
-	bus    *pubsub.PubSub
-	config *model.Config
+	bus      *pubsub.PubSub
+	settings *model.Settings
 
 	// registered connections
 	connections map[*Connection]bool
@@ -34,10 +34,10 @@ type Socket struct {
 	unregister chan *Connection
 }
 
-func NewSocket(bus *pubsub.PubSub, config *model.Config) *Socket {
+func NewSocket(bus *pubsub.PubSub, settings *model.Settings) *Socket {
 	return &Socket{
-		bus:    bus,
-		config: config,
+		bus:      bus,
+		settings: settings,
 
 		connections: make(map[*Connection]bool),
 		register:    make(chan *Connection),

@@ -39,16 +39,55 @@
 						</table>
 					</div>
 				</fieldset>
+				</form>
+			</div>
+			<div class="row">
+				<form class="cd-form">
 				<fieldset>
 					<legend>Notifications</legend>
 
 					<p>Notify via email when the moving process ends, as well as any errors that may occurr.</p>
-					<p>For this to work, you need to set up the email information in unRAID > Settings > Notification Settings</p>
+					<p>It will include a list of all the files that take place in the move operation.</p>
 
 					<div>
 						<label>Notifications</label>
 						<input type="checkbox" data-ng-checked="{{vm.options.config.notifications}}" data-ng-model="vm.options.config.notifications" data-ng-change="vm.flipNotifications()"/> 
 					</div>
+
+					<div class="notifications" data-ng-if="vm.options.config.notifications">
+						<div>
+							<label>From <span>(Email address you want this email to be sent from)</span></label>
+							<input type="email" data-ng-model="vm.options.config.notiFrom" required /> 
+						</div>
+						<div>
+							<label>To <span>(Email address you want this email to be sent to)</span></label>
+							<input type="email" placeholder="myaccount@gmail.com" data-ng-model="vm.options.config.notiTo" required /> 
+						</div>
+						<div>
+							<label>Server (provider) <span>(SMTP server host)</span></label>
+							<input type="text" placeholder="smtp.gmail.com" data-ng-model="vm.options.config.notiHost" required /> 
+						</div>
+						<div>
+							<label>Port <span>(SMTP server port)</span></label>
+							<input type="number" placeholder="465" data-ng-model="vm.options.config.notiPort" min="1" max="65535" required /> 
+						</div>
+						<div>
+							<label>Encryption <span>(Secure communication using TLS/SSL)</span></label>
+							<input type="checkbox" data-ng-checked="{{vm.options.config.notiEncrypt}}" data-ng-model="vm.options.config.notiEncrypt" /> 
+						</div>
+						<div>
+							<label>Username <span>(SMTP server user name)</span></label>
+							<input type="text" placeholder="myaccount" data-ng-model="vm.options.config.notiUser" required /> 
+						</div>
+						<div>
+							<label>Password <span>(SMTP server password)</span></label>
+							<input type="password" placeholder="mypass" data-ng-model="vm.options.config.notiPassword" required /> 
+						</div>
+						<div>
+							<a href="#" class="btn btn-primary" data-ng-click="vm.saveNotifications()">Add</a>
+						</div>
+					</div>
+
 				</fieldset>				
 				</form>
 			</div>

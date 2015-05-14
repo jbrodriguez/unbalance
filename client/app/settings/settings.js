@@ -17,11 +17,12 @@
         vm.addFolder = addFolder;
         vm.removeFolder = removeFolder;
         vm.flipNotifications = flipNotifications;
+        vm.saveNotifications = saveNotifications;
 
         activate();
 
         function activate() {
-            // console.log("behind petrified eyes", options);
+            console.log("behind petrified eyes", options);
         };
 
         function addFolder() {
@@ -57,5 +58,12 @@
                 logger.success('Configuration saved succesfully.');
             });
         }
+
+        function saveNotifications() {
+
+            return api.saveConfig(vm.options.config).then(function(data) {
+                logger.success('Configuration saved succesfully.');
+            });
+        }        
     }
 })();

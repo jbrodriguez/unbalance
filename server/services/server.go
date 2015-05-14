@@ -15,14 +15,14 @@ const apiVersion string = "/api/v1"
 const guiLocation string = "/usr/local/share/unbalance"
 
 type Server struct {
-	bus    *pubsub.PubSub
-	config *model.Config
-	engine *gin.Engine
-	socket *Socket
+	bus      *pubsub.PubSub
+	settings *model.Settings
+	engine   *gin.Engine
+	socket   *Socket
 }
 
-func NewServer(bus *pubsub.PubSub, config *model.Config, socket *Socket) *Server {
-	server := &Server{bus: bus, config: config, socket: socket}
+func NewServer(bus *pubsub.PubSub, settings *model.Settings, socket *Socket) *Server {
+	server := &Server{bus: bus, settings: settings, socket: socket}
 	return server
 }
 

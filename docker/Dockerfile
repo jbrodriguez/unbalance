@@ -9,12 +9,12 @@ CMD ["/bin/bash"]
 # CMD ["/sbin/my_init"]
 # CMD ["/usr/bin/boot.sh"]
 
-ADD unbalance-0.6.1-linux-amd64.tar.gz /tmp
+ADD unbalance-0.6.3-linux-amd64.tar.gz /tmp
 ADD boot.sh /usr/bin/boot.sh
 RUN chmod +x /usr/bin/boot.sh
 ADD install.sh /tmp/install.sh
 RUN chmod +x /tmp/install.sh && /tmp/install.sh
 
-VOLUME /config /mnt /root /etc
+VOLUME /config /mnt /root
 EXPOSE 6237
 

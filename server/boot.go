@@ -8,15 +8,17 @@ import (
 	"github.com/jbrodriguez/pubsub"
 	"os"
 	"os/signal"
+	"path/filepath"
 )
 
 var Version string
 
 const (
-	defaultCfgLocation = "/boot/config/plugins/unbalance/"
-	defaultCfgUsage    = "Path to the config file"
-	defaultLogLocation = ""
-	defaultLogUsage    = "Path to the log file"
+	defaultCfgLocation   = "/boot/config/plugins/unbalance/"
+	defaultCfgUsage      = "Path to the config file"
+	defaultLogLocation   = ""
+	defaultLogUsage      = "Path to the log file"
+	unbalanceLogFilePath = "UNBALANCE_LOGFILEPATH"
 )
 
 func main() {
@@ -30,16 +32,29 @@ func main() {
 
 	flag.Parse()
 
-	config := model.Config{}
-	config.Init(Version, cfg, log)
+	finalLog := os.Getenv(unbalanceLogFilePath)
+
+	// command line param takes precedence over environment var
+	if log != "" {
+		finalLog = log
+	}
+
+	if finalLog != "" {
+		mlog.Start(mlog.LevelInfo, filepath.Join(finalLog, "unbalance.log"))
+	} else {
+		mlog.Start(mlog.LevelInfo, "")
+	}
 
 	mlog.Info("unBALANCE v%s starting up ...", Version)
 
+	settings := model.Settings{}
+	settings.Init(Version, cfg, log)
+
 	bus := pubsub.New(1)
 
-	socket := services.NewSocket(bus, &config)
-	server := services.NewServer(bus, &config, socket)
-	core := services.NewCore(bus, &config)
+	socket := services.NewSocket(bus, &settings)
+	server := services.NewServer(bus, &settings, socket)
+	core := services.NewCore(bus, &settings)
 
 	socket.Start()
 	server.Start()
