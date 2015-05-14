@@ -42,7 +42,7 @@
 				</form>
 			</div>
 			<div class="row">
-				<form class="cd-form">
+				<form name="userForm" data-ng-submit="vm.submit(userForm.$valid)" class="cd-form" novalidate>
 				<fieldset>
 					<legend>Notifications</legend>
 
@@ -57,37 +57,46 @@
 					<div class="notifications" data-ng-if="vm.options.config.notifications">
 						<div>
 							<label>From <span>(Email address you want this email to be sent from)</span></label>
-							<input type="email" data-ng-model="vm.options.config.notiFrom" required /> 
+							<input type="email" name="from" data-ng-model="vm.options.config.notiFrom" required /> 
+							<small data-ng-show="userForm.from.$invalid && !userForm.from.$pristine && vm.submitted" class="help-block">Enter a valid From email.</small>
+							<small data-ng-show="userForm.from.$error.required && !userForm.from.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
 							<label>To <span>(Email address you want this email to be sent to)</span></label>
-							<input type="email" placeholder="myaccount@gmail.com" data-ng-model="vm.options.config.notiTo" required /> 
+							<input type="email" name="to" data-ng-model="vm.options.config.notiTo" required /> 
+							<small data-ng-show="userForm.to.$invalid && !userForm.to.$pristine && vm.submitted" class="help-block">Enter a valid To email.</small>
+							<small data-ng-show="userForm.to.$error.required && !userForm.to.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
 							<label>Server (provider) <span>(SMTP server host)</span></label>
-							<input type="text" placeholder="smtp.gmail.com" data-ng-model="vm.options.config.notiHost" required /> 
+							<input type="text" name="server" data-ng-model="vm.options.config.notiHost" required /> 
+							<small data-ng-show="userForm.server.$error.required && !userForm.server.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
 							<label>Port <span>(SMTP server port)</span></label>
-							<input type="number" placeholder="465" data-ng-model="vm.options.config.notiPort" min="1" max="65535" required /> 
+							<input type="number" name="port" data-ng-model="vm.options.config.notiPort" min="1" max="65535" required /> 
+							<small data-ng-show="userForm.port.$error.min && !userForm.port.$pristine && vm.submitted" class="help-block">Enter a port number between 1 and 65535.</small>
+							<small data-ng-show="userForm.port.$error.max && !userForm.port.$pristine && vm.submitted" class="help-block">Enter a port number between 1 and 65535.</small>
+							<small data-ng-show="userForm.port.$error.required && !userForm.port.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
 							<label>Encryption <span>(Secure communication using TLS/SSL)</span></label>
-							<input type="checkbox" data-ng-checked="{{vm.options.config.notiEncrypt}}" data-ng-model="vm.options.config.notiEncrypt" /> 
+							<input type="checkbox" name="encryption" data-ng-checked="{{vm.options.config.notiEncrypt}}" data-ng-model="vm.options.config.notiEncrypt" /> 
 						</div>
 						<div>
 							<label>Username <span>(SMTP server user name)</span></label>
-							<input type="text" placeholder="myaccount" data-ng-model="vm.options.config.notiUser" required /> 
+							<input type="text" name="username" data-ng-model="vm.options.config.notiUser" required /> 
+							<small data-ng-show="userForm.username.$error.required && !userForm.username.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
 							<label>Password <span>(SMTP server password)</span></label>
-							<input type="password" placeholder="mypass" data-ng-model="vm.options.config.notiPassword" required /> 
+							<input type="password" name="password" data-ng-model="vm.options.config.notiPassword" required /> 
+							<small data-ng-show="userForm.password.$error.required && !userForm.password.$pristine && vm.submitted" class="help-block">Field is required.</small>
 						</div>
 						<div>
-							<a href="#" class="btn btn-primary" data-ng-click="vm.saveNotifications()">Save</a>
+							<button class="btn btn-primary">Submit</button>
 						</div>
 					</div>
-
 				</fieldset>				
 				</form>
 			</div>

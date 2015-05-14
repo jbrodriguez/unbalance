@@ -5,6 +5,7 @@ usermod -g 100 nobody
 usermod -d /home nobody
 chown -R nobody:users /home
 
+
 ## Disable SSH
 rm -rf /etc/service/sshd
 rm /etc/my_init.d/00_regen_ssh_host_keys.sh
@@ -30,11 +31,11 @@ EOT
 chmod -R +x /etc/service/ /etc/my_init.d/
 
 # Dependencies
-apt-get update
-apt-get install -y \
-		rsync \
-		wget \
-		ssmtp
+# apt-get update
+# apt-get install -y \
+# 		rsync \
+# 		wget \
+# 		ssmtp
 
 # wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.5.1/unbalance-0.5.1-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
 
@@ -46,5 +47,5 @@ mv /tmp/unbalance/diskmv /usr/bin
 mv /tmp/unbalance /usr/local/share/
 
 ## Clean up APT when done.
-apt-get clean -y
+# apt-get clean -y
 rm -rf /var/lib/apt/lists/* /var/cache/* /tmp/* /var/tmp/*
