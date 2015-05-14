@@ -17,9 +17,9 @@
 
 				<div class="dashboard-commands">
 					<span>&nbsp;</span>
-					<a href="#" ng-click="vm.calculateBestFit()" class="btn btn-primary" data-ng-class="{disabled: vm.disableCalcCtrl}">CALCULATE</a>
+					<button class="btn btn-primary" data-ng-click="vm.calculateBestFit()" data-ng-disabled="vm.disableCalcCtrl">CALCULATE</button>
 					<span>&nbsp; | &nbsp;</span>
-					<a href="#" ng-click="vm.move()" class="btn btn-primary" data-ng-class="{disabled: vm.disableMoveCtrl}">MOVE</a>
+					<button class="btn btn-primary" data-ng-click="vm.move()" data-ng-disabled="vm.disableMoveCtrl">MOVE</button>
 					<div class="dryrun"> <input type="checkbox" data-ng-checked="{{vm.options.config.dryRun}}" data-ng-model="vm.options.config.dryRun" data-ng-change="vm.flipDryRun()" data-ng-class="{disabled: vm.disableControls}" /> <span>dry-run </span> </div>
 				</div>				
 			</div>

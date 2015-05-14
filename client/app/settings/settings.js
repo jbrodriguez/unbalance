@@ -13,11 +13,13 @@
 
         vm.options = options;
         vm.folder = '';
+        vm.submitted = false;
 
         vm.addFolder = addFolder;
         vm.removeFolder = removeFolder;
         vm.flipNotifications = flipNotifications;
         vm.saveNotifications = saveNotifications;
+        vm.submit = submit;
 
         activate();
 
@@ -64,6 +66,20 @@
             return api.saveConfig(vm.options.config).then(function(data) {
                 logger.success('Configuration saved succesfully.');
             });
-        }        
+        } 
+
+        function submit(isValid) {
+            vm.submitted = !isValid;
+
+            if (!isValid) {
+                console.log("invalid")
+            } else {
+                return api.saveConfig(vm.options.config).then(function(data) {
+                    vm.submitted = false;
+                    logger.success('Configuration saved succesfully.');
+                });
+            };
+        }
+
     }
 })();

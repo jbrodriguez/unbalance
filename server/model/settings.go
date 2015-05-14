@@ -31,14 +31,16 @@ type Config struct {
 }
 
 type Settings struct {
-	ConfigDir string
-	LogDir    string
+	ConfigDir      string
+	LogDir         string
+	CurrentVersion string
 
 	Config
 }
 
 func (s *Settings) Init(version string, config string, log string) {
 	s.Version = version
+	s.CurrentVersion = version
 
 	s.ConfigDir = config
 	s.LogDir = log
@@ -46,7 +48,7 @@ func (s *Settings) Init(version string, config string, log string) {
 	s.setup()
 	s.load()
 
-	s.saveSsmtpConf()
+	s.Save()
 
 	mlog.Info("Config file loaded from (%s) as:\n%s", s.ConfigDir, s.toString())
 }
@@ -80,7 +82,6 @@ func (s *Settings) load() {
 	}
 
 	s.Config = config
-	s.sanitize()
 }
 
 func (s *Settings) sanitize() {
@@ -95,6 +96,7 @@ func (s *Settings) sanitize() {
 	s.NotiEncrypt = s.NotiEncrypt && true
 	s.NotiUser = getString(s.NotiUser, "myaccount")
 	s.NotiPassword = getString(s.NotiPassword, "mypass")
+	s.Version = s.CurrentVersion
 }
 
 func (s *Settings) toString() string {
@@ -116,9 +118,7 @@ func (s *Settings) Save() {
 		mlog.Info("WriteFileJson ERROR: %+v", err)
 	}
 
-	if s.Notifications && s.NotiPassword != "mypass" {
-		s.saveSsmtpConf()
-	}
+	s.saveSsmtpConf()
 
 	mlog.Info("Config file saved as: \n%s", s.toString())
 }
