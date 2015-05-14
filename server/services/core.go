@@ -136,10 +136,11 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	for _, disk := range disks {
 		if disk.Path == dto.SourceDisk {
 			srcDisk = disk
+			break
 		}
 	}
 
-	mlog.Info("calculateBestFit:Source Disk = %s", srcDisk)
+	mlog.Info("calculateBestFit:Begin:srcDisk(%s)", srcDisk.Path)
 
 	// Initialize fields
 	c.storage.BytesToMove = 0
@@ -157,7 +158,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	}
 
 	for _, v := range folders {
-		mlog.Info("calculateBestFit:toBeMoved:Name(s) ; Size(%s)", v.Name, lib.ByteSize(v.Size))
+		mlog.Info("calculateBestFit:total(%d):toBeMoved:Name(%s); Size(%s)", len(folders), v.Name, helper.ByteSize(v.Size))
 	}
 
 	srcDisk.NewFree = srcDisk.Free
@@ -167,6 +168,8 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		if disk.Path != srcDisk.Path {
 			disk.NewFree = disk.Free
 
+			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
+
 			packer := lib.NewKnapsack(disk, folders, c.settings.ReservedSpace)
 			bin := packer.BestFit()
 			if bin != nil {
@@ -174,31 +177,35 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 				disk.NewFree -= bin.Size
 				c.storage.BytesToMove += bin.Size
 
-				mlog.Info("calculateBestFit:Original Free Space: %s", lib.ByteSize(srcDisk.Free))
-				mlog.Info("calculateBestFit:Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
-
 				folders = c.removeFolders(folders, bin.Items)
+
+				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", srcDisk.Path, len(bin.Items), helper.ByteSize(srcDisk.Free), helper.ByteSize(srcDisk.NewFree))
 			} else {
-				mlog.Info("calculateBestFit:No space available on (%s)", disk)
+				mlog.Info("calculateBestFit:NoBinAllocated=Disk(%s)", disk.Path)
 			}
 		}
 	}
 
-	for _, disk := range disks {
+	mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
+	mlog.Info("calculateBestFit:src(%s):Listing disks ...", srcDisk.Path)
+
+	for _, disk := range c.storage.Disks {
 		disk.Print()
 	}
 
 	mlog.Info("=========================================================")
 	mlog.Info("Results for %s", srcDisk.Path)
-	mlog.Info("Original Free Space: %s", lib.ByteSize(srcDisk.Free))
-	mlog.Info("Final Free Space: %s", lib.ByteSize(srcDisk.NewFree))
-	mlog.Info("Gained Space: %s", lib.ByteSize(srcDisk.NewFree-srcDisk.Free))
-	mlog.Info("Bytes To Move: %s", lib.ByteSize(c.storage.BytesToMove))
+	mlog.Info("Original Free Space: %s", helper.ByteSize(srcDisk.Free))
+	mlog.Info("Final Free Space: %s", helper.ByteSize(srcDisk.NewFree))
+	mlog.Info("Gained Space: %s", helper.ByteSize(srcDisk.NewFree-srcDisk.Free))
+	mlog.Info("Bytes To Move: %s", helper.ByteSize(c.storage.BytesToMove))
 	mlog.Info("---------------------------------------------------------")
 
 	c.storage.Print()
 
 	msg.Reply <- c.storage
+
+	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
@@ -470,18 +477,18 @@ func (c *Core) sendmail(msg string) error {
 	// mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + dry + msg + "\""
 	mail := from + "\n" + to + "\n" + subject + "\n\n" + dry + msg
 
-	err := ioutil.WriteFile(msgLocation, []byte(mail), 0644)
-	if err != nil {
-		return err
-	}
+	// err := ioutil.WriteFile(msgLocation, []byte(mail), 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
-	cat := exec.Command("cat", msgLocation)
+	echo := exec.Command("echo", "-e", mail)
 	ssmtp := exec.Command("ssmtp", c.settings.NotiTo)
 
-	mlog.Info("sendmail:echo: %s %s (%s)", cat.Path, cat.Args, cat.Dir)
-	mlog.Info("sendmail:ssmtp: %s %s (%s)", ssmtp.Path, ssmtp.Args, ssmtp.Dir)
+	// mlog.Info("sendmail:echo: %s %s (%s)", echo.Path, echo.Args, echo.Dir)
+	// mlog.Info("sendmail:ssmtp: %s %s (%s)", ssmtp.Path, ssmtp.Args, ssmtp.Dir)
 
-	_, _, err = helper.Pipeline(cat, ssmtp)
+	_, _, err := helper.Pipeline(echo, ssmtp)
 	if err != nil {
 		return err
 	}

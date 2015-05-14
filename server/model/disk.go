@@ -1,8 +1,8 @@
 package model
 
 import (
+	"apertoire.net/unbalance/server/helper"
 	"fmt"
-	"apertoire.net/unbalance/server/lib"
 )
 
 type Disk struct {
@@ -22,35 +22,32 @@ func (self *Disk) Print() {
 	// this disk was not assigned to a bin
 	if self.Bin != nil {
 		fmt.Println("=========================================================")
-		fmt.Println(fmt.Sprintf("[%d/%d] %2.2f%% (%s)", self.Bin.Size, self.Free, (float64(self.Bin.Size)/float64(self.Free))*100, self.Path))
+		fmt.Printf("Disk(%s):ALLOCATED %d folders:[%s/%s] %2.2f%%\n", self.Path, len(self.Bin.Items), helper.ByteSize(self.Bin.Size), helper.ByteSize(self.Free), (float64(self.Bin.Size)/float64(self.Free))*100)
 		fmt.Println("---------------------------------------------------------")
 		self.Bin.Print()
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("")
 	} else {
 		fmt.Println("=========================================================")
-		fmt.Println(fmt.Sprintf("[0/%d] 0%% (%s)", self.Free, self.Path))
+		fmt.Printf("Disk(%s):NO ALLOCATION:[0/%s] 0%%\n", self.Path, helper.ByteSize(self.Free))
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("")
 	}
 }
 
-func (self *Disk) toString() {
-	return fmt.Sprintf("Id(%d); Name(%s); Path(%s); Device(%s), Free(%d); NewFree(%d); Size(%s); Serial(%s); Status(%s); Bin(%v)", 
-			Id, \
-			Name, \
-			Path, \
-			Device, \
-			Free, \
-			NewFree, \
-			lib.ByteSize(Size), \
-			Serial, \
-			Status, \
-			Bin
-			)
+func (self *Disk) toString() string {
+	return fmt.Sprintf("Id(%d); Name(%s); Path(%s); Device(%s), Free(%s); NewFree(%s); Size(%s); Serial(%s); Status(%s); Bin(%v)",
+		self.Id,
+		self.Name,
+		self.Path,
+		self.Device,
+		helper.ByteSize(self.Free),
+		helper.ByteSize(self.NewFree),
+		helper.ByteSize(self.Size),
+		self.Serial,
+		self.Status, self.Bin)
 }
-
 
 type ByFree []*Disk
 
