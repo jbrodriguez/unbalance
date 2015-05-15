@@ -3,6 +3,9 @@ unBALANCE
 
 *tl;dr* **unBALANCE** is an [unRAID](http://lime-technology.com) app to free up space from one of the disks in the array, by moving folders and files to other disks.
 
+## Screenshot
+![Screenshot](unBALANCE.png)
+
 ## Introduction
 With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will distribute the folders/files to other disks filling them up.
 
