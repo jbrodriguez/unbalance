@@ -158,7 +158,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	}
 
 	for _, v := range folders {
-		mlog.Info("calculateBestFit:total(%d):toBeMoved:Name(%s); Size(%s)", len(folders), v.Name, helper.ByteSize(v.Size))
+		mlog.Info("calculateBestFit:total(%d):toBeMoved:Path(%s); Size(%s)", len(folders), v.Path, helper.ByteSize(v.Size))
 	}
 
 	srcDisk.NewFree = srcDisk.Free
@@ -225,6 +225,8 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		mlog.Fatalf("getFolders:Unable to readdir: %s", err)
 	}
 
+	mlog.Info("getFolders:Readdir(%d)", len(dirs))
+
 	// mlog.Info("Dirs: %+v", dirs)
 
 	if len(dirs) == 0 {
@@ -232,7 +234,8 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		return nil
 	}
 
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", filepath.Join(srcFolder, "*")))
+	scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		mlog.Fatalf("getFolders:Unable to stdoutpipe du: %s", err)
@@ -258,7 +261,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 			line = line[:len(line)-1] // drop the '\r'
 		}
 
-		mlog.Info("getFolders(%s):du -bs: %s", srcFolder+"*", line)
+		mlog.Info("getFolders(%s):du -bs: %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])

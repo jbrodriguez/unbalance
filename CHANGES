@@ -1,3 +1,11 @@
+Version 0.6.8 - 2015-05-17
+    -Remove staging and art folders
+    - Add screenshot to README.md
+    - Add support for folders with spaces in the name
+    - Add/Improve logging
+    - Increase ReservedSpace to 450Mb and declare it as a constant
+
+
 Version 0.6.7 - 2015-05-14
     -Remove staging and art folders
     - Fix test Dockerfile
