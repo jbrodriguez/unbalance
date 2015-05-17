@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	SsmtpConf  string = "/etc/ssmtp/ssmtp.conf"
-	dockerEnvS string = "UNBALANCE_DOCKER"
+	SsmtpConf     string = "/etc/ssmtp/ssmtp.conf"
+	dockerEnvS    string = "UNBALANCE_DOCKER"
+	reservedSpace uint64 = 450000000
 )
 
 type Config struct {
@@ -85,7 +86,7 @@ func (s *Settings) load() {
 }
 
 func (s *Settings) sanitize() {
-	s.ReservedSpace = 350000000
+	s.ReservedSpace = reservedSpace
 	s.Folders = getArray(s.Folders, make([]string, 0))
 	s.DryRun = s.DryRun || false
 	s.Notifications = s.Notifications || false
