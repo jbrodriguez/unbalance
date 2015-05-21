@@ -179,7 +179,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 
 				folders = c.removeFolders(folders, bin.Items)
 
-				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", srcDisk.Path, len(bin.Items), helper.ByteSize(srcDisk.Free), helper.ByteSize(srcDisk.NewFree))
+				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), helper.ByteSize(srcDisk.Free), helper.ByteSize(srcDisk.NewFree))
 			} else {
 				mlog.Info("calculateBestFit:NoBinAllocated=Disk(%s)", disk.Path)
 			}
@@ -187,7 +187,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	}
 
 	mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
-	mlog.Info("calculateBestFit:src(%s):Listing disks ...", srcDisk.Path)
+	mlog.Info("calculateBestFit:src(%s):Listing (%d) disks ...", srcDisk.Path, len(c.storage.Disks))
 
 	for _, disk := range c.storage.Disks {
 		disk.Print()
