@@ -80,7 +80,7 @@ It means that operations are simulated, it only shows what it would actually do.
 To perform the operations, uncheck the dry-run checkbox.
 
 ## Credits
-This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the forum thread for additional information).
+This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).
 
 The icon was courteously created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508) (fellow unRAID member)
 
@@ -92,6 +92,8 @@ It was built with:
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) (websocket)
 - [semver (fsaintjacques)](https://github.com/fsaintjacques/semver-tool) (slightly modified)
 - [Gulpjs](http://gulpjs.com/)
+- [pubsub](https://github.com/tuxychandru/pubsub/) (slightly modified)
+
 
 ## License
 [MIT license](http://jbrodriguez.mit-license.org)
