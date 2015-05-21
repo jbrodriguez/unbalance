@@ -400,14 +400,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 		for _, item := range disk.Bin.Items {
 			//			dst := filepath.Join(disk.Path, item.Path)
 
-			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
+			// mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
 			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
 			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
-			mlog.Info("cmd = %s", cmd)
+			mlog.Info("cmd(%s)", cmd)
 
 			commands = append(commands, cmd+"\n")
 
