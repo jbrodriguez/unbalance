@@ -48,7 +48,7 @@ func NewCore(bus *pubsub.PubSub, settings *model.Settings) *Core {
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reFreeSpace = re
 
-	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
+	re, _ = regexp.Compile(`(\d+)\s+(.*?)$`)
 	core.reItems = re
 
 	core.storage = &model.Unraid{}
