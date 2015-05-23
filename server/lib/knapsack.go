@@ -37,6 +37,7 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 	// }
 
 	for _, item := range self.list {
+		// if item.Size > (self.disk.Free - self.buffer) {
 		if item.Size > self.disk.Free {
 			// glog.Info(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
 			self.over = append(self.over, item)

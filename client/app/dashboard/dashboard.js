@@ -111,6 +111,7 @@
 
         function calculateBestFit() {
             var srcDisk = "";
+            var destDisks = {};
 
             for (var key in vm.fromDisk) {
                 if (vm.fromDisk.hasOwnProperty(key)) {
@@ -126,7 +127,15 @@
                 return;
             }
 
-            return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": ""}).then(function(data) {
+            for (var key in vm.toDisk) {
+                if (vm.fromDisk.hasOwnProperty(key)) {
+                    if (vm.toDisk[key]) {
+                        destDisks[key] = true
+                    }
+                }
+            }
+
+            return api.calculateBestFit({"sourceDisk": srcDisk, "destDisk": destDisks}).then(function(data) {
                 vm.condition = data.condition;
                 vm.bytesToMove = data.bytesToMove;
                 vm.inProgress = data.inProgress
