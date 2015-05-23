@@ -277,8 +277,10 @@ find "./$MERGEDIR" -depth \
       -exec rsync $RSYNCOPTS {} "/mnt/${DESTDISK}/" \; \
       $DELCLAUSE
 
-printf "diskmv finished\n"
+echo "diskmv finished"
 
 if [ ! $doit == 'true' ]; then
-  printf "... but it ran in test mode\n"
+  echo "... but it ran in test mode"
 fi
+
+echo " "

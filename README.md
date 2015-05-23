@@ -12,7 +12,7 @@ With unBALANCE, you select a disk that you want to have as much free space avail
 The logic is quite simple:
 Get all elegible folders from the source disk
 Order the target disks by free space available
-For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 250Mb).
+For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).
 
 Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).
 
