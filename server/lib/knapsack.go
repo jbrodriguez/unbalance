@@ -8,20 +8,16 @@ import (
 )
 
 type Knapsack struct {
-	// SourceDisk string
-	// TargetDisk string
-	// MaxSize    uint64
-
 	disk *model.Disk
 
 	Bins []*model.Bin
 	list []*model.Item
 	over []*model.Item
 
-	buffer uint64
+	buffer int64
 }
 
-func NewKnapsack(disk *model.Disk, items []*model.Item, reserved uint64) *Knapsack {
+func NewKnapsack(disk *model.Disk, items []*model.Item, reserved int64) *Knapsack {
 	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
@@ -37,20 +33,21 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 	// }
 
 	for _, item := range self.list {
-		// if item.Size > (self.disk.Free - self.buffer) {
-		if item.Size > self.disk.Free {
-			// glog.Info(fmt.Sprintf("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free))
+		if item.Size > (self.disk.Free - self.buffer) {
+			// if item.Size > self.disk.Free {
+			// mlog.Info("size: %d, disk: %s, free: %d", item.Size, self.disk.Path, self.disk.Free)
 			self.over = append(self.over, item)
 		} else {
 			targetBin := -1
 			remainingSpace := self.disk.Free
 
-			// log.Printf("Disk [%s]: remainingSpace: %d\n", self.disk.Name, remainingSpace)
+			// mlog.Info("disk(%s)-bins(%d); item(%s)-size(%d); remainingSpace(%d)", self.disk.Name, len(self.Bins), item.Name, item.Size, remainingSpace)
 
 			for i, bin := range self.Bins {
 				binSpaceUsed := bin.Size
 				binSpaceLeft := self.disk.Free - binSpaceUsed - item.Size
 
+				// mlog.Info("su(%d); sl(%d)", binSpaceUsed, binSpaceLeft)
 				// if self.disk.Path == "/mnt/disk8" {
 				// 	log.Printf("[/mnt/disk/8] Bin: %d ", i)
 				// }

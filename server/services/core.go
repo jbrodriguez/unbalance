@@ -275,7 +275,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
 
-		size, _ := strconv.ParseUint(result[1], 10, 64)
+		size, _ := strconv.ParseInt(result[1], 10, 64)
 
 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
 		items = append(items, item)

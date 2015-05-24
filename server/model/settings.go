@@ -13,11 +13,11 @@ import (
 const (
 	SsmtpConf     string = "/etc/ssmtp/ssmtp.conf"
 	dockerEnvS    string = "UNBALANCE_DOCKER"
-	reservedSpace uint64 = 450000000
+	reservedSpace int64  = 450000000
 )
 
 type Config struct {
-	ReservedSpace uint64   `json:"reservedSpace"`
+	ReservedSpace int64    `json:"reservedSpace"`
 	Folders       []string `json:"folders"`
 	DryRun        bool     `json:"dryRun"`
 	Notifications bool     `json:"notifications"`
