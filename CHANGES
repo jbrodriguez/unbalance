@@ -1,3 +1,24 @@
+Version 0.7.0 - 2015-05-26
+    -Remove staging and art folders
+    - Include number of unraid disks in logging
+    - Fix logging bug (was referring to srcDisk instead of disk)
+    - Fix regexp that scans the output of du -bs <folder>, to enable folders sizes of single digit
+    - Adjust logging
+    - Modify diskmv script to allow files in the root user share
+    - Add credit (pubsub)
+    - Add link to diskmv unRAID's forum thread
+    - Add diskmv link in UI
+    - Fix README.md to reflect current headroom
+    - Enable functionality to let the user decide which disks are elegible as target for moving folders/files to.
+    - Add test cases
+    - Convert uint64 to int64, to handle adequately difference operations (and probable over/under flow)
+    - Fix edge case in knapsack (one folders equals the size of the remaining space)
+    - Fix service name in stop routine
+    - Modify calculateBestFit to account for disks not chosen as target. If they're not elegible, then let newFree = Free, so that frontend logic detects no change in them
+    - Update diskmv script
+    - Update dev install script to reflect new version
+
+
 Version 0.6.8 - 2015-05-17
     -Remove staging and art folders
     - Add screenshot to README.md
