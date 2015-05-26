@@ -48,8 +48,8 @@ Add the following repository in the Docker GUI<br>
 https://github.com/jbrodriguez/docker-containers/tree/templates<br>
 Add the container [jbrodriguez]/unbalance
 The defaults are <br>
-Port: 6237<BR>
-Volumes: 
+Port: 6237<br>
+Volumes: <br>
 "/mnt" (required)<br>
 "/root" (required)<br>
 "/path/to/config/dir" (required)<br>
