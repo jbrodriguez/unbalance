@@ -49,12 +49,12 @@ func (self *Knapsack) BestFit() (bin *model.Bin) {
 
 				// mlog.Info("su(%d); sl(%d)", binSpaceUsed, binSpaceLeft)
 				// if self.disk.Path == "/mnt/disk8" {
-				// 	log.Printf("[/mnt/disk/8] Bin: %d ", i)
+				// 	mlog.Info("[/mnt/disk/14] Bin: %d ", i)
 				// }
 
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= self.buffer {
-					// log.Printf("[%s] Used: %d | Left: %d\n", self.disk.Path, binSpaceUsed, binSpaceLeft)
-					// log.Printf("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
+					// mlog.Info("[%s] Used: %d | Left: %d\n", self.disk.Path, binSpaceUsed, binSpaceLeft)
+					// mlog.Info("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", self.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
 
 					remainingSpace = binSpaceLeft
 					targetBin = i

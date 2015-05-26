@@ -133,16 +133,20 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 
 	var srcDisk *model.Disk
 	for _, disk := range c.storage.Disks {
+		disk.NewFree = 0
+		disk.Bin = nil
+
 		if disk.Path == dto.SourceDisk {
 			srcDisk = disk
 		} else {
 			if val, ok := dto.DestDisks[disk.Path]; ok && val {
 				disks = append(disks, disk)
+			} else {
+				// if the disk is not elegible as a target, let newFree = Free, to prevent the UI to think there was some change in it
+				disk.NewFree = disk.Free
 			}
 		}
 
-		disk.NewFree = 0
-		disk.Bin = nil
 	}
 
 	mlog.Info("calculateBestFit:Begin:srcDisk(%s); dstDisks(%d)", srcDisk.Path, len(disks))
@@ -199,6 +203,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	mlog.Info("calculateBestFit:src(%s):Listing (%d) disks ...", srcDisk.Path, len(c.storage.Disks))
 
 	for _, disk := range c.storage.Disks {
+		// mlog.Info("the mystery of the year(%s)", disk.Path)
 		disk.Print()
 	}
 
