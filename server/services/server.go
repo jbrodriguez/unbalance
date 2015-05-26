@@ -110,6 +110,7 @@ func (s *Server) calculateBestFit(c *gin.Context) {
 	var bestFit dto.BestFit
 
 	c.Bind(&bestFit)
+	// mlog.Warning("Unable to bind bestFit: %s", err)
 
 	msg := &pubsub.Message{Payload: &bestFit, Reply: make(chan interface{})}
 	s.bus.Pub(msg, "cmd.calculateBestFit")

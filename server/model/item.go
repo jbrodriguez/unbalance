@@ -2,7 +2,7 @@ package model
 
 type Item struct {
 	Name string
-	Size uint64
+	Size int64
 	Path string
 }
 

@@ -48,7 +48,7 @@ func NewCore(bus *pubsub.PubSub, settings *model.Settings) *Core {
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reFreeSpace = re
 
-	re, _ = regexp.Compile(`(.\d+)\s+(.*?)$`)
+	re, _ = regexp.Compile(`(\d+)\s+(.*?)$`)
 	core.reItems = re
 
 	core.storage = &model.Unraid{}
@@ -127,20 +127,33 @@ func (c *Core) getStorageInfo(msg *pubsub.Message) {
 }
 
 func (c *Core) calculateBestFit(msg *pubsub.Message) {
-	disks := make([]*model.Disk, len(c.storage.Disks))
-	copy(disks, c.storage.Disks)
-
 	dto := msg.Payload.(*dto.BestFit)
 
+	disks := make([]*model.Disk, 0)
+
 	var srcDisk *model.Disk
-	for _, disk := range disks {
+	for _, disk := range c.storage.Disks {
+		disk.NewFree = 0
+		disk.Bin = nil
+
 		if disk.Path == dto.SourceDisk {
 			srcDisk = disk
-			break
+		} else {
+			if val, ok := dto.DestDisks[disk.Path]; ok && val {
+				disks = append(disks, disk)
+			} else {
+				// if the disk is not elegible as a target, let newFree = Free, to prevent the UI to think there was some change in it
+				disk.NewFree = disk.Free
+			}
 		}
+
 	}
 
-	mlog.Info("calculateBestFit:Begin:srcDisk(%s)", srcDisk.Path)
+	mlog.Info("calculateBestFit:Begin:srcDisk(%s); dstDisks(%d)", srcDisk.Path, len(disks))
+
+	for _, disk := range disks {
+		mlog.Info("calculateBestFit:elegibleDestDisk(%s)", disk.Path)
+	}
 
 	// Initialize fields
 	c.storage.BytesToMove = 0
@@ -179,7 +192,7 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 
 				folders = c.removeFolders(folders, bin.Items)
 
-				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", srcDisk.Path, len(bin.Items), helper.ByteSize(srcDisk.Free), helper.ByteSize(srcDisk.NewFree))
+				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), helper.ByteSize(srcDisk.Free), helper.ByteSize(srcDisk.NewFree))
 			} else {
 				mlog.Info("calculateBestFit:NoBinAllocated=Disk(%s)", disk.Path)
 			}
@@ -187,9 +200,10 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 	}
 
 	mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
-	mlog.Info("calculateBestFit:src(%s):Listing disks ...", srcDisk.Path)
+	mlog.Info("calculateBestFit:src(%s):Listing (%d) disks ...", srcDisk.Path, len(c.storage.Disks))
 
 	for _, disk := range c.storage.Disks {
+		// mlog.Info("the mystery of the year(%s)", disk.Path)
 		disk.Print()
 	}
 
@@ -266,7 +280,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
 
-		size, _ := strconv.ParseUint(result[1], 10, 64)
+		size, _ := strconv.ParseInt(result[1], 10, 64)
 
 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
 		items = append(items, item)
@@ -400,14 +414,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 		for _, item := range disk.Bin.Items {
 			//			dst := filepath.Join(disk.Path, item.Path)
 
-			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
+			// mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
 			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
 			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
-			mlog.Info("cmd = %s", cmd)
+			mlog.Info("cmd(%s)", cmd)
 
 			commands = append(commands, cmd+"\n")
 

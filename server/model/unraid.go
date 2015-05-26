@@ -19,7 +19,7 @@ type Unraid struct {
 	Disks     []*Disk    `json:"disks"`
 
 	SourceDiskName string
-	BytesToMove    uint64 `json:"bytesToMove"`
+	BytesToMove    int64 `json:"bytesToMove"`
 
 	InProgress bool `json:"inProgress"`
 
@@ -32,8 +32,8 @@ func NewUnraid() (unraid *Unraid) {
 }
 
 type DiskInfoDTO struct {
-	Free map[string]uint64
-	Size map[string]uint64
+	Free map[string]int64
+	Size map[string]int64
 }
 
 func (u *Unraid) Refresh() *Unraid {
@@ -64,7 +64,7 @@ func (u *Unraid) Refresh() *Unraid {
 		return u
 	}
 
-	di := &DiskInfoDTO{Free: make(map[string]uint64), Size: make(map[string]uint64)}
+	di := &DiskInfoDTO{Free: make(map[string]int64), Size: make(map[string]int64)}
 	helper.Shell("df --block-size=1 /mnt/disk*", u.getDiskInfo, di)
 
 	for _, disk := range u.disks {
@@ -122,12 +122,12 @@ func (u *Unraid) Refresh() *Unraid {
 func (u *Unraid) readUnraidConfig(line string, arg interface{}) {
 	if strings.HasPrefix(line, "sbNumDisks") {
 		nd := strings.Split(line, "=")
-		u.Condition.NumDisks, _ = strconv.ParseUint(nd[1], 10, 64)
+		u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
 	}
 
 	if strings.HasPrefix(line, "mdNumProtected") {
 		np := strings.Split(line, "=")
-		u.Condition.NumProtected, _ = strconv.ParseUint(np[1], 10, 64)
+		u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
 	}
 
 	if strings.HasPrefix(line, "sbSynced") {
@@ -138,17 +138,17 @@ func (u *Unraid) readUnraidConfig(line string, arg interface{}) {
 
 	if strings.HasPrefix(line, "sbSyncErrs") {
 		sr := strings.Split(line, "=")
-		u.Condition.SyncErrs, _ = strconv.ParseUint(sr[1], 10, 64)
+		u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
 	}
 
 	if strings.HasPrefix(line, "mdResync") {
 		rs := strings.Split(line, "=")
-		u.Condition.Resync, _ = strconv.ParseUint(rs[1], 10, 64)
+		u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
 	}
 
 	if strings.HasPrefix(line, "mdResyncPos") {
 		rp := strings.Split(line, "=")
-		u.Condition.ResyncPos, _ = strconv.ParseUint(rp[1], 10, 64)
+		u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
 	}
 
 	if strings.HasPrefix(line, "mdState") {
@@ -216,8 +216,8 @@ func (u *Unraid) getDiskInfo(line string, arg interface{}) {
 	di := arg.(*DiskInfoDTO)
 
 	data := strings.Fields(line)
-	di.Size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
-	di.Free[data[5]], _ = strconv.ParseUint(data[3], 0, 64)
+	di.Size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
+	di.Free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
 }
 
 func (u *Unraid) Print() {

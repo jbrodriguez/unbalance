@@ -5,15 +5,15 @@ import (
 )
 
 type Condition struct {
-	NumDisks     uint64    `json:"numDisks"`
-	NumProtected uint64    `json:"numProtected"`
+	NumDisks     int64     `json:"numDisks"`
+	NumProtected int64     `json:"numProtected"`
 	Synced       time.Time `json:"synced"`
-	SyncErrs     uint64    `json:"syncErrs"`
-	Resync       uint64    `json:"resync"`
-	ResyncPrcnt  uint64    `json:"resyncPrct"`
-	ResyncPos    uint64    `json:"resyncPos"`
+	SyncErrs     int64     `json:"syncErrs"`
+	Resync       int64     `json:"resync"`
+	ResyncPrcnt  int64     `json:"resyncPrct"`
+	ResyncPos    int64     `json:"resyncPos"`
 	State        string    `json:"state"`
-	Size         uint64    `json:"size"`
-	Free         uint64    `json:"free"`
-	NewFree      uint64    `json:"newFree"`
+	Size         int64     `json:"size"`
+	Free         int64     `json:"free"`
+	NewFree      int64     `json:"newFree"`
 }

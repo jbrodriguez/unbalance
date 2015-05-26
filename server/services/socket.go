@@ -73,7 +73,7 @@ func (s *Socket) Start() {
 }
 
 func (s *Socket) Stop() {
-	mlog.Info("stopped service Core ...")
+	mlog.Info("stopped service Socket ...")
 }
 
 func (s *Socket) react() {

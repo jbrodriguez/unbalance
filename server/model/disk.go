@@ -10,9 +10,9 @@ type Disk struct {
 	Name    string `json:"name"`
 	Path    string `json:"path"`
 	Device  string `json:"device"`
-	Free    uint64 `json:"free"`
-	NewFree uint64 `json:"newFree"`
-	Size    uint64 `json:"size"`
+	Free    int64  `json:"free"`
+	NewFree int64  `json:"newFree"`
+	Size    int64  `json:"size"`
 	Serial  string `json:"serial"`
 	Status  string `json:"status"`
 	Bin     *Bin   `json:"-"`

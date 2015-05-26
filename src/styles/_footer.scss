@@ -36,7 +36,7 @@ footer {
 .logos {
 	@include flexbox(flex, row, flex-end, center);
 
-	span:nth-child(1) {
+	span:not(:last-child) {
 		margin-right: 1em;
 	}
 }
