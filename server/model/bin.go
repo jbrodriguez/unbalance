@@ -6,7 +6,7 @@ import (
 )
 
 type Bin struct {
-	Size  uint64
+	Size  int64
 	Items []*Item
 }
 

@@ -133,12 +133,12 @@ else
   MERGEDIR="$1"
 fi
 
-if [ ! -d "/mnt/user/$MERGEDIR" ]
-then 
-  echo "'$1' is not a valid user share directory." >&2
-  usage >&2
-  exit 1
-fi
+# if [ ! -d "/mnt/user/$MERGEDIR" ]
+# then 
+#   echo "'$1' is not a valid user share directory." >&2
+#   usage >&2
+#   exit 1
+# fi
 
 if [ -z $2 -o -z $3 ]
 then
@@ -283,4 +283,4 @@ if [ ! $doit == 'true' ]; then
   echo "... but it ran in test mode"
 fi
 
-echo
+echo " "

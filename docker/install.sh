@@ -31,13 +31,13 @@ EOT
 chmod -R +x /etc/service/ /etc/my_init.d/
 
 # Dependencies
-# apt-get update
-# apt-get install -y \
-# 		rsync \
-# 		wget \
-# 		ssmtp
+apt-get update
+apt-get install -y \
+		rsync \
+		wget \
+		ssmtp
 
-# wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.6.7/unbalance-0.6.7-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
+# wget --no-check-certificate https://github.com/jbrodriguez/unbalance/releases/download/0.6.8/unbalance-0.6.8-linux-amd64.tar.gz -O - | tar -xzf - -C /tmp
 
 # ls -al /tmp
 # ls -al /tmp/unbalance
@@ -47,5 +47,5 @@ mv /tmp/unbalance/diskmv /usr/bin
 mv /tmp/unbalance /usr/local/share/
 
 ## Clean up APT when done.
-# apt-get clean -y
+apt-get clean -y
 rm -rf /var/lib/apt/lists/* /var/cache/* /tmp/* /var/tmp/*
