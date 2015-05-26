@@ -1,7 +1,7 @@
 #!/bin/bash
-# diskmv - Move an unRAID user share directory from one disk to another
+# diskmv - Move an unRAID user share files from one disk to another
 #
-# usage: diskmv [options] directory srcdisk destdisk
+# usage: diskmv [options] path srcdisk destdisk
 #
 # A find/rsync structure is used to copy files and directories and then 
 # delete only if the copy succeed, similar to the unRAID mover script.
@@ -9,7 +9,7 @@
 usage(){
 cat << EOF
 
-usage: diskmv [-t|-f|-k|-l|-c|-s N|-v|-q|-h] directory srcdisk destdisk
+usage: diskmv [-t|-f|-k|-l|-c|-s N|-e EXT|-v|-q|-h] path srcdisk destdisk
 
 EOF
 }
@@ -17,11 +17,12 @@ EOF
 helpmsg(){
 cat << EOF
 
-usage: diskmv [options] directory srcdisk destdisk
+usage: diskmv [options] path srcdisk destdisk
 
-directory    Any directory that is contained in the user share file system.
-             It can be specified as an absolute or relative path and can be 
-             relative to the current directory or the /mnt/user/ directory.  
+path         Any directory or file that is contained in the user share file 
+             system. It can be specified as an absolute or relative path and 
+             can be relative to the current directory or the /mnt/user/ 
+             directory.  
 
 srcdisk      Source disk which can be any valid disk in the unraid array. 
              Examples: 'disk2', 'disk18' or 'cache'.
@@ -47,8 +48,8 @@ EOF
 
 [ ${DEBUG:=0} -gt 0 ] && set -x -v
 
-doit='false'      # Default to dry-run
-keepsrc='false'   # Delete source files by default if copy works
+doIt='false'      # Default to dry-run
+keepSource='false'   # Delete source files by default if copy works
 symlinks='false'  # Default rsync to not copy symlinks as symlinks
 clobber='false'   # Default to skip duplicates
 small='false'     # Default to not limit file size
@@ -61,13 +62,13 @@ while :; do
       exit 0
       ;;
     -t|--test) # Specify test mode where no files are moved
-      doit='false'
+      doIt='false'
       ;;
     -f|--force) # Override test mode and force action
-      doit='true'
+      doIt='true'
       ;;
     -k|--keepsource) # Do not delete any source files
-      keepsrc='true'
+      keepSource='true'
       ;;
     -l|--links) # Copy symlinks as symlinks
       symlinks='true'
@@ -125,17 +126,17 @@ if [ "$small" == 'true' ]; then
   fi
 fi
 
-if [ -d "$1" ]
+if [ -e "$1" ]
 then
-  FULLNAME=$(readlink -e "$1")   # Handle relative path
-  MERGEDIR="${FULLNAME#/mnt/*/}"   # Remove any /mnt/*/ prefix
+  fullName=$(readlink -e "$1")   # Handle relative path
+  userShareObj="${fullName#/mnt/*/}"   # Remove any /mnt/*/ prefix
 else
-  MERGEDIR="$1"
+  userShareObj="$1"
 fi
 
-if [ ! -d "/mnt/user/$MERGEDIR" ]
+if [ ! -e "/mnt/user/$userShareObj" ]
 then 
-  echo "'$1' is not a valid user share directory." >&2
+  echo "'$1' is not a valid user share path." >&2
   usage >&2
   exit 1
 fi
@@ -147,10 +148,10 @@ then
   exit 1
 fi
 
-SRCDISK="${2#/mnt/}"    #Remove any leading /mnt/ prefix
-SRCDISK="${SRCDISK%%/*}"    #Remove any trailing path
-if [[ ! -d "/mnt/$SRCDISK" \
-     || "$SRCDISK" != disk[1-9] && "$SRCDISK" != disk[1-9][0-9] && "$SRCDISK" != "cache" \
+sourceDisk="${2#/mnt/}"    #Remove any leading /mnt/ prefix
+sourceDisk="${sourceDisk%%/*}"    #Remove any trailing path
+if [[ ! -d "/mnt/$sourceDisk" \
+     || "$sourceDisk" != disk[1-9] && "$sourceDisk" != disk[1-9][0-9] && "$sourceDisk" != "cache" \
    ]]
 then
   echo "'$2' is not a valid disk." >&2
@@ -158,10 +159,10 @@ then
   exit 1
 fi
 
-DESTDISK="${3#/mnt/}"    #Remove any leading /mnt/ prefix
-DESTDISK="${DESTDISK%%/*}"    #Remove any trailing path
-if [[ ! -d "/mnt/$DESTDISK" \
-     || "$DESTDISK" != disk[1-9] && "$DESTDISK" != disk[1-9][0-9] && "$DESTDISK" != "cache" \
+destDisk="${3#/mnt/}"    #Remove any leading /mnt/ prefix
+destDisk="${destDisk%%/*}"    #Remove any trailing path
+if [[ ! -d "/mnt/$destDisk" \
+     || "$destDisk" != disk[1-9] && "$destDisk" != disk[1-9][0-9] && "$destDisk" != "cache" \
    ]]
 then
   echo "'$3' is not a valid disk." >&2
@@ -169,7 +170,13 @@ then
   exit 1
 fi
 
-RSYNCOPTS="-dIWRpEAXogtl --numeric-ids --inplace"
+if [[ "$destDisk" == "$sourceDisk" ]]; then
+  echo "Destination and Source disks cannot be the same." >&2
+  usage >&2
+  exit 1
+fi
+
+rsyncOpts="-dIWRpEAXogtl --numeric-ids --inplace"
 # rsync options used:
 # -d, --dirs                  transfer directories without recursing
 # -I, --ignore-times          don't skip files that match in size and mod-time
@@ -189,26 +196,27 @@ RSYNCOPTS="-dIWRpEAXogtl --numeric-ids --inplace"
 # rsync options set optionally below
 # -i, --itemize-changes       output a change-summary for all updates
 
-if [ $doit == 'true' ]; then
-  if [ $keepsrc == 'false' ]; then
-    DELCLAUSE="-delete"
+if [ $doIt == 'true' ]; then
+  if [ $keepSource == 'false' ]; then
+    delClause="-delete"
   else
-    DELCLAUSE=""
+    delClause=""
   fi
 else
   echo "Running in test mode, no files will be moved."
-  RSYNCOPTS="$RSYNCOPTS --dry-run"
-  DELCLAUSE=""
+  rsyncOpts="$rsyncOpts --dry-run"
+  delClause=""
 fi
 
 if [ $symlinks == 'true' ]; then
-  SLCLAUSE="-o -type l"
+  symlinkClause="-o -type l"
 else
-  SLCLAUSE=""
+  symlinkClause=""
 fi
 
 if [ $clobber == 'true' ]; then
-  DUPCLAUSE=""
+  dupClause=""
+  rsyncOpts+=' --force'
 else
   # This duplicate clause as annoyingly complicated:
   # If the specified file is a directory on the destination disk or if the 
@@ -217,11 +225,11 @@ else
   # Otherwise, some output is printed and false is returned so the rest of the
   #   clauses in the find statement are not processed and the file is not
   #   copied or moved.
-  DUPCLAUSE=" \
+  dupClause=" \
       ( \
-        -exec [ -d /mnt/$DESTDISK/{} ] ; \
+        -exec [ -d /mnt/$destDisk/{} ] ; \
         -o \
-        -exec [ ! -e /mnt/$DESTDISK/{} ] ; \
+        -exec [ ! -e /mnt/$destDisk/{} ] ; \
         -o \
         -exec echo Duplicate skipped: {} ; \
         -a \
@@ -230,57 +238,55 @@ else
 fi
 
 if [ "$extonly" == 'true' ]; then
-  EXTCLAUSE=('(')  #Start the extension clause with paren stored in an array
+  extClause=('(')  #Start the extension clause with paren stored in an array
   THEREST="$extlist"   #Initialize THEREST
   while true; do
     EXT="${THEREST%%,*}"   #Get the first extension
     THEREST="${THEREST#*,}"   #Remove the first extension
-    EXTCLAUSE+=( -name '*.'"$EXT" )  #Add a -name '*.EXT' test
+    extClause+=( -iname '*.'"$EXT" )  #Add a -name '*.EXT' test
     if [[ "$EXT" == "$THEREST" ]]; then  #There is only one ext left in the list
-      EXTCLAUSE+=(')')  #finish off the extension clause with close paren
+      extClause+=(')')  #finish off the extension clause with close paren
       break  #Done with the while loop
     fi
-    EXTCLAUSE+=(-o)   #Add an "or" operator for the next extension
+    extClause+=(-o)   #Add an "or" operator for the next extension
   done
 else
-  EXTCLAUSE=( )
+  extClause=( )
 fi
 
 if [ "$small" == 'true' ]; then
-  SIZECLAUSE="-size -$((maxsize*1024+1))c"
+  sizeClause="-size -$((maxsize*1024+1))c"
 else
-  SIZECLAUSE=""
+  sizeClause=""
 fi
 
 if [ $verbose -gt 0 ]; then
-  PRINTCLAUSE="-print"
+  printClause="-print"
 else
-  PRINTCLAUSE=""
+  printClause=""
 fi
 
 if [ $verbose -gt 1 ]; then
-  RSYNCOPTS="$RSYNCOPTS -i"
+  rsyncOpts="$rsyncOpts -i"
 fi
 
-echo "Moving /mnt/$SRCDISK/$MERGEDIR into /mnt/$DESTDISK/$MERGEDIR"
-cd "/mnt/$SRCDISK"
+echo "Moving /mnt/$sourceDisk/$userShareObj into /mnt/$destDisk/$userShareObj"
+cd "/mnt/$sourceDisk"
 
-find "./$MERGEDIR" -depth \
+find "./$userShareObj" -depth \
       \( \
-        \( -type f $SIZECLAUSE "${EXTCLAUSE[@]}" ! -exec fuser -s {} \; \) \
+        \( -type f $sizeClause "${extClause[@]}" ! -exec fuser -s {} \; \) \
         -o \
         \( -type d -empty \) \
-        $SLCLAUSE \
+        $symlinkClause \
       \) \
-      $PRINTCLAUSE \
-      $DUPCLAUSE \
-      -exec rsync $RSYNCOPTS {} "/mnt/${DESTDISK}/" \; \
-      $DELCLAUSE
+      $printClause \
+      $dupClause \
+      -exec rsync $rsyncOpts {} "/mnt/${destDisk}/" \; \
+      $delClause
 
 echo "diskmv finished"
 
-if [ ! $doit == 'true' ]; then
+if [ ! $doIt == 'true' ]; then
   echo "... but it ran in test mode"
 fi
-
-echo
