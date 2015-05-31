@@ -41,6 +41,7 @@ apt-get install -y \
 
 # ls -al /tmp
 # ls -al /tmp/unbalance
+rm /etc/cron.daily/logrotate
 
 mv /tmp/unbalance/unbalance /usr/bin
 mv /tmp/unbalance/diskmv /usr/bin
