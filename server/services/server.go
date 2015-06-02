@@ -60,7 +60,6 @@ func (s *Server) Start() {
 		api.PUT("/config", s.saveConfig)
 		api.GET("/storage", s.getStorageInfo)
 		api.POST("/storage/bestfit", s.calculateBestFit)
-		api.POST("/storage/move", s.move)
 	}
 
 	// s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
@@ -120,15 +119,15 @@ func (s *Server) calculateBestFit(c *gin.Context) {
 	c.JSON(200, &resp)
 }
 
-func (s *Server) move(c *gin.Context) {
-	msg := &pubsub.Message{Reply: make(chan interface{})}
-	s.bus.Pub(msg, "cmd.move")
+// func (s *Server) move(c *gin.Context) {
+// 	msg := &pubsub.Message{Reply: make(chan interface{})}
+// 	s.bus.Pub(msg, "cmd.move")
 
-	reply := <-msg.Reply
-	resp := reply.([]*dto.Move)
+// 	reply := <-msg.Reply
+// 	resp := reply.([]*dto.Move)
 
-	c.JSON(200, &resp)
-}
+// 	c.JSON(200, &resp)
+// }
 
 func (s *Server) noRoute(c *gin.Context) {
 	var path string
