@@ -1,3 +1,11 @@
+Version 0.7.3 - 2015-06-02
+    -Remove staging and art folders
+    - Replace simple "du -bs" with a "find du -bs". This improves folder detection.
+    - Add feature to show which folders will not be moved due to space restrictions
+    - Add test cases for new feature
+    - Copy latest diskmv to src folder
+
+
 Version 0.7.2 - 2015-05-31
     -Remove staging and art folders
     - Upgrade Dockerfile to v0.7.1
