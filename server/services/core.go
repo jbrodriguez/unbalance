@@ -34,7 +34,6 @@ type Core struct {
 	chanSaveConfig       chan *pubsub.Message
 	chanStorageInfo      chan *pubsub.Message
 	chanCalculateBestFit chan *pubsub.Message
-	chanMove             chan *pubsub.Message
 	storageMove          chan *pubsub.Message
 	storageUpdate        chan *pubsub.Message
 
@@ -57,7 +56,6 @@ func NewCore(bus *pubsub.PubSub, settings *model.Settings) *Core {
 	core.chanSaveConfig = core.bus.Sub("cmd.saveConfig")
 	core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
 	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
-	core.chanMove = core.bus.Sub("cmd.move")
 	core.storageMove = core.bus.Sub("storage:move")
 	core.storageUpdate = core.bus.Sub("storage:update")
 
@@ -84,8 +82,6 @@ func (c *Core) react() {
 			go c.getStorageInfo(msg)
 		case msg := <-c.chanCalculateBestFit:
 			go c.calculateBestFit(msg)
-		case msg := <-c.chanMove:
-			go c.move(msg)
 		case msg := <-c.storageMove:
 			go c.doStorageMove(msg)
 		case msg := <-c.storageUpdate:
@@ -248,11 +244,18 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		return nil
 	}
 
-	scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
+	// scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
+	// cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
+
+	scanFolder := srcFolder + "/."
+	cmdText := fmt.Sprintf("find \"%s\" ! -name . -prune -exec du -bs {} +", scanFolder)
+
+	mlog.Info("getFolders:Executing %s", cmdText)
+
+	cmd := exec.Command("sh", "-c", cmdText)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		mlog.Fatalf("getFolders:Unable to stdoutpipe du: %s", err)
+		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
 	}
 
 	rd := bufio.NewReader(out)
@@ -275,7 +278,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 			line = line[:len(line)-1] // drop the '\r'
 		}
 
-		mlog.Info("getFolders(%s):du -bs: %s", scanFolder, line)
+		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
@@ -326,51 +329,6 @@ func (c *Core) processDiskMv(line string, arg interface{}) {
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	mlog.Info(line)
-}
-
-func (c *Core) move(msg *pubsub.Message) {
-	var commands []*dto.Move
-
-	commands = make([]*dto.Move, 0)
-
-	for _, disk := range c.storage.Disks {
-		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
-			continue
-		}
-
-		for _, item := range disk.Bin.Items {
-			dst := filepath.Join(disk.Path, item.Path)
-
-			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
-			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
-			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
-			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
-			commands = append(commands, command)
-
-			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
-			mlog.Info("cmd = %s", cmd)
-
-			helper.Shell(cmd, c.processDiskMv, nil)
-
-			// mover.Src = item.Name
-			// mover.Dst = dst
-			// mover.Progress = progress
-
-			// glog.Infof("mover: %+v", mover)
-
-			// mover.Copy()
-			// for {
-			// 	select {
-			// 	case msg := <-mover.ProgressCh:
-			// 		glog.Infof("Progress: %+v", msg)
-			// 	case <-mover.DoneCh:
-			// 		return
-			// 	}
-			// }
-		}
-	}
-
-	msg.Reply <- commands
 }
 
 func (c *Core) doStorageMove(msg *pubsub.Message) {

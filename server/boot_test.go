@@ -5,8 +5,14 @@ import (
 	// "apertoire.net/unbalance/server/helper"
 	"apertoire.net/unbalance/server/lib"
 	"apertoire.net/unbalance/server/model"
+	// "apertoire.net/unbalance/server/services"
 	"github.com/jbrodriguez/mlog"
+	// "github.com/jbrodriguez/pubsub"
 	"github.com/stretchr/testify/assert"
+	// "os"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 )
 
@@ -140,3 +146,75 @@ func TestFit2(t *testing.T) {
 
 	// mlog.Stop()
 }
+
+func TestFolders(t *testing.T) {
+	re, _ := regexp.Compile(`(\d+)\s+(.*?)$`)
+
+	samples := []string{
+		"1670755474  /mnt/disk2/tv shows/./High Def",
+		"6 /mnt/disk2/tv shows/./empty",
+		"99297588  /mnt/disk2/tv shows/./Interstellar.mkv",
+		"6 /mnt/disk2/tv shows/./.TemporaryFiles",
+	}
+
+	for _, sample := range samples {
+		result := re.FindStringSubmatch(sample)
+		// mlog.Info("[%s] %s", result[1], result[2])
+
+		size, _ := strconv.ParseInt(result[1], 10, 64)
+
+		name := result[2]
+		path := filepath.Join("tv shows", filepath.Base(result[2]))
+
+		mlog.Info("name(%s); path(%s); size(%d)", name, path, size)
+	}
+
+	samples2 := []string{
+		"1670755474	/mnt/disk2/tv shows/High Def",
+		"99297588	/mnt/disk2/tv shows/Interstellar.mkv",
+		"6	/mnt/disk2/tv shows/empty",
+	}
+
+	for _, sample := range samples2 {
+		result := re.FindStringSubmatch(sample)
+		// mlog.Info("[%s] %s", result[1], result[2])
+
+		size, _ := strconv.ParseInt(result[1], 10, 64)
+
+		name := result[2]
+		path := filepath.Join("tv shows", filepath.Base(result[2]))
+
+		mlog.Info("name(%s); path(%s); size(%d)", name, path, size)
+	}
+
+}
+
+// func TestGetFolders(t *testing.T) {
+// 	home := os.Getenv("HOME")
+
+// 	mlog.Start(mlog.LevelInfo, "")
+
+// 	bus := pubsub.New(1)
+// 	core := services.NewCore(bus, nil)
+
+// 	locations := []string{
+// 		filepath.Join(home, "tmp/unbalance/.mediagui"),
+// 		filepath.Join(home, "tmp/unbalance/empty"),
+// 	}
+
+// 	for _, location := range locations {
+// 		os.MkdirAll(location, 0777)
+// 	}
+// 	// defer os.RemoveAll(filepath.Join(home, "tmp/unbalance"))
+
+// 	items := core.TestGetFolders(home, "tmp/unbalance")
+
+// 	assert.Equal(t, 2, len(items))
+
+// 	for _, item := range items {
+// 		mlog.Info("name(%s); path(%s); size(%d)", item.Name, item.Path, item.Size)
+
+// 	}
+// 	mlog.Info("items: %+v", items)
+
+// }
