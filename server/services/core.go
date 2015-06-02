@@ -30,11 +30,12 @@ type Core struct {
 	storage  *model.Unraid
 	settings *model.Settings
 
+	foldersNotMoved []string
+
 	chanConfigInfo       chan *pubsub.Message
 	chanSaveConfig       chan *pubsub.Message
 	chanStorageInfo      chan *pubsub.Message
 	chanCalculateBestFit chan *pubsub.Message
-	chanMove             chan *pubsub.Message
 	storageMove          chan *pubsub.Message
 	storageUpdate        chan *pubsub.Message
 
@@ -57,7 +58,6 @@ func NewCore(bus *pubsub.PubSub, settings *model.Settings) *Core {
 	core.chanSaveConfig = core.bus.Sub("cmd.saveConfig")
 	core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
 	core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
-	core.chanMove = core.bus.Sub("cmd.move")
 	core.storageMove = core.bus.Sub("storage:move")
 	core.storageUpdate = core.bus.Sub("storage:update")
 
@@ -73,6 +73,10 @@ func (c *Core) Stop() {
 	mlog.Info("stopped service Core ...")
 }
 
+func (c *Core) SetStorage(storage *model.Unraid) {
+	c.storage = storage
+}
+
 func (c *Core) react() {
 	for {
 		select {
@@ -84,8 +88,6 @@ func (c *Core) react() {
 			go c.getStorageInfo(msg)
 		case msg := <-c.chanCalculateBestFit:
 			go c.calculateBestFit(msg)
-		case msg := <-c.chanMove:
-			go c.move(msg)
 		case msg := <-c.storageMove:
 			go c.doStorageMove(msg)
 		case msg := <-c.storageUpdate:
@@ -149,6 +151,8 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 
 	}
 
+	c.foldersNotMoved = make([]string, 0)
+
 	mlog.Info("calculateBestFit:Begin:srcDisk(%s); dstDisks(%d)", srcDisk.Path, len(disks))
 
 	for _, disk := range disks {
@@ -207,6 +211,12 @@ func (c *Core) calculateBestFit(msg *pubsub.Message) {
 		disk.Print()
 	}
 
+	if len(folders) > 0 {
+		for _, folder := range folders {
+			c.foldersNotMoved = append(c.foldersNotMoved, folder.Path)
+		}
+	}
+
 	mlog.Info("=========================================================")
 	mlog.Info("Results for %s", srcDisk.Path)
 	mlog.Info("Original Free Space: %s", helper.ByteSize(srcDisk.Free))
@@ -248,11 +258,18 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		return nil
 	}
 
-	scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
+	// scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
+	// cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
+
+	scanFolder := srcFolder + "/."
+	cmdText := fmt.Sprintf("find \"%s\" ! -name . -prune -exec du -bs {} +", scanFolder)
+
+	mlog.Info("getFolders:Executing %s", cmdText)
+
+	cmd := exec.Command("sh", "-c", cmdText)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		mlog.Fatalf("getFolders:Unable to stdoutpipe du: %s", err)
+		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
 	}
 
 	rd := bufio.NewReader(out)
@@ -275,7 +292,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 			line = line[:len(line)-1] // drop the '\r'
 		}
 
-		mlog.Info("getFolders(%s):du -bs: %s", scanFolder, line)
+		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
@@ -328,55 +345,12 @@ func (c *Core) processDiskMv(line string, arg interface{}) {
 	mlog.Info(line)
 }
 
-func (c *Core) move(msg *pubsub.Message) {
-	var commands []*dto.Move
-
-	commands = make([]*dto.Move, 0)
-
-	for _, disk := range c.storage.Disks {
-		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
-			continue
-		}
-
-		for _, item := range disk.Bin.Items {
-			dst := filepath.Join(disk.Path, item.Path)
-
-			mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
-			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
-			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
-			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
-			commands = append(commands, command)
-
-			cmd := fmt.Sprintf("./diskmv \"%s\" %s %s", item.Path, c.storage.SourceDiskName, disk.Path)
-			mlog.Info("cmd = %s", cmd)
-
-			helper.Shell(cmd, c.processDiskMv, nil)
-
-			// mover.Src = item.Name
-			// mover.Dst = dst
-			// mover.Progress = progress
-
-			// glog.Infof("mover: %+v", mover)
-
-			// mover.Copy()
-			// for {
-			// 	select {
-			// 	case msg := <-mover.ProgressCh:
-			// 		glog.Infof("Progress: %+v", msg)
-			// 	case <-mover.DoneCh:
-			// 		return
-			// 	}
-			// }
-		}
-	}
-
-	msg.Reply <- commands
-}
-
 func (c *Core) doStorageMove(msg *pubsub.Message) {
 	// var commands []*dto.Move
 
 	// commands = make([]*dto.Move, 0)
+
+	mlog.Info("Runnin storage move")
 
 	var dry string
 	if c.settings.DryRun {
@@ -406,6 +380,14 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 
 	commands := make([]string, 0)
 
+	notMoved := ""
+	if len(c.foldersNotMoved) > 0 {
+		notMoved = "The following folders will not be moved, because there's not enough space in the target disks:\n"
+		for _, folder := range c.foldersNotMoved {
+			notMoved += folder + "\n"
+		}
+	}
+
 	for _, disk := range c.storage.Disks {
 		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
 			continue
@@ -423,30 +405,23 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
-			commands = append(commands, cmd+"\n")
+			commands = append(commands, cmd)
 
 			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			err := helper.Shell(cmd, c.processDiskMv, nil)
 			if err != nil {
+				finished := time.Now()
+				elapsed := time.Since(started)
+
 				mlog.Info("error running the diskmv command: %s", err.Error())
-				c.storage.InProgress = false
 
 				txt := fmt.Sprintf("Move command was closed prematurely: %s", err.Error())
 				outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: txt}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-				outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-				finished := time.Now()
-				elapsed := time.Since(started)
-
-				message := fmt.Sprintf("There was an error when executing\n\n%s\n\nThese are the commands that were executed:\n\n%s\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", cmd, c.printCommands(commands), started, finished, elapsed)
-				if sendErr := c.sendmail(message); sendErr != nil {
-					mlog.Error(sendErr)
-				}
+				c.finishOperation(fmt.Sprintf("There was an error executing %s", cmd), commands, started, finished, elapsed)
 
 				mlog.Error(err)
 				return
@@ -455,19 +430,60 @@ func (c *Core) doStorageMove(msg *pubsub.Message) {
 		}
 	}
 
-	c.storage.InProgress = false
-
-	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation finished"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
 	finished := time.Now()
 	elapsed := time.Since(started)
 
-	message := fmt.Sprintf("Move operation completed.\n\nThese are the commands that were executed:\n\n%s\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", c.printCommands(commands), started, finished, elapsed)
+	c.finishOperation("Move operation completed.", commands, started, finished, elapsed)
+
+}
+
+func (c *Core) finishOperation(headText string, commands []string, started, finished time.Time, elapsed time.Duration) {
+	c.storage.InProgress = false
+
+	outbound := &dto.MessageOut{Topic: "storage:move:progress", Payload: "These are the commands that were executed:"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	printedCommands := ""
+	for _, command := range commands {
+		printedCommands += command + "\n"
+		outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: command}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+
+	outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: fmt.Sprintf("Started: %s", started)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	notMoved := ""
+	if len(c.foldersNotMoved) > 0 {
+		outbound := &dto.MessageOut{Topic: "storage:move:progress", Payload: "The following folders are not moved, because there's not enough space in the target disks:"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		for _, folder := range c.foldersNotMoved {
+			notMoved += folder + "\n"
+			outbound = &dto.MessageOut{Topic: "storage:move:progress", Payload: folder}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		}
+	}
+
+	message := fmt.Sprintf("%s\n\nThese are the commands that were executed:\n\n%s\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", headText, printedCommands, started, finished, elapsed)
+	if notMoved != "" {
+		message += "\n\nThe following folders are not elegible for moving because there's not enough space for them in the target disks:\n" + notMoved
+	}
+
+	outbound = &dto.MessageOut{Topic: "storage:move:end", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 	if sendErr := c.sendmail(message); sendErr != nil {
 		mlog.Error(sendErr)
 	}
 
+	mlog.Info(message)
 }
 
 func (c *Core) doStorageUpdate(msg *pubsub.Message) {
@@ -514,10 +530,10 @@ func (c *Core) sendmail(msg string) error {
 
 }
 
-func (c *Core) printCommands(list []string) string {
-	var str string
-	for _, value := range list {
-		str += value
-	}
-	return str
-}
+// func (c *Core) printCommands(list []string) string {
+// 	var str string
+// 	for _, value := range list {
+// 		str += value
+// 	}
+// 	return str
+// }
