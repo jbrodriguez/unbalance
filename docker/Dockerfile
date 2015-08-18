@@ -15,6 +15,5 @@ RUN chmod +x /usr/bin/boot.sh
 ADD install.sh /tmp/install.sh
 RUN chmod +x /tmp/install.sh && /tmp/install.sh
 
-VOLUME /config /mnt /root
 EXPOSE 6237
 
