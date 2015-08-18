@@ -1,3 +1,8 @@
+Version 0.7.4 - 2015-08-18
+    -Remove staging and art folders
+    - Add support for unRAID 6.1 by mounting "/usr/local/sbin", since 6.1 changed the location of some binaries to this folder
+
+
 Version 0.7.3 - 2015-06-02
     -Remove staging and art folders
     - Replace simple "du -bs" with a "find du -bs". This improves folder detection.
