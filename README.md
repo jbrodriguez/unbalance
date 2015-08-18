@@ -9,10 +9,10 @@ unBALANCE
 ## Introduction
 With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will distribute the folders/files to other disks filling them up.
 
-The logic is quite simple:
-Get all elegible folders from the source disk
-Order the target disks by free space available
-For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).
+The logic is quite simple:<br>
+Get all elegible folders from the source disk<br>
+Order the target disks by free space available<br>
+For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).<br>
 
 Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).
 
@@ -30,7 +30,7 @@ games<br>
 pictures<br>
 backup
 
-You decide, that you want to make space by moving around only bluray movies, games and pictures.
+You decide that you want to make space by moving around only bluray movies, games and pictures.
 
 So you will enter 
 
@@ -52,6 +52,7 @@ Port: 6237<br>
 Volumes: <br>
 "/mnt" (required)<br>
 "/root" (required)<br>
+"/usr/local/sbin" (required)<br>
 "/path/to/config/dir" (required)<br>
 "/path/to/log/dir" (not required)<br>
 "/etc/localtime" (not required, to synchronize time with unRAID)<br>
