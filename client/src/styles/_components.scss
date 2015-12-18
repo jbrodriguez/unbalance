@@ -1,0 +1,493 @@
+// LAYOUT
+.row {
+//	display: block;
+	width: 100%;
+	margin-bottom: 1em;
+}
+
+// TYPOGRAPHY
+.lead {
+	border: 1px solid $borderColor;
+}
+
+
+// BUTTONS
+.btn {
+//	display: inline-block;
+//	font-weight: @btn-font-weight;
+	cursor: pointer;
+	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+	border: 1px solid transparent;
+	white-space: nowrap;
+	padding: $padding-button-vertical $padding-button-horizontal;
+	font-size: 0.75em;
+
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
+		cursor: not-allowed;
+		opacity: .65;
+		box-shadow: none;
+	}	
+}
+
+.btn-default {
+	@include button-variant($button-default-color, $button-default-background);
+	// color: $button-color;
+	// background-color: $button-default-background;
+	// border-color: darken($button-default-background, 5%);
+
+	// &:focus,
+	// &.focus {
+	// 	background-color: darken($button-default-background, 5%);
+	// 	border-color: darken($button-default-background, 12%);
+	// }
+
+	// &:hover {
+	// 	background-color: darken($button-default-background, 5%);
+	// 	border-color: darken($button-default-background, 7%);
+	// }
+}
+
+.btn-primary {
+	@include button-variant($button-primary-color, $button-primary-background);
+}
+
+// PROGRESS BAR
+.meter {
+	@include flexbox(flex, column, center, center);
+}
+
+.progress {
+    background-color: $progress-background;
+    height: 1.5625rem;
+    border: 1px solid white;
+
+    span {
+  		background: $progress-meter;
+  		height: 100%;
+  		display: block;    	
+    }
+}
+
+// STATUS
+.label {
+	// display: inline;
+	padding: .3em .6em .3em;
+	font-size: 75%;
+	// font-weight: bold;
+	line-height: 1;
+	color: $label-color;
+	// text-align: center;
+	// white-space: nowrap;
+	// vertical-align: baseline;
+	border-radius: .25em;
+}
+
+.label-success {
+	background-color: $label-success-bg;
+}
+
+.label-warning {
+	background-color: $label-warning-bg;
+}
+
+// BADGES
+
+.badge {
+	padding: 1em;
+}
+
+.success {
+	background-color: green;
+	border: 1px solid lighten(green, 10%);
+}
+
+.warning {
+	background-color: $badge-bg;
+	border: 1px solid darken($badge-bg, 10%);
+}
+
+// FORMS
+.cd-form {
+	@include flexbox(flex, column, flex-start, stretch);
+
+	margin-bottom: 1em;
+//	border-bottom: 1px $borderColor solid;
+
+	div {
+		/* form element wrapper */
+		margin: 0.8em 0;
+
+		sup {
+			font-size: 0.5em;
+			display: inline-block;
+			color: red;
+		}		
+	}
+
+	fieldset {
+	    margin: 0;
+	    padding: 0.35em 0 0.75em;
+	    border: 0;
+	}
+	
+	legend {
+	//    display: block;
+	    width: 100%;
+	    padding: 0.3em 0;
+	    margin-bottom: 0.3em;
+	    color: #333;
+	    border-bottom: 1px solid #e5e5e5;
+	}	
+
+	label {
+		display: block;
+		font-weight: bold;
+		margin-bottom: 0.25em;
+
+		span {
+			font-weight: normal;
+			font-size: 0.65em;
+			color: #2c97de;
+		}
+	}
+
+	input {
+		min-width: 300px;
+	}
+
+	input,
+	textarea {
+		font-size: 1.1em;
+		color: #2b3e51;
+  	}
+
+	input[type="text"],
+	input[type="email"],
+	input[type="number"],
+	input[type="password"],
+	textarea {
+		display: block;
+		appearance: none;
+
+		padding: 0.25em;
+		border: 1px solid #cfd9db;
+		background-color: #ffffff;
+//		border-radius: .25em;
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08);
+
+		.ng-invalid {
+		  border: 1px solid red;
+		}
+	}
+
+	textarea {
+		width: 100%;
+	}
+
+	input[type="text"]:focus,
+	input[type="email"]:focus,
+	input[type="number"]:focus,
+	input[type="password"]:focus,
+	textarea:focus {
+		outline: none;
+		border-color: #2c97de;
+		box-shadow: 0 0 5px rgba(44, 151, 222, 0.2);
+	}
+
+	textarea {
+		min-height: 200px;
+		resize: vertical;
+		overflow: auto;
+	}
+
+	input[type="submit"] {
+		/* button style */
+		border: none;
+		background: $button-primary-background;
+		border-radius: .25em;
+		padding: 1em 1.25em;
+		color: white;
+		font-weight: bold;
+		cursor: pointer;
+
+		&:hover {
+			background: lighten($button-primary-background, 5%);
+		}
+
+		&:focus {
+			outline: none;
+			background: darken($button-primary-background, 5%);
+		}
+
+		&:active {
+			scale: .9;
+		}
+	}	
+
+	.help-block {
+		font-weight: normal;
+		font-size: 0.65em;
+		color: red;
+	}	
+}
+
+// #form-success,
+// #form-error {
+// 	display: none;
+// 	color: white;
+// 	padding: 0.75em;
+// }
+
+// #form-success {
+// 	background-color: $contactFormSuccessBackground;
+// }
+
+// #form-error {
+// 	background-color: $contactFormErrorBackground;
+// }
+
+
+// TABLES
+.dashboard {
+	@media (min-width: $breakpoint-2) {
+		border-collapse: collapse;
+		font-size: 0.9em; 
+	}
+
+	thead {
+		display: none;
+
+	    @media (min-width: $breakpoint-2) {
+	      // Undo display: block 
+	      border-bottom: 1px solid $borderColor;
+	      display: table-header-group; 
+	    }		
+	}
+
+	th, td, tr {
+		display: block;
+	}
+
+	th, td {
+	    text-align: left;
+
+		@media (min-width: $breakpoint-2) {
+			color: $footerBackground;
+			display: table-cell;
+		}
+	}
+
+	tr {
+		margin-bottom: 1em;
+
+		@media (min-width: $breakpoint-2) {
+			// Undo display: block 
+			display: table-row;
+//			padding: 1em 0.25em;
+
+			&:nth-of-type(even) { 
+				background-color: $borderColor; 
+			}	      
+		}
+	}
+
+	td {
+		color: $primaryColor;
+		background-color: $borderColor;
+		font-size: 0.75em;
+		padding: .5rem .25rem;
+
+		@media (min-width: $breakpoint-2) {
+			font-size: 1em;
+			background-color: transparent;
+//			padding: .5rem .25rem;
+		}			
+
+		&:first-child {
+			color: white;
+		    background-color: $footerBackground;
+
+		    @media (min-width: $breakpoint-2) {
+		      // Undo display: block 
+		      color: $primaryColor;
+		      background-color: transparent;
+		    }		    
+
+		    &:before {
+		    	width: auto;
+		    }
+		}
+
+		&:before {
+			// optional stuff to make it look nicer
+			width: 6.5em; // magic number :( adjust according to your own content
+			display: inline-block;
+			// end options
+
+			@media (min-width: $breakpoint-2) {
+				display: none;
+			}			
+		}
+
+		// &:nth-of-type(1):before { content: "Disk" }
+		&:nth-of-type(2):before { content: "Serial" }
+		&:nth-of-type(3):before { content: "From" }
+		&:nth-of-type(4):before { content: "To" }
+		&:nth-of-type(5):before { content: "Size" }
+		&:nth-of-type(6):before { content: "Free" }
+		&:nth-of-type(7):before { content: "Fill" }
+		&:nth-of-type(8):before { content: "Plan" }			
+	}
+
+}
+
+.settings {
+	width: 100%;
+
+	@media (min-width: $breakpoint-2) {
+		border-collapse: collapse;
+		font-size: 0.9em; 
+	}
+
+	thead {
+		display: none;
+
+	    @media (min-width: $breakpoint-2) {
+	      // Undo display: block 
+	      border-bottom: 1px solid $borderColor;
+	      display: table-header-group; 
+	    }		
+	}
+
+	th, td, tr {
+		display: block;
+	}
+
+	th, td {
+	    text-align: left;
+
+		@media (min-width: $breakpoint-2) {
+			color: $footerBackground;
+			display: table-cell;
+		}
+	}
+
+	tr {
+		margin-bottom: 1em;
+
+		@media (min-width: $breakpoint-2) {
+			// Undo display: block 
+			display: table-row;
+//			padding: 1em 0.25em;
+
+			&:nth-of-type(even) { 
+				background-color: $borderColor; 
+			}	      
+		}
+	}
+
+	td {
+		color: $primaryColor;
+		background-color: $borderColor;
+		font-size: 0.75em;
+		padding: .5rem .25rem;
+
+		@media (min-width: $breakpoint-2) {
+			font-size: 1em;
+			background-color: transparent;
+//			padding: .5rem .25rem;
+		}			
+
+		&:first-child {
+			color: white;
+		    background-color: $footerBackground;
+
+		    @media (min-width: $breakpoint-2) {
+		      // Undo display: block 
+		      color: $primaryColor;
+		      background-color: transparent;
+		    }		    
+
+		    &:before {
+		    	width: auto;
+		    }
+		}
+
+		&:before {
+			// optional stuff to make it look nicer
+			width: 6.5em; // magic number :( adjust according to your own content
+			display: inline-block;
+			// end options
+
+			@media (min-width: $breakpoint-2) {
+				display: none;
+			}			
+		}
+
+		// &:nth-of-type(1):before { content: "Disk" }
+		&:nth-of-type(2):before { content: "Serial" }
+		&:nth-of-type(3):before { content: "From" }
+		&:nth-of-type(4):before { content: "To" }
+		&:nth-of-type(5):before { content: "Size" }
+		&:nth-of-type(6):before { content: "Free" }
+		&:nth-of-type(7):before { content: "Fill" }
+		&:nth-of-type(8):before { content: "Plan" }			
+	}
+
+}
+
+// SPINNERS
+.loading {
+	display: flex;
+	// position: absolute;
+	// top: 50%;
+	// left: 50%;
+	// margin-bottom: 1em;
+
+	// // @media (min-width: $breakpoint-2) {
+	// // 	margin: 0;
+	// // }
+}
+
+.loading-bar {
+	display: inline-block;
+	width: 4px;
+	height: 18px;
+	border-radius: 4px;
+	animation: loading 1s ease-in-out infinite;
+	margin-right: 0.25em;
+
+	&:nth-child(1) {
+		background-color: #3498db;
+		animation-delay: 0;
+	}
+
+	&:nth-child(2) {
+		background-color: #c0392b;
+		animation-delay: 0.09s;
+  	}
+
+	&:nth-child(3) {
+		background-color: #f1c40f;
+		animation-delay: .18s;
+	}
+
+	&:nth-child(4) {
+		background-color: #27ae60;
+		animation-delay: .27s;
+	}
+}
+
+@keyframes loading {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1, 2.2);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
