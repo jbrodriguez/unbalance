@@ -1,0 +1,13 @@
+@media (min-width: $screen-sm-min) {
+	.moviep-images {
+		overflow: hidden;
+		max-height: $moviepage-sm-maxHeight;
+	}	
+}
+
+@media (min-width: $screen-lg-min) {
+	.moviep-images {
+		overflow: hidden;
+		max-height: $moviepage-lg-maxHeight;
+	}	
+}
