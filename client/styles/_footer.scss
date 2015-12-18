@@ -1,0 +1,38 @@
+footer {
+	color: $footerColor;
+	background-color: $footerBackground;
+
+	font-size: 0.75em;	
+
+}
+
+.legal {
+
+    @media (min-width: $breakpoint-2) {
+		flex-direction: row;
+		justify-content: space-between;
+    }	
+
+	a, span {
+		display: flex;
+	}
+
+	a {
+		color: $headerBackground;
+	}
+}
+
+.copyright,
+.version {
+	@extend %spacer;
+
+    @media (min-width: $breakpoint-2) {
+		margin: 0;
+    }	
+}
+
+.logos {
+	span:not(:last-child) {
+		margin-right: 1em;
+	}
+}

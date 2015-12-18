@@ -1,0 +1,87 @@
+// Fonts
+@import url('http://fonts.googleapis.com/css?family=Lato');
+
+// Grid Variables
+$screen-sm-min: 48em !default;
+$screen-md-min: 62em !default;
+$screen-lg-min: 75em !default;
+// $screen-xs-max: ($screen-sm-min - 1) !default;
+// $screen-sm-max: ($screen-md-min - 1) !default;
+// $screen-md-max: ($screen-lg-min - 1) !default;
+
+$grid-columns: 12 !default;
+$grid-gutter-width: 0.5em !default;
+
+$container-max-width: 78em;
+
+$container-sm: (46em + $grid-gutter-width) !default;
+$container-md: (64em + $grid-gutter-width) !default;
+$container-lg: (73em + $grid-gutter-width) !default;
+
+$border-radius: 4px;
+$item-size: 24px;
+$day-margin: 2px;
+$triangle-size: 8px;
+$datepicker__margin: 5px;
+
+// Dimensions
+// $maxWidth: 1250px;
+// $pad: 1em;
+
+$padding-button-vertical: 0.5em;
+$padding-button-horizontal: 0.75em;
+
+$breakpoint-1: 480px;
+$breakpoint-2: 600px;
+
+// Colors
+$light-gray: #F6F7F8;
+$elegant-blue: #204862;
+
+$bodyBackground: $light-gray;
+$primaryTextColor: #666;
+
+//$primaryColor: #555;
+$primaryColor: #666;
+//$primaryAnchorColor: #415571;
+$primaryAnchorColor: #333;
+$primaryHeadersColor: #204862;
+
+$primaryAnchorColor: $elegant-blue;
+$primaryHeaderColor: $elegant-blue;
+
+
+$strongColor: white;
+$strongBackground: #2E688C;
+
+$progress-background: #f6f6f6;
+$progress-meter: #008cba;
+
+$headerColor: #333;
+//$headerBackground: #FCD33F;
+$headerBackground: #0BD43B;
+
+$footerColor: #7c7c72;
+//$footerBackground: #333;
+$footerBackground: #1E446F;
+
+$button-default-color: $footerBackground;
+$button-default-background: #09be35;
+
+$button-primary-color: white;
+$button-primary-background: $progress-meter;
+
+$socialColor: white;
+
+$borderColor: #eee;
+
+$badge-bg: #FEF5C4;
+
+$label-color: #fff;
+$label-success-bg: #5cb85c;
+$label-warning-bg: #f0ad4e;
+
+$console-color: white;
+$console-bg: #343642;
+
+$dashboard-header-bg: $borderColor;
