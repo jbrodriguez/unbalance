@@ -1,6 +1,10 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
 import C from '../constant'
+import styles from '../styles/core.scss'
+import classNames from 'classnames/bind'
+
+let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
 	render() {
@@ -8,11 +12,24 @@ export default class Settings extends Component {
 
 		console.log('settings.props: ', this.props)
 
-		if (model.config === {}) {
+		if (!model.config) {
+			console.log('mother')
 			return (
-				<Loading />
+				<div></div>
+//				<section className={cx('row')}>
+//					<div className={cx('col-xs-12', 'bottom-spacer-half')}>
+//						<div className={cx('loading', 'middle-xs')}>
+//								<div className={cx('loading-bar')}></div>
+//								<div className={cx('loading-bar')}></div>
+//								<div className={cx('loading-bar')}></div>
+//								<div className={cx('loading-bar')}></div>
+//						</div>
+//					</div>
+//				</section>
 			)
 		}
+
+		console.log('after mother')
 
 		let warning = null
 		if (model.config.folders.length === 0) {

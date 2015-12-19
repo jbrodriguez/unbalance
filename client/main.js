@@ -48,7 +48,7 @@ store.status.onValue(
 					<Route path='settings' component={Settings} />
 				</Route>
 			</Router>,
-			document.getElementById('root')
+			document.getElementById('mnt')
 		)
 	}
 )

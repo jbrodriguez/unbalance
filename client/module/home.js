@@ -8,9 +8,14 @@ export default class Home extends Component {
 
 		console.log('home.props: ', this.props)
 
-		if (model.config === {}) {
+		if (!model.config) {
 			return (
-				<Loading />
+				<div className="loading middle-xs">
+					<div className="loading-bar"></div>
+					<div className="loading-bar"></div>
+					<div className="loading-bar"></div>
+					<div className="loading-bar"></div>
+				</div>
 			)
 		}
 
