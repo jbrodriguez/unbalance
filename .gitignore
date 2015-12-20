@@ -1,4 +1,4 @@
-unbalance
+**/unbalance
 
 release/
 dist/
@@ -12,9 +12,6 @@ art/
 
 .DS_Store
 
-# node
+# vendoring
 node_modules
-
-# bower
-bower_components
-src/vendor
+vendor

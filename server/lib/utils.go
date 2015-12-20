@@ -1,7 +1,9 @@
-package helper
+package lib
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -12,6 +14,31 @@ const (
 	GIGABYTE = 1024 * MEGABYTE
 	TERABYTE = 1024 * GIGABYTE
 )
+
+// Check if File / Directory Exists
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+
+	if err == nil {
+		return true, nil
+	}
+
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
+}
+
+func SearchFile(name string, locations []string) string {
+	for _, location := range locations {
+		if b, _ := Exists(filepath.Join(location, name)); b {
+			return location
+		}
+	}
+
+	return ""
+}
 
 func ByteSize(bytes int64) string {
 	unit := ""

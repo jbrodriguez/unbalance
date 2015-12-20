@@ -1,15 +1,15 @@
 package main
 
 import (
-	// "apertoire.net/unbalance/server/dto"
-	// "apertoire.net/unbalance/server/helper"
-	"apertoire.net/unbalance/server/dto"
-	"apertoire.net/unbalance/server/lib"
-	"apertoire.net/unbalance/server/model"
-	"apertoire.net/unbalance/server/services"
+	// "jbrodriguez/unbalance/server/dto"
+	// "jbrodriguez/unbalance/server/helper"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/stretchr/testify/assert"
+	"jbrodriguez/unbalance/server/dto"
+	"jbrodriguez/unbalance/server/lib"
+	"jbrodriguez/unbalance/server/model"
+	"jbrodriguez/unbalance/server/services"
 	"os"
 	"path/filepath"
 	// "regexp"

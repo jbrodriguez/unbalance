@@ -1,18 +1,19 @@
 package model
 
 import (
-	"apertoire.net/unbalance/server/helper"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
-	"os"
+	"jbrodriguez/unbalance/server/lib"
+	// "os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const dockerEnv = "UNBALANCE_DOCKER"
-const unraidCmd = "/root/mdcmd"
-const unraidDockerCmd = "/usr/bin/mdcmd"
+const (
+	UNRAID_CMD        = "/root/mdcmd"
+	UNRAID_DOCKER_CMD = "/usr/bin/mdcmd"
+)
 
 type Unraid struct {
 	Condition *Condition `json:"condition"`
@@ -21,7 +22,7 @@ type Unraid struct {
 	SourceDiskName string
 	BytesToMove    int64 `json:"bytesToMove"`
 
-	InProgress bool `json:"inProgress"`
+	// InProgress bool `json:"inProgress"`
 
 	disks [25]*Disk
 }
@@ -31,15 +32,10 @@ func NewUnraid() (unraid *Unraid) {
 	return unraid
 }
 
-type DiskInfoDTO struct {
-	Free map[string]int64
-	Size map[string]int64
-}
-
-func (u *Unraid) Refresh() *Unraid {
-	if u.InProgress {
-		return u
-	}
+func (u *Unraid) Refresh(runningInDocker bool) {
+	// if u.InProgress {
+	// 	return u
+	// }
 
 	u.SourceDiskName = ""
 	u.BytesToMove = 0
@@ -47,38 +43,129 @@ func (u *Unraid) Refresh() *Unraid {
 	u.Disks = make([]*Disk, 0)
 	u.Condition = &Condition{}
 
-	var cmd string
-	env := os.Getenv(dockerEnv)
-	if env == "y" {
-		cmd = unraidDockerCmd
-	} else {
-		cmd = unraidCmd
+	cmd := UNRAID_CMD
+	if runningInDocker {
+		cmd = UNRAID_DOCKER_CMD
 	}
 
 	// helper.Shell("/root/mdcmd status|strings", u.readUnraidConfig, nil)
 	shell := fmt.Sprintf("%s status", cmd)
-	helper.Shell(shell, u.readUnraidConfig, nil)
+	lib.Shell(shell, func(line string) {
+		if strings.HasPrefix(line, "sbNumDisks") {
+			nd := strings.Split(line, "=")
+			u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
+		}
+
+		if strings.HasPrefix(line, "mdNumProtected") {
+			np := strings.Split(line, "=")
+			u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
+		}
+
+		if strings.HasPrefix(line, "sbSynced") {
+			sd := strings.Split(line, "=")
+			ut, _ := strconv.ParseInt(sd[1], 10, 64)
+			u.Condition.Synced = time.Unix(ut, 0)
+		}
+
+		if strings.HasPrefix(line, "sbSyncErrs") {
+			sr := strings.Split(line, "=")
+			u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
+		}
+
+		if strings.HasPrefix(line, "mdResync") {
+			rs := strings.Split(line, "=")
+			u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
+		}
+
+		if strings.HasPrefix(line, "mdResyncPos") {
+			rp := strings.Split(line, "=")
+			u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
+		}
+
+		if strings.HasPrefix(line, "mdState") {
+			st := strings.Split(line, "=")
+			u.Condition.State = st[1]
+		}
+
+		// Get Disks Information
+		if strings.HasPrefix(line, "diskNumber") {
+			dn := strings.FieldsFunc(line, delim)
+
+			diskId, _ := strconv.Atoi(dn[2])
+			// mlog.Info("diskId = %d", diskId)
+			if u.disks[diskId] == nil {
+				u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
+			}
+		}
+
+		if strings.HasPrefix(line, "diskName") {
+			dm := strings.FieldsFunc(line, delim)
+
+			diskId, _ := strconv.Atoi(dm[1])
+			// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
+			if len(dm) > 2 {
+				u.disks[diskId].Name = dm[2]
+			} else if diskId == 0 {
+				u.disks[diskId].Name = "Parity"
+			}
+		}
+
+		if strings.HasPrefix(line, "diskId") {
+			dm := strings.FieldsFunc(line, delim)
+
+			diskId, _ := strconv.Atoi(dm[1])
+			// mlog.Info("diskId diskId %d", diskId)
+			if len(dm) > 2 {
+				u.disks[diskId].Serial = dm[2]
+			}
+		}
+
+		if strings.HasPrefix(line, "rdevStatus") {
+			dm := strings.FieldsFunc(line, delim)
+
+			diskId, _ := strconv.Atoi(dm[1])
+			// mlog.Info("rdevStatus diskId %d", diskId)
+			u.disks[diskId].Status = dm[2]
+		}
+
+		if strings.HasPrefix(line, "rdevName") {
+			dm := strings.FieldsFunc(line, delim)
+
+			diskId, _ := strconv.Atoi(dm[1])
+			// mlog.Info("rdevName diskId %d", diskId)
+			if len(dm) > 2 {
+				u.disks[diskId].Device = dm[2]
+			}
+		}
+	})
 
 	if u.Condition.State != "STARTED" {
 		u.Print()
-		return u
+		return
 	}
 
-	di := &DiskInfoDTO{Free: make(map[string]int64), Size: make(map[string]int64)}
-	helper.Shell("df --block-size=1 /mnt/disk*", u.getDiskInfo, di)
+	free := make(map[string]int64)
+	size := make(map[string]int64)
+	lib.Shell("df --block-size=1 /mnt/disk*", func(line string) {
+		data := strings.Fields(line)
+		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
+		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
+	})
 
 	for _, disk := range u.disks {
-		if disk != nil && disk.Name != "Parity" && disk.Status == "DISK_OK" {
-			disk.Size = di.Size[disk.Path]
-			disk.Free = di.Free[disk.Path]
-			disk.NewFree = disk.Free
-
-			u.Condition.Size += disk.Size
-			u.Condition.Free += disk.Free
-			u.Condition.NewFree += disk.Free
-
-			u.Disks = append(u.Disks, disk)
+		if disk == nil || disk.Name == "Parity" || disk.Status != "DISK_OK" {
+			continue
 		}
+
+		disk.Size = size[disk.Path]
+		disk.Free = free[disk.Path]
+		disk.NewFree = disk.Free
+
+		u.Condition.Size += disk.Size
+		u.Condition.Free += disk.Free
+		u.Condition.NewFree += disk.Free
+
+		u.Disks = append(u.Disks, disk)
 	}
 
 	u.Print()
@@ -115,115 +202,113 @@ func (u *Unraid) Refresh() *Unraid {
 
 	// u.Disks = disks
 	// u.Condition = condition
-
-	return u
 }
 
-func (u *Unraid) readUnraidConfig(line string, arg interface{}) {
-	if strings.HasPrefix(line, "sbNumDisks") {
-		nd := strings.Split(line, "=")
-		u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
-	}
+// func (u *Unraid) readUnraidConfig(line string, arg interface{}) {
+// 	if strings.HasPrefix(line, "sbNumDisks") {
+// 		nd := strings.Split(line, "=")
+// 		u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
+// 	}
 
-	if strings.HasPrefix(line, "mdNumProtected") {
-		np := strings.Split(line, "=")
-		u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
-	}
+// 	if strings.HasPrefix(line, "mdNumProtected") {
+// 		np := strings.Split(line, "=")
+// 		u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
+// 	}
 
-	if strings.HasPrefix(line, "sbSynced") {
-		sd := strings.Split(line, "=")
-		ut, _ := strconv.ParseInt(sd[1], 10, 64)
-		u.Condition.Synced = time.Unix(ut, 0)
-	}
+// 	if strings.HasPrefix(line, "sbSynced") {
+// 		sd := strings.Split(line, "=")
+// 		ut, _ := strconv.ParseInt(sd[1], 10, 64)
+// 		u.Condition.Synced = time.Unix(ut, 0)
+// 	}
 
-	if strings.HasPrefix(line, "sbSyncErrs") {
-		sr := strings.Split(line, "=")
-		u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
-	}
+// 	if strings.HasPrefix(line, "sbSyncErrs") {
+// 		sr := strings.Split(line, "=")
+// 		u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
+// 	}
 
-	if strings.HasPrefix(line, "mdResync") {
-		rs := strings.Split(line, "=")
-		u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
-	}
+// 	if strings.HasPrefix(line, "mdResync") {
+// 		rs := strings.Split(line, "=")
+// 		u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
+// 	}
 
-	if strings.HasPrefix(line, "mdResyncPos") {
-		rp := strings.Split(line, "=")
-		u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
-	}
+// 	if strings.HasPrefix(line, "mdResyncPos") {
+// 		rp := strings.Split(line, "=")
+// 		u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
+// 	}
 
-	if strings.HasPrefix(line, "mdState") {
-		st := strings.Split(line, "=")
-		u.Condition.State = st[1]
-	}
+// 	if strings.HasPrefix(line, "mdState") {
+// 		st := strings.Split(line, "=")
+// 		u.Condition.State = st[1]
+// 	}
 
-	// Get Disks Information
-	if strings.HasPrefix(line, "diskNumber") {
-		dn := strings.FieldsFunc(line, delim)
+// 	// Get Disks Information
+// 	if strings.HasPrefix(line, "diskNumber") {
+// 		dn := strings.FieldsFunc(line, delim)
 
-		diskId, _ := strconv.Atoi(dn[2])
-		// mlog.Info("diskId = %d", diskId)
-		if u.disks[diskId] == nil {
-			u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
-		}
-	}
+// 		diskId, _ := strconv.Atoi(dn[2])
+// 		// mlog.Info("diskId = %d", diskId)
+// 		if u.disks[diskId] == nil {
+// 			u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
+// 		}
+// 	}
 
-	if strings.HasPrefix(line, "diskName") {
-		dm := strings.FieldsFunc(line, delim)
+// 	if strings.HasPrefix(line, "diskName") {
+// 		dm := strings.FieldsFunc(line, delim)
 
-		diskId, _ := strconv.Atoi(dm[1])
-		// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
-		if len(dm) > 2 {
-			u.disks[diskId].Name = dm[2]
-		} else if diskId == 0 {
-			u.disks[diskId].Name = "Parity"
-		}
-	}
+// 		diskId, _ := strconv.Atoi(dm[1])
+// 		// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
+// 		if len(dm) > 2 {
+// 			u.disks[diskId].Name = dm[2]
+// 		} else if diskId == 0 {
+// 			u.disks[diskId].Name = "Parity"
+// 		}
+// 	}
 
-	if strings.HasPrefix(line, "diskId") {
-		dm := strings.FieldsFunc(line, delim)
+// 	if strings.HasPrefix(line, "diskId") {
+// 		dm := strings.FieldsFunc(line, delim)
 
-		diskId, _ := strconv.Atoi(dm[1])
-		// mlog.Info("diskId diskId %d", diskId)
-		if len(dm) > 2 {
-			u.disks[diskId].Serial = dm[2]
-		}
-	}
+// 		diskId, _ := strconv.Atoi(dm[1])
+// 		// mlog.Info("diskId diskId %d", diskId)
+// 		if len(dm) > 2 {
+// 			u.disks[diskId].Serial = dm[2]
+// 		}
+// 	}
 
-	if strings.HasPrefix(line, "rdevStatus") {
-		dm := strings.FieldsFunc(line, delim)
+// 	if strings.HasPrefix(line, "rdevStatus") {
+// 		dm := strings.FieldsFunc(line, delim)
 
-		diskId, _ := strconv.Atoi(dm[1])
-		// mlog.Info("rdevStatus diskId %d", diskId)
-		u.disks[diskId].Status = dm[2]
-	}
+// 		diskId, _ := strconv.Atoi(dm[1])
+// 		// mlog.Info("rdevStatus diskId %d", diskId)
+// 		u.disks[diskId].Status = dm[2]
+// 	}
 
-	if strings.HasPrefix(line, "rdevName") {
-		dm := strings.FieldsFunc(line, delim)
+// 	if strings.HasPrefix(line, "rdevName") {
+// 		dm := strings.FieldsFunc(line, delim)
 
-		diskId, _ := strconv.Atoi(dm[1])
-		// mlog.Info("rdevName diskId %d", diskId)
-		if len(dm) > 2 {
-			u.disks[diskId].Device = dm[2]
-		}
-	}
-}
+// 		diskId, _ := strconv.Atoi(dm[1])
+// 		// mlog.Info("rdevName diskId %d", diskId)
+// 		if len(dm) > 2 {
+// 			u.disks[diskId].Device = dm[2]
+// 		}
+// 	}
+// }
 
 func delim(r rune) bool {
 	return r == '.' || r == '='
 }
 
-func (u *Unraid) getDiskInfo(line string, arg interface{}) {
-	di := arg.(*DiskInfoDTO)
+// func (u *Unraid) getDiskInfo(line string, arg interface{}) {
+// 	di := arg.(*DiskInfoDTO)
 
-	data := strings.Fields(line)
-	di.Size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
-	di.Free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
-}
+// 	data := strings.Fields(line)
+// 	di.Size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
+// 	di.Free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
+// }
 
 func (u *Unraid) Print() {
 	mlog.Info("Unraid Box Condition: %+v", u.Condition)
 	mlog.Info("Unraid Box SourceDiskName: %+v", u.SourceDiskName)
-	mlog.Info("Unraid Box BytesToMove: %+v", helper.ByteSize(u.BytesToMove))
+	mlog.Info("Unraid Box BytesToMove: %+v", lib.ByteSize(u.BytesToMove))
 	// glog.Info("NumDisks: ", u.Box.NumDisks)
 	// glog.Info("NumProtected: ", u.Box.NumProtected)
 	// glog.Info("Synced: ", u.Box.Synced)

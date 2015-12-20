@@ -1,4 +1,4 @@
-package helper
+package lib
 
 import (
 	"bufio"
@@ -9,9 +9,9 @@ import (
 	"os/exec"
 )
 
-type Callback func(line string, arg interface{})
+type Callback func(line string)
 
-func Shell(command string, callback Callback, arg interface{}) error {
+func Shell(command string, callback Callback) error {
 	cmd := exec.Command("/bin/sh", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -35,7 +35,7 @@ func Shell(command string, callback Callback, arg interface{}) error {
 	}
 
 	for scanner.Scan() {
-		callback(scanner.Text(), arg)
+		callback(scanner.Text())
 	}
 
 	// Wait for the result of the command; also closes our end of the pipe

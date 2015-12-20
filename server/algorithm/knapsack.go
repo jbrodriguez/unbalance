@@ -1,9 +1,9 @@
-package lib
+package algorithm
 
 import (
-	"apertoire.net/unbalance/server/model"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
+	"jbrodriguez/unbalance/server/model"
 	"sort"
 )
 
