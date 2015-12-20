@@ -1,8 +1,8 @@
 package model
 
 import (
-	"apertoire.net/unbalance/server/helper"
 	"fmt"
+	"jbrodriguez/unbalance/server/lib"
 )
 
 type Disk struct {
@@ -22,14 +22,14 @@ func (self *Disk) Print() {
 	// this disk was not assigned to a bin
 	if self.Bin != nil {
 		fmt.Println("=========================================================")
-		fmt.Printf("Disk(%s):ALLOCATED %d folders:[%s/%s] %2.2f%%\n", self.Path, len(self.Bin.Items), helper.ByteSize(self.Bin.Size), helper.ByteSize(self.Free), (float64(self.Bin.Size)/float64(self.Free))*100)
+		fmt.Printf("Disk(%s):ALLOCATED %d folders:[%s/%s] %2.2f%%\n", self.Path, len(self.Bin.Items), lib.ByteSize(self.Bin.Size), lib.ByteSize(self.Free), (float64(self.Bin.Size)/float64(self.Free))*100)
 		fmt.Println("---------------------------------------------------------")
 		self.Bin.Print()
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("")
 	} else {
 		fmt.Println("=========================================================")
-		fmt.Printf("Disk(%s):NO ALLOCATION:[0/%s] 0%%\n", self.Path, helper.ByteSize(self.Free))
+		fmt.Printf("Disk(%s):NO ALLOCATION:[0/%s] 0%%\n", self.Path, lib.ByteSize(self.Free))
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("---------------------------------------------------------")
 		fmt.Println("")
@@ -42,9 +42,9 @@ func (self *Disk) toString() string {
 		self.Name,
 		self.Path,
 		self.Device,
-		helper.ByteSize(self.Free),
-		helper.ByteSize(self.NewFree),
-		helper.ByteSize(self.Size),
+		lib.ByteSize(self.Free),
+		lib.ByteSize(self.NewFree),
+		lib.ByteSize(self.Size),
 		self.Serial,
 		self.Status, self.Bin)
 }

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"apertoire.net/unbalance/server/helper"
 	"fmt"
+	"jbrodriguez/unbalance/server/lib"
 )
 
 type Bin struct {
@@ -17,7 +17,7 @@ func (self *Bin) Add(item *Item) {
 
 func (self *Bin) Print() {
 	for _, item := range self.Items {
-		fmt.Printf("[%s] %s\n", helper.ByteSize(item.Size), item.Name)
+		fmt.Printf("[%s] %s\n", lib.ByteSize(item.Size), item.Name)
 	}
 }
 

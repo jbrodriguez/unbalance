@@ -1,10 +1,10 @@
 package services
 
 import (
-	"apertoire.net/unbalance/server/dto"
 	"github.com/gorilla/websocket"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+	"jbrodriguez/unbalance/server/dto"
 	"time"
 )
 
@@ -25,7 +25,7 @@ const (
 type Connection struct {
 	id   string
 	ws   *websocket.Conn
-	send chan *dto.MessageOut
+	send chan *dto.Packet
 	hub  *Socket
 }
 
@@ -84,7 +84,7 @@ func (c *Connection) reader() {
 	// mlog.Info("before read loop")
 
 	for {
-		var msgIn dto.MessageIn
+		var msgIn dto.Packet
 		err := c.ws.ReadJSON(&msgIn)
 		if err != nil {
 			mlog.Info("error reading socket: %s", err.Error())

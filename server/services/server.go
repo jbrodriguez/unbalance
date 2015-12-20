@@ -1,118 +1,145 @@
 package services
 
 import (
-	"apertoire.net/unbalance/server/dto"
-	"apertoire.net/unbalance/server/model"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
-	"os"
+	"github.com/labstack/echo"
+	mw "github.com/labstack/echo/middleware"
+	"jbrodriguez/unbalance/server/dto"
+	"jbrodriguez/unbalance/server/lib"
+	"jbrodriguez/unbalance/server/model"
+	// "os"
 	"path/filepath"
 )
 
-const apiVersion string = "/api/v1"
-const guiLocation string = "/usr/local/share/unbalance"
+const (
+	API_VERSION = "/api/v1"
+	CAPACITY    = 3
+)
+
+// const guiLocation string = "/usr/local/share/unbalance"
 
 type Server struct {
 	bus      *pubsub.PubSub
-	settings *model.Settings
-	engine   *gin.Engine
-	socket   *Socket
+	settings *lib.Settings
+	engine   *echo.Echo
+	// socket   *Socket
 }
 
-func NewServer(bus *pubsub.PubSub, settings *model.Settings, socket *Socket) *Server {
-	server := &Server{bus: bus, settings: settings, socket: socket}
+func NewServer(bus *pubsub.PubSub, settings *lib.Settings) *Server {
+	server := &Server{
+		bus:      bus,
+		settings: settings,
+	}
 	return server
 }
 
 func (s *Server) Start() {
 	mlog.Info("Starting service Server ...")
 
-	var path string
-	if _, err := os.Stat("./index.html"); err == nil {
-		path = "./"
-	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
-		path = guiLocation
-	} else {
-		slashdot, _ := filepath.Abs("./")
-		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
+	locations := []string{
+		".",
+		"/usr/local/share/unbalance",
 	}
 
-	mlog.Info("Serving files from %s", path)
+	location := lib.SearchFile("index.html", locations)
+	if location == "" {
+		msg := ""
+		for _, loc := range locations {
+			msg += fmt.Sprintf("%s, ", loc)
+		}
+		mlog.Fatalf("Unable to find index.html. Exiting now. (searched in %s)", msg)
+	}
 
-	s.engine = gin.New()
-	s.engine.RedirectTrailingSlash = false
-	s.engine.RedirectFixedPath = false
+	mlog.Info("Serving files from %s", location)
 
-	s.engine.Use(gin.Recovery())
-	// s.engine.Use(helper.Logging())
-	s.engine.Use(static.Serve("/", static.LocalFile(path, true)))
+	s.engine = echo.New()
+
+	s.engine.Use(mw.Recover())
+
+	s.engine.Index(filepath.Join(location, "index.html"))
+	s.engine.Static("/img", filepath.Join(location, "img"))
+
+	api := s.engine.Group(API_VERSION)
+	api.Get("/config", s.getConfig)
+	api.Put("/config", s.saveConfig)
+	api.Get("/storage", s.getStorage)
+	api.Post("/calculate", s.calculate)
+	// api.Post("/move", s.move)
+
+	// s.engine = gin.New()
+	// s.engine.RedirectTrailingSlash = false
+	// s.engine.RedirectFixedPath = false
+
+	// s.engine.Use(gin.Recovery())
+	// // s.engine.Use(helper.Logging())
+	// s.engine.Use(static.Serve("/", static.LocalFile(path, true)))
 
 	// websocket handler
-	s.engine.GET("/ws", func(c *gin.Context) {
-		s.socket.handler(c.Writer, c.Request)
-	})
+	// s.engine.GET("/ws", func(c *gin.Context) {
+	// 	s.socket.handler(c.Writer, c.Request)
+	// })
 
-	api := s.engine.Group(apiVersion)
-	{
-		api.GET("/config", s.getConfig)
-		api.PUT("/config", s.saveConfig)
-		api.GET("/storage", s.getStorageInfo)
-		api.POST("/storage/bestfit", s.calculateBestFit)
-	}
+	// api := s.engine.Group(apiVersion)
+	// {
+	// 	api.GET("/config", s.getConfig)
+	// 	api.PUT("/config", s.saveConfig)
+	// 	api.GET("/storage", s.getStorageInfo)
+	// 	api.POST("/storage/bestfit", s.calculateBestFit)
+	// }
 
-	// s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
-	s.engine.NoRoute(s.noRoute)
-
-	mlog.Info("started listening on :6237")
+	// // s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
+	// s.engine.NoRoute(s.noRoute)
 
 	go s.engine.Run(":6237")
+
+	mlog.Info("Server started listening on :6237")
 }
 
 func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
 }
 
-func (s *Server) getConfig(c *gin.Context) {
-	msg := &pubsub.Message{Reply: make(chan interface{})}
-	s.bus.Pub(msg, "cmd.getConfig")
+func (s *Server) getConfig(c *echo.Context) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/get/config")
 
 	reply := <-msg.Reply
-	resp := reply.(*model.Config)
+	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
 }
 
-func (s *Server) saveConfig(c *gin.Context) {
-	var config model.Config
+func (s *Server) saveConfig(c *echo.Context) {
+	var config lib.Config
 
 	c.Bind(&config)
 
-	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{})}
-	s.bus.Pub(msg, "cmd.saveConfig")
+	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/set/config")
 
 	reply := <-msg.Reply
-	resp := reply.(*model.Config)
+	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
 }
 
-func (s *Server) getStorageInfo(c *gin.Context) {
-	msg := &pubsub.Message{Reply: make(chan interface{})}
-	s.bus.Pub(msg, "cmd.getStorageInfo")
+func (s *Server) getStorage(c *echo.Context) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/get/storage")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 	c.JSON(200, &resp)
 }
 
-func (s *Server) calculateBestFit(c *gin.Context) {
-	var bestFit dto.BestFit
+func (s *Server) calculate(c *echo.Context) {
+	var calculate dto.Calculate
 
-	c.Bind(&bestFit)
-	// mlog.Warning("Unable to bind bestFit: %s", err)
+	c.Bind(&calculate)
+	// mlog.Warning("Unable to bind calculate: %s", err)
 
-	msg := &pubsub.Message{Payload: &bestFit, Reply: make(chan interface{})}
-	s.bus.Pub(msg, "cmd.calculateBestFit")
+	msg := &pubsub.Message{Payload: &calculate, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/calculate")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
@@ -129,16 +156,16 @@ func (s *Server) calculateBestFit(c *gin.Context) {
 // 	c.JSON(200, &resp)
 // }
 
-func (s *Server) noRoute(c *gin.Context) {
-	var path string
-	if _, err := os.Stat("./index.html"); err == nil {
-		path = "./"
-	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
-		path = guiLocation
-	} else {
-		slashdot, _ := filepath.Abs("./")
-		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
-	}
+// func (s *Server) noRoute(c *gin.Context) {
+// 	var path string
+// 	if _, err := os.Stat("./index.html"); err == nil {
+// 		path = "./"
+// 	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
+// 		path = guiLocation
+// 	} else {
+// 		slashdot, _ := filepath.Abs("./")
+// 		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
+// 	}
 
-	c.File(filepath.Join(path, "index.html"))
-}
+// 	c.File(filepath.Join(path, "index.html"))
+// }

@@ -1,11 +1,11 @@
 package services
 
 import (
-	"apertoire.net/unbalance/server/dto"
-	"apertoire.net/unbalance/server/model"
 	"github.com/gorilla/websocket"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+	"jbrodriguez/unbalance/server/dto"
+	"jbrodriguez/unbalance/server/lib"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ const (
 
 type Socket struct {
 	bus      *pubsub.PubSub
-	settings *model.Settings
+	settings *lib.Settings
 
 	// registered connections
 	connections map[*Connection]bool
@@ -34,7 +34,7 @@ type Socket struct {
 	unregister chan *Connection
 }
 
-func NewSocket(bus *pubsub.PubSub, settings *model.Settings) *Socket {
+func NewSocket(bus *pubsub.PubSub, settings *lib.Settings) *Socket {
 	return &Socket{
 		bus:      bus,
 		settings: settings,
@@ -43,8 +43,8 @@ func NewSocket(bus *pubsub.PubSub, settings *model.Settings) *Socket {
 		register:    make(chan *Connection),
 		unregister:  make(chan *Connection),
 
-		broadcast: bus.Sub("socket:broadcast"),
-		emit:      bus.Sub("socket:emit"),
+		// broadcast: bus.Sub("socket:broadcast"),
+		// emit:      bus.Sub("socket:emit"),
 	}
 }
 
@@ -59,7 +59,7 @@ func (s *Socket) handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// mlog.Info("opening connection ... ")
-	c := &Connection{send: make(chan *dto.MessageOut, 50), ws: ws, hub: s}
+	c := &Connection{send: make(chan *dto.Packet, 50), ws: ws, hub: s}
 	s.register <- c
 	// defer func() { s.unregister <- c }()
 
@@ -90,9 +90,9 @@ func (s *Socket) react() {
 			// mlog.Info("broadcasting %v [%v]", m, m.Payload)
 
 			for c := range s.connections {
-				c.send <- m.Payload.(*dto.MessageOut)
+				c.send <- m.Payload.(*dto.Packet)
 				// select {
-				// case c.send <- m.Payload.(*dto.MessageOut):
+				// case c.send <- m.Payload.(*dto.Packet):
 				// 	mlog.Info("after c.send")
 				// 	default:
 				// 		mlog.Info("default.close")
