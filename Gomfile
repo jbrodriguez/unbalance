@@ -1,0 +1,5 @@
+gom 'github.com/jbrodriguez/mlog', :commit => '4adcc10cd8b0500a9a9cc0b8349352729d84603e'
+gom	'github.com/jbrodriguez/pubsub', :commit => 'adb0f108803dfb17dc292f377492a3de391fa077'
+# gom 'github.com/gorilla/websocket', :commit => '3986be78bf859e01f01af631ad76da5b269d270c'
+gom 'github.com/labstack/echo', :commit => '5cd194b6b073541a5ab6c80d7ba8162be373d007'
+gom 'github.com/namsral/flag', :commit => '881a43080604bcf99ab1118a814d1cb2c268fc36'
