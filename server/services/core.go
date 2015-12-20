@@ -49,7 +49,10 @@ type Core struct {
 }
 
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
-	core := &Core{bus: bus, settings: settings}
+	core := &Core{
+		bus:      bus,
+		settings: settings,
+	}
 	core.init()
 
 	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
