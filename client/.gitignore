@@ -1,9 +1,0 @@
-.DS_STORE
-*.log
-bin
-build
-
-node_modules
-
-dist
-coverage

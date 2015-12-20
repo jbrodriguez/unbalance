@@ -9,6 +9,7 @@ art/
 *.tar.gz
 *.zip
 *.7z
+*.log
 
 .DS_Store
 

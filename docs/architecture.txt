@@ -1,0 +1,6 @@
+FrontEnd
+Derived from
+- Dispatcher semantics (https://github.com/staltz/flux-challenge/tree/master/submissions/pasieronen)
+- ffux (https://github.com/milankinen/ffux)
+- flexbox grid (http://flex-grid.com//)
+- 
