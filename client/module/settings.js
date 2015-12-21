@@ -34,17 +34,17 @@ export default class Settings extends Component {
 		let warning = null
 		if (model.config.folders.length === 0) {
 			warning = (
-				<div className="col-xs-12 bottom-spacer-half">
-					<p className="bg-warning">There are no folders elegible for moving. Please enter them, in the input box below</p>
+				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
+					<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
 				</div>	
 			)
 		}
 
 		return (
-			<section class="row">
+			<section className={cx('row')}>
 				{ warning }
 
-				<div className="col-xs-12 bottom-spacer-half">
+				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
 					<form>
 					<fieldset>
 						<legend>Folders elegible for the moving process</legend>
@@ -52,16 +52,16 @@ export default class Settings extends Component {
 						<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
 						<p>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
 
-						<div className="row bottom-spacer-large">
-							<div className="col-xs-12 addon">
-								<span className="addon-item">Folder</span>
-								<input className="addon-field" type="text" onKeyDown={this.addFolder}></input>
-								<button className="btn btn-default">Add</button>
+						<div className={cx('row', 'bottom-spacer-large')}>
+							<div className={cx('col-xs-12 addon')}>
+								<span className={cx('addon-item')}>Folder</span>
+								<input className={cx('addon-field')} type="text" onKeyDown={this.addFolder}></input>
+								<button className={cx('btn', 'btn-default')}>Add</button>
 							</div>
 						</div>
 
-						<div className="row bottom-spacer-large">
-							<div className="col-xs-12">
+						<div className={cx('row', 'bottom-spacer-large')}>
+							<div className={cx('col-xs-12')}>
 								<table>
 								<thead>
 									<th width="50">#</th>
@@ -72,7 +72,7 @@ export default class Settings extends Component {
 										model.config.folders.map( (item, i) => {
 											return (
 												<tr key={i}>
-													<td><i className="icon-prune"></i></td>
+													<td><i className={cx('icon-prune')}></i></td>
 													<td>{item}</td>
 												</tr>
 											)
