@@ -1,0 +1,49 @@
+// a, img {
+// 	display: flex;
+// }
+
+header {
+	margin: 0.5em 0;	
+}
+
+main {
+	flex: 1;
+}
+
+footer {
+	color: $footerColor;
+	background-color: $footerBackground;
+
+	padding: 0.5em 0;
+	margin: 0.5em 0;
+
+	font-size: 0.75em;
+
+	a {
+		color: $footerAnchorColor;
+	}
+}
+
+a, img {
+	display: flex;
+}
+
+
+.headerLogoBg {
+	background-color: $headerLogoBackground;	
+}
+
+.headerMenuBg {
+	background-color: $headerMenuBackground;
+}
+
+.routerSection {
+	a {
+		font-size: 0.9em;
+
+		&.active {
+			padding-bottom: 3px;
+			border-bottom: 3px solid $headerMenuAnchorColor;
+		}
+	}	
+}

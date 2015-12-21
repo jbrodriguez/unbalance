@@ -1,53 +1,45 @@
 // Fonts
 @import url('http://fonts.googleapis.com/css?family=Lato');
 
-// Grid Variables
-$screen-sm-min: 48em !default;
-$screen-md-min: 62em !default;
-$screen-lg-min: 75em !default;
-// $screen-xs-max: ($screen-sm-min - 1) !default;
-// $screen-sm-max: ($screen-md-min - 1) !default;
-// $screen-md-max: ($screen-lg-min - 1) !default;
+// Variables
+ $container-max-width: 78em;
 
-$grid-columns: 12 !default;
-$grid-gutter-width: 0.5em !default;
+// $screen-sm-min: 48em !default;
+// $screen-md-min: 62em !default;
+// $screen-lg-min: 75em !default;
+// // $screen-xs-max: ($screen-sm-min - 1) !default;
+// // $screen-sm-max: ($screen-md-min - 1) !default;
+// // $screen-md-max: ($screen-lg-min - 1) !default;
 
-$container-max-width: 78em;
+// $grid-columns: 12 !default;
+// $grid-gutter-width: 0.5em !default;
 
-$container-sm: (46em + $grid-gutter-width) !default;
-$container-md: (64em + $grid-gutter-width) !default;
-$container-lg: (73em + $grid-gutter-width) !default;
+// $container-sm: (46em + $grid-gutter-width) !default;
+// $container-md: (64em + $grid-gutter-width) !default;
+// $container-lg: (73em + $grid-gutter-width) !default;
 
 // DatePicker Variables
-$border-color: #aeaeae;
+// $border-color: #aeaeae;
 // $background-color: #f0f0f0;
 // $selected-color: #216ba5;
 // $muted-color: #ccc;
-// $text-color: #000;
+// // $text-color: #000;
 
-$border-radius: 4px;
-$item-size: 24px;
-$day-margin: 2px;
-$triangle-size: 8px;
-$datepicker__margin: 5px;
-
-// Dimensions
-// $maxWidth: 1250px;
-// $pad: 1em;
-
-$padding-button-vertical: 0.5em;
-$padding-button-horizontal: 0.75em;
-
-$breakpoint-1: 480px;
-$breakpoint-2: 600px;
+// $border-radius: 4px;
+// $item-size: 24px;
+// $day-margin: 2px;
+// $triangle-size: 8px;
+// $datepicker__margin: 5px;
 
 // Palette
+// $rose: #F26A9A;
 $white-gray: #f2f2f2;
 $light-gray: #F6F7F8;
 $lighter-gray: #e9edef;
 $cement-gray: #DBE1E5;
 $dark-gray: #9DA3A7;
 $darker-gray: #7C8893;
+$silverChalice: #aeaeae;
 
 $elegant-blue: #204862;
 $gray-blue: #57626C;
@@ -71,54 +63,25 @@ $unbalance-green: #0BD43B;
 
 $pale-yellow: #FEF5C4;
 
+// Dimensions
+// $maxWidth: 1250px;
+// $pad: 1em;
+
+// // Breakpoints
+// $breakpoint-1: 480px;
+// $breakpoint-2: 600px;
+
 // Colors
+//$bodyBackground: #FDF3E7;
 $bodyBackground: $light-gray;
 $primaryTextColor: #666;
 
-//$primaryColor: #555;
-$primaryColor: #666;
-//$primaryAnchorColor: #415571;
-$primaryAnchorColor: #333;
-$primaryHeadersColor: #204862;
+$borderColor: $silverChalice;
 
+// $primaryAnchorColor: #333;
 $primaryAnchorColor: $elegant-blue;
 $primaryHeaderColor: $elegant-blue;
 
-
-$strongColor: white;
-$strongBackground: #2E688C;
-
-$progress-background: #f6f6f6;
-$progress-meter: #008cba;
-
-$headerColor: #333;
-//$headerBackground: #FCD33F;
-$headerBackground: #0BD43B;
-
-$footerColor: #7c7c72;
-//$footerBackground: #333;
-//$footerBackground: #1E446F;
-
-$button-default-color: $unbalance-footer;
-$button-default-background: #09be35;
-
-$button-primary-color: white;
-$button-primary-background: $progress-meter;
-
-$socialColor: white;
-
-$borderColor: #eee;
-
-$badge-bg: #FEF5C4;
-
-$label-color: #fff;
-$label-success-bg: #5cb85c;
-$label-warning-bg: #f0ad4e;
-
-$console-color: white;
-$console-bg: #343642;
-
-$dashboard-header-bg: $borderColor;
 
 // ELEMENTS
 $padding-default: 0.5em;
@@ -157,8 +120,29 @@ $headerLogoBackground: $unbalance-green;
 $headerMenuAnchorColor: $elegant-blue;
 $headerMenuBackground: $lighter-gray;
 
+// $headerMenuBackground: $cement-gray;
+
+// MAIN
+$movie-cover-bg: $lighter-gray;
+$article-border-color: $white-gray;
+$director-color: $bright-orange;
+$movie-title-color: $elegant-blue;
+
+$pagination-hover-bg: $cement-gray;
+$pagination-active-bg: $cheerful-blue;
+$pagination-border-color: $article-border-color;
+
+$console-border: $light-gray;
+$console-color: white;
+$console-bg: $charcoal-blue;
+
 // FOOTER
-$footer-color: $gray-blue;
-$footer-bg: $headerMenuAnchorColor;
+$footerColor: $gray-blue;
+$footerBackground: $headerMenuAnchorColor;
 //$footer-bg: transparent;
-$footer-anchor-color: $headerLogoBackground;
+$footerAnchorColor: $headerLogoBackground;
+
+// $legalBackground: #7E8F7D;
+// $footer-legal-bg: $gray-blue;
+
+
