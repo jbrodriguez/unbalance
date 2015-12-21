@@ -32,8 +32,12 @@ module.exports = {
 			exclude: /node_modules/,
 			loader: 'babel'
 		}, {
-			test: /\.json?$/,
-			loader: 'json'
+			test: /\.(jpe?g|png|gif|svg)$/i,
+			include: path.resolve(__dirname, 'client/img'),
+			loaders: [
+				'file?hash=sha512&digest=hex&name=[name]-[hash:7].[ext]',
+				'image-webpack?{progressive:true, optimizationLevel: 7, interlaced: false, pngquant:{quality: "65-90", speed: 4}}'
+			]
 		}, {
 			test: /\.scss$/,
 			loaders: [
