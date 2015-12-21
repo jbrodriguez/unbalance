@@ -71,7 +71,7 @@ func (s *Server) Start() {
 	api.Put("/config", s.saveConfig)
 	api.Get("/storage", s.getStorage)
 	api.Post("/calculate", s.calculate)
-	// api.Post("/move", s.move)
+	api.Post("/move", s.move)
 
 	// s.engine = gin.New()
 	// s.engine.RedirectTrailingSlash = false
@@ -106,16 +106,18 @@ func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
 }
 
-func (s *Server) getConfig(c *echo.Context) {
+func (s *Server) getConfig(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/config")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) saveConfig(c *echo.Context) {
+func (s *Server) saveConfig(c *echo.Context) (err error) {
 	var config lib.Config
 
 	c.Bind(&config)
@@ -126,18 +128,22 @@ func (s *Server) saveConfig(c *echo.Context) {
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) getStorage(c *echo.Context) {
+func (s *Server) getStorage(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/storage")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) calculate(c *echo.Context) {
+func (s *Server) calculate(c *echo.Context) (err error) {
 	var calculate dto.Calculate
 
 	c.Bind(&calculate)
@@ -149,17 +155,21 @@ func (s *Server) calculate(c *echo.Context) {
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-// func (s *Server) move(c *gin.Context) {
-// 	msg := &pubsub.Message{Reply: make(chan interface{})}
-// 	s.bus.Pub(msg, "cmd.move")
+func (s *Server) move(c *echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{})}
+	s.bus.Pub(msg, "/move")
 
-// 	reply := <-msg.Reply
-// 	resp := reply.([]*dto.Move)
+	reply := <-msg.Reply
+	resp := reply.([]*dto.Move)
 
-// 	c.JSON(200, &resp)
-// }
+	c.JSON(200, &resp)
+
+	return nil
+}
 
 // func (s *Server) noRoute(c *gin.Context) {
 // 	var path string
