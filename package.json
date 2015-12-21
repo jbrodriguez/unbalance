@@ -8,7 +8,7 @@
   "scripts": {
     "test": "",
     "start": "babel-node server",
-    "build": "rm -rf dist && NODE_ENV=production webpack --config ./webpack.production.config.js --progress --profile --colors",
+    "build": "rimraf dist && NODE_ENV=production webpack --config ./webpack.production.config.js --progress --profile --colors",
     "eslint": "eslint .",
     "jscs": "jscs ."
   },
@@ -34,7 +34,9 @@
     "eslint-plugin-react": "^3.4.2",
     "express": "^4.13.3",
     "extract-text-webpack-plugin": "^0.8.2",
+    "file-loader": "^0.8.5",
     "html-webpack-plugin": "^1.6.1",
+    "image-webpack-loader": "^1.6.2",
     "jscs": "^2.1.1",
     "jsdom": "^6.5.1",
     "json-loader": "^0.5.3",
@@ -44,6 +46,7 @@
     "postcss-loader": "^0.6.0",
     "react-addons-test-utils": "^0.14.3",
     "react-transform-hmr": "^1.0.0",
+    "rimraf": "^2.4.4",
     "sass-loader": "^3.1.2",
     "sinon": "^1.16.1",
     "sinon-chai": "^2.8.0",
