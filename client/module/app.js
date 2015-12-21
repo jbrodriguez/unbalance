@@ -20,6 +20,18 @@ export default function App({ children, model }) {
 	// console.log('this.context: ', this.context)
 	// let { children, model } = this.props
 
+	let progress = null
+	if (model.opInProgress) {
+		return (
+			<div className={cx('loading', 'middle-xs')}>
+				<div className={cx('loading-bar')}></div>
+				<div className={cx('loading-bar')}></div>
+				<div className={cx('loading-bar')}></div>
+				<div className={cx('loading-bar')}></div>
+			</div>
+		)
+	}
+
 	let version = model.config ? model.config.version : null
 
 	// var url = require("file!./file.png");
