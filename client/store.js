@@ -3,6 +3,30 @@ import B from 'baconjs'
 import Dispatcher from './lib/dispatcher'
 import * as C from './constant'
 
+// state = {
+// 	config: {
+// 		folders: [
+// 			"movies/films",
+// 			"movies/tvshows"
+// 		],
+// 		dryRun: true
+// 	}
+// 	unraid: {
+// 		condition: {
+// 			numDisks: 24,
+// 			numProtected: 0,
+// 		},
+// 		disks: [
+// 			{id: 1, name: "disk1", path: "/mnt/disk1"},
+// 			{id: 2, name: "disk2", path: "/mnt/disk2"},
+// 			{id: 3, name: "disk3", path: "/mnt/disk3"},
+// 		],
+// 		bytesToMove: 0,
+// 		inProgress: false, // need to review this variable
+// 	}
+// 	opInProgress: null,
+// }
+
 export default class Store {
 	constructor(initialState = {}) {
 		this.dispatch = Dispatcher.dispatch
