@@ -1,16 +1,22 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
-import C from '../constant'
+import * as C from '../constant'
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
+	componentDidMount() {
+		console.log('settings.didmount.props: ', this.props)
+		this.props.dispatch(C.GET_CONFIG)
+		console.log('looks so')
+	}
+
 	render() {
 		let { dispatch, model } = this.props
 
-		console.log('settings.props: ', this.props)
+		console.log('settings.render.props: ', this.props)
 
 		if (!model.config) {
 			console.log('mother')
