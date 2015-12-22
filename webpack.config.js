@@ -32,7 +32,10 @@ module.exports = {
 			exclude: /node_modules/,
 			loader: 'babel'
 		}, {
-			test: /\.(jpe?g|png|gif|svg)$/i,
+			test: /\.json?$/,
+			loader: 'json'
+		}, {
+    		test: /\.(jpe?g|png|gif|svg)$/i,
 			include: path.resolve(__dirname, 'client/img'),
 			loaders: [
 				'file?hash=sha512&digest=hex&name=[name]-[hash:7].[ext]',

@@ -36,6 +36,9 @@ module.exports = {
 			exclude: /node_modules/,
 			loader: 'babel'
 		}, {
+			test: /\.json?$/,
+			loader: 'json'
+		}, {
 			test: /\.(jpe?g|png|gif|svg)$/i,
 			include: path.resolve(__dirname, 'client/img'),
 			loaders: [
