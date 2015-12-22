@@ -21,8 +21,8 @@ var store = new Store(initialState)
 
 function requireConfig(nextState, replaceState, callback) {
 	console.log('mofo')
-	store.state.onValue(state => {
-		console.log('require.state.config: ', state.config)
+	store.status.onValue(state => {
+		console.log('require.state: ', state)
 		// console.log('require.config: ', config)
 		if (!state.config) {
 			replaceState({ nextPathname: nextState.location.pathname }, '/settings')
