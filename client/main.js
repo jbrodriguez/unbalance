@@ -20,9 +20,9 @@ let initialState = {
 var store = new Store(initialState)
 
 function requireConfig(nextState, replaceState, callback) {
-	console.log('mofo')
+	// console.log('mofo')
 	store.status.onValue(state => {
-		console.log('require.state: ', state)
+		// console.log('require.state: ', state)
 		// console.log('require.config: ', config)
 		if (!state.config) {
 			replaceState({ nextPathname: nextState.location.pathname }, '/settings')
@@ -31,6 +31,9 @@ function requireConfig(nextState, replaceState, callback) {
 		callback()
 	})
 }
+
+					// <IndexRoute component={Home} onEnter={requireConfig} />
+					// <IndexRoute component={Home} />
 
 
 store.status.onValue(
@@ -44,7 +47,7 @@ store.status.onValue(
 		render(
 			<Router createElement={createElement}>
 				<Route path='/' component={App}>
-					<IndexRoute component={Home} onEnter={requireConfig} />
+					<IndexRoute component={Home} />
 					<Route path='settings' component={Settings} />
 				</Route>
 			</Router>,
