@@ -6,9 +6,14 @@ import (
 	"jbrodriguez/unbalance/server/lib"
 	// "os"
 	"errors"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	UNRAID_CMD = "mdcmd"
 )
 
 type Unraid struct {
@@ -19,6 +24,7 @@ type Unraid struct {
 	BytesToMove    int64 `json:"bytesToMove"`
 
 	// InProgress bool `json:"inProgress"`
+	unraidCmd string
 
 	disks [25]*Disk
 }
@@ -29,10 +35,12 @@ func (u *Unraid) SanityCheck() error {
 		"/root",
 	}
 
-	exists := lib.SearchFile("mdcmd", locations)
+	location := lib.SearchFile(UNRAID_CMD, locations)
 	if location == "" {
-		return errors.New(fmt.Sprintf("Unable to find unRAID mdcmd (%s)", locations.Join(", ")))
+		return errors.New(fmt.Sprintf("Unable to find unRAID mdcmd (%s)", strings.Join(locations, ", ")))
 	}
+
+	u.unraidCmd = filepath.Join(location, UNRAID_CMD)
 
 	return nil
 }
@@ -49,7 +57,7 @@ func (u *Unraid) Refresh() {
 	u.Condition = &Condition{}
 
 	// helper.Shell("/root/mdcmd status|strings", u.readUnraidConfig, nil)
-	shell := fmt.Sprintf("%s status", UNRAID_CMD)
+	shell := fmt.Sprintf("%s status", u.unraidCmd)
 	lib.Shell(shell, func(line string) {
 		if strings.HasPrefix(line, "sbNumDisks") {
 			nd := strings.Split(line, "=")
