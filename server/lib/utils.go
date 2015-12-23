@@ -65,3 +65,35 @@ func ByteSize(bytes int64) string {
 	stringValue = strings.TrimSuffix(stringValue, ".0")
 	return fmt.Sprintf("%s%s", stringValue, unit)
 }
+
+func WriteLine(fullpath, line string) error {
+	f, err := os.OpenFile(fullpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(line + "\n")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteLines(fullpath string, lines []string) error {
+	f, err := os.OpenFile(fullpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	for _, line := range lines {
+		_, err = f.WriteString(line + "\n")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
