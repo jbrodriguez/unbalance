@@ -17,6 +17,7 @@ import Api from './lib/api'
 // 		condition: {
 // 			numDisks: 24,
 // 			numProtected: 0,
+//			state: "STARTED",
 // 		},
 // 		disks: [
 // 			{id: 1, name: "disk1", path: "/mnt/disk1"},
@@ -26,6 +27,10 @@ import Api from './lib/api'
 // 		bytesToMove: 0,
 // 		inProgress: false, // need to review this variable
 // 	}
+//  toDisk: {},
+//  fromDisk: {},
+//  maxFreeDisk: 0,
+//  maxFreePath: "",
 // 	opInProgress: null,
 // }
 
@@ -48,6 +53,8 @@ export default class Store {
 			addFolder,
 			folderAdded,
 			opInProgress,
+			getStorage,
+			gotStorage,
 			calculate,
 			move,
 			toggleDryRun,
@@ -59,6 +66,8 @@ export default class Store {
 			C.ADD_FOLDER,
 			C.FOLDER_ADDED,
 			C.OP_IN_PROGRESS,
+			C.GET_STORAGE,
+			C.GOT_STORAGE,
 			C.CALCULATE,
 			C.MOVE,
 			C.TOGGLE_DRY_RUN,
@@ -75,11 +84,13 @@ export default class Store {
 		return B.update(
 			initialState,
 			getConfig, _getConfig,
-			[gotConfig], _gotConfig,
-			[addFolder], _addFolder,
-			[opInProgress], _opInProgress,
-			[folderAdded], _folderAdded,
-			[gotWsMessage], _gotWsMessage,
+			gotConfig, _gotConfig,
+			addFolder, _addFolder,
+			folderAdded, _folderAdded,
+			opInProgress, _opInProgress,
+			getStorage, _getStorage,
+			gotStorage, _gotStorage,
+			gotWsMessage, _gotWsMessage,
 		)
 
 		function _getConfig(state, _) {
@@ -93,7 +104,6 @@ export default class Store {
 		}
 
 		function _gotConfig(state, config) {
-			console.log('whatisconfig: ', config)
 			return {
 				...state,
 				config: config,
@@ -101,10 +111,10 @@ export default class Store {
 			}
 		}
 
-		function _addFolder(state, _) {
+		function _addFolder(state, folder) {
 			dispatch(C.OP_IN_PROGRESS, C.ADD_FOLDER)
 
-			B.fromPromise(api.addFolder).onValue(json => {
+			B.fromPromise(api.addFolder(folder)).onValue(json => {
 				dispatch(C.FOLDER_ADDED, json)
 			})
 
@@ -123,6 +133,26 @@ export default class Store {
 			return {
 				...state,
 				opInProgress: action
+			}
+		}
+
+		function _getStorage(state, _) {
+			dispatch(C.OP_IN_PROGRESS, C.GET_STORAGE)
+
+			B.fromPromise(api.getStorage()).onValue(json => {
+				dispatch(C.GOT_STORAGE, json)
+			})
+
+			return state
+		}
+
+		function _gotStorage(state, unraid) {
+			console.log('unraid: ', unraid)
+			
+			return {
+				...state,
+				opInProgress: null,
+				unraid,
 			}
 		}
 
