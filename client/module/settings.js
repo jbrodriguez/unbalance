@@ -8,9 +8,7 @@ let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
 	componentDidMount() {
-		console.log('settings.didmount.props: ', this.props)
 		this.props.dispatch(C.GET_CONFIG)
-		console.log('looks so')
 	}
 
 	render() {
@@ -46,6 +44,17 @@ export default class Settings extends Component {
 			)
 		}
 
+		function addFolder(e) {
+			console.log('key - value: ', e.key, e.target.value)
+			if (e.key !== "Enter") {
+				return
+			}
+
+			e.preventDefault()
+
+			dispatch(C.ADD_FOLDER, e.target.value)
+		}
+
 		return (
 			<section className={cx('row')}>
 				{ warning }
@@ -56,13 +65,15 @@ export default class Settings extends Component {
 						<legend>Folders elegible for the moving process</legend>
 
 						<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
-						<p>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
+						<p className={cx('bottom-spacer-half')}>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
 
 						<div className={cx('row', 'bottom-spacer-large')}>
-							<div className={cx('col-xs-12 addon')}>
-								<span className={cx('addon-item')}>Folder</span>
-								<input className={cx('addon-field')} type="text" onKeyDown={this.addFolder}></input>
-								<button className={cx('btn', 'btn-default')}>Add</button>
+							<div className={cx('col-xs-12')}>
+								<div className={cx('addon')}>
+									<span className={cx('addon-item')}>Folder</span>
+									<input className={cx('addon-field')} type="text" onKeyDown={addFolder}></input>
+									<button className={cx('btn', 'btn-default')}>Add</button>
+								</div>
 							</div>
 						</div>
 
@@ -96,13 +107,5 @@ export default class Settings extends Component {
 		)
 	}
 
-	addFolder(e) {
-		if (e.key !== "Enter") {
-			return
-		}
 
-		e.preventDefault()
-
-		this.dispatch(C.ADD_FOLDER, e.target.value)
-	}
 }
