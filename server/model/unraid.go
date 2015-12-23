@@ -5,14 +5,10 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"jbrodriguez/unbalance/server/lib"
 	// "os"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
-)
-
-const (
-	UNRAID_CMD        = "/root/mdcmd"
-	UNRAID_DOCKER_CMD = "/usr/bin/mdcmd"
 )
 
 type Unraid struct {
@@ -27,12 +23,21 @@ type Unraid struct {
 	disks [25]*Disk
 }
 
-func NewUnraid() (unraid *Unraid) {
-	unraid = &Unraid{}
-	return unraid
+func (u *Unraid) SanityCheck() error {
+	locations := []string{
+		"/usr/local/sbin",
+		"/root",
+	}
+
+	exists := lib.SearchFile("mdcmd", locations)
+	if location == "" {
+		return errors.New(fmt.Sprintf("Unable to find unRAID mdcmd (%s)", locations.Join(", ")))
+	}
+
+	return nil
 }
 
-func (u *Unraid) Refresh(runningInDocker bool) {
+func (u *Unraid) Refresh() {
 	// if u.InProgress {
 	// 	return u
 	// }
@@ -43,13 +48,8 @@ func (u *Unraid) Refresh(runningInDocker bool) {
 	u.Disks = make([]*Disk, 0)
 	u.Condition = &Condition{}
 
-	cmd := UNRAID_CMD
-	if runningInDocker {
-		cmd = UNRAID_DOCKER_CMD
-	}
-
 	// helper.Shell("/root/mdcmd status|strings", u.readUnraidConfig, nil)
-	shell := fmt.Sprintf("%s status", cmd)
+	shell := fmt.Sprintf("%s status", UNRAID_CMD)
 	lib.Shell(shell, func(line string) {
 		if strings.HasPrefix(line, "sbNumDisks") {
 			nd := strings.Split(line, "=")

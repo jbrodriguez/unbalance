@@ -56,6 +56,7 @@ func (s *Server) Start() {
 
 	s.engine = echo.New()
 
+	s.engine.Use(mw.Logger())
 	s.engine.Use(mw.Recover())
 
 	s.engine.Index(filepath.Join(location, "index.html"))
@@ -67,8 +68,8 @@ func (s *Server) Start() {
 	})
 
 	api := s.engine.Group(API_VERSION)
+	api.Put("/config/folder", s.addFolder)
 	api.Get("/config", s.getConfig)
-	api.Put("/config", s.saveConfig)
 	api.Get("/storage", s.getStorage)
 	api.Post("/calculate", s.calculate)
 	api.Post("/move", s.move)
@@ -117,13 +118,16 @@ func (s *Server) getConfig(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) saveConfig(c *echo.Context) (err error) {
-	var config lib.Config
+func (s *Server) addFolder(c *echo.Context) (err error) {
+	var packet dto.Packet
 
-	c.Bind(&config)
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
 
-	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
-	s.bus.Pub(msg, "/set/config")
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/add/folder")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -131,6 +135,21 @@ func (s *Server) saveConfig(c *echo.Context) (err error) {
 
 	return nil
 }
+
+// func (s *Server) saveConfig(c *echo.Context) (err error) {
+// 	var config lib.Config
+
+// 	c.Bind(&config)
+
+// 	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
+// 	s.bus.Pub(msg, "/set/config")
+
+// 	reply := <-msg.Reply
+// 	resp := reply.(*lib.Config)
+// 	c.JSON(200, &resp)
+
+// 	return nil
+// }
 
 func (s *Server) getStorage(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
