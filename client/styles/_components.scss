@@ -208,12 +208,17 @@ legend {
 // TABLES
 table {
 	background: white;
-	border: 1px solid $form-element-border;
+	// border: 1px solid $form-element-border;
 	table-layout: fixed;
 	width: 100%;
 }
 
-thead,
+thead {
+	color: $elegant-blue;
+	border-bottom: 1px solid $form-element-border;
+	padding: $padding-default;
+}
+
 tr,
 th,
 td {
@@ -231,7 +236,7 @@ tr:nth-of-type(even) {
 }
 
 th {
-	background-color: $cement-gray;
+	// background-color: $cement-gray;
 }
 
 // SPINNERS
@@ -329,6 +334,10 @@ th {
 
 .flex {
 	display: flex;
+}
+
+.direction-column {
+	flex-direction: column;
 }
 
 // .direction-row {
