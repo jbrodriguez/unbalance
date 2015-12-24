@@ -4,6 +4,7 @@ import Dispatcher from './lib/dispatcher'
 import * as C from './constant'
 
 import Api from './lib/api'
+import WebSocketApi from './lib/wsapi'
 
 // state = {
 // 	config: {
@@ -37,15 +38,16 @@ import Api from './lib/api'
 export default class Store {
 	constructor(initialState = {}) {
 		const api = new Api()
+		const ws = new WebSocketApi()
 
-		this.state = this._setup(initialState, api, Dispatcher.dispatch, Dispatcher.register)
+		this.state = this._setup(initialState, api, ws, Dispatcher.dispatch, Dispatcher.register)
 	}
 
 	get status() {
 		return this.state
 	}
 
-	_setup(initialState, api, dispatch, register) {
+	_setup(initialState, api, ws, dispatch, register) {
 		const [
 			start, 
 			getConfig,
@@ -74,11 +76,10 @@ export default class Store {
 			C.GOT_WS_MESSAGE,
 		)
 
-		start.onValue(value => {
-			const ws = new WebSocket(WS_URL)
-			B.fromEventTarget(ws, "message").onValue(event => {
-				dispatch(C.GOT_WS_MESSAGE, JSON.parse(event.data))
-			})
+		// const ws = new WebSocket(WS_URL)
+
+		ws.stream.onValue(event => {
+			dispatch(event.data.topic, JSON.parse(event.data.payload))
 		})
 
 		return B.update(
@@ -90,6 +91,7 @@ export default class Store {
 			opInProgress, _opInProgress,
 			getStorage, _getStorage,
 			gotStorage, _gotStorage,
+			calculate, _calculate,
 			gotWsMessage, _gotWsMessage,
 		)
 
@@ -154,6 +156,11 @@ export default class Store {
 				opInProgress: null,
 				unraid,
 			}
+		}
+
+		function _calculate(state, payload) {
+			ws.send({topic: C.CALCULATE, payload})
+			return state
 		}
 
 		function _gotWsMessage(state, message) {
