@@ -48,6 +48,15 @@ a, img {
 	}	
 }
 
+.gridHeader {
+	background-color: $headerMenuBackground;
+	padding: 1em 0;
+
+	label {
+		font-size: 0.75em;
+	}
+}
+
 // $breakpoint-2: 600px;
 
 // .dashboard {

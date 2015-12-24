@@ -13,7 +13,7 @@ i {
 	}		
 }
 
-input,
+input:not([type=checkbox]),
 select {
 	font-size: 0.9em;
 	padding: 0.25em;
@@ -213,10 +213,18 @@ table {
 	width: 100%;
 }
 
-thead {
+thead,
+tfoot {
 	color: $elegant-blue;
+	// padding: $padding-default;
+}
+
+thead {
 	border-bottom: 1px solid $form-element-border;
-	padding: $padding-default;
+}
+
+tfoot {
+	border-top: 1px solid $form-element-border;
 }
 
 tr,
