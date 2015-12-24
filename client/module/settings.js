@@ -44,17 +44,6 @@ export default class Settings extends Component {
 			)
 		}
 
-		function addFolder(e) {
-			console.log('key - value: ', e.key, e.target.value)
-			if (e.key !== "Enter") {
-				return
-			}
-
-			e.preventDefault()
-
-			dispatch(C.ADD_FOLDER, e.target.value)
-		}
-
 		return (
 			<section className={cx('row')}>
 				{ warning }
@@ -71,7 +60,7 @@ export default class Settings extends Component {
 							<div className={cx('col-xs-12')}>
 								<div className={cx('addon')}>
 									<span className={cx('addon-item')}>Folder</span>
-									<input className={cx('addon-field')} type="text" onKeyDown={addFolder}></input>
+									<input className={cx('addon-field')} type="text" onKeyDown={this._addFolder.bind(this, dispatch)}></input>
 									<button className={cx('btn', 'btn-default')}>Add</button>
 								</div>
 							</div>
@@ -106,6 +95,17 @@ export default class Settings extends Component {
 			</section>
 		)
 	}
+
+	_addFolder(dispatch, e) {
+		console.log('key - value: ', e.key, e.target.value)
+		if (e.key !== "Enter") {
+			return
+		}
+
+		e.preventDefault()
+
+		dispatch(C.ADD_FOLDER, e.target.value)
+	}	
 
 
 }
