@@ -80,8 +80,9 @@ func (c *Core) Start() (err error) {
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
-	c.registerAdditional(c.bus, "/calculate", c.calc, c.mailbox)
-	c.registerAdditional(c.bus, "/move", c.move, c.mailbox)
+
+	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
+	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
 	// c.registerAdditional(c.bus, "/set/config", c.setConfig)
 
 	err = c.storage.SanityCheck()
@@ -196,7 +197,9 @@ func (c *Core) calc(msg *pubsub.Message) {
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	c.storage.Condition.State = "CALCULATING"
+	c.opIsRunning = true
+	defer c.opIsRunning = false
+	// c.storage.Condition.State = "CALCULATING"
 
 	outbound := &dto.Packet{Topic: "storage:calc:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -319,9 +322,6 @@ func (c *Core) calc(msg *pubsub.Message) {
 		// }
 	}
 
-	// send to front end the signal of operation finished
-	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// send mail according to user preferences
 	subject := "unBALANCE - CALCULATE operation completed"
@@ -359,6 +359,10 @@ func (c *Core) calc(msg *pubsub.Message) {
 	// msg.Reply <- c.storage
 
 	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
+
+	// send to front end the signal of operation finished
+	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")	
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {

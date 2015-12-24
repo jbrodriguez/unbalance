@@ -61,7 +61,7 @@ func (s *Server) Start() {
 
 	s.engine.Index(filepath.Join(location, "index.html"))
 	s.engine.Static("/img", filepath.Join(location, "img"))
-	s.engine.WebSocket("/ws", func(c *echo.Context) (err error) {
+	s.engine.WebSocket("/skt", func(c *echo.Context) (err error) {
 		ws := c.Socket()
 		s.bus.Pub(&pubsub.Message{Payload: ws}, "/add/connection")
 		return nil
