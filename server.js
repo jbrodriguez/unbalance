@@ -11,7 +11,8 @@ import httpProxy from 'http-proxy'
 // We need to add a configuration to our proxy server,
 // as we are now proxying outside localhost
 var proxy = httpProxy.createProxyServer({
-  changeOrigin: true
+  changeOrigin: true,
+  ws: true,
 });
 
 const isDeveloping = process.env.NODE_ENV !== 'production';
@@ -39,7 +40,13 @@ if (isDeveloping) {
 
 	app.all('/api/*', function(req, res) {
 		proxy.web(req, res, {
-			target: 'http://hal.apertoire.org:6237'
+			target: 'http://wopr.apertoire.org:6237'
+		})
+	})
+
+	app.all('/skt', function(req, res) {
+		proxy.web(req, res, {
+			target: 'http://wopr.apertoire.org:6237/skt'
 		})
 	})
 
@@ -55,7 +62,11 @@ if (isDeveloping) {
 	});
 }
 
-app.listen(port, '0.0.0.0', function onStart(err) {
+var server = require('http').createServer(app);
+server.on('upgrade', function(req, socket, head) {
+	proxy.ws(req, socket, head)
+});
+server.listen(port, '0.0.0.0', function onStart(err) {
 	if (err) {
 		console.log(err);
 	}
