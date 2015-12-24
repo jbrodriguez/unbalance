@@ -22,6 +22,10 @@ export default class Home extends Component {
 	}
 
 	componentDidMount() {
+		let { model, history } = this.props
+		if (!model.config) {
+			history.pushState(null, '/settings')
+		}
 		// console.log('home.didmount.props: ', this.props)
 		this.props.dispatch(C.GET_STORAGE)
 	}
@@ -50,18 +54,26 @@ export default class Home extends Component {
 									// </td>				
 
 
-	componentWillReceiveNextProps(nextProps) {
-		let { model } = this.props.model
+	componentWillReceiveProps(nextProps) {
+		// console.log('home.nextprops: ', nextProps)
 
-		if (nextProps.unraid.disks === model.unraid.disks) {
+		let newModel = nextProps.model
+		let oldModel = this.props.model
+
+		if (!newModel.unraid) {
 			return
 		}
 
-		let toDisk, fromDisk = {}
+		if (oldModel.unraid && newModel.unraid.disks === oldModel.unraid.disks) {
+			return
+		}
+
+		let toDisk = {}
+		let fromDisk = {}
 		let maxFreeSize = 0
 		let maxFreePath = ""
 
-		model.unraid.disks.map( disk => {
+		newModel.unraid.disks.map( disk => {
 			toDisk[disk.path] = true
 			fromDisk[disk.path] = false
 
@@ -86,11 +98,26 @@ export default class Home extends Component {
 		})
 	}
 
+					// <tbody>
+					// 	{ rows }
+					// 	<tr>
+					// 		<td colSpan="4">TOTAL</td>
+					// 		<td>{humanBytes(model.unraid.condition.size)}</td>
+					// 		<td>{humanBytes(model.unraid.condition.free)}</td>
+					// 		<td>
+					// 			<div className={cx('progress')}>
+					// 			</div>
+					// 		</td>
+					// 		<td>{humanBytes(model.unraid.condition.free)}</td>
+					// 	</tr>
+					// </tbody>
+
+
 	render() {
 		let { dispatch, model } = this.props
 
 		if (!model.unraid) {
-			// console.log('about to div')
+			console.log('about to div')
 			return (
 				<div></div>
 			)
@@ -113,20 +140,29 @@ export default class Home extends Component {
 		if (ok) {
 			// console.log('disks: ', model.unraid.disks)
 
-			let rows = 	model.unraid.disks.map( (item, i) => (
-							<tr>
-								<td>{item.path.replace("/mnt", "")}</td>
-								<td>{item.serial} ({item.device})</td>
-								<td><input type="checkbox" checked={this.state.fromDisk[disk.path]} onChange="this._checkFrom.bind(this, item.path)"/></td>
-								<td><input type="checkbox" checked={this.state.toDisk[disk.path]} onChange="this._checkTo.bind(this, item.path)"/></td>
-								<td>{humanBytes(item.size)}</td>
-								<td>{humanBytes(item.free)}</td>
-								<td>{percentage(item.free/item.size)}</td>
-								<td>{humanBytes(item.newFree)}</td>				
-							</tr>
-						))
+			let rows = 	model.unraid.disks.map( (disk, i) => {
+							diskChanged = cx(
+								{'label': disk.newFree !== disk.free},
+								{'label-success': disk.newFree !== disk.free},
+							)
 
-			// console.log('rows: ', rows)
+							return (
+								<tr>
+									<td>{disk.path.replace("/mnt/", "")}</td>
+									<td>{disk.serial} ({disk.device})</td>
+									<td><input type="checkbox" checked={this.state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
+									<td><input type="checkbox" checked={this.state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
+									<td>{humanBytes(disk.size)}</td>
+									<td>{humanBytes(disk.free)}</td>
+									<td>{percentage(disk.free/disk.size)}</td>
+									<td>
+										<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
+									</td>
+								</tr>
+							)
+						})
+
+			// console.log('rows: ', rows)			
 
 			grid = (
 				<table className={cx('')}>
@@ -144,18 +180,27 @@ export default class Home extends Component {
 					</thead>
 					<tbody>
 						{ rows }
+					</tbody>
+					<tfoot>
 						<tr>
-							<td colSpan="4">TOTAL</td>
-							<td>{humanBytes(model.unraid.condition.size)}</td>
-							<td>{humanBytes(model.unraid.condition.free)}</td>
-							<td>
+							<th colSpan="4">TOTAL</th>
+							<th>{humanBytes(model.unraid.condition.size)}</th>
+							<th>{humanBytes(model.unraid.condition.free)}</th>
+							<th>
 								<div className={cx('progress')}>
 								</div>
-							</td>
-							<td>{humanBytes(model.unraid.condition.free)}</td>
+							</th>
+							<th>{humanBytes(model.unraid.condition.free)}</th>
 						</tr>
-					</tbody>
+					</tfoot>
 				</table>					
+			)
+		}
+
+		let progressText = null
+		if (model.opInProgress) {
+			progressText = (
+				<span>&nbsp; | &nbsp; { model.opInProgress } </span>
 			)
 		}
 
@@ -165,9 +210,26 @@ export default class Home extends Component {
 					{ warning }
 				</section>
 
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12', 'col-sm-8')}>
-						STATUS: {model.unraid.condition.state}
+				<section className={cx('row', 'between-xs', 'gridHeader', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12', 'col-sm-9')}>
+						<div className={cx('flex-section', 'middle-xs')}>
+							<span className={cx('lspacer')}>STATUS:</span>
+							<span className={cx('spacer', 'label', 'label-success')}>{model.unraid.condition.state}</span>
+							{ progressText }
+						</div>
+					</div>
+					<div className={cx('col-xs-12', 'col-sm-3')}>
+						<div className={cx('flexSection', 'end-xs')}>
+							<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this, dispatch)}>CALCULATE</button>
+							<span>&nbsp; | &nbsp;</span>
+							<button className={cx('btn', 'btn-primary')} disabled={true}>MOVE</button>
+							<span>&nbsp; | &nbsp;</span>
+							<div className={cx('flex', 'middle-xs', 'dryrun', 'rspacer')}> 
+								<input type="checkbox" checked={model.config.dryRun} onChange={this._flipDryRun.bind(this)} />
+								&nbsp;
+								<label>dry run</label>
+							</div>
+						</div>
 					</div>
 				</section>
 
@@ -191,7 +253,7 @@ export default class Home extends Component {
 
 		let toDisk = Object.assign({}, this.state.toDisk)
 		for (var key in toDisk) {
-			toDisk[key] = !(key === from)
+			toDisk[key] = !(key === path)
 		}
 
 		this.setState({
@@ -201,12 +263,34 @@ export default class Home extends Component {
 	}
 
 	_checkTo(path, e) {
+		if (this.state.fromDisk[path]) {
+			e.preventDefault()
+			return
+		}
+
 		let toDisk = Object.assign({}, this.state.toDisk)
 		toDisk[path] = !toDisk[path]
 
 		this.setState({
 			toDisk
 		})
+	}
+
+	_flipDryRun(e) {
+
+	}
+
+	_calculate(dispatch, e) {
+		let srcDisk = ''
+
+		for (var key in this.state.fromDisk) {
+			if (this.state.fromDisk[key]) {
+				srcDisk = key
+				break
+			}
+		}
+
+		dispatch(C.CALCULATE, {srcDisk, dstDisks: this.state.toDisk})
 	}
 
 }

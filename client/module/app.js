@@ -34,6 +34,10 @@ export default function App({ children, model }) {
 
 	let version = model.config ? model.config.version : null
 
+	if (model.config) { 
+		// console.log('app.model.config.version: ', model.config.version)
+	}
+
 	// var url = require("file!./file.png");
 	let unbalance = require("../img/unbalance-logo.png")
 	let diskmv = require("../img/diskmv.png")
@@ -100,7 +104,7 @@ export default function App({ children, model }) {
 
 
 				<ul className={cx('col-xs-12', 'col-sm-4', 'flex', 'center-xs')}>
-					<span className={cx('version')}>unBALANCE {version}</span>
+					<span className={cx('version')}>unBALANCE v{version}</span>
 				</ul>
 
 				<ul className={cx('col-xs-12', 'col-sm-4')}>
