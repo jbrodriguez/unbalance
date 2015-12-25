@@ -56,3 +56,6 @@ coverage: test
  
 publish: dependencies client server
 	rsync -avzP -e "ssh" dist/* $(SERVER):/boot/custom/unbalance
+
+deploy: dependencies server
+	rsync -avzP -e "ssh" dist/* $(SERVER):/boot/custom/unbalance
