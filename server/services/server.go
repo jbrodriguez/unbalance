@@ -19,8 +19,6 @@ const (
 	CAPACITY    = 3
 )
 
-// const guiLocation string = "/usr/local/share/unbalance"
-
 type Server struct {
 	Service
 
@@ -77,32 +75,6 @@ func (s *Server) Start() {
 	api.Put("/config/folder", s.addFolder)
 	api.Get("/config", s.getConfig)
 	api.Get("/storage", s.getStorage)
-	api.Post("/calculate", s.calculate)
-	api.Post("/move", s.move)
-
-	// s.engine = gin.New()
-	// s.engine.RedirectTrailingSlash = false
-	// s.engine.RedirectFixedPath = false
-
-	// s.engine.Use(gin.Recovery())
-	// // s.engine.Use(helper.Logging())
-	// s.engine.Use(static.Serve("/", static.LocalFile(path, true)))
-
-	// websocket handler
-	// s.engine.GET("/ws", func(c *gin.Context) {
-	// 	s.socket.handler(c.Writer, c.Request)
-	// })
-
-	// api := s.engine.Group(apiVersion)
-	// {
-	// 	api.GET("/config", s.getConfig)
-	// 	api.PUT("/config", s.saveConfig)
-	// 	api.GET("/storage", s.getStorageInfo)
-	// 	api.POST("/storage/bestfit", s.calculateBestFit)
-	// }
-
-	// // s.engine.NoRoute(static.Serve("/", static.LocalFile(path, true)))
-	// s.engine.NoRoute(s.noRoute)
 
 	go s.engine.Run(":6237")
 
@@ -173,34 +145,6 @@ func (s *Server) getStorage(c *echo.Context) (err error) {
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
-	c.JSON(200, &resp)
-
-	return nil
-}
-
-func (s *Server) calculate(c *echo.Context) (err error) {
-	var calculate dto.Calculate
-
-	c.Bind(&calculate)
-	// mlog.Warning("Unable to bind calculate: %s", err)
-
-	msg := &pubsub.Message{Payload: &calculate, Reply: make(chan interface{}, CAPACITY)}
-	s.bus.Pub(msg, "/calculate")
-
-	reply := <-msg.Reply
-	resp := reply.(*model.Unraid)
-	c.JSON(200, &resp)
-
-	return nil
-}
-
-func (s *Server) move(c *echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{})}
-	s.bus.Pub(msg, "/move")
-
-	reply := <-msg.Reply
-	resp := reply.([]*dto.Move)
-
 	c.JSON(200, &resp)
 
 	return nil
