@@ -84,7 +84,7 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	if err = WriteLine(tmpFile, fmt.Sprintf("dryRun=%b", s.DryRun)); err != nil {
+	if err = WriteLine(tmpFile, fmt.Sprintf("dryRun=%t", s.DryRun)); err != nil {
 		return err
 	}
 
