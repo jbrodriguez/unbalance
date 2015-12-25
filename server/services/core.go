@@ -2,6 +2,7 @@ package services
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
@@ -20,7 +21,6 @@ import (
 	"time"
 )
 
-// const dockerEnv = "UNBALANCE_DOCKER"
 const (
 	DISKMV_CMD = "./diskmv"
 )
@@ -37,13 +37,6 @@ type Core struct {
 	foldersNotMoved []string
 
 	mailbox chan *pubsub.Mailbox
-
-	// chanConfigInfo       chan *pubsub.Message
-	// chanSaveConfig       chan *pubsub.Message
-	// chanStorageInfo      chan *pubsub.Message
-	// chanCalculateBestFit chan *pubsub.Message
-	// storageMove          chan *pubsub.Message
-	// storageUpdate        chan *pubsub.Message
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -69,13 +62,6 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 
 func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
-
-	// core.chanConfigInfo = core.bus.Sub("cmd.getConfig")
-	// core.chanSaveConfig = core.bus.Sub("cmd.saveConfig")
-	// core.chanStorageInfo = core.bus.Sub("cmd.getStorageInfo")
-	// core.chanCalculateBestFit = core.bus.Sub("cmd.calculateBestFit")
-	// core.storageMove = core.bus.Sub("storage:move")
-	// core.storageUpdate = core.bus.Sub("storage:update")
 
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
@@ -105,29 +91,6 @@ func (c *Core) react() {
 		c.dispatch(mbox.Topic, mbox.Content)
 	}
 }
-
-// func (c *Core) SetStorage(storage *model.Unraid) {
-// 	c.storage = storage
-// }
-
-// func (c *Core) react() {
-// 	for {
-// 		select {
-// 		case msg := <-c.chanConfigInfo:
-// 			go c.getConfigInfo(msg)
-// 		case msg := <-c.chanSaveConfig:
-// 			go c.saveConfig(msg)
-// 		case msg := <-c.chanStorageInfo:
-// 			go c.getStorageInfo(msg)
-// 		case msg := <-c.chanCalculateBestFit:
-// 			go c.calculateBestFit(msg)
-// 		case msg := <-c.storageMove:
-// 			go c.doStorageMove(msg)
-// 		case msg := <-c.storageUpdate:
-// 			go c.doStorageUpdate(msg)
-// 		}
-// 	}
-// }
 
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
@@ -204,7 +167,14 @@ func (c *Core) calc(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "storage:calc:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	dtoCalc := msg.Payload.(*dto.Calculate)
+	mlog.Info("payload received is: (%+v)", msg.Payload)
+	payload := msg.Payload.(string)
+
+	var dtoCalc dto.Calculate
+	err := json.Unmarshal([]byte(payload), &dtoCalc)
+	if err != nil {
+		mlog.Fatalf(err.Error())
+	}
 
 	disks := make([]*model.Disk, 0)
 
