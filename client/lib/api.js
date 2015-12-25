@@ -6,15 +6,24 @@ export default class Api {
 	}
 
 	getConfig() {
+		console.log('this.hostr', this.hostr)
 		return fetch(this.hostr + '/config')
 			.then(resp => resp.json())
 	}
 
 	addFolder(folder) {
+		// console.log('sending: ', folder)
 		return fetch(this.hostr + '/config/folder', {
 			method: 'PUT',
-			body: JSON.stringify({topic: "", payload: folder})
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: folder})
 		})
 		.then(resp => resp.json())
+	}
+
+	getStorage() {
+		// console.log('this.hostr', this.hostr)
+		return fetch(this.hostr + '/storage')
+			.then(resp => resp.json())
 	}
 }

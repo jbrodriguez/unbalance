@@ -45,7 +45,7 @@ func main() {
 
 	socket.Start()
 	server.Start()
-	core.Start()
+	mlog.FatalIfError(core.Start())
 
 	mlog.Info("Press Ctrl+C to stop ...")
 

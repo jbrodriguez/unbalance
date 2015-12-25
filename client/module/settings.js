@@ -1,16 +1,20 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
-import C from '../constant'
+import * as C from '../constant'
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
+	componentDidMount() {
+		this.props.dispatch(C.GET_CONFIG)
+	}
+
 	render() {
 		let { dispatch, model } = this.props
 
-		console.log('settings.props: ', this.props)
+		console.log('settings.render.props: ', this.props)
 
 		if (!model.config) {
 			console.log('mother')
@@ -34,34 +38,36 @@ export default class Settings extends Component {
 		let warning = null
 		if (model.config.folders.length === 0) {
 			warning = (
-				<div className="col-xs-12 bottom-spacer-half">
-					<p className="bg-warning">There are no folders elegible for moving. Please enter them, in the input box below</p>
+				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
+					<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
 				</div>	
 			)
 		}
 
 		return (
-			<section class="row">
+			<section className={cx('row')}>
 				{ warning }
 
-				<div className="col-xs-12 bottom-spacer-half">
+				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
 					<form>
 					<fieldset>
 						<legend>Folders elegible for the moving process</legend>
 
 						<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
-						<p>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
+						<p className={cx('bottom-spacer-half')}>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
 
-						<div className="row bottom-spacer-large">
-							<div className="col-xs-12 addon">
-								<span className="addon-item">Folder</span>
-								<input className="addon-field" type="text" onKeyDown={this.addFolder}></input>
-								<button className="btn btn-default">Add</button>
+						<div className={cx('row', 'bottom-spacer-large')}>
+							<div className={cx('col-xs-12')}>
+								<div className={cx('addon')}>
+									<span className={cx('addon-item')}>Folder</span>
+									<input className={cx('addon-field')} type="text" onKeyDown={this._addFolder.bind(this, dispatch)}></input>
+									<button className={cx('btn', 'btn-default')}>Add</button>
+								</div>
 							</div>
 						</div>
 
-						<div className="row bottom-spacer-large">
-							<div className="col-xs-12">
+						<div className={cx('row', 'bottom-spacer-large')}>
+							<div className={cx('col-xs-12')}>
 								<table>
 								<thead>
 									<th width="50">#</th>
@@ -72,7 +78,7 @@ export default class Settings extends Component {
 										model.config.folders.map( (item, i) => {
 											return (
 												<tr key={i}>
-													<td><i className="icon-prune"></i></td>
+													<td><i className={cx('icon-prune')}></i></td>
 													<td>{item}</td>
 												</tr>
 											)
@@ -90,13 +96,16 @@ export default class Settings extends Component {
 		)
 	}
 
-	addFolder(e) {
+	_addFolder(dispatch, e) {
+		console.log('key - value: ', e.key, e.target.value)
 		if (e.key !== "Enter") {
 			return
 		}
 
 		e.preventDefault()
 
-		this.dispatch(C.ADD_FOLDER, e.target.value)
-	}
+		dispatch(C.ADD_FOLDER, e.target.value)
+	}	
+
+
 }

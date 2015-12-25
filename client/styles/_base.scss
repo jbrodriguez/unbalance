@@ -1,22 +1,66 @@
-/*
-Application Settings Go Here
-------------------------------------
-This file acts as a bundler for all variables/mixins/themes, so they
-can easily be swapped out without `core.scss` ever having to know.
+body {
+	font: 100%/1.625em 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	color: $primaryTextColor;
 
-For example:
+	// background-image: url("paper.png");
+	background: $bodyBackground;
+	// display: flex;
+	// flex-direction: column;
 
-@import './variables/colors'
-@import './variables/components'
-@import './themes/default'
-*/
+	// min-height: 100vh;
+}
 
-@import 'settings';
-@import 'helpers';
-@import 'grid';
-@import 'components';
+h1,
+h2,
+h3 {
+	font-family: Lato;
+	color: $primaryHeaderColor;
+	font-weight: bold;
+	line-height: 1.2;
+}
 
-// custom stuff
-@import 'header';
-@import 'main';
-@import 'footer';
+h1 {
+	font-size: 2em;
+	margin-bottom: 0.17em;
+}
+
+h2 {
+	font-size: 1.5em;
+	margin-bottom: 0.33em;
+}
+
+h3 { 
+    font-size: 1.17em;
+    margin-bottom: 0.5em;
+}
+
+// p,
+// ul,
+// ol {
+// 	margin-bottom: 1.5em;
+// }
+
+a {
+	color: $primaryAnchorColor;
+}
+
+ul {
+	list-style-position: inside;
+
+	li {
+		list-style-type: none;
+	}	
+}
+
+ol {
+	list-style-position: inside;
+
+	li {
+		list-style-type: none;
+	}	
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}

@@ -1,40 +1,3 @@
-// LAYOUT
-.body {
-	display: flex;
-	flex-direction: column;
-
-	min-height: 100vh;	
-}
-
-// HELPERS
-.spacer {
-	margin: 0 1em;
-}
-
-.bottom-spacer {
-	margin-bottom: 0.25em;
-}
-
-.bottom-spacer-half {
-	margin-bottom: 0.5em;
-}
-
-.bottom-spacer-large {
-	margin-bottom: 1em;
-}
-
-.rspacer {
-	margin-right: 1em;
-}
-
-.lspacer {
-	margin-left: 1em;
-}
-
-.bg-warning {
-	@include bg-variant($state-warning-bg);
-}
-
 // STANDARD TAG STYLING
 i {
 	color: $headerMenuAnchorColor;
@@ -50,7 +13,7 @@ i {
 	}		
 }
 
-input,
+input:not([type=checkbox]),
 select {
 	font-size: 0.9em;
 	padding: 0.25em;
@@ -59,10 +22,9 @@ select {
 
 	&:focus {
 		outline: none;
-		border-color: $border-color;
+		border-color: $borderColor;
 		box-shadow: inset 0 2px 2px #e9e9e9, 0 0 10px 0 rgba(73, 107, 125, .3);
 	}
-
 }
 
 // input:focus {
@@ -113,7 +75,25 @@ legend {
     margin-bottom: $padding-default;
     // color: #333;
     border-bottom: 1px solid $form-element-border;
-}	
+}
+
+
+// LAYOUT
+.body {
+	display: flex;
+	flex-direction: column;
+
+	max-width: 78em;
+	min-height: 100vh;	
+}
+
+
+
+// PANELS
+.bg-warning {
+	@include bg-variant($state-warning-bg);
+}
+
 
 .addon {
 	display: flex;
@@ -228,12 +208,25 @@ legend {
 // TABLES
 table {
 	background: white;
-	border: 1px solid $form-element-border;
+	// border: 1px solid $form-element-border;
 	table-layout: fixed;
 	width: 100%;
 }
 
 thead,
+tfoot {
+	color: $elegant-blue;
+	// padding: $padding-default;
+}
+
+thead {
+	border-bottom: 1px solid $form-element-border;
+}
+
+tfoot {
+	border-top: 1px solid $form-element-border;
+}
+
 tr,
 th,
 td {
@@ -251,7 +244,7 @@ tr:nth-of-type(even) {
 }
 
 th {
-	background-color: $cement-gray;
+	// background-color: $cement-gray;
 }
 
 // SPINNERS
@@ -308,6 +301,58 @@ th {
     transform: scale(1);
   }
 }
+
+// social icon
+.icon {
+	height: 25px;
+	width: 25px;
+	display: inline-block;
+	fill: $unbalance-footer;
+}
+
+// FUNCTIONAL HELPERS
+.spacer {
+	margin: 0 1em;
+}
+
+.bottom-spacer {
+	margin-bottom: 0.25em;
+}
+
+.bottom-spacer-half {
+	margin-bottom: 0.5em;
+}
+
+.bottom-spacer-large {
+	margin-bottom: 1em;
+}
+
+.rspacer {
+	margin-right: 1em;
+}
+
+.lspacer {
+	margin-left: 1em;
+}
+
+.flexSection {
+	display: flex;
+	flex-direction: row;
+}
+
+.flex {
+	display: flex;
+}
+
+.direction-column {
+	flex-direction: column;
+}
+
+// .direction-row {
+// 	flex-direction: row;
+// }
+
+
 
 // .row {
 // //	display: block;

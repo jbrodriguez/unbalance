@@ -56,22 +56,24 @@ func (s *Server) Start() {
 
 	s.engine = echo.New()
 
+	s.engine.Use(mw.Logger())
 	s.engine.Use(mw.Recover())
 
 	s.engine.Index(filepath.Join(location, "index.html"))
+	s.engine.Static("/app", filepath.Join(location, "app"))
 	s.engine.Static("/img", filepath.Join(location, "img"))
-	s.engine.WebSocket("/ws", func(c *echo.Context) (err error) {
+	s.engine.WebSocket("/skt", func(c *echo.Context) (err error) {
 		ws := c.Socket()
 		s.bus.Pub(&pubsub.Message{Payload: ws}, "/add/connection")
 		return nil
 	})
 
 	api := s.engine.Group(API_VERSION)
+	api.Put("/config/folder", s.addFolder)
 	api.Get("/config", s.getConfig)
-	api.Put("/config", s.saveConfig)
 	api.Get("/storage", s.getStorage)
 	api.Post("/calculate", s.calculate)
-	// api.Post("/move", s.move)
+	api.Post("/move", s.move)
 
 	// s.engine = gin.New()
 	// s.engine.RedirectTrailingSlash = false
@@ -106,38 +108,62 @@ func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
 }
 
-func (s *Server) getConfig(c *echo.Context) {
+func (s *Server) getConfig(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/config")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) saveConfig(c *echo.Context) {
-	var config lib.Config
+func (s *Server) addFolder(c *echo.Context) (err error) {
+	var packet dto.Packet
 
-	c.Bind(&config)
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
 
-	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
-	s.bus.Pub(msg, "/set/config")
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/add/folder")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) getStorage(c *echo.Context) {
+// func (s *Server) saveConfig(c *echo.Context) (err error) {
+// 	var config lib.Config
+
+// 	c.Bind(&config)
+
+// 	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
+// 	s.bus.Pub(msg, "/set/config")
+
+// 	reply := <-msg.Reply
+// 	resp := reply.(*lib.Config)
+// 	c.JSON(200, &resp)
+
+// 	return nil
+// }
+
+func (s *Server) getStorage(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/storage")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-func (s *Server) calculate(c *echo.Context) {
+func (s *Server) calculate(c *echo.Context) (err error) {
 	var calculate dto.Calculate
 
 	c.Bind(&calculate)
@@ -149,17 +175,21 @@ func (s *Server) calculate(c *echo.Context) {
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 	c.JSON(200, &resp)
+
+	return nil
 }
 
-// func (s *Server) move(c *gin.Context) {
-// 	msg := &pubsub.Message{Reply: make(chan interface{})}
-// 	s.bus.Pub(msg, "cmd.move")
+func (s *Server) move(c *echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{})}
+	s.bus.Pub(msg, "/move")
 
-// 	reply := <-msg.Reply
-// 	resp := reply.([]*dto.Move)
+	reply := <-msg.Reply
+	resp := reply.([]*dto.Move)
 
-// 	c.JSON(200, &resp)
-// }
+	c.JSON(200, &resp)
+
+	return nil
+}
 
 // func (s *Server) noRoute(c *gin.Context) {
 // 	var path string

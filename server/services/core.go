@@ -22,8 +22,7 @@ import (
 
 // const dockerEnv = "UNBALANCE_DOCKER"
 const (
-	DISKMV_CMD        = "./diskmv"
-	DISKMV_DOCKER_CMD = "/usr/bin/diskmv"
+	DISKMV_CMD = "./diskmv"
 )
 
 type Core struct {
@@ -32,6 +31,8 @@ type Core struct {
 	bus      *pubsub.PubSub
 	storage  *model.Unraid
 	settings *lib.Settings
+
+	opIsRunning bool
 
 	foldersNotMoved []string
 
@@ -50,8 +51,10 @@ type Core struct {
 
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core := &Core{
-		bus:      bus,
-		settings: settings,
+		bus:         bus,
+		settings:    settings,
+		opIsRunning: false,
+		storage:     &model.Unraid{},
 	}
 	core.init()
 
@@ -61,12 +64,10 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	re, _ = regexp.Compile(`(\d+)\s+(.*?)$`)
 	core.reItems = re
 
-	core.storage = &model.Unraid{}
-
 	return core
 }
 
-func (c *Core) Start() {
+func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	// core.chanConfigInfo = core.bus.Sub("cmd.getConfig")
@@ -77,13 +78,21 @@ func (c *Core) Start() {
 	// core.storageUpdate = core.bus.Sub("storage:update")
 
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
-	c.registerAdditional(c.bus, "/set/config", c.setConfig, c.mailbox)
+	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
-	c.registerAdditional(c.bus, "/calculate", c.calc, c.mailbox)
-	c.registerAdditional(c.bus, "/move", c.move, c.mailbox)
+
+	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
+	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
 	// c.registerAdditional(c.bus, "/set/config", c.setConfig)
 
+	err = c.storage.SanityCheck()
+	if err != nil {
+		return err
+	}
+
 	go c.react()
+
+	return nil
 }
 
 func (c *Core) Stop() {
@@ -126,11 +135,13 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-func (c *Core) setConfig(msg *pubsub.Message) {
-	mlog.Info("Saving config")
+func (c *Core) addFolder(msg *pubsub.Message) {
 
-	config := msg.Payload.(*lib.Config)
-	c.settings.Config = *config
+	folder := msg.Payload.(string)
+
+	mlog.Info("Adding folder (%s)", folder)
+
+	c.settings.AddFolder(folder)
 	// c.config.Folders = config.Folders
 	// c.config.DryRun = config.DryRun
 	// c.config.Notifications = config.Notifications
@@ -148,9 +159,35 @@ func (c *Core) setConfig(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
+// func (c *Core) setConfig(msg *pubsub.Message) {
+// 	mlog.Info("Saving config")
+
+// 	config := msg.Payload.(*lib.Config)
+// 	c.settings.Config = *config
+// 	// c.config.Folders = config.Folders
+// 	// c.config.DryRun = config.DryRun
+// 	// c.config.Notifications = config.Notifications
+// 	// c.Notifications = config.Notifications
+// 	// c.NotiFrom = config.NotiFrom
+// 	// c.NotiTo = config.NotiTo
+// 	// c.NotiHost = config.NotiHost
+// 	// c.NotiPort = config.NotiPort
+// 	// c.NotiEncrypt = config.NotiEncrypt
+// 	// c.NotiUser = config.NotiUser
+// 	// c.NotiPassword = config.NotiPassword
+
+// 	c.settings.Save()
+
+// 	msg.Reply <- &c.settings.Config
+// }
+
 func (c *Core) getStorage(msg *pubsub.Message) {
-	if c.storage.Condition.State == "STARTED" {
-		c.storage.Refresh(c.settings.RunningInDocker)
+	// mlog.Info("c.storage: (%+v)", c.storage)
+	// if c.storage.Condition.State == "STARTED" {
+	// 	c.storage.Refresh(c.settings.RunningInDocker)
+	// }
+	if !c.opIsRunning {
+		c.storage.Refresh()
 	}
 
 	msg.Reply <- c.storage
@@ -160,7 +197,9 @@ func (c *Core) calc(msg *pubsub.Message) {
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	c.storage.Condition.State = "CALCULATING"
+	c.opIsRunning = true
+	defer func() { c.opIsRunning = false }()
+	// c.storage.Condition.State = "CALCULATING"
 
 	outbound := &dto.Packet{Topic: "storage:calc:begin", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -283,10 +322,6 @@ func (c *Core) calc(msg *pubsub.Message) {
 		// }
 	}
 
-	// send to front end the signal of operation finished
-	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
 	// send mail according to user preferences
 	subject := "unBALANCE - CALCULATE operation completed"
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", started, finished, elapsed)
@@ -323,6 +358,10 @@ func (c *Core) calc(msg *pubsub.Message) {
 	// msg.Reply <- c.storage
 
 	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
+
+	// send to front end the signal of operation finished
+	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
@@ -451,13 +490,6 @@ func (c *Core) move(msg *pubsub.Message) {
 		dry = "-f"
 	}
 
-	var diskmv string
-	if c.settings.RunningInDocker {
-		diskmv = DISKMV_DOCKER_CMD
-	} else {
-		diskmv = DISKMV_CMD
-	}
-
 	// c.storage.InProgress = true
 
 	outbound := &dto.Packet{Topic: "storage:move:begin", Payload: "Operation started"}
@@ -491,7 +523,7 @@ func (c *Core) move(msg *pubsub.Message) {
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
-			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", diskmv, dry, item.Path, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
 			commands = append(commands, cmd)
