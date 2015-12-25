@@ -78,7 +78,7 @@ func (s *Server) Start() {
 
 	go s.engine.Run(":6237")
 
-	s.mailbox = s.register(s.bus, "storage:broadcast", s.broadcast)
+	s.mailbox = s.register(s.bus, "socket:broadcast", s.broadcast)
 	go s.react()
 
 	mlog.Info("Server started listening on :6237")
