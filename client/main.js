@@ -19,10 +19,11 @@ function boot(config) {
 	console.log('config: ', config)
 
 	let initialState = {
-		unraid: null,
 		config,
+		unraid: null,
 		opInProgress: null,
 		consoleLines: [],
+		progressText: "",
 	}
 
 	var store = new Store(initialState)

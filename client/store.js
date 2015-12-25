@@ -28,11 +28,9 @@ import WebSocketApi from './lib/wsapi'
 // 		bytesToMove: 0,
 // 		inProgress: false, // need to review this variable
 // 	}
-//  toDisk: {},
-//  fromDisk: {},
-//  maxFreeDisk: 0,
-//  maxFreePath: "",
 // 	opInProgress: null,
+//  consoleLines: [],
+//	progressText: "",
 // }
 
 export default class Store {
@@ -58,6 +56,9 @@ export default class Store {
 			getStorage,
 			gotStorage,
 			calculate,
+			calcStarted,
+			calcProgress,
+			calcFinished,
 			move,
 			toggleDryRun,
 			gotWsMessage,
@@ -71,6 +72,9 @@ export default class Store {
 			C.GET_STORAGE,
 			C.GOT_STORAGE,
 			C.CALCULATE,
+			C.CALC_STARTED,
+			C.CALC_PROGRESS,
+			C.CALC_FINISHED,
 			C.MOVE,
 			C.TOGGLE_DRY_RUN,
 			C.GOT_WS_MESSAGE,
@@ -79,7 +83,8 @@ export default class Store {
 		// const ws = new WebSocket(WS_URL)
 
 		ws.stream.onValue(event => {
-			dispatch(event.data.topic, JSON.parse(event.data.payload))
+			console.log('streaming: ', event)
+			dispatch(event.topic, event.payload)
 		})
 
 		return B.update(
@@ -92,6 +97,9 @@ export default class Store {
 			getStorage, _getStorage,
 			gotStorage, _gotStorage,
 			calculate, _calculate,
+			calcStarted, _calcStarted,
+			calcProgress, _calcProgress,
+			calcFinished, _calcFinished,
 			gotWsMessage, _gotWsMessage,
 		)
 
@@ -159,8 +167,32 @@ export default class Store {
 		}
 
 		function _calculate(state, payload) {
+			dispatch(C.OP_IN_PROGRESS, C.CALCULATE)
+
 			ws.send({topic: C.CALCULATE, payload})
 			return state
+		}
+
+		function _calcStarted(state, payload) {
+			return {
+				...state,
+				progressText: 'CALCULATE: ' + payload,
+			}
+		}
+
+		function _calcProgress(state, payload) {
+			return {
+				...state,
+				progressText: 'CALCULATE: ' + payload,
+			}
+		}
+
+		function _calcFinished(state, payload) {
+			return {
+				...state,
+				progressText: "",
+				opInProgress: null,
+			}
 		}
 
 		function _gotWsMessage(state, message) {

@@ -200,7 +200,7 @@ export default class Home extends Component {
 		let progressText = null
 		if (model.opInProgress) {
 			progressText = (
-				<span>&nbsp; | &nbsp; { model.opInProgress } </span>
+				<span>&nbsp; | &nbsp; { model.progressText } </span>
 			)
 		}
 
