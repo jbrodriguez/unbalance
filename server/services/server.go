@@ -9,6 +9,7 @@ import (
 	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	"jbrodriguez/unbalance/server/model"
+	"jbrodriguez/unbalance/server/net"
 	// "os"
 	"path/filepath"
 )
@@ -21,17 +22,24 @@ const (
 // const guiLocation string = "/usr/local/share/unbalance"
 
 type Server struct {
+	Service
+
 	bus      *pubsub.PubSub
 	settings *lib.Settings
-	engine   *echo.Echo
-	// socket   *Socket
+
+	engine  *echo.Echo
+	mailbox chan *pubsub.Mailbox
+
+	pool map[*net.Connection]bool
 }
 
 func NewServer(bus *pubsub.PubSub, settings *lib.Settings) *Server {
 	server := &Server{
 		bus:      bus,
 		settings: settings,
+		pool:     make(map[*net.Connection]bool),
 	}
+	server.init()
 	return server
 }
 
@@ -62,11 +70,8 @@ func (s *Server) Start() {
 	s.engine.Index(filepath.Join(location, "index.html"))
 	s.engine.Static("/app", filepath.Join(location, "app"))
 	s.engine.Static("/img", filepath.Join(location, "img"))
-	s.engine.WebSocket("/skt", func(c *echo.Context) (err error) {
-		ws := c.Socket()
-		s.bus.Pub(&pubsub.Message{Payload: ws}, "/add/connection")
-		return nil
-	})
+
+	s.engine.WebSocket("/skt", s.handleWs)
 
 	api := s.engine.Group(API_VERSION)
 	api.Put("/config/folder", s.addFolder)
@@ -101,11 +106,21 @@ func (s *Server) Start() {
 
 	go s.engine.Run(":6237")
 
+	s.mailbox = s.register(s.bus, "storage:broadcast", s.broadcast)
+	go s.react()
+
 	mlog.Info("Server started listening on :6237")
 }
 
 func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
+}
+
+func (s *Server) react() {
+	for mbox := range s.mailbox {
+		// mlog.Info("Core:Topic: %s", mbox.Topic)
+		s.dispatch(mbox.Topic, mbox.Content)
+	}
 }
 
 func (s *Server) getConfig(c *echo.Context) (err error) {
@@ -189,6 +204,31 @@ func (s *Server) move(c *echo.Context) (err error) {
 	c.JSON(200, &resp)
 
 	return nil
+}
+
+func (s *Server) handleWs(c *echo.Context) (err error) {
+	conn := net.NewConnection(c.Socket(), s.onMessage, s.onClose)
+	s.pool[conn] = true
+	err = conn.Read()
+	return err
+}
+
+func (s *Server) onMessage(packet *dto.Packet) {
+	s.bus.Pub(&pubsub.Message{Payload: packet.Payload}, packet.Topic)
+}
+
+func (s *Server) onClose(c *net.Connection, err error) {
+	mlog.Warning("closing socket (%+v): %s", c, err)
+	if _, ok := s.pool[c]; ok {
+		delete(s.pool, c)
+	}
+}
+
+func (s *Server) broadcast(msg *pubsub.Message) {
+	packet := msg.Payload.(*dto.Packet)
+	for conn, _ := range s.pool {
+		conn.Write(packet)
+	}
 }
 
 // func (s *Server) noRoute(c *gin.Context) {
