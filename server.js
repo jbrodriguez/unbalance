@@ -19,6 +19,7 @@ const isDeveloping = process.env.NODE_ENV !== 'production';
 const port = isDeveloping ? 3000 : process.env.PORT;
 
 const app = express();
+const server = require('http').createServer(app);
 
 if (isDeveloping) {
 	const compiler = webpack(config);
@@ -39,16 +40,18 @@ if (isDeveloping) {
 	app.use(webpackHotMiddleware(compiler));
 
 	app.all('/api/*', function(req, res) {
-		proxy.web(req, res, {
-			target: 'http://wopr.apertoire.org:6237'
-		})
+		proxy.web(req, res, {target: 'http://wopr.apertoire.org:6237'})
 	})
 
-	app.all('/skt', function(req, res) {
-		proxy.web(req, res, {
-			target: 'http://wopr.apertoire.org:6237/skt'
-		})
-	})
+	server.on('upgrade', function(req, socket, head) {
+		proxy.ws(req, socket, head, {target: 'http://wopr.apertoire.org:6237'})
+	});
+
+	// app.all('/skt', function(req, res) {
+	// 	proxy.ws(req, res, {
+	// 		target: 'ws://wopr.apertoire.org:6237/skt'
+	// 	})
+	// })
 
 	app.get('*', function response(req, res) {
 		res.write(middleware.fileSystem.readFileSync(path.join(__dirname, 'dist/index.html')));
@@ -62,10 +65,7 @@ if (isDeveloping) {
 	});
 }
 
-var server = require('http').createServer(app);
-server.on('upgrade', function(req, socket, head) {
-	proxy.ws(req, socket, head)
-});
+// var server = require('http').createServer(app);
 server.listen(port, '0.0.0.0', function onStart(err) {
 	if (err) {
 		console.log(err);
