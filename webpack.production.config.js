@@ -9,8 +9,8 @@ module.exports = {
 		path.join(__dirname, 'client/main.js')
 	],
 	output: {
-		path: path.join(__dirname, '/dist/'),
-		filename: '[name]-[hash:7].min.js'
+		path: path.join(__dirname, '/dist'),
+		filename: 'app/[name]-[hash:7].min.js'
 	},
 	plugins: [
 		new webpack.optimize.OccurenceOrderPlugin(),
@@ -19,7 +19,7 @@ module.exports = {
 			inject: 'body',
 			filename: 'index.html'
 		}),
-		new ExtractTextPlugin('[name]-[hash:7].min.css'),
+		new ExtractTextPlugin('app/[name]-[hash:7].min.css'),
 		new webpack.optimize.UglifyJsPlugin({
 			compressor: {
 				warnings: false,
@@ -42,7 +42,7 @@ module.exports = {
 			test: /\.(jpe?g|png|gif|svg)$/i,
 			include: path.resolve(__dirname, 'client/img'),
 			loaders: [
-				'file?hash=sha512&digest=hex&name=[name]-[hash:7].[ext]',
+				'file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]',
 				'image-webpack?{progressive:true, optimizationLevel: 7, interlaced: false, pngquant:{quality: "65-90", speed: 4}}'
 			]
 		}, {
