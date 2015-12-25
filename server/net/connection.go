@@ -23,13 +23,13 @@ func NewConnection(ws *websocket.Conn, onMessage MessageFunc, onClose CloseFunc)
 	}
 }
 
-func (c *Connection) Read() {
+func (c *Connection) Read() (err error) {
 	for {
 		var packet dto.Packet
-		err := websocket.Message.Receive(c.ws, &packet)
+		err = websocket.JSON.Receive(c.ws, &packet)
 		if err != nil {
 			go c.onClose(c, err)
-			break
+			return
 		} else {
 			go c.onMessage(&packet)
 		}
@@ -37,6 +37,6 @@ func (c *Connection) Read() {
 }
 
 func (c *Connection) Write(packet *dto.Packet) (err error) {
-	err = websocket.Message.Send(c.ws, packet)
+	err = websocket.JSON.Send(c.ws, packet)
 	return
 }

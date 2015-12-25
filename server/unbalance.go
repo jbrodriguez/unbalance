@@ -37,13 +37,11 @@ func main() {
 	}
 	mlog.Info(msg)
 
-	bus := pubsub.New(623)
+	bus := pubsub.New(23)
 
-	socket := services.NewSocket(bus, settings)
 	server := services.NewServer(bus, settings)
 	core := services.NewCore(bus, settings)
 
-	socket.Start()
 	server.Start()
 	mlog.FatalIfError(core.Start())
 
@@ -55,5 +53,4 @@ func main() {
 
 	core.Stop()
 	server.Stop()
-	socket.Stop()
 }
