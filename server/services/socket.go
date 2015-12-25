@@ -107,7 +107,7 @@ func (s *Socket) onMessage(packet *dto.Packet) {
 }
 
 func (s *Socket) onClose(c *net.Connection, err error) {
-	// log error ?
+	mlog.Warning("closing socket (%+v): %s", c, err)
 	if _, ok := s.pool[c]; ok {
 		delete(s.pool, c)
 	}

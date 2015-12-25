@@ -198,7 +198,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 	started := time.Now()
 
 	c.opIsRunning = true
-	defer c.opIsRunning = false
+	defer func() { c.opIsRunning = false }()
 	// c.storage.Condition.State = "CALCULATING"
 
 	outbound := &dto.Packet{Topic: "storage:calc:begin", Payload: "Operation started"}
@@ -322,7 +322,6 @@ func (c *Core) calc(msg *pubsub.Message) {
 		// }
 	}
 
-
 	// send mail according to user preferences
 	subject := "unBALANCE - CALCULATE operation completed"
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", started, finished, elapsed)
@@ -362,7 +361,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	// send to front end the signal of operation finished
 	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")	
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {

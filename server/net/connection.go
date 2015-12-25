@@ -26,7 +26,8 @@ func NewConnection(ws *websocket.Conn, onMessage MessageFunc, onClose CloseFunc)
 func (c *Connection) Read() {
 	for {
 		var packet dto.Packet
-		if err := websocket.Message.Receive(c.ws, &packet); err != nil {
+		err := websocket.Message.Receive(c.ws, &packet)
+		if err != nil {
 			go c.onClose(c, err)
 			break
 		} else {
