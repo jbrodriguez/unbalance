@@ -22,8 +22,7 @@ function boot(config) {
 		config,
 		unraid: null,
 		opInProgress: null,
-		consoleLines: [],
-		progressText: "",
+		lines: [],
 	}
 
 	var store = new Store(initialState)
@@ -48,7 +47,7 @@ function boot(config) {
 
 	store.status.onValue(
 		model => {
-			console.log('this.model: ', model)
+			// console.log('this.model: ', model)
 			// since wrapping the router in a Provider doesn't work right now
 			// I think I'm missing something
 			function createElement(Component, props) {

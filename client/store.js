@@ -29,7 +29,7 @@ import WebSocketApi from './lib/wsapi'
 // 		inProgress: false, // need to review this variable
 // 	}
 // 	opInProgress: null,
-//  consoleLines: [],
+//  console: [],
 //	progressText: "",
 // }
 
@@ -83,7 +83,7 @@ export default class Store {
 		// const ws = new WebSocket(WS_URL)
 
 		ws.stream.onValue(event => {
-			console.log('streaming: ', event)
+			// console.log('streaming: ', event)
 			dispatch(event.topic, event.payload)
 		})
 
@@ -176,21 +176,21 @@ export default class Store {
 		function _calcStarted(state, payload) {
 			return {
 				...state,
-				progressText: 'CALCULATE: ' + payload,
+				lines: [].concat('CALCULATE: ' + payload),
 			}
 		}
 
 		function _calcProgress(state, payload) {
 			return {
 				...state,
-				progressText: 'CALCULATE: ' + payload,
+				lines: state.lines.concat('CALCULATE: ' + payload),
 			}
 		}
 
 		function _calcFinished(state, payload) {
 			return {
 				...state,
-				progressText: "",
+				unraid: payload,
 				opInProgress: null,
 			}
 		}
@@ -198,7 +198,7 @@ export default class Store {
 		function _gotWsMessage(state, message) {
 			return {
 				...state,
-				consoleLines: consoleLines.push(message)
+				// consoleLines: consoleLines.push(message)
 			}
 		}		
 	}
