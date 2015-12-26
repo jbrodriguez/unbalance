@@ -8,6 +8,10 @@ let cx = classNames.bind(styles)
 
 export default class Console extends React.Component {
 	componentDidUpdate() {
+		if (this.props.model.lines.length === 0) {
+			return
+		}
+
 		// console.log('being called')
 		var node = findDOMNode(this)
 		node.scrollTop = node.scrollHeight
@@ -16,9 +20,9 @@ export default class Console extends React.Component {
 	render() {
 		let { model } = this.props
 
-		if (model.lines.length === 0) {
-			return null;
-		}
+		// if (model.lines.length === 0) {
+		// 	return null
+		// }
 
 		let items = model.lines.map( (line, i) => {
 			return (
@@ -27,10 +31,8 @@ export default class Console extends React.Component {
 		})
 
 		return (
-			<div className={cx('col-xs-12')}>
-				<div className={cx('console')}>
-					{ items }
-				</div>
+			<div className={cx('console')}>
+				{ items }
 			</div>
 		)		
 	}	
