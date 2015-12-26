@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
 import * as C from '../constant'
+import ConsolePanel from './consolePanel'
 
 import { humanBytes, percentage } from '../lib/utils'
 
@@ -141,28 +142,31 @@ export default class Home extends Component {
 			// console.log('disks: ', model.unraid.disks)
 
 			let rows = 	model.unraid.disks.map( (disk, i) => {
-							let diskChanged = cx(
-								{'label': disk.newFree !== disk.free},
-								{'label-success': disk.newFree !== disk.free},
-							)
+				// let diskChanged = cx(
+				// 	{'label': disk.newFree !== disk.free},
+				// 	{'label-success': disk.newFree !== disk.free}
+				// )
+			// console.log('disk.newFree !== disk.free', disk.newFree !== disk.free)
+			const isDifferent = disk.newFree !== disk.free ? true : false
+			let diskChanged = cx({'label': isDifferent}, {'label-success': false})
 
-							return (
-								<tr>
-									<td>{disk.path.replace("/mnt/", "")}</td>
-									<td>{disk.serial} ({disk.device})</td>
-									<td><input type="checkbox" checked={this.state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
-									<td><input type="checkbox" checked={this.state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
-									<td>{humanBytes(disk.size)}</td>
-									<td>{humanBytes(disk.free)}</td>
-									<td>{percentage(disk.free/disk.size)}</td>
-									<td>
-										<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
-									</td>
-								</tr>
-							)
-						})
+				// console.log('diskChanged: ', diskChanged)
 
-			// console.log('rows: ', rows)			
+				return (
+					<tr key={i}>
+						<td>{disk.path.replace("/mnt/", "")}</td>
+						<td>{disk.serial} ({disk.device})</td>
+						<td><input type="checkbox" checked={this.state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
+						<td><input type="checkbox" checked={this.state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
+						<td>{humanBytes(disk.size)}</td>
+						<td>{humanBytes(disk.free)}</td>
+						<td>{percentage(disk.free/disk.size)}</td>
+						<td>
+							<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
+						</td>
+					</tr>
+				)
+			})
 
 			grid = (
 				<table className={cx('')}>
@@ -197,13 +201,6 @@ export default class Home extends Component {
 			)
 		}
 
-		let progressText = null
-		if (model.opInProgress) {
-			progressText = (
-				<span>&nbsp; | &nbsp; { model.progressText } </span>
-			)
-		}
-
 		return (
 			<div>
 				<section className={cx('row', 'bottom-spacer-half')}>
@@ -215,7 +212,6 @@ export default class Home extends Component {
 						<div className={cx('flex-section', 'middle-xs')}>
 							<span className={cx('lspacer')}>STATUS:</span>
 							<span className={cx('spacer', 'label', 'label-success')}>{model.unraid.condition.state}</span>
-							{ progressText }
 						</div>
 					</div>
 					<div className={cx('col-xs-12', 'col-sm-3')}>
@@ -231,6 +227,10 @@ export default class Home extends Component {
 							</div>
 						</div>
 					</div>
+				</section>
+
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<ConsolePanel model={model} />
 				</section>
 
 				<section className={cx('row', 'bottom-spacer-half')}>
