@@ -142,15 +142,9 @@ export default class Home extends Component {
 			// console.log('disks: ', model.unraid.disks)
 
 			let rows = 	model.unraid.disks.map( (disk, i) => {
-				// let diskChanged = cx(
-				// 	{'label': disk.newFree !== disk.free},
-				// 	{'label-success': disk.newFree !== disk.free}
-				// )
-			// console.log('disk.newFree !== disk.free', disk.newFree !== disk.free)
-			const isDifferent = disk.newFree !== disk.free ? true : false
-			let diskChanged = cx({'label': isDifferent}, {'label-success': false})
-
-				// console.log('diskChanged: ', diskChanged)
+				let diskChanged = cx({
+					'label': disk.newFree !== disk.free
+				})
 
 				return (
 					<tr key={i}>
