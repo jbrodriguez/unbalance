@@ -28,11 +28,11 @@ import WebSocketApi from './lib/wsapi'
 // 		bytesToMove: 0,
 // 		inProgress: false, // need to review this variable
 // 	}
-//  toDisk: {},
-//  fromDisk: {},
-//  maxFreeDisk: 0,
-//  maxFreePath: "",
-// 	opInProgress: null,
+//  fromDisk: null,
+//  toDisk: null,
+//  opInProgress: null,
+//  moveDisabled: true,
+//  console: [],
 // }
 
 export default class Store {
@@ -58,8 +58,13 @@ export default class Store {
 			getStorage,
 			gotStorage,
 			calculate,
+			calcStarted,
+			calcProgress,
+			calcFinished,
 			move,
 			toggleDryRun,
+			checkFrom,
+			checkTo,
 			gotWsMessage,
 		] = register(
 			C.START,
@@ -71,15 +76,21 @@ export default class Store {
 			C.GET_STORAGE,
 			C.GOT_STORAGE,
 			C.CALCULATE,
+			C.CALC_STARTED,
+			C.CALC_PROGRESS,
+			C.CALC_FINISHED,
 			C.MOVE,
 			C.TOGGLE_DRY_RUN,
+			C.CHECK_FROM,
+			C.CHECK_TO,
 			C.GOT_WS_MESSAGE,
 		)
 
 		// const ws = new WebSocket(WS_URL)
 
 		ws.stream.onValue(event => {
-			dispatch(event.data.topic, JSON.parse(event.data.payload))
+			// console.log('streaming: ', event)
+			dispatch(event.topic, event.payload)
 		})
 
 		return B.update(
@@ -92,6 +103,11 @@ export default class Store {
 			getStorage, _getStorage,
 			gotStorage, _gotStorage,
 			calculate, _calculate,
+			calcStarted, _calcStarted,
+			calcProgress, _calcProgress,
+			calcFinished, _calcFinished,
+			checkFrom, _checkFrom,
+			checkTo, _checkTo,
 			gotWsMessage, _gotWsMessage,
 		)
 
@@ -150,23 +166,114 @@ export default class Store {
 
 		function _gotStorage(state, unraid) {
 			console.log('unraid: ', unraid)
-			
+		
+			let toDisk = {}
+			let fromDisk = {}
+			let maxFreeSize = 0
+			let maxFreePath = ""
+
+			unraid.disks.map( disk => {
+				toDisk[disk.path] = true
+				fromDisk[disk.path] = false
+
+				if (disk.free > maxFreeSize) {
+					maxFreeSize = disk.free
+					maxFreePath = disk.path
+				}
+
+				return disk
+			})
+
+			if (maxFreePath != "") {
+				toDisk[maxFreePath] = false
+				fromDisk[maxFreePath] = true
+			}
+
 			return {
 				...state,
 				opInProgress: null,
+				moveDisabled: true,
+				lines: [],
 				unraid,
+				fromDisk,
+				toDisk,
 			}
 		}
 
-		function _calculate(state, payload) {
-			ws.send({topic: C.CALCULATE, payload})
+		function _calculate(state, _) {
+			dispatch(C.OP_IN_PROGRESS, C.CALCULATE)
+
+			let srcDisk = ""
+
+			for (var key in state.fromDisk) {
+				if (state.fromDisk[key]) {
+					srcDisk = key
+					break
+				}
+			}			
+
+			ws.send({topic: C.CALCULATE, payload: {srcDisk, dstDisks: state.toDisk}})
 			return state
+		}
+
+		function _calcStarted(state, payload) {
+			return {
+				...state,
+				lines: [].concat('CALCULATE: ' + payload),
+			}
+		}
+
+		function _calcProgress(state, payload) {
+			return {
+				...state,
+				lines: state.lines.concat('CALCULATE: ' + payload),
+			}
+		}
+
+		function _calcFinished(state, unraid) {
+			return {
+				...state,
+				unraid,
+				opInProgress: null,
+				moveDisabled: false,
+			}
+		}
+
+		function _checkFrom(state, path) {
+			let fromDisk = Object.assign({}, state.fromDisk)
+			for (var key in fromDisk) {
+				if (key !== path) {
+					fromDisk[key] = false
+				}
+			}
+			fromDisk[path] = true
+
+			let toDisk = Object.assign({}, state.toDisk)
+			for (var key in toDisk) {
+				toDisk[key] = !(key === path)
+			}
+
+			return {
+				...state,
+				fromDisk,
+				toDisk,
+			}
+		}
+
+		function _checkTo(state, path) {
+			let toDisk = Object.assign({}, state.toDisk)
+			toDisk[path] = !toDisk[path]
+
+			return {
+				...state,
+				toDisk,
+			}		
 		}
 
 		function _gotWsMessage(state, message) {
 			return {
 				...state,
-				consoleLines: consoleLines.push(message)
+				// consoleLines: consoleLines.push(message)
 			}
 		}		
 	}

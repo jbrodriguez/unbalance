@@ -135,22 +135,22 @@ legend {
 	background-color: $label-default-bg;
 	color: white;
 
-	&.alert {
+	&-alert {
 		background-color: #f04124;
 		color: white;
 	}
 
-	&.warning {
+	&-warning {
 		background-color: #f08a24;
 		color: white;
 	}
 
-	&.success {
+	&-success {
 		background-color: #43ac6a;
 		color: white;
 	}
 
-	&.secondary {
+	&-secondary {
 	    background-color: #e7e7e7;
 	    color: #333333;
 	}

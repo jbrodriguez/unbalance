@@ -329,9 +329,13 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
 
-	// send to front end the signal of operation finished
-	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: "Operation Finished"}
+	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: "Operation Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// send to front end the signal of operation finished
+	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: c.storage}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {

@@ -19,10 +19,13 @@ function boot(config) {
 	console.log('config: ', config)
 
 	let initialState = {
-		unraid: null,
 		config,
+		unraid: null,
+		fromDisk: null,
+		toDisk: null,
 		opInProgress: null,
-		consoleLines: [],
+		moveDisabled: true,
+		lines: [],
 	}
 
 	var store = new Store(initialState)
@@ -47,7 +50,7 @@ function boot(config) {
 
 	store.status.onValue(
 		model => {
-			console.log('this.model: ', model)
+			// console.log('this.model: ', model)
 			// since wrapping the router in a Provider doesn't work right now
 			// I think I'm missing something
 			function createElement(Component, props) {
