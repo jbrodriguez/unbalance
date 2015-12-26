@@ -28,9 +28,11 @@ import WebSocketApi from './lib/wsapi'
 // 		bytesToMove: 0,
 // 		inProgress: false, // need to review this variable
 // 	}
-// 	opInProgress: null,
+//  fromDisk: null,
+//  toDisk: null,
+//  opInProgress: null,
+//  moveDisabled: true,
 //  console: [],
-//	progressText: "",
 // }
 
 export default class Store {
@@ -61,6 +63,8 @@ export default class Store {
 			calcFinished,
 			move,
 			toggleDryRun,
+			checkFrom,
+			checkTo,
 			gotWsMessage,
 		] = register(
 			C.START,
@@ -77,6 +81,8 @@ export default class Store {
 			C.CALC_FINISHED,
 			C.MOVE,
 			C.TOGGLE_DRY_RUN,
+			C.CHECK_FROM,
+			C.CHECK_TO,
 			C.GOT_WS_MESSAGE,
 		)
 
@@ -100,6 +106,8 @@ export default class Store {
 			calcStarted, _calcStarted,
 			calcProgress, _calcProgress,
 			calcFinished, _calcFinished,
+			checkFrom, _checkFrom,
+			checkTo, _checkTo,
 			gotWsMessage, _gotWsMessage,
 		)
 
@@ -158,18 +166,53 @@ export default class Store {
 
 		function _gotStorage(state, unraid) {
 			console.log('unraid: ', unraid)
-			
+		
+			let toDisk = {}
+			let fromDisk = {}
+			let maxFreeSize = 0
+			let maxFreePath = ""
+
+			unraid.disks.map( disk => {
+				toDisk[disk.path] = true
+				fromDisk[disk.path] = false
+
+				if (disk.free > maxFreeSize) {
+					maxFreeSize = disk.free
+					maxFreePath = disk.path
+				}
+
+				return disk
+			})
+
+			if (maxFreePath != "") {
+				toDisk[maxFreePath] = false
+				fromDisk[maxFreePath] = true
+			}
+
 			return {
 				...state,
 				opInProgress: null,
+				moveDisabled: true,
+				lines: [],
 				unraid,
+				fromDisk,
+				toDisk,
 			}
 		}
 
-		function _calculate(state, payload) {
+		function _calculate(state, _) {
 			dispatch(C.OP_IN_PROGRESS, C.CALCULATE)
 
-			ws.send({topic: C.CALCULATE, payload})
+			let srcDisk = ""
+
+			for (var key in state.fromDisk) {
+				if (state.fromDisk[key]) {
+					srcDisk = key
+					break
+				}
+			}			
+
+			ws.send({topic: C.CALCULATE, payload: {srcDisk, dstDisks: state.toDisk}})
 			return state
 		}
 
@@ -187,12 +230,44 @@ export default class Store {
 			}
 		}
 
-		function _calcFinished(state, payload) {
+		function _calcFinished(state, unraid) {
 			return {
 				...state,
-				unraid: payload,
+				unraid,
 				opInProgress: null,
+				moveDisabled: false,
 			}
+		}
+
+		function _checkFrom(state, path) {
+			let fromDisk = Object.assign({}, state.fromDisk)
+			for (var key in fromDisk) {
+				if (key !== path) {
+					fromDisk[key] = false
+				}
+			}
+			fromDisk[path] = true
+
+			let toDisk = Object.assign({}, state.toDisk)
+			for (var key in toDisk) {
+				toDisk[key] = !(key === path)
+			}
+
+			return {
+				...state,
+				fromDisk,
+				toDisk,
+			}
+		}
+
+		function _checkTo(state, path) {
+			let toDisk = Object.assign({}, state.toDisk)
+			toDisk[path] = !toDisk[path]
+
+			return {
+				...state,
+				toDisk,
+			}		
 		}
 
 		function _gotWsMessage(state, message) {

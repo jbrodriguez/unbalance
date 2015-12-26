@@ -21,7 +21,10 @@ function boot(config) {
 	let initialState = {
 		config,
 		unraid: null,
+		fromDisk: null,
+		toDisk: null,
 		opInProgress: null,
+		moveDisabled: true,
 		lines: [],
 	}
 
