@@ -62,10 +62,13 @@ export default class Store {
 			calcProgress,
 			calcFinished,
 			move,
+			moveStarted,
+			moveProgress,
+			moveFinished,
 			toggleDryRun,
+			dryRunToggled,
 			checkFrom,
 			checkTo,
-			gotWsMessage,
 		] = register(
 			C.START,
 			C.GET_CONFIG,
@@ -80,10 +83,13 @@ export default class Store {
 			C.CALC_PROGRESS,
 			C.CALC_FINISHED,
 			C.MOVE,
+			C.MOVE_STARTED,
+			C.MOVE_PROGRESS,
+			C.MOVE_FINISHED,
 			C.TOGGLE_DRY_RUN,
+			C.DRY_RUN_TOGGLED,
 			C.CHECK_FROM,
 			C.CHECK_TO,
-			C.GOT_WS_MESSAGE,
 		)
 
 		// const ws = new WebSocket(WS_URL)
@@ -108,7 +114,12 @@ export default class Store {
 			calcFinished, _calcFinished,
 			checkFrom, _checkFrom,
 			checkTo, _checkTo,
-			gotWsMessage, _gotWsMessage,
+			move, _move,
+			moveStarted, _moveStarted,
+			moveProgress, _moveProgress,
+			moveFinished, _moveFinished,
+			toggleDryRun, _toggleDryRun,
+			dryRunToggled, _dryRunToggled,
 		)
 
 		function _getConfig(state, _) {
@@ -270,12 +281,55 @@ export default class Store {
 			}		
 		}
 
-		function _gotWsMessage(state, message) {
+		function _move(state) {
+			dispatch(C.OP_IN_PROGRESS, C.MOVE)
+
+			ws.send({topic: C.MOVE})
+			return state			
+		}
+
+		function _moveStarted(state, payload) {
 			return {
 				...state,
-				// consoleLines: consoleLines.push(message)
+				lines: [].concat('MOVE: ' + payload),
 			}
-		}		
+		}
+
+		function _moveProgress(state, payload) {
+			return {
+				...state,
+				lines: state.lines.concat('MOVE: ' + payload),
+			}
+		}
+
+		function _moveFinished(state, unraid) {
+			let moveDisabled = !state.config.dryRun
+			console.log('moveDisabled: ', moveDisabled)
+			return {
+				...state,
+				unraid,
+				opInProgress: null,
+				moveDisabled,
+			}
+		}
+
+		function _toggleDryRun(state, _) {
+			dispatch(C.OP_IN_PROGRESS, C.TOGGLE_DRY_RUN)
+
+			B.fromPromise(api.toggleDryRun()).onValue(json => {
+				dispatch(C.DRY_RUN_TOGGLED, json)
+			})
+
+			return state			
+		}
+
+		function _dryRunToggled(state, config) {
+			return {
+				...state,
+				config,
+				opInProgress: null
+			}
+		}
 	}
 }
 
