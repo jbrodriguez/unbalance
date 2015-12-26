@@ -75,6 +75,7 @@ func (s *Server) Start() {
 	api.Put("/config/folder", s.addFolder)
 	api.Get("/config", s.getConfig)
 	api.Get("/storage", s.getStorage)
+	api.Put("/config/dryRun", s.toggleDryRun)
 
 	go s.engine.Run(":6237")
 
@@ -145,6 +146,17 @@ func (s *Server) getStorage(c *echo.Context) (err error) {
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) toggleDryRun(c *echo.Context) (err error) {
+	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/toggle/dryRun")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
 
 	return nil

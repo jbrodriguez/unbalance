@@ -26,4 +26,13 @@ export default class Api {
 		return fetch(this.hostr + '/storage')
 			.then(resp => resp.json())
 	}
+
+	toggleDryRun(dryRun) {
+		return fetch(this.hostr + '/config/dryRun', {
+			method: 'PUT',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: dryRun})
+		})
+		.then(resp => resp.json())
+	}
 }
