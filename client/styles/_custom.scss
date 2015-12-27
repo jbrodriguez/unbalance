@@ -80,6 +80,87 @@ a, img {
 }
 
 
+.tree-view {
+  font-size: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.treeView ul {
+  margin: 0;
+  padding: 0;
+  padding-left: 13px;
+}
+
+.treeView > ul {
+  padding-left: 0;
+}
+
+.treeView li {
+  list-style-type: none;
+}
+
+.treeView .listItem {
+  cursor: default;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.treeView .name {
+  background-repeat: no-repeat;
+  background-position: 2px 50%;
+  padding-left: 25px;
+  line-height: 25px;
+  height: 25px;
+  margin-left: 15px;
+}
+
+.treeView .file > .listItem .name {
+  background-image: url(../img/file.png);
+}
+
+.treeView .folder > .listItem .name {
+  background-image: url(../img/folder.png);
+}
+
+.treeView .entry.selected:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 25px;
+  background-color: #f5f5f5;
+  z-index: -1;
+}
+
+.treeView .folder.open > .listItem:before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 25px;
+  background-image: url(../img/chevron-down.png);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+.treeView .directory.closed > .listItem:before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 25px;
+  background-image: url(../img/chevron-right.png);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+.treeView .file > .listItem:before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 25px;
+}
+
 // $breakpoint-2: 600px;
 
 // .dashboard {
