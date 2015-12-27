@@ -124,9 +124,9 @@ export default class Home extends Component {
 					</div>
 					<div className={cx('col-xs-12', 'col-sm-3')}>
 						<div className={cx('flexSection', 'end-xs')}>
-							<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)}>CALCULATE</button>
+							<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)} disabled={model.opInProgress}>CALCULATE</button>
 							<span>&nbsp; | &nbsp;</span>
-							<button className={cx('btn', 'btn-primary')} disabled={model.moveDisabled}>MOVE</button>
+							<button className={cx('btn', 'btn-primary')} onClick={this._move.bind(this)} disabled={model.moveDisabled || model.opInProgress}>MOVE</button>
 							<span>&nbsp; | &nbsp;</span>
 							<div className={cx('flex', 'middle-xs', 'dryrun', 'rspacer')}> 
 								<input type="checkbox" checked={model.config.dryRun} onChange={this._flipDryRun.bind(this)} />
@@ -167,11 +167,15 @@ export default class Home extends Component {
 	}
 
 	_flipDryRun(e) {
-
+		this.props.dispatch(C.TOGGLE_DRY_RUN)
 	}
 
 	_calculate(e) {
 		this.props.dispatch(C.CALCULATE)
+	}
+
+	_move(e) {
+		this.props.dispatch(C.MOVE)
 	}
 
 }

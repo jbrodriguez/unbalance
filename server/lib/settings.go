@@ -76,6 +76,10 @@ func (s *Settings) AddFolder(folder string) {
 	s.Folders = append(s.Folders, folder)
 }
 
+func (s *Settings) ToggleDryRun() {
+	s.DryRun = !s.DryRun
+}
+
 func (s *Settings) Save() (err error) {
 	tmpFile := s.Conf + ".tmp"
 

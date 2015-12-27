@@ -66,6 +66,7 @@ func (c *Core) Start() (err error) {
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
+	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
 
 	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
@@ -156,6 +157,27 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 	msg.Reply <- c.storage
 }
 
+func (c *Core) toggleDryRun(msg *pubsub.Message) {
+	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
+
+	c.settings.ToggleDryRun()
+	// c.config.Folders = config.Folders
+	// c.config.DryRun = config.DryRun
+	// c.config.Notifications = config.Notifications
+	// c.Notifications = config.Notifications
+	// c.NotiFrom = config.NotiFrom
+	// c.NotiTo = config.NotiTo
+	// c.NotiHost = config.NotiHost
+	// c.NotiPort = config.NotiPort
+	// c.NotiEncrypt = config.NotiEncrypt
+	// c.NotiUser = config.NotiUser
+	// c.NotiPassword = config.NotiPassword
+
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
 func (c *Core) calc(msg *pubsub.Message) {
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
@@ -230,6 +252,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "storage:calc:progress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
+		time.Sleep(2 * time.Second)
 
 		if disk.Path != srcDisk.Path {
 			disk.NewFree = disk.Free
@@ -455,7 +478,11 @@ func (c *Core) move(msg *pubsub.Message) {
 	mlog.Info("Running move operation ...")
 	started := time.Now()
 
-	c.storage.Condition.State = "MOVING"
+	c.opIsRunning = true
+	defer func() { c.opIsRunning = false }()
+
+	outbound := &dto.Packet{Topic: "storage:move:begin", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	var dry string
 	if c.settings.DryRun {
@@ -463,15 +490,6 @@ func (c *Core) move(msg *pubsub.Message) {
 	} else {
 		dry = "-f"
 	}
-
-	// c.storage.InProgress = true
-
-	outbound := &dto.Packet{Topic: "storage:move:begin", Payload: "Operation started"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// if err := c.sendmail("Move Operation started"); err != nil {
-	// 	mlog.Error(err)
-	// }
 
 	commands := make([]string, 0)
 
@@ -500,8 +518,6 @@ func (c *Core) move(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
-			commands = append(commands, cmd)
-
 			outbound = &dto.Packet{Topic: "storage:move:progress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -526,6 +542,7 @@ func (c *Core) move(msg *pubsub.Message) {
 				return
 			}
 
+			commands = append(commands, cmd)
 		}
 	}
 
@@ -562,7 +579,18 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	outbound = &dto.Packet{Topic: "storage:move:end", Payload: "Operation Finished"}
+	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// send to front end the signal of operation finished
+	if !c.settings.DryRun {
+		c.storage.Refresh()
+	} else {
+		outbound = &dto.Packet{Topic: "storage:move:progress", Payload: "--- IT WAS A DRY RUN ---"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+
+	outbound = &dto.Packet{Topic: "storage:move:end", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", started, finished, elapsed, headline)

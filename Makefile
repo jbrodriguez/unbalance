@@ -55,7 +55,9 @@ coverage: test
 	go build tool cover -html=.coverage.out
  
 publish: dependencies client server
+	cp server/diskmv dist/diskmv
 	rsync -avzP -e "ssh" dist/* $(SERVER):/boot/custom/unbalance
 
 deploy: dependencies server
+	cp server/diskmv dist/diskmv
 	rsync -avzP -e "ssh" dist/* $(SERVER):/boot/custom/unbalance
