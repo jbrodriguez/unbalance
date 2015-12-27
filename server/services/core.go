@@ -67,6 +67,7 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
+	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
 
 	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
@@ -176,6 +177,12 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) getTree(msg *pubsub.Message) {
+	path := msg.Payload.(string)
+
+	msg.Reply <- c.storage.GetTree(path)
 }
 
 func (c *Core) calc(msg *pubsub.Message) {

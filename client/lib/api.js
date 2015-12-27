@@ -27,6 +27,15 @@ export default class Api {
 			.then(resp => resp.json())
 	}
 
+	getTree(path) {
+		return fetch(this.hostr + '/tree', {
+			method: 'POST',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: path})
+		})
+		.then(resp => resp.json())
+	}
+
 	toggleDryRun(dryRun) {
 		return fetch(this.hostr + '/config/dryRun', {
 			method: 'PUT',

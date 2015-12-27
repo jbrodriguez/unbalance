@@ -3,9 +3,11 @@ package model
 import (
 	"fmt"
 	"github.com/jbrodriguez/mlog"
+	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	// "os"
 	"errors"
+	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -212,94 +214,25 @@ func (u *Unraid) Refresh() {
 	// u.Condition = condition
 }
 
-// func (u *Unraid) readUnraidConfig(line string, arg interface{}) {
-// 	if strings.HasPrefix(line, "sbNumDisks") {
-// 		nd := strings.Split(line, "=")
-// 		u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
-// 	}
+func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
+	root := filepath.Join("/mnt/user", path)
 
-// 	if strings.HasPrefix(line, "mdNumProtected") {
-// 		np := strings.Split(line, "=")
-// 		u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
-// 	}
+	entry = &dto.Entry{Path: path}
+	items := make([]*dto.Node, 0)
 
-// 	if strings.HasPrefix(line, "sbSynced") {
-// 		sd := strings.Split(line, "=")
-// 		ut, _ := strconv.ParseInt(sd[1], 10, 64)
-// 		u.Condition.Synced = time.Unix(ut, 0)
-// 	}
+	elements, _ := ioutil.ReadDir(root)
+	for _, element := range elements {
+		if !element.IsDir() {
+			continue
+		}
 
-// 	if strings.HasPrefix(line, "sbSyncErrs") {
-// 		sr := strings.Split(line, "=")
-// 		u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
-// 	}
+		items = append(items, &dto.Node{Type: "folder", Path: filepath.Join(path, element.Name())})
+	}
 
-// 	if strings.HasPrefix(line, "mdResync") {
-// 		rs := strings.Split(line, "=")
-// 		u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
-// 	}
+	entry.Nodes = items
 
-// 	if strings.HasPrefix(line, "mdResyncPos") {
-// 		rp := strings.Split(line, "=")
-// 		u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
-// 	}
-
-// 	if strings.HasPrefix(line, "mdState") {
-// 		st := strings.Split(line, "=")
-// 		u.Condition.State = st[1]
-// 	}
-
-// 	// Get Disks Information
-// 	if strings.HasPrefix(line, "diskNumber") {
-// 		dn := strings.FieldsFunc(line, delim)
-
-// 		diskId, _ := strconv.Atoi(dn[2])
-// 		// mlog.Info("diskId = %d", diskId)
-// 		if u.disks[diskId] == nil {
-// 			u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
-// 		}
-// 	}
-
-// 	if strings.HasPrefix(line, "diskName") {
-// 		dm := strings.FieldsFunc(line, delim)
-
-// 		diskId, _ := strconv.Atoi(dm[1])
-// 		// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
-// 		if len(dm) > 2 {
-// 			u.disks[diskId].Name = dm[2]
-// 		} else if diskId == 0 {
-// 			u.disks[diskId].Name = "Parity"
-// 		}
-// 	}
-
-// 	if strings.HasPrefix(line, "diskId") {
-// 		dm := strings.FieldsFunc(line, delim)
-
-// 		diskId, _ := strconv.Atoi(dm[1])
-// 		// mlog.Info("diskId diskId %d", diskId)
-// 		if len(dm) > 2 {
-// 			u.disks[diskId].Serial = dm[2]
-// 		}
-// 	}
-
-// 	if strings.HasPrefix(line, "rdevStatus") {
-// 		dm := strings.FieldsFunc(line, delim)
-
-// 		diskId, _ := strconv.Atoi(dm[1])
-// 		// mlog.Info("rdevStatus diskId %d", diskId)
-// 		u.disks[diskId].Status = dm[2]
-// 	}
-
-// 	if strings.HasPrefix(line, "rdevName") {
-// 		dm := strings.FieldsFunc(line, delim)
-
-// 		diskId, _ := strconv.Atoi(dm[1])
-// 		// mlog.Info("rdevName diskId %d", diskId)
-// 		if len(dm) > 2 {
-// 			u.disks[diskId].Device = dm[2]
-// 		}
-// 	}
-// }
+	return
+}
 
 func delim(r rune) bool {
 	return r == '.' || r == '='
