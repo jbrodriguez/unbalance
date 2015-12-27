@@ -1,4 +1,5 @@
 import B from 'baconjs'
+import path from 'path'
 
 import Dispatcher from './lib/dispatcher'
 import * as C from './constant'
@@ -69,6 +70,8 @@ export default class Store {
 			dryRunToggled,
 			checkFrom,
 			checkTo,
+			treeItemClicked,
+			gotTree,
 		] = register(
 			C.START,
 			C.GET_CONFIG,
@@ -90,6 +93,8 @@ export default class Store {
 			C.DRY_RUN_TOGGLED,
 			C.CHECK_FROM,
 			C.CHECK_TO,
+			C.TREE_ITEM_CLICKED,
+			C.GOT_TREE,
 		)
 
 		// const ws = new WebSocket(WS_URL)
@@ -120,6 +125,8 @@ export default class Store {
 			moveFinished, _moveFinished,
 			toggleDryRun, _toggleDryRun,
 			dryRunToggled, _dryRunToggled,
+			treeItemClicked, _treeItemClicked,
+			gotTree, _gotTree,
 		)
 
 		function _getConfig(state, _) {
@@ -328,6 +335,48 @@ export default class Store {
 				...state,
 				config,
 				opInProgress: null
+			}
+		}
+
+		function _treeItemClicked(state, item) {
+			let items = Object.assign({}, state.tree.items)
+
+			let open = items[item.path]
+			// let items = Object.assign({}, state.tree.items)
+
+			// dispatch(C.SELECT_TREE_ITEM, item)
+
+			if (item.type !== 'folder') dispatch(C.TREE_FILE_SELECTED, item)
+
+			if (open) {
+				// dispatch(C.CLOSE_TREE_ITEM, item)
+				delete items[item.path]
+				Object.keys(items).forEach( p => {
+					if (path.join(p, '/').indexOf(path.join(item.path, '/')) === 0) delete items[p]
+				})
+
+			} else {
+				// dispatch(C.TREE_FOLDER_SELECTED, item)
+				B.fromPromise(api.getTree(item.path)).onValue(json => {
+					dispatch(C.GOT_TREE, json)
+				})
+			}
+
+			return {
+				...state,
+				tree: {items, selected: item.path},
+			}
+		}
+
+		function _gotTree(state, newTree) {
+			console.log('newTree: ', newTree)
+			let tree = state.tree
+
+			tree.items[newTree.path] = newTree.nodes
+
+			return {
+				...state,
+				tree
 			}
 		}
 	}

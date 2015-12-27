@@ -17,12 +17,14 @@ export default class TreeView extends Component {
 	}
 
 	_renderTree(entry) {
+		console.log('entry: ', entry)
 		let { items, selected } = this.props
 		let entries = items[entry]
 
 		if (!entries) return (<ul></ul>)
 
 		let list = entries.map( item => {
+			console.log('item: ', item)
 			let name = path.basename(item.path)
 			let open = items[item.path]
 
@@ -42,7 +44,7 @@ export default class TreeView extends Component {
 					<div className={cx('listItem')} onClick={this._onClick.bind(this, item)}>
 						<span className={cx('name')}>{name}</span>
 					</div>
-					{ this._renderTree.bind(this, item.path) }
+					{ this._renderTree(item.path) }
 				</li>
 			)
 
@@ -57,7 +59,7 @@ export default class TreeView extends Component {
 
 	_onClick(item, e) {
 		console.log('item: ', item)
-		this.props.dispatch(C.SHARE_ITEM_CLICKED, item)
+		this.props.dispatch(C.TREE_ITEM_CLICKED, item)
 		// let { tree, onFolder, onFile, onClose }
 		// let open = tree[item.path]
 
