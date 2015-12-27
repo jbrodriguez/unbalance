@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
+import TreeView from './treeView'
+
 import * as C from '../constant'
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
@@ -14,10 +16,10 @@ export default class Settings extends Component {
 	render() {
 		let { dispatch, model } = this.props
 
-		console.log('settings.render.props: ', this.props)
+		// console.log('settings.render.props: ', this.props)
 
 		if (!model.config) {
-			console.log('mother')
+			// console.log('mother')
 			return (
 				<div></div>
 //				<section className={cx('row')}>
@@ -33,7 +35,7 @@ export default class Settings extends Component {
 			)
 		}
 
-		console.log('after mother')
+		// console.log('after mother')
 
 		let warning = null
 		if (model.config.folders.length === 0) {
@@ -44,10 +46,25 @@ export default class Settings extends Component {
 			)
 		}
 
+		// let tree = {}
+		// tree['/'] = [
+		// 	{type: 'folder', path: 'films'},
+		// 	{type: 'folder', path: 'tvshows'},
+		// 	{type: 'folder', path: 'storage'},
+		// 	{type: 'folder', path: 'backup'},
+		// ]
+
+		// let selected = ""
+
+		console.log('model.tree: ', model.tree)
+
 		return (
+			<div>
 			<section className={cx('row')}>
 				{ warning }
+			</section>
 
+			<section>
 				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
 					<form>
 					<fieldset>
@@ -91,8 +108,15 @@ export default class Settings extends Component {
 					</fieldset>
 					</form>
 				</div>
-
 			</section>
+
+			<section className={cx('row')}>
+				<div className={cx('col-xs-12')}>
+					<TreeView items={model.tree.items} selected={model.tree.selected} dispatch={dispatch} />
+				</div>
+			</section>
+
+			</div>
 		)
 	}
 
@@ -105,7 +129,5 @@ export default class Settings extends Component {
 		e.preventDefault()
 
 		dispatch(C.ADD_FOLDER, e.target.value)
-	}	
-
-
+	}
 }
