@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
+import 'font-awesome-webpack'
+
 import TreeView from './treeView'
 
 import * as C from '../constant'
@@ -75,16 +77,6 @@ export default class Settings extends Component {
 
 						<div className={cx('row', 'bottom-spacer-large')}>
 							<div className={cx('col-xs-12')}>
-								<div className={cx('addon')}>
-									<span className={cx('addon-item')}>Folder</span>
-									<input className={cx('addon-field')} type="text" onKeyDown={this._addFolder.bind(this, dispatch)}></input>
-									<button className={cx('btn', 'btn-default')}>Add</button>
-								</div>
-							</div>
-						</div>
-
-						<div className={cx('row', 'bottom-spacer-large')}>
-							<div className={cx('col-xs-12')}>
 								<table>
 								<thead>
 									<th width="50">#</th>
@@ -95,7 +87,7 @@ export default class Settings extends Component {
 										model.config.folders.map( (item, i) => {
 											return (
 												<tr key={i}>
-													<td><i className={cx('icon-prune')}></i></td>
+													<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
 													<td>{item}</td>
 												</tr>
 											)
@@ -120,14 +112,18 @@ export default class Settings extends Component {
 		)
 	}
 
-	_addFolder(dispatch, e) {
-		console.log('key - value: ', e.key, e.target.value)
-		if (e.key !== "Enter") {
-			return
-		}
+	// _addFolder(dispatch, e) {
+	// 	console.log('key - value: ', e.key, e.target.value)
+	// 	if (e.key !== "Enter") {
+	// 		return
+	// 	}
 
-		e.preventDefault()
+	// 	e.preventDefault()
 
-		dispatch(C.ADD_FOLDER, e.target.value)
+	// 	dispatch(C.ADD_FOLDER, e.target.value)
+	// }
+
+	_deleteFolder(folder, e) {
+		this.props.dispatch(C.DELETE_FOLDER, folder)
 	}
 }

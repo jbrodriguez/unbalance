@@ -55,6 +55,8 @@ export default class Store {
 			gotConfig,
 			addFolder,
 			folderAdded,
+			deleteFolder,
+			folderDeleted,
 			opInProgress,
 			getStorage,
 			gotStorage,
@@ -78,6 +80,8 @@ export default class Store {
 			C.GOT_CONFIG,
 			C.ADD_FOLDER,
 			C.FOLDER_ADDED,
+			C.DELETE_FOLDER,
+			C.FOLDER_DELETED,
 			C.OP_IN_PROGRESS,
 			C.GET_STORAGE,
 			C.GOT_STORAGE,
@@ -110,6 +114,8 @@ export default class Store {
 			gotConfig, _gotConfig,
 			addFolder, _addFolder,
 			folderAdded, _folderAdded,
+			deleteFolder, _deleteFolder,
+			folderDeleted, _folderDeleted,
 			opInProgress, _opInProgress,
 			getStorage, _getStorage,
 			gotStorage, _gotStorage,
@@ -148,6 +154,10 @@ export default class Store {
 		}
 
 		function _addFolder(state, folder) {
+			if (state.config.folders.indexOf(folder) !== -1) {
+				return state
+			}
+
 			dispatch(C.OP_IN_PROGRESS, C.ADD_FOLDER)
 
 			B.fromPromise(api.addFolder(folder)).onValue(json => {
@@ -158,6 +168,24 @@ export default class Store {
 		}
 
 		function _folderAdded(state, config) {
+			return {
+				...state,
+				config: config,
+				opInProgress: null,
+			}
+		}
+
+		function _deleteFolder(state, folder) {
+			dispatch(C.OP_IN_PROGRESS, C.ADD_FOLDER)
+
+			B.fromPromise(api.deleteFolder(folder)).onValue(json => {
+				dispatch(C.FOLDER_DELETED, json)
+			})
+
+			return state
+		}
+
+		function _folderDeleted(state, config) {
 			return {
 				...state,
 				config: config,
