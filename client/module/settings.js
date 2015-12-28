@@ -56,7 +56,7 @@ export default class Settings extends Component {
 
 		// let selected = ""
 
-		console.log('model.tree: ', model.tree)
+		// console.log('model.tree: ', model.tree)
 
 		return (
 			<div>

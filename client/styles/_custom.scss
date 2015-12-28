@@ -107,6 +107,16 @@ a, img {
   text-overflow: ellipsis;
 }
 
+.detail {
+  margin-left: 25px;
+  visibility: hidden;
+}
+
+.treeView .listItem:hover > .detail {
+  visibility: visible;
+}
+
+
 .treeView .name {
   background-repeat: no-repeat;
   background-position: 2px 50%;
@@ -127,8 +137,8 @@ a, img {
 .treeView .entry.selected:before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
+  // left: 0;
+  // right: 0;
   height: 25px;
   background-color: #f5f5f5;
   z-index: -1;
@@ -144,7 +154,7 @@ a, img {
   background-position: 0 50%;
 }
 
-.treeView .directory.closed > .listItem:before {
+.treeView .folder.closed > .listItem:before {
   content: '';
   position: absolute;
   width: 15px;
@@ -160,6 +170,16 @@ a, img {
   width: 15px;
   height: 25px;
 }
+
+
+// .detail {
+//   margin-left: 25px;
+//   visibility: hidden;
+// }
+
+// .master:hover > .detail {
+//   visibility: visible;
+// }
 
 // $breakpoint-2: 600px;
 

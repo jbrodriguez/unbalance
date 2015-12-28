@@ -16,21 +16,23 @@ export default class TreeView extends Component {
 		)
 	}
 
+
 	_renderTree(entry) {
-		console.log('entry: ', entry)
+		// console.log('entry: ', entry)
 		let { items, selected } = this.props
 		let entries = items[entry]
 
 		if (!entries) return (<ul></ul>)
 
 		let list = entries.map( item => {
-			console.log('item: ', item)
+			// console.log('item: ', item)
 			let name = path.basename(item.path)
 			let open = items[item.path]
 
 			let isFolder = item.type === 'folder'
 
 			let itemClass = cx({
+				'master': true,
 				'entry': true,
 				'file': !isFolder,
 				'folder': isFolder,
@@ -41,8 +43,9 @@ export default class TreeView extends Component {
 
 			return (
 				<li key={item.path} className={itemClass}>
-					<div className={cx('listItem')} onClick={this._onClick.bind(this, item)}>
-						<span className={cx('name')}>{name}</span>
+					<div className={cx('listItem')}>
+						<button className={cx('btn', 'btn-alert', 'detail')} onClick={this._onAdd.bind(this, item)}>add</button>
+						<span className={cx('name')} onClick={this._onClick.bind(this, item)}>{name}</span>
 					</div>
 					{ this._renderTree(item.path) }
 				</li>
@@ -58,7 +61,7 @@ export default class TreeView extends Component {
 	}
 
 	_onClick(item, e) {
-		console.log('item: ', item)
+		console.log('_onClick.item: ', item)
 		this.props.dispatch(C.TREE_ITEM_CLICKED, item)
 		// let { tree, onFolder, onFile, onClose }
 		// let open = tree[item.path]
@@ -72,5 +75,12 @@ export default class TreeView extends Component {
 		// } else {
 		// 	this.props.dispatch(C.FOLDER_SELECTED, item)
 		// }
+	}
+
+	_onAdd(item, e) {
+		e.preventDefault()
+		console.log('_onAdd.item: ', item)
+
+		this.props.dispatch(C.ADD_FOLDER, item.path)
 	}
 }

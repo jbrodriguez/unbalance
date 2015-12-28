@@ -205,6 +205,11 @@ legend {
 	@include button-variant($button-primary-color, $button-primary-bg);
 }
 
+.btn-alert {
+	@include button-variant($buttonAlertColor, $buttonAlertBg);
+}
+
+
 // TABLES
 table {
 	background: white;
