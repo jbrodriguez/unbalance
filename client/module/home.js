@@ -11,11 +11,18 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Home extends Component {
-	componentDidMount() {
+	componentWillMount() {
 		let { model, history } = this.props
-		if (!model.config) {
+		if (model.config.folders.length === 0) {
 			history.pushState(null, '/settings')
 		}
+	}
+	
+	componentDidMount() {
+		// let { model, history } = this.props
+		// if (!model.config) {
+		// 	history.pushState(null, '/settings')
+		// }
 		// console.log('home.didmount.props: ', this.props)
 		this.props.dispatch(C.GET_STORAGE)
 	}
