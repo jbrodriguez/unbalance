@@ -36,6 +36,7 @@ function boot([config, entry]) {
 		tree: {
 			items,
 			selected: '',
+			fetching: false,
 		}
 	}
 

@@ -30,7 +30,7 @@ export default class TreeView extends Component {
 
 	_renderTree(entry) {
 		// console.log('entry: ', entry)
-		let { items, selected } = this.props
+		let { items, selected, fetching } = this.props
 		let entries = items[entry]
 
 		if (!entries) return (<ul></ul>)
@@ -58,10 +58,32 @@ export default class TreeView extends Component {
 				'fa-chevron-down': isFolder && open,
 			})
 
+			// console.log('about to render fetch: ', fetching)
+
+
+			let spinner = null
+			let spacer = (
+				<span>&nbsp; &nbsp;</span>
+			)
+
+			if (fetching) {
+				spinner = (
+					<i className="fa fa-circle-o-notch fa-spin" />
+				)
+			} else {
+				spinner = (
+					<span>&nbsp; &nbsp;</span>
+				)
+			}
+
 			return (
-				<li key={item.path} className={cx('listItem')}>
+				<li key={item.path} className={cx()}>
 					<div className={cx('flex', 'listItem')}>
-						<button className={cx('btn', 'btn-alert', 'floating')} onClick={this._onAdd.bind(this, item)}>add</button>
+						<div className={cx('floating')}>
+							<button className={cx('btn', 'btn-alert', )} onClick={this._onAdd.bind(this, item)}>add</button>
+							{ spacer }
+							{ spinner }
+						</div>
 						<div  onClick={this._onClick.bind(this, item)}>
 							&nbsp; &nbsp;
 							<i className={chevron} />

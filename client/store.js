@@ -33,7 +33,18 @@ import WebSocketApi from './lib/wsapi'
 //  toDisk: null,
 //  opInProgress: null,
 //  moveDisabled: true,
-//  console: [],
+//  lines: [],
+// 	tree: {
+// 		items: 
+// 			'/': [
+// 				{type: 'folder', path: '/films'}
+// 				{type: 'folder', path: '/tvshows'}
+// 				{type: 'folder', path: '/storage'}
+// 				{type: 'folder', path: '/data'}
+// 			],
+// 		selected: "",
+// 		fetching: false,
+// 	}
 // }
 
 export default class Store {
@@ -374,7 +385,9 @@ export default class Store {
 
 			// dispatch(C.SELECT_TREE_ITEM, item)
 
-			if (item.type !== 'folder') dispatch(C.TREE_FILE_SELECTED, item)
+			let fetching = false
+
+			// if (item.type !== 'folder') dispatch(C.TREE_FILE_SELECTED, item)
 
 			if (open) {
 				// dispatch(C.CLOSE_TREE_ITEM, item)
@@ -384,7 +397,7 @@ export default class Store {
 				})
 
 			} else {
-				// dispatch(C.TREE_FOLDER_SELECTED, item)
+				fetching = true
 				B.fromPromise(api.getTree(item.path)).onValue(json => {
 					dispatch(C.GOT_TREE, json)
 				})
@@ -392,7 +405,7 @@ export default class Store {
 
 			return {
 				...state,
-				tree: {items, selected: item.path},
+				tree: {items, selected: item.path, fetching},
 			}
 		}
 
@@ -401,6 +414,7 @@ export default class Store {
 			let tree = state.tree
 
 			tree.items[newTree.path] = newTree.nodes
+			tree.fetching = false
 
 			return {
 				...state,
