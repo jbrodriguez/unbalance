@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import path from 'path'
+import 'font-awesome-webpack'
 
 import * as C from '../constant'
 import styles from '../styles/core.scss'
@@ -16,6 +17,16 @@ export default class TreeView extends Component {
 		)
 	}
 
+				// <li key={item.path} className={itemClass}>
+				// 	<div className={cx('listItem')}>
+				// 		<button className={cx('btn', 'btn-alert', 'detail')} onClick={this._onAdd.bind(this, item)}>add</button>
+				// 		<span className={cx('name')} onClick={this._onClick.bind(this, item)}>{name}</span>
+				// 	</div>
+				// 	{ this._renderTree(item.path) }
+				// </li>
+
+					// <Icon name={chevron} />
+
 
 	_renderTree(entry) {
 		// console.log('entry: ', entry)
@@ -28,24 +39,37 @@ export default class TreeView extends Component {
 			// console.log('item: ', item)
 			let name = path.basename(item.path)
 			let open = items[item.path]
-
 			let isFolder = item.type === 'folder'
 
-			let itemClass = cx({
-				'master': true,
-				'entry': true,
-				'file': !isFolder,
-				'folder': isFolder,
-				'closed': isFolder && !open,
-				'open': isFolder && open,
-				'selected': item.path === selected,
+			// let itemClass = cx({
+			// 	'master': true,
+			// 	'entry': true,
+			// 	'file': !isFolder,
+			// 	'folder': isFolder,
+			// 	'closed': isFolder && !open,
+			// 	'open': isFolder && open,
+			// 	'selected': item.path === selected,
+			// })
+
+			let chevron = cx({
+				'chevron': true,
+				'fa': true,
+				'fa-chevron-right': isFolder && !open,
+				'fa-chevron-down': isFolder && open,
 			})
 
 			return (
-				<li key={item.path} className={itemClass}>
-					<div className={cx('listItem')}>
-						<button className={cx('btn', 'btn-alert', 'detail')} onClick={this._onAdd.bind(this, item)}>add</button>
-						<span className={cx('name')} onClick={this._onClick.bind(this, item)}>{name}</span>
+				<li key={item.path} className={cx('listItem')}>
+					<div className={cx('flex', 'listItem')}>
+						<button className={cx('btn', 'btn-alert', 'floating')} onClick={this._onAdd.bind(this, item)}>add</button>
+						<div  onClick={this._onClick.bind(this, item)}>
+							&nbsp; &nbsp;
+							<i className={chevron} />
+							&nbsp; &nbsp;
+							<i className="fa fa-folder" />
+							&nbsp; &nbsp;
+							<span className={cx('name')} >{name}</span>
+						</div>
 					</div>
 					{ this._renderTree(item.path) }
 				</li>

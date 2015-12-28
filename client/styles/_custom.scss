@@ -79,96 +79,126 @@ a, img {
 	}
 }
 
+.treeView {
+	user-select: none;
 
-.tree-view {
-  font-size: 14px;
-  user-select: none;
-  -webkit-user-select: none;
-}
+	ul {
+		margin: 0;
+		padding: 0;
+		padding-left: 1em;
+	}
 
-.treeView ul {
-  margin: 0;
-  padding: 0;
-  padding-left: 13px;
-}
+	& > ul {
+		padding-left: 0;
+	}
 
-.treeView > ul {
-  padding-left: 0;
-}
+	li { 
+		list-style-type: none;
+	}
 
-.treeView li {
-  list-style-type: none;
-}
+	.floating {
+		margin-right: 0.5em;
+		visibility: hidden;
+	}
 
-.treeView .listItem {
-  cursor: default;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+	& .listItem:hover > .floating {
+		visibility: visible;
+	}
 
-.detail {
-  margin-left: 25px;
-  visibility: hidden;
-}
+	.chevron {
+		color: $silverChalice;
+	}
 
-.treeView .listItem:hover > .detail {
-  visibility: visible;
 }
 
 
-.treeView .name {
-  background-repeat: no-repeat;
-  background-position: 2px 50%;
-  padding-left: 25px;
-  line-height: 25px;
-  height: 25px;
-  margin-left: 15px;
+
+// .tree-view {
+// 	font-size: 14px;
+// 	user-select: none;
+// 	-webkit-user-select: none;
+// }
+
+// .tree-view ul {
+// 	margin: 0;
+// 	padding: 0;
+// 	padding-left: 13px;
+// }
+
+.tree-view > ul {
+	padding-left: 0;
 }
 
-.treeView .file > .listItem .name {
-  background-image: url(../img/file.png);
+.tree-view li {
+	list-style-type: none;
 }
 
-.treeView .folder > .listItem .name {
-  background-image: url(../img/folder.png);
+.tree-view .listItem {
+	cursor: default;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
-.treeView .entry.selected:before {
-  content: '';
-  position: absolute;
-  // left: 0;
-  // right: 0;
-  height: 25px;
-  background-color: #f5f5f5;
-  z-index: -1;
+
+
+.tree-view .listItem:hover > .detail {
+	visibility: visible;
 }
 
-.treeView .folder.open > .listItem:before {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 25px;
-  background-image: url(../img/chevron-down.png);
-  background-repeat: no-repeat;
-  background-position: 0 50%;
+
+.tree-view .name {
+	background-repeat: no-repeat;
+	background-position: 2px 50%;
+	padding-left: 25px;
+	line-height: 25px;
+	height: 25px;
+	margin-left: 15px;
 }
 
-.treeView .folder.closed > .listItem:before {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 25px;
-  background-image: url(../img/chevron-right.png);
-  background-repeat: no-repeat;
-  background-position: 0 50%;
+.tree-view .file > .listItem .name {
+	background-image: url(../img/file.png);
 }
 
-.treeView .file > .listItem:before {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 25px;
+.tree-view .folder > .listItem .name {
+	background-image: url(../img/folder.png);
+}
+
+.tree-view .entry.selected:before {
+	content: '';
+	position: absolute;
+	// left: 0;
+	// right: 0;
+	height: 25px;
+	background-color: #f5f5f5;
+	z-index: -1;
+}
+
+.tree-view .folder.open > .listItem:before {
+	content: '';
+	position: absolute;
+	width: 15px;
+	height: 25px;
+	background-image: url(../img/chevron-down.png);
+	background-repeat: no-repeat;
+	background-position: 0 50%;
+}
+
+.tree-view .folder.closed > .listItem:before {
+	content: '';
+	position: absolute;
+	width: 15px;
+	height: 25px;
+	background-image: url(../img/chevron-right.png);
+	background-repeat: no-repeat;
+	background-position: 0 50%;
+}
+
+.tree-view .file > .listItem:before {
+	content: '';
+	position: absolute;
+	width: 15px;
+	height: 25px;
 }
 
 
