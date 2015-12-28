@@ -76,6 +76,23 @@ func (s *Settings) AddFolder(folder string) {
 	s.Folders = append(s.Folders, folder)
 }
 
+func (s *Settings) DeleteFolder(folder string) {
+
+	index := -1
+	for p, v := range s.Folders {
+		if v == folder {
+			index = p
+			break
+		}
+	}
+
+	if index == -1 {
+		return
+	}
+
+	s.Folders = append(s.Folders[:index], s.Folders[index+1:]...)
+}
+
 func (s *Settings) ToggleDryRun() {
 	s.DryRun = !s.DryRun
 }
