@@ -43,7 +43,6 @@ export default function App({ children, model }) {
 	let diskmv = require("../img/diskmv.png")
 	let unraid = require('../img/unraid.png')
 	let logo = require('../img/logo-small.png')
-	let icons = require('../img/icons.svg')
 	let vm = require('../img/v.png')
 
 	return (
@@ -73,8 +72,8 @@ export default function App({ children, model }) {
 							</div>
 
 							<div className={cx('col-xs-12', 'col-sm-4', 'middle-xs', 'end-xs', 'flexSection')}>
-								<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><svg className={cx('icon')}><title>Twitter follow</title><use xlinkHref={icons + '#icon-twitter'}></use></svg></a>
-								<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><svg className={cx('icon')}><title>Github star</title><use xlinkHref={icons + '#icon-github'}></use></svg></a>
+								<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><i className={cx('fa fa-twitter')} /></a>
+								<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><i className={cx('fa fa-github')} /></a>
 								<img src={vm} />
 							</div>
 						</section>
