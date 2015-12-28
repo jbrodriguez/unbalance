@@ -103,9 +103,30 @@ export default class Settings extends Component {
 			</section>
 
 			<section className={cx('row')}>
-				<div className={cx('col-xs-12')}>
-					<TreeView items={model.tree.items} selected={model.tree.selected} dispatch={dispatch} />
+				<div className={cx('col-xs-12', 'col-sm-8')}>
+						<TreeView {...model.tree} dispatch={dispatch} />
 				</div>
+				<div className={cx('col-xs-12', 'col-sm-4')}>
+						<table>
+							<thead>
+								<th width="50">#</th>
+								<th>Folder</th>
+							</thead>
+							<tbody>
+								{ 
+									model.config.folders.map( (item, i) => {
+										return (
+											<tr key={i}>
+												<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
+												<td>{item}</td>
+											</tr>
+										)
+									})
+								}
+							</tbody>
+						</table>
+				</div>
+
 			</section>
 
 			</div>
