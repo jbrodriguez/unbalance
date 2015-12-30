@@ -37,7 +37,8 @@ function boot([config, entry]) {
 			items,
 			selected: '',
 			fetching: false,
-		}
+		},
+		alerts: [],
 	}
 
 	var store = new Store(initialState)
