@@ -13,10 +13,17 @@ import Settings from './module/settings'
 
 let api = new Api()
 
-api.getConfig().then( boot )
+Promise.all([api.getConfig(), api.getTree('/')])
+	.then( boot )
 
-function boot(config) {
+// api.getConfig().then( boot )
+
+function boot([config, entry]) {
 	console.log('config: ', config)
+	console.log('entry: ', entry)
+
+	let items = {}
+	items[entry.path] = entry.nodes
 
 	let initialState = {
 		config,
@@ -26,6 +33,12 @@ function boot(config) {
 		opInProgress: null,
 		moveDisabled: true,
 		lines: [],
+		tree: {
+			items,
+			selected: '',
+			fetching: false,
+		},
+		alerts: [],
 	}
 
 	var store = new Store(initialState)

@@ -73,8 +73,10 @@ func (s *Server) Start() {
 
 	api := s.engine.Group(API_VERSION)
 	api.Put("/config/folder", s.addFolder)
+	api.Delete("/config/folder", s.deleteFolder)
 	api.Get("/config", s.getConfig)
 	api.Get("/storage", s.getStorage)
+	api.Post("/tree", s.getTree)
 	api.Put("/config/dryRun", s.toggleDryRun)
 
 	go s.engine.Run(":6237")
@@ -125,20 +127,23 @@ func (s *Server) addFolder(c *echo.Context) (err error) {
 	return nil
 }
 
-// func (s *Server) saveConfig(c *echo.Context) (err error) {
-// 	var config lib.Config
+func (s *Server) deleteFolder(c *echo.Context) (err error) {
+	var packet dto.Packet
 
-// 	c.Bind(&config)
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
 
-// 	msg := &pubsub.Message{Payload: &config, Reply: make(chan interface{}, CAPACITY)}
-// 	s.bus.Pub(msg, "/set/config")
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/delete/folder")
 
-// 	reply := <-msg.Reply
-// 	resp := reply.(*lib.Config)
-// 	c.JSON(200, &resp)
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
 
-// 	return nil
-// }
+	return nil
+}
 
 func (s *Server) getStorage(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
@@ -146,6 +151,24 @@ func (s *Server) getStorage(c *echo.Context) (err error) {
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) getTree(c *echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/get/tree")
+
+	reply := <-msg.Reply
+	resp := reply.(*dto.Entry)
 	c.JSON(200, &resp)
 
 	return nil

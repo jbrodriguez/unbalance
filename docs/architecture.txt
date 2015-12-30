@@ -3,4 +3,5 @@ Derived from
 - Dispatcher semantics (https://github.com/staltz/flux-challenge/tree/master/submissions/pasieronen)
 - ffux (https://github.com/milankinen/ffux)
 - flexbox grid (http://flexboxgrid.com//)
-- 
+- tree-view (https://github.com/maxogden/tree-view)
+- build tool (https://github.com/christianalfoni/webpack-express-boilerplate)

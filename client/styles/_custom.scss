@@ -57,6 +57,9 @@ a, img {
 	}
 }
 
+// .gridSection {
+// }
+
 .console {
 	// display: flex;	
 
@@ -79,6 +82,159 @@ a, img {
 	}
 }
 
+.treeView {
+	user-select: none;
+
+	ul {
+		margin: 0;
+		padding: 0;
+		padding-left: 1em;
+	}
+
+	& > ul {
+		padding-left: 0;
+	}
+
+	li { 
+		list-style-type: none;
+	}
+
+	.floating {
+		margin-right: 0.5em;
+		visibility: hidden;
+	}
+
+	& .listItem:hover > .floating {
+		visibility: visible;
+	}
+
+	.chevron {
+		color: $silverChalice;
+	}
+
+}
+
+.sidebar,
+.content {
+	padding: 1em;
+}
+
+.sidebar {
+	background-color: $cement-gray;
+}
+
+.content {
+	background-color: white;
+}
+
+.divider {
+	color: $light-gray;
+	padding: 0.5em;
+	font-size: 0.85em;
+	background-color: $elegant-blue;
+	border: 1px solid $lighter-gray;
+}
+
+	// border-bottom: 3px solid $headerMenuAnchorColor;
+
+
+// .tree-view {
+// 	font-size: 14px;
+// 	user-select: none;
+// 	-webkit-user-select: none;
+// }
+
+// .tree-view ul {
+// 	margin: 0;
+// 	padding: 0;
+// 	padding-left: 13px;
+// }
+
+// .tree-view > ul {
+// 	padding-left: 0;
+// }
+
+// .tree-view li {
+// 	list-style-type: none;
+// }
+
+// .tree-view .listItem {
+// 	cursor: default;
+// 	overflow: hidden;
+// 	white-space: nowrap;
+// 	text-overflow: ellipsis;
+// }
+
+
+
+// .tree-view .listItem:hover > .detail {
+// 	visibility: visible;
+// }
+
+
+// .tree-view .name {
+// 	background-repeat: no-repeat;
+// 	background-position: 2px 50%;
+// 	padding-left: 25px;
+// 	line-height: 25px;
+// 	height: 25px;
+// 	margin-left: 15px;
+// }
+
+// .tree-view .file > .listItem .name {
+// 	background-image: url(../img/file.png);
+// }
+
+// .tree-view .folder > .listItem .name {
+// 	background-image: url(../img/folder.png);
+// }
+
+// .tree-view .entry.selected:before {
+// 	content: '';
+// 	position: absolute;
+// 	// left: 0;
+// 	// right: 0;
+// 	height: 25px;
+// 	background-color: #f5f5f5;
+// 	z-index: -1;
+// }
+
+// .tree-view .folder.open > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// 	background-image: url(../img/chevron-down.png);
+// 	background-repeat: no-repeat;
+// 	background-position: 0 50%;
+// }
+
+// .tree-view .folder.closed > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// 	background-image: url(../img/chevron-right.png);
+// 	background-repeat: no-repeat;
+// 	background-position: 0 50%;
+// }
+
+// .tree-view .file > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// }
+
+
+// .detail {
+//   margin-left: 25px;
+//   visibility: hidden;
+// }
+
+// .master:hover > .detail {
+//   visibility: visible;
+// }
 
 // $breakpoint-2: 600px;
 

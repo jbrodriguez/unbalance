@@ -11,11 +11,18 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Home extends Component {
-	componentDidMount() {
+	componentWillMount() {
 		let { model, history } = this.props
-		if (!model.config) {
+		if (model.config.folders.length === 0) {
 			history.pushState(null, '/settings')
 		}
+	}
+
+	componentDidMount() {
+		// let { model, history } = this.props
+		// if (!model.config) {
+		// 	history.pushState(null, '/settings')
+		// }
 		// console.log('home.didmount.props: ', this.props)
 		this.props.dispatch(C.GET_STORAGE)
 	}
@@ -35,9 +42,7 @@ export default class Home extends Component {
 		let warning = null
 		if (!ok) {
 			warning = (
-				<div className={cx('col-xs-12')}>
-					<p className={cx('bg-warning')}>The array is not operational. Please start the array first.</p>
-				</div>
+				<p className={cx('bg-warning')}>The array is not operational. Please start the array first.</p>
 			)
 		}
 
@@ -109,30 +114,84 @@ export default class Home extends Component {
 			)
 		}
 
+				// <section className={cx('row', 'bottom-spacer-half', 'gridHeader')}>
+				// 	<div className={cx('col-xs-12', 'col-sm-9')}>
+				// 		<div className={cx('flex-section', 'middle-xs', 'gridSection')}>
+				// 			<span className={cx('lspacer')}>STATUS:</span>
+				// 			<span className={cx('spacer', 'label', 'label-success')}>{model.unraid.condition.state}</span>
+				// 		</div>
+				// 	</div>
+				// 	<div className={cx('col-xs-12', 'col-sm-3')}>
+				// 		<div className={cx('flexSection', 'end-xs', 'gridSection')}>
+				// 			<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)} disabled={model.opInProgress}>CALCULATE</button>
+				// 			<span>&nbsp; | &nbsp;</span>
+				// 			<button className={cx('btn', 'btn-primary')} onClick={this._move.bind(this)} disabled={model.moveDisabled || model.opInProgress}>MOVE</button>
+				// 			<span>&nbsp; | &nbsp;</span>
+				// 			<div className={cx('flex', 'middle-xs', 'dryrun', 'rspacer')}> 
+				// 				<input type="checkbox" checked={model.config.dryRun} onChange={this._flipDryRun.bind(this)} />
+				// 				&nbsp;
+				// 				<label>dry run</label>
+				// 			</div>
+				// 		</div>
+				// 	</div>
+				// </section>
+
+				// <section className={cx('row', 'bottom-spacer-half')}>
+				// 	<div className={cx('col-xs-12')}>
+				// 		{ consolePanel }
+				// 	</div>
+				// </section>
+
+
+				// <section className={cx('row', 'bottom-spacer-half')}>
+				// 	<div className={cx('col-xs-12')}>
+				// 		{ grid }
+				// 	</div>
+				// </section>
+
+//			<div className={cx('row')}>
+//				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
+//					<div className={cx('gridSection')}>
+//						<span>TRUE</span>
+//					</div>
+//				</div>
+//			</div>
+
+
+//	
+
 		return (
 			<div>
 				<section className={cx('row', 'bottom-spacer-half')}>
-					{ warning }
+					<div className={cx('col-xs-12')}>
+						{ warning }
+					</div>
 				</section>
 
-				<section className={cx('row', 'between-xs', 'gridHeader', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12', 'col-sm-9')}>
-						<div className={cx('flex-section', 'middle-xs')}>
-							<span className={cx('lspacer')}>STATUS:</span>
-							<span className={cx('spacer', 'label', 'label-success')}>{model.unraid.condition.state}</span>
-						</div>
-					</div>
-					<div className={cx('col-xs-12', 'col-sm-3')}>
-						<div className={cx('flexSection', 'end-xs')}>
-							<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)} disabled={model.opInProgress}>CALCULATE</button>
-							<span>&nbsp; | &nbsp;</span>
-							<button className={cx('btn', 'btn-primary')} onClick={this._move.bind(this)} disabled={model.moveDisabled || model.opInProgress}>MOVE</button>
-							<span>&nbsp; | &nbsp;</span>
-							<div className={cx('flex', 'middle-xs', 'dryrun', 'rspacer')}> 
-								<input type="checkbox" checked={model.config.dryRun} onChange={this._flipDryRun.bind(this)} />
-								&nbsp;
-								<label>dry run</label>
-							</div>
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>
+						<div className={cx('gridHeader')}>
+							<section className={cx('row')}>
+								<div className={cx('col-xs-12', 'col-sm-9')}>
+									<div className={cx('flexSection', 'middle-xs')}>
+										<span className={cx('lspacer')}>STATUS:</span>
+										<span className={cx('spacer', 'label', 'label-success')}>{model.unraid.condition.state}</span>
+									</div>
+								</div>
+								<div className={cx('col-xs-12', 'col-sm-3')}>
+									<div className={cx('flexSection', 'end-xs')}>
+										<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)} disabled={model.opInProgress}>CALCULATE</button>
+										<span>&nbsp; | &nbsp;</span>
+										<button className={cx('btn', 'btn-primary')} onClick={this._move.bind(this)} disabled={model.moveDisabled || model.opInProgress}>MOVE</button>
+										<span>&nbsp; | &nbsp;</span>
+										<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
+											<input type="checkbox" checked={model.config.dryRun} onChange={this._flipDryRun.bind(this)} />
+											&nbsp;
+											<label>dry run</label>
+										</div>
+									</div>
+								</div>
+							</section>
 						</div>
 					</div>
 				</section>
@@ -143,12 +202,11 @@ export default class Home extends Component {
 					</div>
 				</section>
 
-
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-					{ grid }
+						{ grid }
 					</div>
-				</section>
+				</section>				
 			</div>
 		)
 	}

@@ -1,4 +1,5 @@
 import B from 'baconjs'
+import path from 'path'
 
 import Dispatcher from './lib/dispatcher'
 import * as C from './constant'
@@ -32,7 +33,18 @@ import WebSocketApi from './lib/wsapi'
 //  toDisk: null,
 //  opInProgress: null,
 //  moveDisabled: true,
-//  console: [],
+//  lines: [],
+// 	tree: {
+// 		items: 
+// 			'/': [
+// 				{type: 'folder', path: '/films'}
+// 				{type: 'folder', path: '/tvshows'}
+// 				{type: 'folder', path: '/storage'}
+// 				{type: 'folder', path: '/data'}
+// 			],
+// 		selected: "",
+// 		fetching: false,
+// 	}
 // }
 
 export default class Store {
@@ -54,6 +66,8 @@ export default class Store {
 			gotConfig,
 			addFolder,
 			folderAdded,
+			deleteFolder,
+			folderDeleted,
 			opInProgress,
 			getStorage,
 			gotStorage,
@@ -69,12 +83,16 @@ export default class Store {
 			dryRunToggled,
 			checkFrom,
 			checkTo,
+			treeItemClicked,
+			gotTree,
 		] = register(
 			C.START,
 			C.GET_CONFIG,
 			C.GOT_CONFIG,
 			C.ADD_FOLDER,
 			C.FOLDER_ADDED,
+			C.DELETE_FOLDER,
+			C.FOLDER_DELETED,
 			C.OP_IN_PROGRESS,
 			C.GET_STORAGE,
 			C.GOT_STORAGE,
@@ -90,6 +108,8 @@ export default class Store {
 			C.DRY_RUN_TOGGLED,
 			C.CHECK_FROM,
 			C.CHECK_TO,
+			C.TREE_ITEM_CLICKED,
+			C.GOT_TREE,
 		)
 
 		// const ws = new WebSocket(WS_URL)
@@ -105,6 +125,8 @@ export default class Store {
 			gotConfig, _gotConfig,
 			addFolder, _addFolder,
 			folderAdded, _folderAdded,
+			deleteFolder, _deleteFolder,
+			folderDeleted, _folderDeleted,
 			opInProgress, _opInProgress,
 			getStorage, _getStorage,
 			gotStorage, _gotStorage,
@@ -120,6 +142,8 @@ export default class Store {
 			moveFinished, _moveFinished,
 			toggleDryRun, _toggleDryRun,
 			dryRunToggled, _dryRunToggled,
+			treeItemClicked, _treeItemClicked,
+			gotTree, _gotTree,
 		)
 
 		function _getConfig(state, _) {
@@ -141,6 +165,10 @@ export default class Store {
 		}
 
 		function _addFolder(state, folder) {
+			if (state.config.folders.indexOf(folder) !== -1) {
+				return state
+			}
+
 			dispatch(C.OP_IN_PROGRESS, C.ADD_FOLDER)
 
 			B.fromPromise(api.addFolder(folder)).onValue(json => {
@@ -151,6 +179,24 @@ export default class Store {
 		}
 
 		function _folderAdded(state, config) {
+			return {
+				...state,
+				config: config,
+				opInProgress: null,
+			}
+		}
+
+		function _deleteFolder(state, folder) {
+			dispatch(C.OP_IN_PROGRESS, C.ADD_FOLDER)
+
+			B.fromPromise(api.deleteFolder(folder)).onValue(json => {
+				dispatch(C.FOLDER_DELETED, json)
+			})
+
+			return state
+		}
+
+		function _folderDeleted(state, config) {
 			return {
 				...state,
 				config: config,
@@ -328,6 +374,51 @@ export default class Store {
 				...state,
 				config,
 				opInProgress: null
+			}
+		}
+
+		function _treeItemClicked(state, item) {
+			let items = Object.assign({}, state.tree.items)
+
+			let open = items[item.path]
+			// let items = Object.assign({}, state.tree.items)
+
+			// dispatch(C.SELECT_TREE_ITEM, item)
+
+			let fetching = false
+
+			// if (item.type !== 'folder') dispatch(C.TREE_FILE_SELECTED, item)
+
+			if (open) {
+				// dispatch(C.CLOSE_TREE_ITEM, item)
+				delete items[item.path]
+				Object.keys(items).forEach( p => {
+					if (path.join(p, '/').indexOf(path.join(item.path, '/')) === 0) delete items[p]
+				})
+
+			} else {
+				fetching = true
+				B.fromPromise(api.getTree(item.path)).onValue(json => {
+					dispatch(C.GOT_TREE, json)
+				})
+			}
+
+			return {
+				...state,
+				tree: {items, selected: item.path, fetching},
+			}
+		}
+
+		function _gotTree(state, newTree) {
+			console.log('newTree: ', newTree)
+			let tree = state.tree
+
+			tree.items[newTree.path] = newTree.nodes
+			tree.fetching = false
+
+			return {
+				...state,
+				tree
 			}
 		}
 	}

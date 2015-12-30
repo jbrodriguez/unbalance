@@ -65,8 +65,10 @@ func (c *Core) Start() (err error) {
 
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
+	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
+	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
 
 	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
@@ -117,6 +119,19 @@ func (c *Core) addFolder(msg *pubsub.Message) {
 	// c.NotiEncrypt = config.NotiEncrypt
 	// c.NotiUser = config.NotiUser
 	// c.NotiPassword = config.NotiPassword
+
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) deleteFolder(msg *pubsub.Message) {
+
+	folder := msg.Payload.(string)
+
+	mlog.Info("Deleting folder (%s)", folder)
+
+	c.settings.DeleteFolder(folder)
 
 	c.settings.Save()
 
@@ -176,6 +191,12 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) getTree(msg *pubsub.Message) {
+	path := msg.Payload.(string)
+
+	msg.Reply <- c.storage.GetTree(path)
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
