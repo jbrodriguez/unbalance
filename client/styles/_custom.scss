@@ -57,6 +57,9 @@ a, img {
 	}
 }
 
+// .gridSection {
+// }
+
 .console {
 	// display: flex;	
 
@@ -147,81 +150,81 @@ a, img {
 // 	padding-left: 13px;
 // }
 
-.tree-view > ul {
-	padding-left: 0;
-}
+// .tree-view > ul {
+// 	padding-left: 0;
+// }
 
-.tree-view li {
-	list-style-type: none;
-}
+// .tree-view li {
+// 	list-style-type: none;
+// }
 
-.tree-view .listItem {
-	cursor: default;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-
-
-
-.tree-view .listItem:hover > .detail {
-	visibility: visible;
-}
+// .tree-view .listItem {
+// 	cursor: default;
+// 	overflow: hidden;
+// 	white-space: nowrap;
+// 	text-overflow: ellipsis;
+// }
 
 
-.tree-view .name {
-	background-repeat: no-repeat;
-	background-position: 2px 50%;
-	padding-left: 25px;
-	line-height: 25px;
-	height: 25px;
-	margin-left: 15px;
-}
 
-.tree-view .file > .listItem .name {
-	background-image: url(../img/file.png);
-}
+// .tree-view .listItem:hover > .detail {
+// 	visibility: visible;
+// }
 
-.tree-view .folder > .listItem .name {
-	background-image: url(../img/folder.png);
-}
 
-.tree-view .entry.selected:before {
-	content: '';
-	position: absolute;
-	// left: 0;
-	// right: 0;
-	height: 25px;
-	background-color: #f5f5f5;
-	z-index: -1;
-}
+// .tree-view .name {
+// 	background-repeat: no-repeat;
+// 	background-position: 2px 50%;
+// 	padding-left: 25px;
+// 	line-height: 25px;
+// 	height: 25px;
+// 	margin-left: 15px;
+// }
 
-.tree-view .folder.open > .listItem:before {
-	content: '';
-	position: absolute;
-	width: 15px;
-	height: 25px;
-	background-image: url(../img/chevron-down.png);
-	background-repeat: no-repeat;
-	background-position: 0 50%;
-}
+// .tree-view .file > .listItem .name {
+// 	background-image: url(../img/file.png);
+// }
 
-.tree-view .folder.closed > .listItem:before {
-	content: '';
-	position: absolute;
-	width: 15px;
-	height: 25px;
-	background-image: url(../img/chevron-right.png);
-	background-repeat: no-repeat;
-	background-position: 0 50%;
-}
+// .tree-view .folder > .listItem .name {
+// 	background-image: url(../img/folder.png);
+// }
 
-.tree-view .file > .listItem:before {
-	content: '';
-	position: absolute;
-	width: 15px;
-	height: 25px;
-}
+// .tree-view .entry.selected:before {
+// 	content: '';
+// 	position: absolute;
+// 	// left: 0;
+// 	// right: 0;
+// 	height: 25px;
+// 	background-color: #f5f5f5;
+// 	z-index: -1;
+// }
+
+// .tree-view .folder.open > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// 	background-image: url(../img/chevron-down.png);
+// 	background-repeat: no-repeat;
+// 	background-position: 0 50%;
+// }
+
+// .tree-view .folder.closed > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// 	background-image: url(../img/chevron-right.png);
+// 	background-repeat: no-repeat;
+// 	background-position: 0 50%;
+// }
+
+// .tree-view .file > .listItem:before {
+// 	content: '';
+// 	position: absolute;
+// 	width: 15px;
+// 	height: 25px;
+// }
 
 
 // .detail {
