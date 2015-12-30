@@ -111,6 +111,28 @@ a, img {
 
 }
 
+.sidebar,
+.content {
+	padding: 1em;
+}
+
+.sidebar {
+	background-color: $cement-gray;
+}
+
+.content {
+	background-color: white;
+}
+
+.divider {
+	color: $light-gray;
+	padding: 0.5em;
+	font-size: 0.85em;
+	background-color: $elegant-blue;
+	border: 1px solid $lighter-gray;
+}
+
+	// border-bottom: 3px solid $headerMenuAnchorColor;
 
 
 // .tree-view {

@@ -340,13 +340,13 @@ th {
 	margin-left: 1em;
 }
 
+.flex {
+	display: flex;
+}
+
 .flexSection {
 	display: flex;
 	flex-direction: row;
-}
-
-.flex {
-	display: flex;
 }
 
 .direction-column {

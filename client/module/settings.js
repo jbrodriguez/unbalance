@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import 'font-awesome-webpack'
 
 import TreeView from './treeView'
+import Alert from './alertPanel'
 
 import * as C from '../constant'
 import styles from '../styles/core.scss'
@@ -18,35 +19,27 @@ export default class Settings extends Component {
 	render() {
 		let { dispatch, model } = this.props
 
-		// console.log('settings.render.props: ', this.props)
-
 		if (!model.config) {
-			// console.log('mother')
-			return (
-				<div></div>
-//				<section className={cx('row')}>
-//					<div className={cx('col-xs-12', 'bottom-spacer-half')}>
-//						<div className={cx('loading', 'middle-xs')}>
-//								<div className={cx('loading-bar')}></div>
-//								<div className={cx('loading-bar')}></div>
-//								<div className={cx('loading-bar')}></div>
-//								<div className={cx('loading-bar')}></div>
-//						</div>
-//					</div>
-//				</section>
+			return null
+		}
+
+
+		// let warning = null
+		// if (model.config.folders.length === 0) {
+		// 	warning = (
+		// 		<div className={cx('col-xs-12', 'bottom-spacer-half')}>
+		// 			<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
+		// 		</div>	
+		// 	)
+		// }
+
+		let alert = null
+		if ( model.alerts.length !== 0) {
+			alert = (
+				<Alert alerts={model.alerts} dispatch={dispatch} />
 			)
 		}
 
-		// console.log('after mother')
-
-		let warning = null
-		if (model.config.folders.length === 0) {
-			warning = (
-				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
-					<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
-				</div>	
-			)
-		}
 
 		// let tree = {}
 		// tree['/'] = [
@@ -60,11 +53,38 @@ export default class Settings extends Component {
 
 		// console.log('model.tree: ', model.tree)
 
+						// <div className={cx('row', 'bottom-spacer-large')}>
+						// 	<div className={cx('col-xs-12')}>
+						// 		<table>
+						// 		<thead>
+						// 			<th width="50">#</th>
+						// 			<th>Folder</th>
+						// 		</thead>
+						// 		<tbody>
+						// 			{ 
+						// 				model.config.folders.map( (item, i) => {
+						// 					return (
+						// 						<tr key={i}>
+						// 							<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
+						// 							<td>{item}</td>
+						// 						</tr>
+						// 					)
+						// 				})
+						// 			}
+						// 		</tbody>
+						// 		</table>
+						// 	</div>
+						// </div>		
+
+//							<thead>
+//								<th width="50">#</th>
+//								<th>Folder</th>
+//							</thead>						
+
 		return (
 			<div>
-			<section className={cx('row')}>
-				{ warning }
-			</section>
+
+			{ alert }
 
 			<section>
 				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
@@ -75,49 +95,36 @@ export default class Settings extends Component {
 						<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
 						<p className={cx('bottom-spacer-half')}>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
 
-						<div className={cx('row', 'bottom-spacer-large')}>
-							<div className={cx('col-xs-12')}>
-								<table>
-								<thead>
-									<th width="50">#</th>
-									<th>Folder</th>
-								</thead>
-								<tbody>
-									{ 
-										model.config.folders.map( (item, i) => {
-											return (
-												<tr key={i}>
-													<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
-													<td>{item}</td>
-												</tr>
-											)
-										})
-									}
-								</tbody>
-								</table>
-							</div>
-						</div>
+
 					</fieldset>
 					</form>
 				</div>
 			</section>
 
 			<section className={cx('row')}>
-				<div className={cx('col-xs-12', 'col-sm-8')}>
+				<div className={cx('col-xs-12', 'col-sm-8', 'divider')}>
+					User Shares Explorer
+				</div>
+				<div className={cx('col-xs-12', 'col-sm-4', 'divider')}>
+					Chosen Folders
+				</div>
+
+			</section>
+
+
+			<section className={cx('row')}>
+				<div className={cx('col-xs-12', 'col-sm-8', 'sidebar')}>
 						<TreeView {...model.tree} dispatch={dispatch} />
 				</div>
-				<div className={cx('col-xs-12', 'col-sm-4')}>
+				<div className={cx('col-xs-12', 'col-sm-4', 'content')}>
 						<table>
-							<thead>
-								<th width="50">#</th>
-								<th>Folder</th>
-							</thead>
+
 							<tbody>
 								{ 
 									model.config.folders.map( (item, i) => {
 										return (
 											<tr key={i}>
-												<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
+												<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
 												<td>{item}</td>
 											</tr>
 										)
