@@ -1,3 +1,138 @@
+Version 1.0.0 - 2015-12-31
+    -Remove staging and art folders
+    - First pass at new client architecture using redux
+    (back) Ignore some additional files/folders
+    (unbalance) Remove unneeded script
+    (back) Add vendoring component (gom)
+    (back) Bring makefile up to date
+    (back) Rename components (or move them to another package)
+    (back) Change apertoire.net for jbrodriguez (moved folder in my source code hierarchy)
+    (back) Implement new settings logic
+    (back) Implement echo as server (instead of gin)
+    (back) Implement new actor/bus logic
+    (back) Define new connection struct semantics
+    (back) Fix legibility
+    (back) Implement new websocket  handling logic
+    (front) Reset client folder for a clean slate
+    (front) Setup webpack based build system for the frontend, with dev server in node/express and hot module replacement, among other things.
+    (front) Remove gulp task (no longer needed)
+    (front) Define front end architecture to be react based. The framework is ad-hoc, with inputs from different sources
+    (front) Add classnames to support css-modules syntax
+    (unbalance) Start documenting the referenced code / apps / libraries
+    (front) Define mounting element for app and remove css links that are no longer required
+    (front) Replace styles with new flexbox grid
+    (front) Mount app in new mount point
+    (front) Apply new css-module syntax
+    (unbalance) Add required node dependencies
+    (front) Add image optimization and fingerprinting
+    (front) Add images required in the app
+    (front) Define production build configuration
+    (front) First pass at new UI. The grid framework comes now from flexboxgrid.com
+    (unbalance) Reflect change in grid framework
+    (front) Document what the state/model should look like
+    (front) Add progress feedback whenever there's an operation running
+    (front) Fix className syntax
+    (unbalance) Remove stats plugin for production builds
+    (back) Fix echo handler function signature (it requires the function to return an error object)
+    (front) Add proxy for dev purposes
+    (front) Add json loader, since it is required by some dependencies
+    (front) Add http proxy for api
+    (front) Fix property reference
+    (front) Get config upon loading page
+    (front) Inject api into store
+    (front) Cleanup code
+    (back) Add file handling helper functions
+    (back) Look for mdcmd in different locations. This in order to support pre 6.1 versions that had mdcmd at /root (6.1 moved it to /usr/local/sbin)
+    (back) Perform a sanity check on core start, by trying to find mdcmd. If not found return an error (and fatal out)
+    (back) Add opIsRunning flag. It's set when calculate/move are running and cleared when they're done
+    (back) Change routes order in order for the first one to get picked up
+    (back) Change message name for add folder functionality
+    (back) Add echo logger middleware
+    (back) Fatal out if sanity check fails during startup
+    (back) Remove runningInDocker flag. All it did was to locate mdcmd, we now move it to the appropriate location when run under Docker. Also, diskmv will be put alongside unbalance binary, so that it will always be found there
+    (back) Define config flag in code to pick up any settings saved by the user
+    (back) Fix save settings logic. We now write to a tmp file and rename it when all writes are done
+    (back) Add addFolder functionality
+    (front) Define required constants
+    (front) Add getstorage api call
+    (front) General cleanups
+    (front) First pass at table ui styling
+    (front) Add addfolder functionality, still pending removal of folders and prevention of duplication
+    (front) Add main ui, calling api, showing disks, logic for checking/unchecking disks, formatting functions
+    (back) Fix unraid model's search for mdcmd logic errors
+    (front) Proxy websockets
+    (front) Switch to calling api.getconfig on boot and starting the app once the promise has been resolved. react-routers onEnter is a PITA to work with
+    (front) Improve websocket handling in frontend code
+    (front) Configure addFolder as a class method, rather than being embedded in the main function
+    (front) Reroute to settings from home if no config is found. An alternative look into this issue can be found at https://wmyers.github.io/technical/react-flux/Async-authentication-with-React-Router-1.0.0-beta2/
+    (front) Some ui improvements
+    (back) Set up invocation of calculate (and move) operations
+    (unbalance) Add target for deployment to makefile
+    (front) Put img, css and js files into appropriate folders
+    (front) Fix websocket proxying
+    (front) Add visual clue for disks that would be changed after calculation is complete
+    (back) Fix syntax for bool sprintf
+    (back) Fix defer semantics
+    (back) Add endpoint for app folder in server (it holds js and css files)
+    (back) Remove socket service (no longer required)
+    (back) Adjust bus buffer
+    (back) Adjust server service to handle end-to-end ws connections
+    (back) Return error from read for websocket connections
+    (back) Change socket message receive type. We get exchange json messages.
+    (back) server service code cleanup
+    (back) Fix reception of json message
+    (unbalance) Add target to deploy server binary to specified unraid host
+    (back) Fix name of broadcast message
+    (front) Implement UI for calculate as a progress line, but we'll change it next to introduce the web 'console'
+    (back) Put 'operation finished' message as the last calc:progress message, then send a calc:end, with the new unraid object
+    (front) Add console element as a separate component, in order to scroll to bottom (currently not working)
+    (front) Fix label alternates in scss code
+    (front) Enhance conditional classes logic
+    (front) Reduce logic in ConsolePanel, make it as simple as possible, while enabling scrolling to the bottom at the same time
+    (front) Reduce size of console.
+    (front) Increase separation of concerns for the home component, by moving store manipulation logic to the store itself
+    (front) Add move button enabling/disabling code (embedded in the state object)
+    (front) Paint source disk with a different label color, after calculation is complete
+    (unbalance) Include diskmv tool when deploying/publishing app
+    (unbalance) Add toggleDryRun api
+    (front) Add move feature
+    (unbalance) Remove unneeded tool (old version)
+    (front) Add path module for convenience
+    (unbalance) Add getTree api call, to retrieve the folders underneat a given root. It's /mnt/user rooted at the server
+    (front) Add TreeView component
+    (front) Add styling to the TreeView
+    (front) Add ajax call to retrieve sub folders in TreeView
+    (unbalance) Add credits
+    (front) Include add button ui to the treeview (first pass, will try to improve the css next)
+    (front) Add fontawesome icons
+    (front) Add config steps to process fontawesome icons
+    (front) Remove items replaced by fontawesome
+    (front) Use fontawesome icons
+    (front) Fix logic to redirect to settings when no folders are defined
+    (front) Add delete folder feature
+    (front) Improve tree view ui
+    (front) Add required modules
+    (back) Implement delete folder functionality
+    (front) Show a spinner when we're fetching folders from the server
+    (front) Another attempt at tree view location
+    (front) Improve folder input ui
+    (front) Add alert panel (missing timeout implementation
+    (front) Modify markup to cater for new flexbox production grid
+    (front) Add missing state property
+    (front) Remove files no longer needed
+    (front) Rename module folder to components
+    (front) Convert to ES5 notation to avoid errors
+    (front) Define module dependencies
+    (front) Redefine building steps for js files, using babel 6 logic
+    (front) Define reactorx actions for the app. Each file roughly corresponds to a property of the state object.
+    (front) Rewrite components to use reactorx framework
+    (front) Use reactorx framework
+    (back) Rename websocket messages passed between client and server
+    (back) Add some progress messages
+    (unbalance) Ignore .out files
+    (unbalance) Remove folder that is no longer needed
+
+
 Version 0.7.4 - 2015-08-18
     -Remove staging and art folders
     - Add support for unRAID 6.1 by mounting "/usr/local/sbin", since 6.1 changed the location of some binaries to this folder
