@@ -6,7 +6,7 @@ export default class Api {
 	}
 
 	getConfig() {
-		console.log('this.hostr', this.hostr)
+		// console.log('this.hostr', this.hostr)
 		return fetch(this.hostr + '/config')
 			.then(resp => resp.json())
 	}

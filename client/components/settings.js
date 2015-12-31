@@ -2,10 +2,9 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import 'font-awesome-webpack'
 
-import TreeView from './treeView'
-import Alert from './alertPanel'
+import TreePanel from './treePanel'
+import AlertPanel from './alertPanel'
 
-import * as C from '../constant'
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
@@ -13,19 +12,23 @@ let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
 	componentDidMount() {
-		this.props.dispatch(C.GET_CONFIG)
+		let { actions, dispatch } = this.props.store
+		dispatch(actions.getConfig)
 	}
 
 	render() {
-		let { dispatch, model } = this.props
+		// let { dispatch, state } = this.props
+		// console.log('settings.render: ', this.props.store)
+		let { state, actions, dispatch } = this.props.store
 
-		if (!model.config) {
+
+		if (!state.config) {
 			return null
 		}
 
 
 		// let warning = null
-		// if (model.config.folders.length === 0) {
+		// if (state.config.folders.length === 0) {
 		// 	warning = (
 		// 		<div className={cx('col-xs-12', 'bottom-spacer-half')}>
 		// 			<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
@@ -34,9 +37,13 @@ export default class Settings extends Component {
 		// }
 
 		let alert = null
-		if ( model.alerts.length !== 0) {
+		if ( state.alerts.length !== 0) {
 			alert = (
-				<Alert alerts={model.alerts} dispatch={dispatch} />
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>				
+						<AlertPanel {...store} />
+					</div>
+				</section>		
 			)
 		}
 
@@ -51,7 +58,7 @@ export default class Settings extends Component {
 
 		// let selected = ""
 
-		// console.log('model.tree: ', model.tree)
+		// console.log('state.tree: ', state.tree)
 
 						// <div className={cx('row', 'bottom-spacer-large')}>
 						// 	<div className={cx('col-xs-12')}>
@@ -62,7 +69,7 @@ export default class Settings extends Component {
 						// 		</thead>
 						// 		<tbody>
 						// 			{ 
-						// 				model.config.folders.map( (item, i) => {
+						// 				state.config.folders.map( (item, i) => {
 						// 					return (
 						// 						<tr key={i}>
 						// 							<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
@@ -108,20 +115,19 @@ export default class Settings extends Component {
 				<div className={cx('col-xs-12', 'col-sm-4', 'divider')}>
 					Chosen Folders
 				</div>
-
 			</section>
 
 
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12', 'col-sm-8', 'sidebar')}>
-						<TreeView {...model.tree} dispatch={dispatch} />
+						<TreePanel tree={state.tree} actions={actions} dispatch={dispatch} />
 				</div>
 				<div className={cx('col-xs-12', 'col-sm-4', 'content')}>
 						<table>
 
 							<tbody>
 								{ 
-									model.config.folders.map( (item, i) => {
+									state.config.folders.map( (item, i) => {
 										return (
 											<tr key={i}>
 												<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>

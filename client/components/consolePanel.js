@@ -8,7 +8,7 @@ let cx = classNames.bind(styles)
 
 export default class Console extends React.Component {
 	componentDidUpdate() {
-		if (this.props.model.lines.length === 0) {
+		if (this.props.lines.length === 0) {
 			return
 		}
 
@@ -18,13 +18,13 @@ export default class Console extends React.Component {
 	}
 
 	render() {
-		let { model } = this.props
+		let { lines } = this.props
 
 		// if (model.lines.length === 0) {
 		// 	return null
 		// }
 
-		let items = model.lines.map( (line, i) => {
+		let items = lines.map( (line, i) => {
 			return (
 				<p key={i} className={cx('consoleLine')}>{line}</p>
 			)

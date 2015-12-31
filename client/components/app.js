@@ -14,14 +14,16 @@ let cx = classNames.bind(styles)
 //
 // App is a pure function of it's props, so we can
 // define it with a plain javascript function...
-// export default function App({ children, model }) {
-export default function App({ children, model }) {
+// export default function App({ children, state }) {
+export default function App({ children, store }) {
 	// console.log('this.props: ', this.props)
 	// console.log('this.context: ', this.context)
-	// let { children, model } = this.props
+	// let { children, state } = this.props
+
+	let { state } = store
 
 	let progress = null
-	if (model.opInProgress) {
+	if (state.opInProgress) {
 		progress = (
 			<div className={cx('loading', 'middle-xs')}>
 				<div className={cx('loading-bar')}></div>
@@ -32,10 +34,10 @@ export default function App({ children, model }) {
 		)
 	}
 
-	let version = model.config ? model.config.version : null
+	let version = state.config ? state.config.version : null
 
-	if (model.config) { 
-		// console.log('app.model.config.version: ', model.config.version)
+	if (state.config) { 
+		// console.log('app.state.config.version: ', state.config.version)
 	}
 
 	// var url = require("file!./file.png");

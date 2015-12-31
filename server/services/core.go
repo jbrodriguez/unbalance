@@ -70,8 +70,8 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
 	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
 
-	c.registerAdditional(c.bus, "storage:calc", c.calc, c.mailbox)
-	c.registerAdditional(c.bus, "storage:move", c.move, c.mailbox)
+	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
+	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
 	// c.registerAdditional(c.bus, "/set/config", c.setConfig)
 
 	err = c.storage.SanityCheck()
@@ -207,7 +207,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 	defer func() { c.opIsRunning = false }()
 	// c.storage.Condition.State = "CALCULATING"
 
-	outbound := &dto.Packet{Topic: "storage:calc:begin", Payload: "Operation started"}
+	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	mlog.Info("payload received is: (%+v)", msg.Payload)
@@ -253,8 +253,14 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	sort.Sort(model.ByFree(disks))
 
+	srcDiskWithoutMnt := srcDisk.Path[5:]
+
 	var folders []*model.Item
 	for _, path := range c.settings.Folders {
+		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 		list := c.getFolders(dtoCalc.SourceDisk, path)
 
 		if list != nil {
@@ -269,8 +275,9 @@ func (c *Core) calc(msg *pubsub.Message) {
 	srcDisk.NewFree = srcDisk.Free
 
 	for _, disk := range disks {
-		msg := fmt.Sprintf("Processing disk %s ...", disk.Path)
-		outbound := &dto.Packet{Topic: "storage:calc:progress", Payload: msg}
+		diskWithoutMnt := disk.Path[5:]
+		msg := fmt.Sprintf("Processing %s ...", diskWithoutMnt)
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
 		time.Sleep(2 * time.Second)
@@ -300,13 +307,13 @@ func (c *Core) calc(msg *pubsub.Message) {
 	elapsed := time.Since(started)
 
 	// Send to frontend console started/ended/elapsed times
-	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: fmt.Sprintf("Started: %s", started)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", started)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// send to frontend the folders that will not be moved, if any
@@ -315,7 +322,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 	if len(folders) > 0 {
 		// c.foldersNotMoved = append(make([]*model.Item, 0), folders...)
 
-		outbound := &dto.Packet{Topic: "storage:calc:progress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		c.foldersNotMoved = make([]string, 0)
@@ -324,14 +331,14 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 			notMoved += folder.Path + "\n"
 
-			outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: folder.Path}
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: folder.Path}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		}
 
 		// for _, folder := range c.foldersNotMoved {
 		// 	notMoved += folder + "\n"
-		// 	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: folder}
+		// 	outbound = &dto.Packet{Topic: "calcProgress", Payload: folder}
 		// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		// }
 	}
@@ -373,11 +380,11 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
 
-	outbound = &dto.Packet{Topic: "storage:calc:progress", Payload: "Operation Finished"}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Operation Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// send to front end the signal of operation finished
-	outbound = &dto.Packet{Topic: "storage:calc:end", Payload: c.storage}
+	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 }
@@ -489,7 +496,7 @@ loop:
 }
 
 // func (c *Core) processDiskMv(line string, arg interface{}) {
-// 	outbound := &dto.Packet{Topic: "storage:move:progress", Payload: line}
+// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 // 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 // 	mlog.Info(line)
@@ -502,7 +509,7 @@ func (c *Core) move(msg *pubsub.Message) {
 	c.opIsRunning = true
 	defer func() { c.opIsRunning = false }()
 
-	outbound := &dto.Packet{Topic: "storage:move:begin", Payload: "Operation started"}
+	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	var dry string
@@ -539,11 +546,11 @@ func (c *Core) move(msg *pubsub.Message) {
 			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, item.Path, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
-			outbound = &dto.Packet{Topic: "storage:move:progress", Payload: cmd}
+			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			err := lib.Shell(cmd, func(line string) {
-				outbound := &dto.Packet{Topic: "storage:move:progress", Payload: line}
+				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				mlog.Info(line)
@@ -578,40 +585,40 @@ func (c *Core) move(msg *pubsub.Message) {
 }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
-	outbound := &dto.Packet{Topic: "storage:move:progress", Payload: fmt.Sprintf("Started: %s", started)}
+	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", started)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: headline}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: headline}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: "These are the commands that were executed:"}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: "These are the commands that were executed:"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	printedCommands := ""
 	for _, command := range commands {
 		printedCommands += command + "\n"
-		outbound = &dto.Packet{Topic: "storage:move:progress", Payload: command}
+		outbound = &dto.Packet{Topic: "moveProgress", Payload: command}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	outbound = &dto.Packet{Topic: "storage:move:progress", Payload: "Operation Finished"}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: "Operation Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// send to front end the signal of operation finished
 	if !c.settings.DryRun {
 		c.storage.Refresh()
 	} else {
-		outbound = &dto.Packet{Topic: "storage:move:progress", Payload: "--- IT WAS A DRY RUN ---"}
+		outbound = &dto.Packet{Topic: "moveProgress", Payload: "--- IT WAS A DRY RUN ---"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	outbound = &dto.Packet{Topic: "storage:move:end", Payload: c.storage}
+	outbound = &dto.Packet{Topic: "moveFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", started, finished, elapsed, headline)
