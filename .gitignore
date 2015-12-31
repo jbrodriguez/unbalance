@@ -10,6 +10,7 @@ art/
 *.zip
 *.7z
 *.log
+*.out
 
 .DS_Store
 
