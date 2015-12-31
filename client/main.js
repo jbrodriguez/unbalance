@@ -2,28 +2,74 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, IndexRoute } from 'react-router'
 
-import Store from './store'
-import Provider from './lib/provider'
-import Dispatcher from './lib/dispatcher'
+import { createStore } from 'reactorx'
+
+import startActions from './actions/start'
+import uiActions from './actions/ui'
+import configActions from './actions/config'
+import treeActions from './actions/tree'
+import unraidActions from './actions/unraid'
+
 import Api from './lib/api'
+import WSApi from './lib/wsapi'
 
-import App from './module/app'
-import Home from './module/home'
-import Settings from './module/settings'
+import App from './components/app'
+import Home from './components/home'
+import Settings from './components/settings'
 
-let api = new Api()
+// SAMPLE STATE
+// state = {
+// 	config: {
+// 		folders: [
+// 			"movies/films",
+// 			"movies/tvshows"
+// 		],
+// 		dryRun: true
+// 	}
+// 	unraid: {
+// 		condition: {
+// 			numDisks: 24,
+// 			numProtected: 0,
+//			state: "STARTED",
+// 		},
+// 		disks: [
+// 			{id: 1, name: "disk1", path: "/mnt/disk1"},
+// 			{id: 2, name: "disk2", path: "/mnt/disk2"},
+// 			{id: 3, name: "disk3", path: "/mnt/disk3"},
+// 		],
+// 		bytesToMove: 0,
+// 		inProgress: false, // need to review this variable
+// 	}
+//  fromDisk: null,
+//  toDisk: null,
+//  opInProgress: null,
+//  moveDisabled: true,
+//  lines: [],
+// 	tree: {
+// 		items: 
+// 			'/': [
+// 				{type: 'folder', path: '/films'}
+// 				{type: 'folder', path: '/tvshows'}
+// 				{type: 'folder', path: '/storage'}
+// 				{type: 'folder', path: '/data'}
+// 			],
+// 		selected: "",
+// 		fetching: false,
+// 	}
+// }
+
+const api = new Api()
+const ws = new WSApi()
 
 Promise.all([api.getConfig(), api.getTree('/')])
 	.then( boot )
 
-// api.getConfig().then( boot )
-
 function boot([config, entry]) {
-	console.log('config: ', config)
-	console.log('entry: ', entry)
+	// console.log('config: ', config)
+	// console.log('entry: ', entry)
 
-	let items = {}
-	items[entry.path] = entry.nodes
+	let treeItems = {}
+	treeItems[entry.path] = entry.nodes
 
 	let initialState = {
 		config,
@@ -34,40 +80,23 @@ function boot([config, entry]) {
 		moveDisabled: true,
 		lines: [],
 		tree: {
-			items,
+			items: treeItems,
 			selected: '',
 			fetching: false,
 		},
 		alerts: [],
 	}
 
-	var store = new Store(initialState)
+	let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
 
-	// function requireConfig(nextState, replaceState, callback) {
-	// 	// console.log('mofo')
-	// 	store.status.onValue(state => {
-	// 		// console.log('require.state: ', state)
-	// 		console.log('require.config: ', state.config)
-	// 		if (!state.config) {
-	// 			console.log('do i replace')
-	// 			replaceState({ nextPathname: nextState.location.pathname }, '/settings')
-	// 		}
+	const store = createStore(initialState, actions, {api, ws})
 
-	// 		callback()
-	// 	})
-	// }
+	store.subscribe(
+		store => {
+			// console.log('main.store: ', store)
 
-						// <IndexRoute component={Home} onEnter={requireConfig} />
-						// <IndexRoute component={Home} />
-
-
-	store.status.onValue(
-		model => {
-			// console.log('this.model: ', model)
-			// since wrapping the router in a Provider doesn't work right now
-			// I think I'm missing something
 			function createElement(Component, props) {
-				return <Component {...props} model={model} dispatch={Dispatcher.dispatch} />
+				return <Component {...props} store={store} />
 			}
 
 			render(
@@ -81,4 +110,6 @@ function boot([config, entry]) {
 			)
 		}
 	)
+
+	store.dispatch(store.actions.start)	
 }
