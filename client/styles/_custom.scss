@@ -50,7 +50,7 @@ a, img {
 
 .gridHeader {
 	background-color: $headerMenuBackground;
-	padding: 1em 0;
+	// padding: 1em 0;
 
 	label {
 		font-size: 0.75em;
@@ -84,6 +84,8 @@ a, img {
 
 .treeView {
 	user-select: none;
+	padding: 0.5em;
+	// background-color: $cement-gray;
 
 	ul {
 		margin: 0;
@@ -114,26 +116,41 @@ a, img {
 
 }
 
-.sidebar,
-.content {
-	padding: 1em;
-}
+// .sidebar,
+// .content {
+// 	color: $primaryTextColor;
+// 	// padding: 1em;
+// }
 
 .sidebar {
 	background-color: $cement-gray;
 }
 
-.content {
-	background-color: white;
+// .content {
+// 	background-color: white;
+// }
+
+.explorerHeader {
+	color: $light-gray;
+	padding-bottom: 0.25em;
+	font-size: 0.9em;
+	background-color: $explorerHeader;
 }
 
-.divider {
-	color: $light-gray;
-	padding: 0.5em;
-	font-size: 0.85em;
-	background-color: $elegant-blue;
-	border: 1px solid $lighter-gray;
+.explorerContent {
+	background-color: $explorerContent;
+	// padding: 0.5em;
+	border-bottom: 1px solid $explorerHeader;
 }
+
+.explorerChosen {
+	padding: 0.5em;
+	background-color: $explorerChosen;
+}
+
+// .title {
+// 	padding: 1em;
+// }
 
 	// border-bottom: 3px solid $headerMenuAnchorColor;
 

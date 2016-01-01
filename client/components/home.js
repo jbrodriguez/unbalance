@@ -129,34 +129,6 @@ export default class Home extends Component {
 			<div>
 				{ warning }
 
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12')}>
-						<div className={cx('gridHeader')}>
-							<section className={cx('row')}>
-								<div className={cx('col-xs-12', 'col-sm-9')}>
-									<div className={cx('flexSection', 'middle-xs')}>
-										<span className={cx('lspacer')}>STATUS:</span>
-										<span className={cx('spacer', 'label', 'label-success')}>{state.unraid.condition.state}</span>
-									</div>
-								</div>
-								<div className={cx('col-xs-12', 'col-sm-3')}>
-									<div className={cx('flexSection', 'end-xs')}>
-										<button className={cx('btn', 'btn-primary')} onClick={this._calculate.bind(this)} disabled={state.opInProgress}>CALCULATE</button>
-										<span>&nbsp; | &nbsp;</span>
-										<button className={cx('btn', 'btn-primary')} onClick={this._move.bind(this)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
-										<span>&nbsp; | &nbsp;</span>
-										<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
-											<input type="checkbox" checked={state.config.dryRun} onChange={this._flipDryRun.bind(this)} />
-											&nbsp;
-											<label>dry run</label>
-										</div>
-									</div>
-								</div>
-							</section>
-						</div>
-					</div>
-				</section>
-
 				{ consolePanel }
 
 				{ grid }

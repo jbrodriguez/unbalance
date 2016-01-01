@@ -36,16 +36,16 @@ export default class Settings extends Component {
 		// 	)
 		// }
 
-		let alert = null
-		if ( state.alerts.length !== 0) {
-			alert = (
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12')}>				
-						<AlertPanel {...store} />
-					</div>
-				</section>		
-			)
-		}
+		// let alert = null
+		// if ( state.alerts.length !== 0) {
+		// 	alert = (
+		// 		<section className={cx('row', 'bottom-spacer-half')}>
+		// 			<div className={cx('col-xs-12')}>				
+		// 				<AlertPanel {...store} />
+		// 			</div>
+		// 		</section>		
+		// 	)
+		// }
 
 
 		// let tree = {}
@@ -88,12 +88,13 @@ export default class Settings extends Component {
 //								<th>Folder</th>
 //							</thead>						
 
+			// { alert }
+
+
 		return (
 			<div>
 
-			{ alert }
-
-			<section>
+			<section className={cx('row')}>
 				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
 					<form>
 					<fieldset>
@@ -109,38 +110,59 @@ export default class Settings extends Component {
 			</section>
 
 			<section className={cx('row')}>
-				<div className={cx('col-xs-12', 'col-sm-8', 'divider')}>
-					User Shares Explorer
+				<div className={cx('col-xs-12')}>
+					<div>
+						<section className={cx('row')}>
+							<div className={cx('col-xs-12')}>
+								<div className={cx('explorerHeader')}>
+									<section className={cx('row')}>
+										<div className={cx('col-xs-12', 'col-sm-8')}>
+											<span className={cx('lspacer')}>Unraid Shares Explorer</span>
+										</div>
+										<div className={cx('col-xs-12', 'col-sm-4')}>
+											Folders to move
+										</div>
+									</section>
+								</div>
+							</div>
+						</section>
+
+						<section className={cx('row')}>
+							<div className={cx('col-xs-12')}>
+								<div className={cx('explorerContent')}>
+									<section className={cx('row')}>
+										<div className={cx('col-xs-12', 'col-sm-8')}>
+											<TreePanel tree={state.tree} actions={actions} dispatch={dispatch} />
+										</div>
+										<div className={cx('col-xs-12', 'col-sm-4', 'flex', 'flexOne')}>
+											<div className={cx('explorerChosen')}>
+												<table className={cx('')}>
+													<tbody>
+														{ 
+															state.config.folders.map( (item, i) => {
+																return (
+																	<tr key={i}>
+																		<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
+																		<td>{item}</td>
+																	</tr>
+																)
+															})
+														}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</section>
+								</div>
+							</div>
+						</section>
+					</div>
 				</div>
-				<div className={cx('col-xs-12', 'col-sm-4', 'divider')}>
-					Chosen Folders
-				</div>
+
 			</section>
 
 
-			<section className={cx('row')}>
-				<div className={cx('col-xs-12', 'col-sm-8', 'sidebar')}>
-						<TreePanel tree={state.tree} actions={actions} dispatch={dispatch} />
-				</div>
-				<div className={cx('col-xs-12', 'col-sm-4', 'content')}>
-						<table>
 
-							<tbody>
-								{ 
-									state.config.folders.map( (item, i) => {
-										return (
-											<tr key={i}>
-												<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
-												<td>{item}</td>
-											</tr>
-										)
-									})
-								}
-							</tbody>
-						</table>
-				</div>
-
-			</section>
 
 			</div>
 		)
