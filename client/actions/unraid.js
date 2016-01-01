@@ -122,6 +122,10 @@ function _calcStarted({state, actions, dispatch}, _, line) {
 	// make sure we clean out the lines array
 	newState.lines = [].concat('CALCULATE: ' + line)
 
+	newState.unraid.disks.forEach( disk => {
+		disk.newFree = disk.free
+	})
+
 	return newState
 
 

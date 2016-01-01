@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import { Link } from 'react-router'
+
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
@@ -15,17 +16,30 @@ let cx = classNames.bind(styles)
 // App is a pure function of it's props, so we can
 // define it with a plain javascript function...
 // export default function App({ children, state }) {
-export default function App({ children, store }) {
+export default function App({ location, children, store }) {
 	// console.log('this.props: ', this.props)
 	// console.log('this.context: ', this.context)
 	// let { children, state } = this.props
 
-	let { state } = store
+	// console.log('app.location: ', location)
+
+	let { state, dispatch, actions } = store
+
+	let alert = null
+	if ( state.alerts.length !== 0) {
+		alert = (
+			<section className={cx('row', 'bottom-spacer-half')}>
+				<div className={cx('col-xs-12')}>				
+					<AlertPanel {...store} />
+				</div>
+			</section>		
+		)
+	}	
 
 	let progress = null
 	if (state.opInProgress) {
 		progress = (
-			<div className={cx('loading', 'middle-xs')}>
+			<div className={cx('loading')}>
 				<div className={cx('loading-bar')}></div>
 				<div className={cx('loading-bar')}></div>
 				<div className={cx('loading-bar')}></div>
@@ -34,11 +48,33 @@ export default function App({ children, store }) {
 		)
 	}
 
-	let version = state.config ? state.config.version : null
+	// <span className={cx('lspacer')}>STATUS:</span>
+	
+	let status = null
+	let buttons = null
+	if (location.pathname === '/' && state.unraid) {
+		status = (
+			<div className={cx('flexSection', 'middle-xs')}>
+				<span className={cx('spacer', 'label', 'label-success')}>{state.unraid.condition.state}</span>
+			</div>
+		)
 
-	if (state.config) { 
-		// console.log('app.state.config.version: ', state.config.version)
+		buttons = (
+			<div className={cx('flexSection', 'end-xs')}>
+				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={state.opInProgress}>CALCULATE</button>
+				<span>&nbsp; | &nbsp;</span>
+				<button className={cx('btn', 'btn-primary')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
+				<span>&nbsp; | &nbsp;</span>
+				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
+					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions, dispatch)} />
+					&nbsp;
+					<label>dry run</label>
+				</div>
+			</div>
+		)
 	}
+
+	let version = state.config ? state.config.version : null
 
 	// var url = require("file!./file.png");
 	let unbalance = require("../img/unbalance-logo.png")
@@ -63,17 +99,31 @@ export default function App({ children, store }) {
 
 					<li className={cx('headerMenuBg')}>
 						<section className={cx('row', 'middle-xs')}>
-							<div className={cx('col-xs-12', 'col-sm-4', 'flexSection', 'routerSection')}>
+							<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
 								<Link to="/" className={cx('lspacer')}>HOME</Link>
 								<span className={cx('spacer')}>|</span>
 								<Link to="settings">SETTINGS</Link>						
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-4', 'center-xs', 'flex')}>
-								{ progress }
+							<div className={cx('col-xs-12', 'col-sm-7')}>
+								<div className={cx('gridHeader')}>
+									<section className={cx('row', 'between-xs')}>
+										<div className={cx('col-xs-12', 'col-sm-3')}>
+											{ status}
+										</div>
+
+										<div className={cx('col-xs-12', 'col-sm-1', 'flexSection', 'center-xs', 'middle-xs')}>
+											{ progress }
+										</div>
+
+										<div className={cx('col-xs-12', 'col-sm-8')}>
+											{ buttons }
+										</div>
+									</section>
+								</div>
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-4', 'middle-xs', 'end-xs', 'flexSection')}>
+							<div className={cx('col-xs-12', 'col-sm-2', 'middle-xs', 'end-xs', 'flexSection')}>
 								<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><i className={cx('fa fa-twitter')} /></a>
 								<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><i className={cx('fa fa-github')} /></a>
 								<img src={vm} />
@@ -89,6 +139,8 @@ export default function App({ children, store }) {
 		</header>
 
 		<main>
+			{ alert }
+
 			{ children }
 		</main>
 
@@ -121,4 +173,16 @@ export default function App({ children, store }) {
 		</footer>
 		</div>
 	)
+}
+
+function calculate(actions, dispatch, e) {
+	dispatch(actions.calculate)
+}
+
+function move(actions, dispatch, e) {
+	dispatch(actions.move)
+}
+
+function toggleDryRun(actions, dispatch, e) {
+	dispatch(actions.toggleDryRun)
 }
