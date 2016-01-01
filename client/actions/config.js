@@ -76,7 +76,7 @@ function _folderDeleted({state, actions, dispatch}, _, config) {
 	return newState
 }
 
-function _toggleDryRun({state, actions, dispatch}) {
+function _toggleDryRun({state, actions, dispatch}, {api, _}) {
 	dispatch(actions.opInProgress, actions.toggleDryRun)
 
 	api.toggleDryRun()
