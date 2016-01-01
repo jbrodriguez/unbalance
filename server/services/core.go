@@ -210,7 +210,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	mlog.Info("payload received is: (%+v)", msg.Payload)
+	// mlog.Info("payload received is: (%+v)", msg.Payload)
 	payload := msg.Payload.(string)
 
 	var dtoCalc dto.Calculate
@@ -276,7 +276,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	for _, disk := range disks {
 		diskWithoutMnt := disk.Path[5:]
-		msg := fmt.Sprintf("Processing %s ...", diskWithoutMnt)
+		msg := fmt.Sprintf("Trying to allocate folders into %s ...", diskWithoutMnt)
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
@@ -543,7 +543,12 @@ func (c *Core) move(msg *pubsub.Message) {
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
-			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, item.Path, c.storage.SourceDiskName, disk.Path)
+			sanePath := item.Path
+			if item.Path[0] == '/' {
+				sanePath = sanePath[1:]
+			}
+
+			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, sanePath, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
