@@ -23,6 +23,7 @@ import (
 
 const (
 	DISKMV_CMD = "./diskmv"
+	MAIL_CMD   = "/usr/local/emhttp/webGui/scripts/notify"
 )
 
 type Core struct {
@@ -64,6 +65,8 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
+	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
@@ -97,6 +100,30 @@ func (c *Core) react() {
 
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setNotifyCalc(msg *pubsub.Message) {
+	fnotify := msg.Payload.(float64)
+	notify := int(fnotify)
+
+	mlog.Info("Setting notifyCalc to (%d)", notify)
+
+	c.settings.NotifyCalc = notify
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setNotifyMove(msg *pubsub.Message) {
+	fnotify := msg.Payload.(float64)
+	notify := int(fnotify)
+
+	mlog.Info("Setting notifyMove to (%d)", notify)
+
+	c.settings.NotifyMove = notify
+	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
 }
@@ -276,7 +303,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	for _, disk := range disks {
 		diskWithoutMnt := disk.Path[5:]
-		msg := fmt.Sprintf("Trying to allocate folders into %s ...", diskWithoutMnt)
+		msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
@@ -349,9 +376,9 @@ func (c *Core) calc(msg *pubsub.Message) {
 	if notMoved != "" {
 		switch c.settings.NotifyCalc {
 		case 1:
-			message += "\n\nSome folders are not elegible for moving because there's not enough space for them in any of the target disks."
+			message += "\n\nSome folders will not be moved because there's not enough space for them in any of the destination disks."
 		case 2:
-			message += "\n\nThe following folders are not elegible for moving because there's not enough space for them in any of the target disks:\n\n" + notMoved
+			message += "\n\nThe following folders will not be moved because there's not enough space for them in any of the destination disks:\n\n" + notMoved
 		}
 	}
 
@@ -647,10 +674,21 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 // 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 // }
 
-func (c *Core) sendmail(notify int, subject, message string, dryRun bool) error {
-	if notify == 0 {
-		return nil
+func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
+	// if notify == 0 {
+	// 	return nil
+	// }
+
+	dry := ""
+	if dryRun {
+		dry = "-------\nDRY RUN\n-------\n"
 	}
+
+	msg := dry + message
+
+	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", MAIL_CMD, subject, msg)
+	cmd := exec.Command(MAIL_CMD, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	err = cmd.Run()
 
 	// from := "From: " + c.settings.NotiFrom
 	// to := "To: " + c.settings.NotiTo
@@ -680,8 +718,7 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) error 
 	// 	return err
 	// }
 
-	return nil
-
+	return
 }
 
 // func (c *Core) printCommands(list []string) string {

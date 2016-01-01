@@ -94,18 +94,41 @@ export default class Settings extends Component {
 		return (
 			<div>
 
-			<section className={cx('row')}>
-				<div className={cx('col-xs-12', 'bottom-spacer-half')}>
-					<form>
-					<fieldset>
-						<legend>Folders elegible for the moving process</legend>
+			<section className={cx('row', 'bottom-spacer-large')}>
+				<div className={cx('col-xs-12')}>
+					<div>
+						<h3>SET UP NOTIFICATIONS</h3>
 
-						<p>Specify which folders will be available for moving. All folders should be relative to /mnt/user.</p>
-						<p className={cx('bottom-spacer-half')}>For example, you may want to move only movies, but not tvshows. You have /mnt/user/Movies and /mnt/user/TVShows. In the input box below, you would enter Movies.</p>
+						<p>Notifications rely on unRAID's notifications settings, so you need to set up unRAID first, in order to receive notifications from unBALANCE.</p>
 
+						<br />
 
-					</fieldset>
-					</form>
+						<span> Calculate: </span>
+						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc.bind(this, 0)} /> <span>No Notifications</span>
+						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc.bind(this, 1)} /> <span>Basic</span>
+						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc.bind(this, 2)} /> <span>Detailed</span>
+
+						<br />
+
+						<span> Move: </span>
+						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove.bind(this, 0)} /> <span>No Notifications</span>
+						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove.bind(this, 1)} /> <span>Basic</span>
+						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove.bind(this, 2)} /> <span>Detailed</span>
+					</div>
+				</div>
+			</section>			
+
+			<section className={cx('row', 'bottom-spacer-large')}>
+				<div className={cx('col-xs-12')}>
+					<div>
+						<h3>WHICH FOLDERS DO YOU WANT TO MOVE ?</h3>
+
+						<p>Define which folders should be moved to free up space on the source disk (you choose the source disk in the main page).</p>
+						<p>You can choose entire user shares (/Movies) or specific folders below a user share (/Movies/Action).</p>
+						<p>The folders you select will be moved to other disks in the array, only if enough space is available.</p>
+						<p>Click on the <button className={cx('btn', 'btn-alert')}>add</button>  button that appears when you hover your mouse over a folder in the "unRAID Shares Explorer" column below, to select it for moving.</p>
+						<p>Click on the <i className={cx('fa fa-remove')}></i> icon that appears next to any folder in the "Folders to be moved" column, to deselect it.</p>
+					</div>
 				</div>
 			</section>
 
@@ -117,7 +140,7 @@ export default class Settings extends Component {
 								<div className={cx('explorerHeader')}>
 									<section className={cx('row')}>
 										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<span className={cx('lspacer')}>Unraid Shares Explorer</span>
+											<span className={cx('lspacer')}>unRAID Shares Explorer</span>
 										</div>
 										<div className={cx('col-xs-12', 'col-sm-4')}>
 											Folders to move
@@ -180,6 +203,18 @@ export default class Settings extends Component {
 	// }
 
 	_deleteFolder(folder, e) {
-		this.props.dispatch(C.DELETE_FOLDER, folder)
+		let { dispatch, actions } = this.props.store
+		dispatch(actions.deleteFolder, folder)
 	}
+
+	_setNotifyCalc(notify, e) {
+		let { dispatch, actions } = this.props.store
+		dispatch(actions.setNotifyCalc, notify)
+	}
+
+	_setNotifyMove(notify, e) {
+		let { dispatch, actions } = this.props.store
+		dispatch(actions.setNotifyMove, notify)
+	}
+
 }
