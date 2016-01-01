@@ -9,6 +9,7 @@ module.exports = [
 	{type: "calcStarted", fn: _calcStarted},
 	{type: "calcProgress", fn: _calcProgress},
 	{type: "calcFinished", fn: _calcFinished},
+	// {type: "calcIsRunning", fn: _calcIsRunning},
 
 	{type: "move", fn: _move},
 	{type: "moveStarted", fn: _moveStarted},
@@ -31,27 +32,35 @@ function _getStorage({state, actions, dispatch}, {api, _}) {
 function _gotStorage({state, actions, dispatch}, _, unraid) {
 	// console.log('unraid: ', unraid)
 
+	// let toDisk = {}
+	// let fromDisk = {}
+	// let maxFreeSize = 0
+	// let maxFreePath = ""
+
+	// unraid.disks.map( disk => {
+	// 	toDisk[disk.path] = true
+	// 	fromDisk[disk.path] = false
+
+	// 	if (disk.free > maxFreeSize) {
+	// 		maxFreeSize = disk.free
+	// 		maxFreePath = disk.path
+	// 	}
+
+	// 	return disk
+	// })
+
+	// if (maxFreePath != "") {
+	// 	toDisk[maxFreePath] = false
+	// 	fromDisk[maxFreePath] = true
+	// }
+
 	let toDisk = {}
 	let fromDisk = {}
-	let maxFreeSize = 0
-	let maxFreePath = ""
 
-	unraid.disks.map( disk => {
-		toDisk[disk.path] = true
-		fromDisk[disk.path] = false
-
-		if (disk.free > maxFreeSize) {
-			maxFreeSize = disk.free
-			maxFreePath = disk.path
-		}
-
-		return disk
+	unraid.disks.forEach( disk => {
+		fromDisk[disk.path] = disk.src
+		toDisk[disk.path] = disk.dst
 	})
-
-	if (maxFreePath != "") {
-		toDisk[maxFreePath] = false
-		fromDisk[maxFreePath] = true
-	}
 
 	let newState = Object.assign({}, state)
 
@@ -138,6 +147,11 @@ function _calcStarted({state, actions, dispatch}, _, line) {
 function _calcProgress({state, actions, dispatch}, _, line) {
 	let newState = Object.assign({}, state)
 
+	// make sure we disable the interface, in case another browser is open
+	// or even the initial browser is woken from sleep 
+	newState.opInProgress = actions.calculate
+	newState.moveDisabled = true
+
 	newState.lines.push('CALCULATE: ' + line)
 
 	return newState
@@ -164,6 +178,17 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 	// 	moveDisabled: false,
 	// }
 }
+
+// // this message is received when the browser requests
+// function _calcIsRunning({state, actions, dispatch}, _, unraid) {
+// 	let newState = Object.assign({}, state)
+
+// 	newState.opInProgress = actions.calculate
+// 	newState.moveDisabled = true
+// 	// newState.lines.push('CALCULATE: ' + line)
+
+// 	return newState
+// }
 
 function _move({state, actions, dispatch}, {_, ws}) {
 	dispatch(actions.opInProgress, actions.move)

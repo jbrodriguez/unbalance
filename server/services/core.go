@@ -227,6 +227,16 @@ func (c *Core) getTree(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
+	if c.opIsRunning {
+		outbound := &dto.Packet{Topic: "calcIsRunning", Payload: c.storage}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	go c._calc(msg)
+}
+
+func (c *Core) _calc(msg *pubsub.Message) {
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
@@ -250,20 +260,21 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	var srcDisk *model.Disk
 	for _, disk := range c.storage.Disks {
-		disk.NewFree = 0
+		// reset disk
+		disk.NewFree = disk.Free
 		disk.Bin = nil
+		disk.Src = false
+		disk.Dst = dtoCalc.DestDisks[disk.Path]
 
 		if disk.Path == dtoCalc.SourceDisk {
+			disk.Src = true
 			srcDisk = disk
 		} else {
+			// add it to the target disk list, only if the user selected it
 			if val, ok := dtoCalc.DestDisks[disk.Path]; ok && val {
 				disks = append(disks, disk)
-			} else {
-				// if the disk is not elegible as a target, let newFree = Free, to prevent the UI to think there was some change in it
-				disk.NewFree = disk.Free
 			}
 		}
-
 	}
 
 	c.foldersNotMoved = make([]string, 0)
@@ -299,7 +310,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 		mlog.Info("calculateBestFit:total(%d):toBeMoved:Path(%s); Size(%s)", len(folders), v.Path, lib.ByteSize(v.Size))
 	}
 
-	srcDisk.NewFree = srcDisk.Free
+	// srcDisk.NewFree = srcDisk.Free
 
 	for _, disk := range disks {
 		diskWithoutMnt := disk.Path[5:]
@@ -310,7 +321,7 @@ func (c *Core) calc(msg *pubsub.Message) {
 		time.Sleep(2 * time.Second)
 
 		if disk.Path != srcDisk.Path {
-			disk.NewFree = disk.Free
+			// disk.NewFree = disk.Free
 
 			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
 
