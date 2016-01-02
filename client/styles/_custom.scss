@@ -3,7 +3,7 @@
 // }
 
 header {
-	margin: 0.5em 0;	
+	margin: 0.5em 0;
 }
 
 main {
@@ -46,8 +46,9 @@ p {
 		font-size: 0.9em;
 
 		&.active {
-			padding-bottom: 3px;
-			border-bottom: 3px solid $headerMenuAnchorColor;
+			// padding-bottom: 3px;
+			font-weight: bold;
+			border-bottom: 1px solid $headerMenuAnchorColor;
 		}
 	}	
 }

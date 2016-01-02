@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import { Link } from 'react-router'
+import { IndexLink, Link } from 'react-router'
 
 import FeedbackPanel from './feedbackPanel'
 
@@ -73,8 +73,7 @@ export default function App({ location, children, store }) {
 		buttons = (
 			<div className={cx('flexSection', 'end-xs')}>
 				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={calcDisabled}>CALCULATE</button>
-				<span>&nbsp; | &nbsp;</span>
-				<button className={cx('btn', 'btn-primary')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
+				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
 					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions, dispatch)} />
@@ -94,6 +93,15 @@ export default function App({ location, children, store }) {
 	let logo = require('../img/logo-small.png')
 	let vm = require('../img/v.png')
 
+	let indexActive = cx({
+		'lspacer': true,
+		'active': true
+	})
+
+	let active = cx({
+		'active': true
+	})
+
 	return (
 		<div className={cx('container', 'body')}>
 		<header>
@@ -111,9 +119,9 @@ export default function App({ location, children, store }) {
 					<li className={cx('headerMenuBg')}>
 						<section className={cx('row', 'middle-xs')}>
 							<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
-								<Link to="/" className={cx('lspacer')}>HOME</Link>
+								<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>HOME</IndexLink>
 								<span className={cx('spacer')}>|</span>
-								<Link to="settings">SETTINGS</Link>						
+								<Link to="settings" activeClassName={active}>SETTINGS</Link>						
 							</div>
 
 							<div className={cx('col-xs-12', 'col-sm-7')}>
