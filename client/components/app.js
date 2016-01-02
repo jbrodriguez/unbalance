@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react'
 import { Link } from 'react-router'
 
+import FeedbackPanel from './feedbackPanel'
+
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
@@ -26,11 +28,11 @@ export default function App({ location, children, store }) {
 	let { state, dispatch, actions } = store
 
 	let alert = null
-	if ( state.alerts.length !== 0) {
+	if ( state.feedback.length !== 0) {
 		alert = (
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>				
-					<AlertPanel {...store} />
+					<FeedbackPanel {...store} />
 				</div>
 			</section>		
 		)
