@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	DISKMV_CMD = "./diskmv"
-	MAIL_CMD   = "/usr/local/emhttp/webGui/scripts/notify"
+	DISKMV_CMD  = "./diskmv"
+	MAIL_CMD    = "/usr/local/emhttp/webGui/scripts/notify"
+	TIME_FORMAT = "Jan _2, 2006 15:04:05"
 )
 
 type Core struct {
@@ -342,13 +343,16 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	}
 
 	finished := time.Now()
-	elapsed := time.Since(started)
+	elapsed := lib.Round(time.Since(started), time.Millisecond)
+
+	fstarted := started.Format(TIME_FORMAT)
+	ffinished := finished.Format(TIME_FORMAT)
 
 	// Send to frontend console started/ended/elapsed times
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", started)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
@@ -383,7 +387,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	// send mail according to user preferences
 	subject := "unBALANCE - CALCULATE operation completed"
-	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", started, finished, elapsed)
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
 	if notMoved != "" {
 		switch c.settings.NotifyCalc {
 		case 1:
@@ -628,10 +632,14 @@ func (c *Core) move(msg *pubsub.Message) {
 }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
-	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", started)}
+	fstarted := started.Format(TIME_FORMAT)
+	ffinished := finished.Format(TIME_FORMAT)
+	elapsed = lib.Round(time.Since(started), time.Millisecond)
+
+	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
@@ -664,7 +672,7 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 	outbound = &dto.Packet{Topic: "moveFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", started, finished, elapsed, headline)
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", fstarted, ffinished, elapsed, headline)
 	switch c.settings.NotifyMove {
 	case 1:
 		message += fmt.Sprintf("\n\n%d commands were executed.", len(commands))
