@@ -233,23 +233,35 @@ func (c *Core) calc(msg *pubsub.Message) {
 }
 
 func (c *Core) _calc(msg *pubsub.Message) {
+	defer func() { c.opIsRunning = false }()
+
+	payload, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert calculate parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert calculate parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var dtoCalc dto.Calculate
+	err := json.Unmarshal([]byte(payload), &dtoCalc)
+	if err != nil {
+		mlog.Warning("Unable to bind calculate parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind calculate parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	defer func() { c.opIsRunning = false }()
 	// c.storage.Condition.State = "CALCULATING"
 
 	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// mlog.Info("payload received is: (%+v)", msg.Payload)
-	payload := msg.Payload.(string)
-
-	var dtoCalc dto.Calculate
-	err := json.Unmarshal([]byte(payload), &dtoCalc)
-	if err != nil {
-		mlog.Fatalf(err.Error())
-	}
 
 	disks := make([]*model.Disk, 0)
 
@@ -422,7 +434,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	// send to front end the signal of operation finished
 	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
@@ -537,10 +548,10 @@ func (c *Core) move(msg *pubsub.Message) {
 }
 
 func (c *Core) _move(msg *pubsub.Message) {
+	defer func() { c.opIsRunning = false }()
+
 	mlog.Info("Running move operation ...")
 	started := time.Now()
-
-	defer func() { c.opIsRunning = false }()
 
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -602,6 +613,8 @@ func (c *Core) _move(msg *pubsub.Message) {
 				headline := fmt.Sprintf("Move command (%s) was interrupted: %s", cmd, err.Error())
 
 				mlog.Warning(headline)
+				outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				c.finishMoveOperation(subject, headline, commands, started, finished, elapsed)
 

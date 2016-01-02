@@ -15,6 +15,8 @@ module.exports = [
 	{type: "moveStarted", fn: _moveStarted},
 	{type: "moveProgress", fn: _moveProgress},
 	{type: "moveFinished", fn: _moveFinished},
+
+	{type: "opError", fn: _opError},
 ]
 
 function _getStorage({state, actions, dispatch}, {api, _}) {
@@ -246,4 +248,12 @@ function _moveFinished({state, actions, dispatch}, _, unraid) {
 	// 	opInProgress: null,
 	// 	moveDisabled,
 	// }
+}
+
+function _opError({state, actions, dispatch}, _, error) {
+	let newState = Object.assign({}, state)
+
+	newState.feedback.push(error)
+	
+	return newState
 }
