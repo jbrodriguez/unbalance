@@ -164,6 +164,18 @@ p {
 	}
 }
 
+.progress {
+    background-color: $progressBackground;
+    height: 1.5625rem;
+    border: 1px solid white;
+
+    span {
+  		background: $progressMeter;
+  		height: 100%;
+  		display: block;    	
+    }
+}
+
 // .title {
 // 	padding: 1em;
 // }

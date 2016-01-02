@@ -59,11 +59,15 @@ export default class Home extends Component {
 			)
 		}
 
+					// {percentage(disk.free/disk.size)}
+
 		let rows = 	state.unraid.disks.map( (disk, i) => {
 			let diskChanged = cx({
 				'label': disk.newFree !== disk.free,
 				'label-success': disk.newFree !== disk.free && state.fromDisk[disk.path],
 			})
+
+			const percent = percentage((disk.size - disk.free) / disk.size)
 
 			return (
 				<tr key={i}>
@@ -73,7 +77,11 @@ export default class Home extends Component {
 					<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
 					<td>{humanBytes(disk.size)}</td>
 					<td>{humanBytes(disk.free)}</td>
-					<td>{percentage(disk.free/disk.size)}</td>
+					<td>
+			            <div className={cx('progress')}>
+			                <span style={{width: percent}}></span>
+			            </div>
+					</td>
 					<td>
 						<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
 					</td>

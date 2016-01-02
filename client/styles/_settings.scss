@@ -47,6 +47,7 @@ $charcoal-blue: #343642;
 $cheerful-blue: #008cba;
 $unbalance-blue: #333;
 $unbalance-footer: #1E446F;
+$angular-blue: #008cba;
 
 $bright-orange: #C63D0F;
 $mellow-orange: #f08a24;
@@ -142,6 +143,13 @@ $consoleBg: $charcoal-blue;
 $explorerHeader: $elegant-blue;
 $explorerContent: $cement-gray;
 $explorerChosen: white;
+
+// $progressBackground: #f6f6f6;
+// $progressNeter: #008cba;
+$progressBackground: $lighter-gray;
+$progressMeter: $angular-blue;
+
+
 
 // FOOTER
 $footerColor: $darker-gray;
