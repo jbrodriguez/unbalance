@@ -1,3 +1,34 @@
+Version 1.1.0 - 2016-01-02
+    (front) Add missing api parameter
+    (front) Reset each disk when a calcuation has begun
+    (front) Move control panel in home page to app header
+    (front) Move alert panel to content area of app
+    (front) General ui fixes
+    (unbalance) Use latest version of diskmv (it's the same as for the previous unbalance version)
+    (back) Sanitize path sento to diskmv for moving (remove leading slash, if any)
+    (unbalance) Add support for notifications both in client and server
+    (back) Use unRAID notifications as unBALANCE's notification system
+    (unbalance) Allow other browser clients to connect to the server and receive the same interface as the original browser. It also works when the original browser does a refresh.
+    (front) Disable calculate button as needed
+    (front) Set correct label style for unraid status
+    (front) Change footer color and copyright text
+    (front) Style changes
+    (front) Add check for unraid started status in settings
+    (front) SImplify logic to check for unraid availability
+    (back) Improve formatting of the operations' started, finished and elapsed times
+    (front) Rename AlertPanel to FeedbackPanel
+    (front) Set feedback message when calculate returns 0 bytes to move
+    (front) Fix copy
+    (front) UI improvements
+    (front) Implement active state for navigation links
+    (front) Little ui fix
+    (front) Implement fill component to display how much a disk is filled
+    (front) Disable dry run checkbox when an operation is running
+    (front) Display a warning box instead of the settings, when an operation is running
+    (back) Allow move operation to be parallelized
+    (unbalance) Define a new opError message/action that raises an alert on the ui whenever it's received
+
+
 Version 1.0.0 - 2015-12-31
     -Remove staging and art folders
     - First pass at new client architecture using redux
