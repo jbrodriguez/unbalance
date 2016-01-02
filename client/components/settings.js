@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 import 'font-awesome-webpack'
 
 import TreePanel from './treePanel'
-import AlertPanel from './alertPanel'
 
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
@@ -29,7 +28,7 @@ export default class Settings extends Component {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>The array is not operational. Please start the array first.</p>
+						<p className={cx('bg-warning')}>The array is not started. Please start the array before perfoming any operations with unBALANCE.</p>
 					</div>
 				</section>
 			)
