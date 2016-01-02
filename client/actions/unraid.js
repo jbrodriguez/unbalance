@@ -169,6 +169,11 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 	newState.opInProgress = null
 	newState.moveDisabled = false
 
+	if (newState.unraid.bytesToMove === 0) {
+		newState.feedback.push("There's no space available to move any of the folders you selected.")
+		newState.feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
+	}
+
 	return newState
 
 	// return {
