@@ -162,6 +162,9 @@ func (u *Unraid) Refresh() {
 		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
 	})
 
+	maxFree := int64(0)
+	var srcDisk *Disk
+
 	for _, disk := range u.disks {
 		if disk == nil || disk.Name == "Parity" || disk.Status != "DISK_OK" {
 			continue
@@ -171,11 +174,24 @@ func (u *Unraid) Refresh() {
 		disk.Free = free[disk.Path]
 		disk.NewFree = disk.Free
 
+		disk.Src = false
+		disk.Dst = true
+
+		if disk.Free > maxFree {
+			maxFree = disk.Free
+			srcDisk = disk
+		}
+
 		u.Condition.Size += disk.Size
 		u.Condition.Free += disk.Free
 		u.Condition.NewFree += disk.Free
 
 		u.Disks = append(u.Disks, disk)
+	}
+
+	if srcDisk != nil {
+		srcDisk.Src = true
+		srcDisk.Dst = false
 	}
 
 	u.Print()

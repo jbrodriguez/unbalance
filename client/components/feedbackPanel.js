@@ -6,21 +6,24 @@ import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
-export default function AlertPanel({state, actions, dispatch}) {
+export default function FeedbackPanel({state, actions, dispatch}) {
 	return (
-		<div className={cx('bg-alert')}>
+		<div className={cx('bg-feedback', 'feedback')}>
 			<section className={cx('row')}>
-				<div className={cx('col-xs-12', 'end-xs')}>
-					<i className={cx('fa fa-remove')} onClick={dispatch(actions.removeAlert)}></i>
+				<div className={cx('col-xs-12', 'end-xs', 'divider')}>
+					<div className={cx('flexSection', 'middle-xs', 'between-xs')}>
+						<span className={cx('lspacer')}>Operation Feedback</span>
+						<i className={cx('fa fa-remove', 'rspacer')} onClick={_removeFeedback.bind(null, actions, dispatch)}></i>
+					</div>
 				</div>
 			</section>
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12')}>
-					<ul>
+					<ul className={cx('lspacer')}>
 					{ 
-						state.alerts.map( (alert, i) => {
+						state.feedback.map( (feedback, i) => {
 							return (
-								<li key={i}>{alert}</li>
+								<li key={i}>{feedback}</li>
 							)
 						})
 					}
@@ -29,6 +32,10 @@ export default function AlertPanel({state, actions, dispatch}) {
 			</section>
 		</div>
 	)
+}
+
+function _removeFeedback(actions, dispatch, e) {
+	dispatch(actions.removeFeedback)
 }
 
 

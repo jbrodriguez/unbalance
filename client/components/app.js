@@ -1,5 +1,7 @@
 import React, { Component, PropTypes } from 'react'
-import { Link } from 'react-router'
+import { IndexLink, Link } from 'react-router'
+
+import FeedbackPanel from './feedbackPanel'
 
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
@@ -26,15 +28,15 @@ export default function App({ location, children, store }) {
 	let { state, dispatch, actions } = store
 
 	let alert = null
-	if ( state.alerts.length !== 0) {
+	if ( state.feedback.length !== 0) {
 		alert = (
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>				
-					<AlertPanel {...store} />
+					<FeedbackPanel {...store} />
 				</div>
 			</section>		
 		)
-	}	
+	}
 
 	let progress = null
 	if (state.opInProgress) {
@@ -48,25 +50,33 @@ export default function App({ location, children, store }) {
 		)
 	}
 
+	const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
+	const disabled = state.opInProgress || (!stateOk)
+
 	// <span className={cx('lspacer')}>STATUS:</span>
+	const labelStyle = cx({
+		'spacer': true,
+		'label': true,
+		'label-success': stateOk,
+		'label-alert': !stateOk,
+	})
 	
 	let status = null
 	let buttons = null
 	if (location.pathname === '/' && state.unraid) {
 		status = (
 			<div className={cx('flexSection', 'middle-xs')}>
-				<span className={cx('spacer', 'label', 'label-success')}>{state.unraid.condition.state}</span>
+				<span className={labelStyle}>{state.unraid.condition.state}</span>
 			</div>
 		)
 
 		buttons = (
 			<div className={cx('flexSection', 'end-xs')}>
-				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={state.opInProgress}>CALCULATE</button>
-				<span>&nbsp; | &nbsp;</span>
-				<button className={cx('btn', 'btn-primary')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
+				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={disabled}>CALCULATE</button>
+				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
-					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions, dispatch)} />
+					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions, dispatch)} disabled={disabled} />
 					&nbsp;
 					<label>dry run</label>
 				</div>
@@ -82,6 +92,15 @@ export default function App({ location, children, store }) {
 	let unraid = require('../img/unraid.png')
 	let logo = require('../img/logo-small.png')
 	let vm = require('../img/v.png')
+
+	let indexActive = cx({
+		'lspacer': true,
+		'active': true
+	})
+
+	let active = cx({
+		'active': true
+	})
 
 	return (
 		<div className={cx('container', 'body')}>
@@ -100,9 +119,9 @@ export default function App({ location, children, store }) {
 					<li className={cx('headerMenuBg')}>
 						<section className={cx('row', 'middle-xs')}>
 							<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
-								<Link to="/" className={cx('lspacer')}>HOME</Link>
+								<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>HOME</IndexLink>
 								<span className={cx('spacer')}>|</span>
-								<Link to="settings">SETTINGS</Link>						
+								<Link to="settings" activeClassName={active}>SETTINGS</Link>						
 							</div>
 
 							<div className={cx('col-xs-12', 'col-sm-7')}>
@@ -150,7 +169,7 @@ export default function App({ location, children, store }) {
 
 				<ul className={cx('col-xs-12', 'col-sm-4')}>
 		    		<div className={cx('flexSection')}>
-						<span className={cx('copyright', 'spacer')}>Copyright &copy; 2014 +</span>
+						<span className={cx('copyright', 'lspacer')}>Copyright &copy; &nbsp;</span>
 						<a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a>
 					</div>
 				</ul>

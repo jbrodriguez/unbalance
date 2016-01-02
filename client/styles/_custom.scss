@@ -3,7 +3,7 @@
 // }
 
 header {
-	margin: 0.5em 0;	
+	margin: 0.5em 0;
 }
 
 main {
@@ -28,6 +28,10 @@ a, img {
 	display: flex;
 }
 
+p {
+	line-height: 2em;
+}
+
 
 .headerLogoBg {
 	background-color: $headerLogoBackground;	
@@ -42,8 +46,10 @@ a, img {
 		font-size: 0.9em;
 
 		&.active {
-			padding-bottom: 3px;
-			border-bottom: 3px solid $headerMenuAnchorColor;
+			color: $headerMenuAnchorColor;
+			// padding-bottom: 3px;
+			font-weight: bold;
+			border-bottom: 1px solid $headerMenuAnchorColor;
 		}
 	}	
 }
@@ -146,6 +152,28 @@ a, img {
 .explorerChosen {
 	padding: 0.5em;
 	background-color: $explorerChosen;
+}
+
+.feedback {
+	color: white;
+	font-size: 0.8em;
+
+	.divider {
+		font-size: 0.5em;
+		border-bottom: 1px solid white;
+	}
+}
+
+.progress {
+    background-color: $progressBackground;
+    height: 1.5625rem;
+    border: 1px solid white;
+
+    span {
+  		background: $progressMeter;
+  		height: 100%;
+  		display: block;    	
+    }
 }
 
 // .title {

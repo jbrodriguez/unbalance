@@ -38,7 +38,6 @@ import Settings from './components/settings'
 // 			{id: 3, name: "disk3", path: "/mnt/disk3"},
 // 		],
 // 		bytesToMove: 0,
-// 		inProgress: false, // need to review this variable
 // 	}
 //  fromDisk: null,
 //  toDisk: null,
@@ -55,7 +54,8 @@ import Settings from './components/settings'
 // 			],
 // 		selected: "",
 // 		fetching: false,
-// 	}
+// 	},
+//	feedback: []
 // }
 
 const api = new Api()
@@ -84,7 +84,7 @@ function boot([config, entry]) {
 			selected: '',
 			fetching: false,
 		},
-		alerts: [],
+		feedback: [],
 	}
 
 	let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)

@@ -1,6 +1,6 @@
 module.exports = [
 	{type: "opInProgress", fn: _opInProgress},
-	{type: "removeAlert", fn: _removeAlert},
+	{type: "removeFeedback", fn: _removeFeedback},
 ]
 
 function _opInProgress({state, actions, dispatch}, _, action) {
@@ -11,10 +11,10 @@ function _opInProgress({state, actions, dispatch}, _, action) {
 	return newState
 }
 
-function _removeAlert({state, actions, dispatch}, _, action) {
+function _removeFeedback({state, actions, dispatch}) {
 	let newState = Object.assign({}, state)
 
-	newState.alerts = []
+	newState.feedback = []
 
 	return newState
 }

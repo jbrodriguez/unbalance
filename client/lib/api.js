@@ -11,6 +11,25 @@ export default class Api {
 			.then(resp => resp.json())
 	}
 
+	setNotifyCalc(notify) {
+		return fetch(this.hostr + '/config/notifyCalc', {
+			method: 'PUT',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: notify})
+		})
+		.then(resp => resp.json())
+	}
+
+	setNotifyMove(notify) {
+		return fetch(this.hostr + '/config/notifyMove', {
+			method: 'PUT',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: notify})
+		})
+		.then(resp => resp.json())
+	}
+
+
 	addFolder(folder) {
 		// console.log('sending: ', folder)
 		return fetch(this.hostr + '/config/folder', {

@@ -1,2 +1,292 @@
 #!/bin/bash
-echo "copied"
+# diskmv - Move an unRAID user share files from one disk to another
+#
+# usage: diskmv [options] path srcdisk destdisk
+#
+# A find/rsync structure is used to copy files and directories and then 
+# delete only if the copy succeed, similar to the unRAID mover script.
+
+usage(){
+cat << EOF
+
+usage: diskmv [-t|-f|-k|-l|-c|-s N|-e EXT|-v|-q|-h] path srcdisk destdisk
+
+EOF
+}
+
+helpmsg(){
+cat << EOF
+
+usage: diskmv [options] path srcdisk destdisk
+
+path         Any directory or file that is contained in the user share file 
+             system. It can be specified as an absolute or relative path and 
+             can be relative to the current directory or the /mnt/user/ 
+             directory.  
+
+srcdisk      Source disk which can be any valid disk in the unraid array. 
+             Examples: 'disk2', 'disk18' or 'cache'.
+
+destdisk     Destination disk which can be any valid disk in the unraid array.
+             Examples: 'disk2', 'disk18' or 'cache'.
+
+Options:
+
+-t	test mode, do not copy or delete files
+-f	force, override test mode and take action
+-k	keep source files, do not delete after successful copy
+-l	link, copy symlinks as symlinks, default is to ignore symlinks
+-c	clobber, duplicates on destination will be overwritten
+-s N    small, only move files less than or equal to N kilobytes
+-e EXT  only move files with extensions in the comma separated list EXT
+-v	verbose, output more information
+-q	quiet, output less information
+-h	help, print this help message
+
+EOF
+}
+
+[ ${DEBUG:=0} -gt 0 ] && set -x -v
+
+doIt='false'      # Default to dry-run
+keepSource='false'   # Delete source files by default if copy works
+symlinks='false'  # Default rsync to not copy symlinks as symlinks
+clobber='false'   # Default to skip duplicates
+small='false'     # Default to not limit file size
+verbose=1	  # Default to output some but not all info
+
+while :; do
+  case "$1" in
+    -h|-\?|--help)
+      helpmsg
+      exit 0
+      ;;
+    -t|--test) # Specify test mode where no files are moved
+      doIt='false'
+      ;;
+    -f|--force) # Override test mode and force action
+      doIt='true'
+      ;;
+    -k|--keepsource) # Do not delete any source files
+      keepSource='true'
+      ;;
+    -l|--links) # Copy symlinks as symlinks
+      symlinks='true'
+      ;;
+    -c|--clobber) # Clobber duplicates on destination
+      clobber='true'
+      ;;
+    -s|--small) # Only move files smaller than 4096 bytes
+      small='true'
+      maxsize="$2"
+      shift
+      ;;
+    -e|--extension) # Only move files smaller than 4096 bytes
+      extonly='true'
+      extlist="$2"
+      shift
+      ;;
+    -v|--verbose)
+      verbose=$((verbose + 1)) # Each -v argument adds 1 to verbosity
+      ;;
+    -q|--quiet)
+      verbose=$((verbose - 1)) # Each -q argument subtracts 1 from verbosity
+      ;;
+    --) # End of all options
+      break
+      ;;
+    -?*)
+      echo "Unknown option (ignored): $1" >&2
+      ;;
+    *) # Default case: if no more options then break out of loop
+      break
+  esac
+  shift
+done
+
+if [ "$extonly" == 'true' ]; then
+  if [ -z "$extlist" ]; then
+    echo "The -e (--extension) option requires a list of extensions." >&2
+    usage >&2
+    exit 1
+  fi
+fi
+
+if [ "$small" == 'true' ]; then
+  if [ -z "$maxsize" ]; then
+    echo "The -s (--small) option requires an integer argument." >&2
+    usage >&2
+    exit 1
+  fi
+  re='^[1-9][0-9]*$'  #Regular expression for only digits not starting with 0
+  if [[ ! "$maxsize" =~ $re ]]; then
+    echo "Invalid argument: '$maxsize' for the -s (--small) option." >&2
+    usage >&2
+    exit 1
+  fi
+fi
+
+if [ -e "$1" ]
+then
+  fullName=$(readlink -e "$1")   # Handle relative path
+  userShareObj="${fullName#/mnt/*/}"   # Remove any /mnt/*/ prefix
+else
+  userShareObj="$1"
+fi
+
+if [ ! -e "/mnt/user/$userShareObj" ]
+then 
+  echo "'$1' is not a valid user share path." >&2
+  usage >&2
+  exit 1
+fi
+
+if [ -z $2 -o -z $3 ]
+then
+  echo "Both source and destination disks must be specified."  >&2
+  usage >&2
+  exit 1
+fi
+
+sourceDisk="${2#/mnt/}"    #Remove any leading /mnt/ prefix
+sourceDisk="${sourceDisk%%/*}"    #Remove any trailing path
+if [[ ! -d "/mnt/$sourceDisk" \
+     || "$sourceDisk" != disk[1-9] && "$sourceDisk" != disk[1-9][0-9] && "$sourceDisk" != "cache" \
+   ]]
+then
+  echo "'$2' is not a valid disk." >&2
+  usage >&2
+  exit 1
+fi
+
+destDisk="${3#/mnt/}"    #Remove any leading /mnt/ prefix
+destDisk="${destDisk%%/*}"    #Remove any trailing path
+if [[ ! -d "/mnt/$destDisk" \
+     || "$destDisk" != disk[1-9] && "$destDisk" != disk[1-9][0-9] && "$destDisk" != "cache" \
+   ]]
+then
+  echo "'$3' is not a valid disk." >&2
+  usage >&2
+  exit 1
+fi
+
+if [[ "$destDisk" == "$sourceDisk" ]]; then
+  echo "Destination and Source disks cannot be the same." >&2
+  usage >&2
+  exit 1
+fi
+
+rsyncOpts="-dIWRpEAXogtl --numeric-ids --inplace"
+# rsync options used:
+# -d, --dirs                  transfer directories without recursing
+# -I, --ignore-times          don't skip files that match in size and mod-time
+# -W, --whole-file            copy files whole (without delta-xfer algorithm)
+# -R, --relative              use relative path names
+# -p, --perms                 preserve permissions
+# -E, --executability         preserve the file's executability
+# -A, --acls                  preserve ACLs (implies --perms)
+# -X, --xattrs                preserve extended attributes
+# -o, --owner                 preserve owner (super-user only)
+# -g, --group                 preserve group
+# -t, --times                 preserve modification times
+# -l, --links                 copy symlinks as symlinks
+#     --numeric-ids           don't map uid/gid values by user/group name
+#     --inplace               update destination files in-place
+
+# rsync options set optionally below
+# -i, --itemize-changes       output a change-summary for all updates
+
+if [ $doIt == 'true' ]; then
+  if [ $keepSource == 'false' ]; then
+    delClause="-delete"
+  else
+    delClause=""
+  fi
+else
+  echo "Running in test mode, no files will be moved."
+  rsyncOpts="$rsyncOpts --dry-run"
+  delClause=""
+fi
+
+if [ $symlinks == 'true' ]; then
+  symlinkClause="-o -type l"
+else
+  symlinkClause=""
+fi
+
+if [ $clobber == 'true' ]; then
+  dupClause=""
+  rsyncOpts+=' --force'
+else
+  # This duplicate clause as annoyingly complicated:
+  # If the specified file is a directory on the destination disk or if the 
+  #   specified file does not exist on the destination disk, then the duplicate
+  #   clause is finished and the next clause in the find statement is processed.
+  # Otherwise, some output is printed and false is returned so the rest of the
+  #   clauses in the find statement are not processed and the file is not
+  #   copied or moved.
+  dupClause=" \
+      ( \
+        -exec [ -d /mnt/$destDisk/{} ] ; \
+        -o \
+        -exec [ ! -e /mnt/$destDisk/{} ] ; \
+        -o \
+        -exec echo Duplicate skipped: {} ; \
+        -a \
+        -exec false ; \
+      ) "
+fi
+
+if [ "$extonly" == 'true' ]; then
+  extClause=('(')  #Start the extension clause with paren stored in an array
+  THEREST="$extlist"   #Initialize THEREST
+  while true; do
+    EXT="${THEREST%%,*}"   #Get the first extension
+    THEREST="${THEREST#*,}"   #Remove the first extension
+    extClause+=( -iname '*.'"$EXT" )  #Add a -name '*.EXT' test
+    if [[ "$EXT" == "$THEREST" ]]; then  #There is only one ext left in the list
+      extClause+=(')')  #finish off the extension clause with close paren
+      break  #Done with the while loop
+    fi
+    extClause+=(-o)   #Add an "or" operator for the next extension
+  done
+else
+  extClause=( )
+fi
+
+if [ "$small" == 'true' ]; then
+  sizeClause="-size -$((maxsize*1024+1))c"
+else
+  sizeClause=""
+fi
+
+if [ $verbose -gt 0 ]; then
+  printClause="-print"
+else
+  printClause=""
+fi
+
+if [ $verbose -gt 1 ]; then
+  rsyncOpts="$rsyncOpts -i"
+fi
+
+echo "Moving /mnt/$sourceDisk/$userShareObj into /mnt/$destDisk/$userShareObj"
+cd "/mnt/$sourceDisk"
+
+find "./$userShareObj" -depth \
+      \( \
+        \( -type f $sizeClause "${extClause[@]}" ! -exec fuser -s {} \; \) \
+        -o \
+        \( -type d -empty \) \
+        $symlinkClause \
+      \) \
+      $printClause \
+      $dupClause \
+      -exec rsync $rsyncOpts {} "/mnt/${destDisk}/" \; \
+      $delClause
+
+echo "diskmv finished"
+
+if [ ! $doIt == 'true' ]; then
+  echo "... but it ran in test mode"
+fi

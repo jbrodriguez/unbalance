@@ -9,11 +9,14 @@ module.exports = [
 	{type: "calcStarted", fn: _calcStarted},
 	{type: "calcProgress", fn: _calcProgress},
 	{type: "calcFinished", fn: _calcFinished},
+	// {type: "calcIsRunning", fn: _calcIsRunning},
 
 	{type: "move", fn: _move},
 	{type: "moveStarted", fn: _moveStarted},
 	{type: "moveProgress", fn: _moveProgress},
 	{type: "moveFinished", fn: _moveFinished},
+
+	{type: "opError", fn: _opError},
 ]
 
 function _getStorage({state, actions, dispatch}, {api, _}) {
@@ -31,27 +34,35 @@ function _getStorage({state, actions, dispatch}, {api, _}) {
 function _gotStorage({state, actions, dispatch}, _, unraid) {
 	// console.log('unraid: ', unraid)
 
+	// let toDisk = {}
+	// let fromDisk = {}
+	// let maxFreeSize = 0
+	// let maxFreePath = ""
+
+	// unraid.disks.map( disk => {
+	// 	toDisk[disk.path] = true
+	// 	fromDisk[disk.path] = false
+
+	// 	if (disk.free > maxFreeSize) {
+	// 		maxFreeSize = disk.free
+	// 		maxFreePath = disk.path
+	// 	}
+
+	// 	return disk
+	// })
+
+	// if (maxFreePath != "") {
+	// 	toDisk[maxFreePath] = false
+	// 	fromDisk[maxFreePath] = true
+	// }
+
 	let toDisk = {}
 	let fromDisk = {}
-	let maxFreeSize = 0
-	let maxFreePath = ""
 
-	unraid.disks.map( disk => {
-		toDisk[disk.path] = true
-		fromDisk[disk.path] = false
-
-		if (disk.free > maxFreeSize) {
-			maxFreeSize = disk.free
-			maxFreePath = disk.path
-		}
-
-		return disk
+	unraid.disks.forEach( disk => {
+		fromDisk[disk.path] = disk.src
+		toDisk[disk.path] = disk.dst
 	})
-
-	if (maxFreePath != "") {
-		toDisk[maxFreePath] = false
-		fromDisk[maxFreePath] = true
-	}
 
 	let newState = Object.assign({}, state)
 
@@ -138,6 +149,11 @@ function _calcStarted({state, actions, dispatch}, _, line) {
 function _calcProgress({state, actions, dispatch}, _, line) {
 	let newState = Object.assign({}, state)
 
+	// make sure we disable the interface, in case another browser is open
+	// or even the initial browser is woken from sleep 
+	newState.opInProgress = actions.calculate
+	newState.moveDisabled = true
+
 	newState.lines.push('CALCULATE: ' + line)
 
 	return newState
@@ -155,6 +171,11 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 	newState.opInProgress = null
 	newState.moveDisabled = false
 
+	if (newState.unraid.bytesToMove === 0) {
+		newState.feedback.push("There's no space available to move any of the folders you selected.")
+		newState.feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
+	}
+
 	return newState
 
 	// return {
@@ -164,6 +185,17 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 	// 	moveDisabled: false,
 	// }
 }
+
+// // this message is received when the browser requests
+// function _calcIsRunning({state, actions, dispatch}, _, unraid) {
+// 	let newState = Object.assign({}, state)
+
+// 	newState.opInProgress = actions.calculate
+// 	newState.moveDisabled = true
+// 	// newState.lines.push('CALCULATE: ' + line)
+
+// 	return newState
+// }
 
 function _move({state, actions, dispatch}, {_, ws}) {
 	dispatch(actions.opInProgress, actions.move)
@@ -216,4 +248,12 @@ function _moveFinished({state, actions, dispatch}, _, unraid) {
 	// 	opInProgress: null,
 	// 	moveDisabled,
 	// }
+}
+
+function _opError({state, actions, dispatch}, _, error) {
+	let newState = Object.assign({}, state)
+
+	newState.feedback.push(error)
+	
+	return newState
 }

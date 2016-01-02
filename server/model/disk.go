@@ -16,6 +16,8 @@ type Disk struct {
 	Serial  string `json:"serial"`
 	Status  string `json:"status"`
 	Bin     *Bin   `json:"-"`
+	Src     bool   `json:"src"`
+	Dst     bool   `json:"dst"`
 }
 
 func (self *Disk) Print() {

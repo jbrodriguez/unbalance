@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	DISKMV_CMD = "./diskmv"
+	DISKMV_CMD  = "./diskmv"
+	MAIL_CMD    = "/usr/local/emhttp/webGui/scripts/notify"
+	TIME_FORMAT = "Jan _2, 2006 15:04:05"
 )
 
 type Core struct {
@@ -64,6 +66,8 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
+	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
@@ -97,6 +101,30 @@ func (c *Core) react() {
 
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setNotifyCalc(msg *pubsub.Message) {
+	fnotify := msg.Payload.(float64)
+	notify := int(fnotify)
+
+	mlog.Info("Setting notifyCalc to (%d)", notify)
+
+	c.settings.NotifyCalc = notify
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setNotifyMove(msg *pubsub.Message) {
+	fnotify := msg.Payload.(float64)
+	notify := int(fnotify)
+
+	mlog.Info("Setting notifyMove to (%d)", notify)
+
+	c.settings.NotifyMove = notify
+	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
 }
@@ -200,43 +228,60 @@ func (c *Core) getTree(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
+	c.opIsRunning = true
+	go c._calc(msg)
+}
+
+func (c *Core) _calc(msg *pubsub.Message) {
+	defer func() { c.opIsRunning = false }()
+
+	payload, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert calculate parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert calculate parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var dtoCalc dto.Calculate
+	err := json.Unmarshal([]byte(payload), &dtoCalc)
+	if err != nil {
+		mlog.Warning("Unable to bind calculate parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind calculate parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	c.opIsRunning = true
-	defer func() { c.opIsRunning = false }()
 	// c.storage.Condition.State = "CALCULATING"
 
 	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	mlog.Info("payload received is: (%+v)", msg.Payload)
-	payload := msg.Payload.(string)
-
-	var dtoCalc dto.Calculate
-	err := json.Unmarshal([]byte(payload), &dtoCalc)
-	if err != nil {
-		mlog.Fatalf(err.Error())
-	}
+	// mlog.Info("payload received is: (%+v)", msg.Payload)
 
 	disks := make([]*model.Disk, 0)
 
 	var srcDisk *model.Disk
 	for _, disk := range c.storage.Disks {
-		disk.NewFree = 0
+		// reset disk
+		disk.NewFree = disk.Free
 		disk.Bin = nil
+		disk.Src = false
+		disk.Dst = dtoCalc.DestDisks[disk.Path]
 
 		if disk.Path == dtoCalc.SourceDisk {
+			disk.Src = true
 			srcDisk = disk
 		} else {
+			// add it to the target disk list, only if the user selected it
 			if val, ok := dtoCalc.DestDisks[disk.Path]; ok && val {
 				disks = append(disks, disk)
-			} else {
-				// if the disk is not elegible as a target, let newFree = Free, to prevent the UI to think there was some change in it
-				disk.NewFree = disk.Free
 			}
 		}
-
 	}
 
 	c.foldersNotMoved = make([]string, 0)
@@ -272,18 +317,18 @@ func (c *Core) calc(msg *pubsub.Message) {
 		mlog.Info("calculateBestFit:total(%d):toBeMoved:Path(%s); Size(%s)", len(folders), v.Path, lib.ByteSize(v.Size))
 	}
 
-	srcDisk.NewFree = srcDisk.Free
+	// srcDisk.NewFree = srcDisk.Free
 
 	for _, disk := range disks {
 		diskWithoutMnt := disk.Path[5:]
-		msg := fmt.Sprintf("Processing %s ...", diskWithoutMnt)
+		msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
 		time.Sleep(2 * time.Second)
 
 		if disk.Path != srcDisk.Path {
-			disk.NewFree = disk.Free
+			// disk.NewFree = disk.Free
 
 			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
 
@@ -304,13 +349,16 @@ func (c *Core) calc(msg *pubsub.Message) {
 	}
 
 	finished := time.Now()
-	elapsed := time.Since(started)
+	elapsed := lib.Round(time.Since(started), time.Millisecond)
+
+	fstarted := started.Format(TIME_FORMAT)
+	ffinished := finished.Format(TIME_FORMAT)
 
 	// Send to frontend console started/ended/elapsed times
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", started)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
@@ -345,13 +393,13 @@ func (c *Core) calc(msg *pubsub.Message) {
 
 	// send mail according to user preferences
 	subject := "unBALANCE - CALCULATE operation completed"
-	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", started, finished, elapsed)
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
 	if notMoved != "" {
 		switch c.settings.NotifyCalc {
 		case 1:
-			message += "\n\nSome folders are not elegible for moving because there's not enough space for them in any of the target disks."
+			message += "\n\nSome folders will not be moved because there's not enough space for them in any of the destination disks."
 		case 2:
-			message += "\n\nThe following folders are not elegible for moving because there's not enough space for them in any of the target disks:\n\n" + notMoved
+			message += "\n\nThe following folders will not be moved because there's not enough space for them in any of the destination disks:\n\n" + notMoved
 		}
 	}
 
@@ -386,7 +434,6 @@ func (c *Core) calc(msg *pubsub.Message) {
 	// send to front end the signal of operation finished
 	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
@@ -495,19 +542,16 @@ loop:
 	return folders[:w]
 }
 
-// func (c *Core) processDiskMv(line string, arg interface{}) {
-// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	mlog.Info(line)
-// }
-
 func (c *Core) move(msg *pubsub.Message) {
+	c.opIsRunning = true
+	go c._move(msg)
+}
+
+func (c *Core) _move(msg *pubsub.Message) {
+	defer func() { c.opIsRunning = false }()
+
 	mlog.Info("Running move operation ...")
 	started := time.Now()
-
-	c.opIsRunning = true
-	defer func() { c.opIsRunning = false }()
 
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -543,7 +587,12 @@ func (c *Core) move(msg *pubsub.Message) {
 			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
 			//			commands = append(commands, command)
 
-			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, item.Path, c.storage.SourceDiskName, disk.Path)
+			sanePath := item.Path
+			if item.Path[0] == '/' {
+				sanePath = sanePath[1:]
+			}
+
+			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, sanePath, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
@@ -564,6 +613,8 @@ func (c *Core) move(msg *pubsub.Message) {
 				headline := fmt.Sprintf("Move command (%s) was interrupted: %s", cmd, err.Error())
 
 				mlog.Warning(headline)
+				outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				c.finishMoveOperation(subject, headline, commands, started, finished, elapsed)
 
@@ -585,10 +636,14 @@ func (c *Core) move(msg *pubsub.Message) {
 }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
-	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", started)}
+	fstarted := started.Format(TIME_FORMAT)
+	ffinished := finished.Format(TIME_FORMAT)
+	elapsed = lib.Round(time.Since(started), time.Millisecond)
+
+	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Ended: %s", finished)}
+	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	outbound = &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
@@ -621,7 +676,7 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 	outbound = &dto.Packet{Topic: "moveFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", started, finished, elapsed, headline)
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s", fstarted, ffinished, elapsed, headline)
 	switch c.settings.NotifyMove {
 	case 1:
 		message += fmt.Sprintf("\n\n%d commands were executed.", len(commands))
@@ -642,10 +697,21 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 // 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 // }
 
-func (c *Core) sendmail(notify int, subject, message string, dryRun bool) error {
-	if notify == 0 {
-		return nil
+func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
+	// if notify == 0 {
+	// 	return nil
+	// }
+
+	dry := ""
+	if dryRun {
+		dry = "-------\nDRY RUN\n-------\n"
 	}
+
+	msg := dry + message
+
+	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", MAIL_CMD, subject, msg)
+	cmd := exec.Command(MAIL_CMD, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	err = cmd.Run()
 
 	// from := "From: " + c.settings.NotiFrom
 	// to := "To: " + c.settings.NotiTo
@@ -675,8 +741,7 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) error 
 	// 	return err
 	// }
 
-	return nil
-
+	return
 }
 
 // func (c *Core) printCommands(list []string) string {

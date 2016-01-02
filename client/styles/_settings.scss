@@ -47,6 +47,7 @@ $charcoal-blue: #343642;
 $cheerful-blue: #008cba;
 $unbalance-blue: #333;
 $unbalance-footer: #1E446F;
+$angular-blue: #008cba;
 
 $bright-orange: #C63D0F;
 $mellow-orange: #f08a24;
@@ -103,6 +104,7 @@ $button-padding-vertical: 0.3em;
 $button-padding-horizontal: 1em;
 
 $state-warning-bg: $pale-yellow;
+$state-feedback-bg: $bright-orange;
 
 $form-element-border: $cement-gray;
 $form-addon-bg: $cement-gray;
@@ -142,8 +144,15 @@ $explorerHeader: $elegant-blue;
 $explorerContent: $cement-gray;
 $explorerChosen: white;
 
+// $progressBackground: #f6f6f6;
+// $progressNeter: #008cba;
+$progressBackground: $lighter-gray;
+$progressMeter: $angular-blue;
+
+
+
 // FOOTER
-$footerColor: $gray-blue;
+$footerColor: $darker-gray;
 $footerBackground: $headerMenuAnchorColor;
 //$footer-bg: transparent;
 $footerAnchorColor: $headerLogoBackground;

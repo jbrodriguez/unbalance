@@ -2,6 +2,9 @@ module.exports = [
 	{type: "getConfig", fn: _getConfig},
 	{type: "gotConfig", fn: _gotConfig},
 
+	{type: "setNotifyCalc", fn: _setNotifyCalc},
+	{type: "setNotifyMove", fn: _setNotifyMove},
+
 	{type: "addFolder", fn: _addFolder},
 	{type: "folderAdded", fn: _folderAdded},
 	{type: "deleteFolder", fn: _deleteFolder},
@@ -31,6 +34,29 @@ function _gotConfig({state, actions, dispatch}, _, config) {
 
 	return newState
 }
+
+function _setNotifyCalc({state, actions, dispatch}, {api, _}, notify) {
+	if (state.config.notifyCalc !== notify) {
+		api.setNotifyCalc(notify)
+			.then(json => {
+				dispatch(actions.gotConfig, json)
+			})
+	}
+
+	return state
+}
+
+function _setNotifyMove({state, actions, dispatch}, {api, _}, notify) {
+	if (state.config.notifyMove !== notify) {
+		api.setNotifyMove(notify)
+			.then(json => {
+				dispatch(actions.gotConfig, json)
+			})
+	}
+
+	return state
+}
+
 
 function _addFolder({state, actions, dispatch}, {api, _}, folder) {
 	if (state.config.folders.indexOf(folder) !== -1) {
