@@ -46,6 +46,7 @@ p {
 		font-size: 0.9em;
 
 		&.active {
+			color: $headerMenuAnchorColor;
 			// padding-bottom: 3px;
 			font-weight: bold;
 			border-bottom: 1px solid $headerMenuAnchorColor;
