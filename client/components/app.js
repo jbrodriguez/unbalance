@@ -34,7 +34,7 @@ export default function App({ location, children, store }) {
 				</div>
 			</section>		
 		)
-	}	
+	}
 
 	let progress = null
 	if (state.opInProgress) {
@@ -48,20 +48,29 @@ export default function App({ location, children, store }) {
 		)
 	}
 
+	const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
+	const calcDisabled = state.opInProgress || (!stateOk)
+
 	// <span className={cx('lspacer')}>STATUS:</span>
+	const labelStyle = cx({
+		'spacer': true,
+		'label': true,
+		'label-success': stateOk,
+		'label-alert': !stateOk,
+	})
 	
 	let status = null
 	let buttons = null
 	if (location.pathname === '/' && state.unraid) {
 		status = (
 			<div className={cx('flexSection', 'middle-xs')}>
-				<span className={cx('spacer', 'label', 'label-success')}>{state.unraid.condition.state}</span>
+				<span className={labelStyle}>{state.unraid.condition.state}</span>
 			</div>
 		)
 
 		buttons = (
 			<div className={cx('flexSection', 'end-xs')}>
-				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={state.opInProgress}>CALCULATE</button>
+				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={calcDisabled}>CALCULATE</button>
 				<span>&nbsp; | &nbsp;</span>
 				<button className={cx('btn', 'btn-primary')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
@@ -150,7 +159,7 @@ export default function App({ location, children, store }) {
 
 				<ul className={cx('col-xs-12', 'col-sm-4')}>
 		    		<div className={cx('flexSection')}>
-						<span className={cx('copyright', 'spacer')}>Copyright &copy; 2014 +</span>
+						<span className={cx('copyright', 'lspacer')}>Copyright &copy; &nbsp;</span>
 						<a href='http://jbrodriguez.io/'>Juan B. Rodriguez</a>
 					</div>
 				</ul>
