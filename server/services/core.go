@@ -228,12 +228,7 @@ func (c *Core) getTree(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
-	if c.opIsRunning {
-		outbound := &dto.Packet{Topic: "calcIsRunning", Payload: c.storage}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		return
-	}
-
+	c.opIsRunning = true
 	go c._calc(msg)
 }
 
@@ -241,7 +236,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	c.opIsRunning = true
 	defer func() { c.opIsRunning = false }()
 	// c.storage.Condition.State = "CALCULATING"
 
@@ -537,18 +531,15 @@ loop:
 	return folders[:w]
 }
 
-// func (c *Core) processDiskMv(line string, arg interface{}) {
-// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	mlog.Info(line)
-// }
-
 func (c *Core) move(msg *pubsub.Message) {
+	c.opIsRunning = true
+	go c._move(msg)
+}
+
+func (c *Core) _move(msg *pubsub.Message) {
 	mlog.Info("Running move operation ...")
 	started := time.Now()
 
-	c.opIsRunning = true
 	defer func() { c.opIsRunning = false }()
 
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
