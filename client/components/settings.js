@@ -24,16 +24,26 @@ export default class Settings extends Component {
 			return null
 		}
 
-		if (state.unraid && state.unraid.condition.state !== "STARTED") {
+		const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
+		if (!stateOk) {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>The array is not started. Please start the array before perfoming any operations with unBALANCE.</p>
+						<p className={cx('bg-warning')}>&nbsp; The array is not started. Please start the array before perfoming any operations with unBALANCE.</p>
 					</div>
 				</section>
 			)
 		}		
 
+		if (state.opInProgress) {
+			return (
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>
+						<p className={cx('bg-warning')}>&nbsp; {state.opInProgress} operation is currently under way. Wait until the operation has finished to make any settings changes.</p>
+					</div>
+				</section>
+			)
+		}	
 
 		// let warning = null
 		// if (state.config.folders.length === 0) {
