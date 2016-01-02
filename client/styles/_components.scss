@@ -94,6 +94,10 @@ legend {
 	@include bg-variant($state-warning-bg);
 }
 
+.bg-feedback {
+	@include bg-variant($state-feedback-bg);
+}
+
 
 .addon {
 	display: flex;

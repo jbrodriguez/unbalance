@@ -152,6 +152,16 @@ p {
 	background-color: $explorerChosen;
 }
 
+.feedback {
+	color: white;
+	font-size: 0.8em;
+
+	.divider {
+		font-size: 0.5em;
+		border-bottom: 1px solid white;
+	}
+}
+
 // .title {
 // 	padding: 1em;
 // }
