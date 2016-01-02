@@ -21,10 +21,19 @@ export default class Settings extends Component {
 		// console.log('settings.render: ', this.props.store)
 		let { state, actions, dispatch } = this.props.store
 
-
 		if (!state.config) {
 			return null
 		}
+
+		if (state.unraid && state.unraid.condition.state !== "STARTED") {
+			return (
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>
+						<p className={cx('bg-warning')}>The array is not operational. Please start the array first.</p>
+					</div>
+				</section>
+			)
+		}		
 
 
 		// let warning = null
@@ -124,8 +133,8 @@ export default class Settings extends Component {
 						<h3>WHICH FOLDERS DO YOU WANT TO MOVE ?</h3>
 
 						<p>Define which folders should be moved to free up space on the source disk (you choose the source disk in the main page).</p>
-						<p>You can choose entire user shares (/Movies) or specific folders below a user share (/Movies/Action).</p>
-						<p>The folders you select will be moved to other disks in the array, only if enough space is available.</p>
+						<p>You can choose entire user shares (e.g.: /Movies) or any folders below a user share (e.g.: /Movies/Action, /Movies/Comedy/90s).</p>
+						<p>The folders you select will be moved to other disks in the array, as long as there's enough space available.</p>
 						<p>Click on the <button className={cx('btn', 'btn-alert')}>add</button>  button that appears when you hover your mouse over a folder in the "unRAID Shares Explorer" column below, to select it for moving.</p>
 						<p>Click on the <i className={cx('fa fa-remove')}></i> icon that appears next to any folder in the "Folders to be moved" column, to deselect it.</p>
 					</div>
@@ -143,7 +152,7 @@ export default class Settings extends Component {
 											<span className={cx('lspacer')}>unRAID Shares Explorer</span>
 										</div>
 										<div className={cx('col-xs-12', 'col-sm-4')}>
-											Folders to move
+											Folders to be moved
 										</div>
 									</section>
 								</div>
