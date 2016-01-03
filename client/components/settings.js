@@ -24,7 +24,7 @@ export default class Settings extends Component {
 			return null
 		}
 
-		console.log('state.unraid: ', state.unraid)
+		// console.log('state.unraid: ', state.unraid)
 		if (!state.unraid) {
 			// dispatch(actions.getStorage)
 			return null
