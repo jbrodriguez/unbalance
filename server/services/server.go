@@ -45,8 +45,9 @@ func (s *Server) Start() {
 	mlog.Info("Starting service Server ...")
 
 	locations := []string{
-		".",
+		"/usr/local/emhttp/plugins/unBALANCE",
 		"/usr/local/share/unbalance",
+		".",
 	}
 
 	location := lib.SearchFile("index.html", locations)
