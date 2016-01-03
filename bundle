@@ -16,7 +16,6 @@ if [ -f "$UB_FILE" ]; then
 	exit 0
 fi
 
-
 if ! git diff --quiet; then
 	error "There are unsaved changes in your current branch. Please commit changes and try again."
 fi
@@ -25,11 +24,12 @@ branch_name=$(git symbolic-ref -q HEAD)
 branch_name=${branch_name##refs/heads/}
 branch_name=${branch_name:-HEAD}
 
-if [[ $branch_name != "master" ]]; then
-	error "Can release only from master branch. Switch to master and try again."
-fi
-
 git checkout master
+
+if ! git diff --quiet; then
+	git checkout $branch_name
+	error "There are unsaved changes in master. Please commit changes and try again."
+fi
 
 UB_RELEASE="release/unBALANCE"
 UB_VERSION=$(cat VERSION)
