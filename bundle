@@ -5,9 +5,9 @@ function error {
   exit 1
 }
 
-UB_RELEASE="release/unBALANCE"
+UB_RELEASE="release/unbalance"
 UB_VERSION=$(cat VERSION)
-UB_FILE="unBALANCE-$UB_VERSION.tgz"
+UB_FILE="unbalance-$UB_VERSION.tgz"
 echo $UB_FILE
 
 
@@ -31,15 +31,12 @@ if ! git diff --quiet; then
 	error "There are unsaved changes in master. Please commit changes and try again."
 fi
 
-UB_RELEASE="release/unBALANCE"
-UB_VERSION=$(cat VERSION)
-UB_FILE="unBALANCE-$UB_VERSION.tgz"
-echo $UB_FILE
-
 rm -rf release && mkdir -p $UB_RELEASE
 cp -r dist/* $UB_RELEASE
 cp server/diskmv $UB_RELEASE/diskmv
 cp -r plugin/event $UB_RELEASE
+cp README.md $UB_RELEASE
+cp unbalance.png $UB_RELEASE
 pushd release 
 tar czvf ./$UB_FILE usr 
 mv ./$UB_FILE ..
@@ -47,7 +44,7 @@ popd
 
 UB_MD5=$(md5sum ./$UB_FILE | cut -d' ' -f1)
 echo $UB_MD5
-sed -e s/'{{md5sum}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unBALANCE.plg
+sed -e s/'{{md5sum}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unbalance.plg
 rm -rf release
 
 git checkout $branch_name
