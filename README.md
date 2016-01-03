@@ -4,10 +4,16 @@ unBALANCE
 *tl;dr* **unBALANCE** is an [unRAID](http://lime-technology.com) app to free up space from one of the disks in the array, by moving folders and files to other disks.
 
 ## Screenshot
-![Screenshot](unBALANCE.png)
+![Screenshot](110-home.png)
+
+## Upgrade Notes for v1.x.x
+For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
+
+- The notifications system is based on unRAID's settings, so you need to set up unRAID's notifications first. This also means that you must be running 6.1 to receive emails and other unRAID alerts
+- The configuration file format has changed, but the app will convert it upon first boot.
 
 ## Introduction
-With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will distribute the folders/files to other disks filling them up.
+With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move the folders/files to other disks filling them up, as space allows.
 
 The logic is quite simple:<br>
 Get all elegible folders from the source disk<br>
@@ -18,27 +24,12 @@ Internally, all move operations are handled by [diskmv](https://github.com/trina
 
 The array must be started for the app to work.
 
-You need to select which folders are elegible for moving.
+The first time you open the app, you are redirected to the settings page, where you can navigate your user shares, to select which folders you want to move.
 
-Let's say you have the following unRAID shares:
+You can Select an entire user share (/films in the screenshot below) or any folder(s) under the user shares (/films/bluray for example).
 
-movies<br>
-|_ bluray<br>
-|_ dvd<br>
-tvshows<br>
-games<br>
-pictures<br>
-backup
+![Settings](110-settings.png)
 
-You decide that you want to make space by moving around only bluray movies, games and pictures.
-
-So you will enter 
-
-movies/bluray<br>
-games<br>
-pictures
-
-in the Settings page, that opens the first time you run the app.
 
 ## Install
 There are 2 ways to install this application
@@ -83,18 +74,19 @@ To perform the operations, uncheck the dry-run checkbox.
 ## Credits
 This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).
 
-The icon was courteously created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508) (fellow unRAID member)
+The icon was courteously created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508) (fellow unRAID forums member)
 
 It was built with:
 
-- [Go](https://golang.org/) Back End
-- [AngularJS](https://angularjs.org/) Front End
-- [gin (gin-gonic)](https://github.com/gin-gonic/gin) (REST api)
-- [Gorilla WebSocket](https://github.com/gorilla/websocket) (websocket)
-- [semver (fsaintjacques)](https://github.com/fsaintjacques/semver-tool) (slightly modified)
-- [Gulpjs](http://gulpjs.com/)
+- [Go](https://golang.org/) - Back End
+- [echo](https://github.com/labstack/echo) - REST and websocket api
 - [pubsub](https://github.com/tuxychandru/pubsub/) (slightly modified)
-
+- [React](https://facebook.github.io/react/) - Front End
+- [reactorx](https://github.com/jbrodriguez/reactorx) - Flux/Redux-like React 
+- [flexboxgrid](http://flexboxgrid.com/) - CSS3 flex based grid system
+framework
+- [js-csp](https://github.com/ubolonton/js-csp) - Go-like concurrency for javascript
+- [Webpack](https://webpack.github.io/) - Build toolchain
 
 ## License
 [MIT license](http://jbrodriguez.mit-license.org)
