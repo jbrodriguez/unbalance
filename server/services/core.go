@@ -89,7 +89,7 @@ func (c *Core) Start() (err error) {
 		".",
 	}
 
-	c.diskmvLocation := lib.SearchFile("diskmv", locations)
+	c.diskmvLocation = lib.SearchFile("diskmv", locations)
 	if c.diskmvLocation == "" {
 		msg := ""
 		for _, loc := range c.diskmvLocation {
