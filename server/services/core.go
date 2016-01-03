@@ -22,7 +22,6 @@ import (
 )
 
 const (
-	DISKMV_CMD  = "./diskmv"
 	MAIL_CMD    = "/usr/local/emhttp/webGui/scripts/notify"
 	TIME_FORMAT = "Jan _2, 2006 15:04:05"
 )
@@ -42,6 +41,8 @@ type Core struct {
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
+
+	diskmvLocation string
 }
 
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
@@ -81,6 +82,20 @@ func (c *Core) Start() (err error) {
 	err = c.storage.SanityCheck()
 	if err != nil {
 		return err
+	}
+
+	locations := []string{
+		"/usr/local/emhttp/plugins/unBALANCE",
+		".",
+	}
+
+	c.diskmvLocation := lib.SearchFile("diskmv", locations)
+	if c.diskmvLocation == "" {
+		msg := ""
+		for _, loc := range c.diskmvLocation {
+			msg += fmt.Sprintf("%s, ", loc)
+		}
+		mlog.Fatalf("Unable to find diskmv. Exiting now. (searched in %s)", msg)
 	}
 
 	go c.react()
@@ -592,7 +607,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 				sanePath = sanePath[1:]
 			}
 
-			cmd := fmt.Sprintf("%s %s \"%s\" %s %s", DISKMV_CMD, dry, sanePath, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("diskmv %s \"%s\" %s %s", dry, sanePath, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
