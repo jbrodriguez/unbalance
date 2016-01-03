@@ -43,13 +43,13 @@ func NewSettings(version string) (*Settings, error) {
 
 	// /boot/config/plugins/unbalance/
 	flag.StringVar(&config, "config", "", "config location")
-	flag.StringVar(&log, "log", "", "folder where log file will be written to")
+	flag.StringVar(&log, "log", "/boot/logs", "folder where log file will be written to")
 	flag.StringVar(&folders, "folders", "", "folders that will be scanned for media")
 	flag.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
 	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 
-	flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
+	flag.Set("config", "/boot/config/plugins/unBALANCE/unbalance.conf")
 	flag.Parse()
 
 	// fmt.Printf("folders: %s\nconfig: %s\n", folders, config)
