@@ -1,0 +1,100 @@
+<?xml version='1.0' standalone='yes'?>
+
+<!DOCTYPE PLUGIN [
+<!ENTITY name        "unBALANCE">
+<!ENTITY author      "Juan B. Rodriguez">
+<!ENTITY version     "{{version}}">
+<!ENTITY launch      "Settings/&name;">
+<!ENTITY pluginURL   "https://github.com/jbrodriguez/unraid-plugin/raw/master/&name;.plg">
+<!ENTITY bundle      "&name;-&version;.tgz">
+<!ENTITY md5         "{{md5}}">
+]>
+
+<PLUGIN  name="&name;"
+         author="&author;"
+         version="&version;"
+         launch="&launch;"
+         pluginURL="&pluginURL;"
+>
+
+<CHANGES>
+###2016-01-03 - v1.1.x
+- Convert to plugin (supports 6.1+ only)
+- Notification system based on unRAID
+- Improved Settings page
+- UX enhancements
+
+###2015-08-18 - v0.7.4
+- Add support for unRAID 6.1
+
+###2015-06-02 - v0.7.3
+- Show which folders won't be moved due to space restrictions
+- General bug fixes
+
+###2015-05-31 - v0.7.2
+- Remove logrotate script, to prevent triggering email notifications (since logrotate fails on the container for some reason)
+
+###2015-05-26 - v0.7.1
+- Add support for empty folders
+- Add support for single files in the root of user shares
+- Respect selection of "To" disks (user decides which disks are elegible as targets)
+
+###2015-05-17 - v0.6.8
+- Add support for spaces in folder names
+
+###2015-05-14 - v0.6.7
+- Mail notifications are now handled internally, they have to be entered in the Settings page
+- UI bugfixes
+- Additional logging
+
+###2015-05-09 - v0.6.3
+- Added mail notification when the operation completes. For this to work, unRAID's notification settings must be enabled
+- Now using the icon contributed by hernandito
+
+###2015-05-07 - v0.6.1
+- The GUI now handles browser refreshes. The log prior to the refresh will not be displayed, but new lines will be shown in the "console".
+
+###2015-05-03 - v0.5.1
+- Initial public version
+</CHANGES>
+
+<!--
+The plugin frees up space from a disk array in unRAID systems.
+-->
+
+<!--
+Get the unBALANCE bundle.
+-->
+<FILE Name="/boot/config/plugins/&name;/&bundle;">
+<URL>"https://github.com/jbrodriguez/unbalance/releases/download/&version;/&bundle;"</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<!--
+Prepare for installation.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+# Remove emhttp files so we can re-install.
+rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
+
+# Remove old 'bundle' files.
+rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;')
+
+# Install the 'bundle'.
+tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+# Remove all plugin files.
+rm -rf /usr/local/emhttp/plugins/&name;
+rm -rf /boot/config/plugins/&name;
+</INLINE>
+</FILE>
+
+</PLUGIN>
