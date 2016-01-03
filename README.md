@@ -13,7 +13,7 @@ For those upgrading from previous versions (v0.7.4 and below), please take note 
 - The configuration file format has changed, but the app will convert it upon first boot.
 
 ## Introduction
-With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move  the folders/files to other disks filling them up, as space allows.
+With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move the folders/files to other disks filling them up, as space allows.
 
 The logic is quite simple:<br>
 Get all elegible folders from the source disk<br>
@@ -24,11 +24,12 @@ Internally, all move operations are handled by [diskmv](https://github.com/trina
 
 The array must be started for the app to work.
 
-The first time you open the app, you are redirected to the settings page, where you can see and navigate your user shares, to select which folders you want to move:
+The first time you open the app, you are redirected to the settings page, where you can navigate your user shares, to select which folders you want to move.
+
+You can Select an entire user share (/films in the screenshot below) or any folder(s) under the user shares (/films/bluray for example).
 
 ![Settings](110-settings.png)
 
-Select an entire user share (/films in the screenshot above) or any folder below the user shares (/films/bluray for example).
 
 ## Install
 There are 2 ways to install this application
