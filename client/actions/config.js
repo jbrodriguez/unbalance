@@ -59,6 +59,18 @@ function _setNotifyMove({state, actions, dispatch}, {api, _}, notify) {
 
 
 function _addFolder({state, actions, dispatch}, {api, _}, folder) {
+	state.config.folders.forEach( chosen => {
+		if (folder === chosen || chosen.indexOf(folder) > -1 || folder.indexOf(chosen) > -1) {
+			let newState = Object.assign({}, state)
+
+			newState.feedback.push("The folder you're trying to add is already selected, contains or is contained by an already selected folder. Please try again.")
+
+			return newState
+		}
+	})
+
+
+
 	if (state.config.folders.indexOf(folder) !== -1) {
 		return state
 	}
