@@ -27,6 +27,12 @@ export default function App({ location, children, store }) {
 
 	let { state, dispatch, actions } = store
 
+	if (!state.config) {
+		return (
+			<div></div>
+		)
+	}
+
 	let alert = null
 	if ( state.feedback.length !== 0) {
 		alert = (

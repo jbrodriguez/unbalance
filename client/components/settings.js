@@ -10,10 +10,10 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
-	componentDidMount() {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.getConfig)
-	}
+	// componentDidMount() {
+	// 	let { actions, dispatch } = this.props.store
+	// 	dispatch(actions.getConfig)
+	// }
 
 	render() {
 		// let { dispatch, state } = this.props
