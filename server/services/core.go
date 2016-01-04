@@ -713,9 +713,9 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 // }
 
 func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
-	// if notify == 0 {
-	// 	return nil
-	// }
+	if notify == 0 {
+		return nil
+	}
 
 	dry := ""
 	if dryRun {
