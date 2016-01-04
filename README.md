@@ -6,11 +6,12 @@ unBALANCE
 ## Screenshot
 ![Screenshot](110-home.png)
 
-## Upgrade Notes for v1.x.x
+## Upgrade Notes for v1.2.x
 For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
 
+- unBALANCE is now distributed as a plugin rather than as a docker container. This is mostly to have unRAID's files more readily available. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to copy Apple's Time Machine backups.
 - The notifications system is based on unRAID's settings, so you need to set up unRAID's notifications first. This also means that you must be running 6.1 to receive emails and other unRAID alerts
-- The configuration file format has changed, but the app will convert it upon first boot.
+- The configuration file format has changed, so you need to set up folders from scratch (it will be easier with this version).
 
 ## Introduction
 With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move the folders/files to other disks filling them up, as space allows.
@@ -34,19 +35,16 @@ You can Select an entire user share (/films in the screenshot below) or any fold
 ## Install
 There are 2 ways to install this application
 
-- Docker app (preferred)<br>
-Add the following repository in the Docker GUI<br>
-https://github.com/jbrodriguez/docker-containers/tree/templates<br>
-Add the container [jbrodriguez]/unbalance
-The defaults are <br>
-Port: 6237<br>
-Volumes: <br>
-"/mnt" (required)<br>
-"/root" (required)<br>
-"/usr/local/sbin" (required)<br>
-"/path/to/config/dir" (required)<br>
-"/path/to/log/dir" (not required)<br>
-"/etc/localtime" (not required, to synchronize time with unRAID)<br>
+- Plugin (Community Application)
+Go to the Apps tab
+Click on the Plugins button (the last one)
+Look for unBALANCE
+Install
+
+- Plugin (manual)
+Go to the Plugins tab
+Click on Install Plugin
+Paste 
 
 - Manual
 ```Shell
