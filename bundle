@@ -31,12 +31,22 @@ if ! git diff --quiet; then
 	error "There are unsaved changes in master. Please commit changes and try again."
 fi
 
+echo "Building client"
+npm run build
+
+echo "Building server"
+make server
+
+echo "Generating release ..."
 rm -rf release && mkdir -p $UB_RELEASE
 cp -r dist/* $UB_RELEASE
 cp server/diskmv $UB_RELEASE/diskmv
 cp -r plugin/event $UB_RELEASE
 cp plugin/README.md $UB_RELEASE
 cp plugin/unbalance.png $UB_RELEASE
+cp CHANGES $UB_RELEASE
+cp VERSION $UB_RELEASE
+
 pushd release 
 tar czvf ./$UB_FILE unbalance 
 mv ./$UB_FILE ..
