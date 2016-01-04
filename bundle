@@ -35,16 +35,16 @@ rm -rf release && mkdir -p $UB_RELEASE
 cp -r dist/* $UB_RELEASE
 cp server/diskmv $UB_RELEASE/diskmv
 cp -r plugin/event $UB_RELEASE
-cp README.md $UB_RELEASE
-cp unbalance.png $UB_RELEASE
+cp plugin/README.md $UB_RELEASE
+cp plugin/unbalance.png $UB_RELEASE
 pushd release 
-tar czvf ./$UB_FILE usr 
+tar czvf ./$UB_FILE unbalance 
 mv ./$UB_FILE ..
 popd
 
 UB_MD5=$(md5sum ./$UB_FILE | cut -d' ' -f1)
 echo $UB_MD5
-sed -e s/'{{md5sum}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unbalance.plg
+sed -e s/'{{md5}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unbalance.plg
 rm -rf release
 
 git checkout $branch_name
