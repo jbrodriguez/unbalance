@@ -121,7 +121,3 @@ func (s *Settings) Save() (err error) {
 
 	return
 }
-
-func (s *Settings) Migrate() {
-	if 
-}
