@@ -340,7 +340,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("calculateBestFit:%s", msg)
-		time.Sleep(2 * time.Second)
+		// time.Sleep(2 * time.Second)
 
 		if disk.Path != srcDisk.Path {
 			// disk.NewFree = disk.Free
