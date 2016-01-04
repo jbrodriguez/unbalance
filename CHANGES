@@ -1,3 +1,33 @@
+Version 1.2.0 - 2016-01-04
+    (unbalance) Update README
+    (unbalance) Add new screenshots
+    (unbalance) Update settings screenshot
+    (unbalance) Fix copy
+    (unbalance) Ignore additional files
+    (unbalance) Create support files for an unraid plugin
+    (back) Look for diskmv script in the app's plugin folder
+    (back) Look for web files in the app's plugin folder
+    (back) Set a default logging location in the settings struct
+    (unbalance) Remove previous version screenshot
+    (unbalance) Do nothing when building bundle, if the file exists already
+    (unbalance) Additional fixes for bundle script
+    (unbalance) Change execute bit of plugin event scripts
+    (unbalance) Add files required for unraid plugins
+    (back) Small fixes
+    (front) Logic adjustments
+    (front) Change bootstrap logic, we now use the start action, to pull config, storage and tree values from the server
+    (unbalance) Fixes #2 (migration to plugins), #3 (previous commit), #5 (tgz based on plugin distribution channel)
+    (front) Fix cycle prevention logic
+    (front) Add timeout for feedback panel (7 seconds)
+    (front) Change styling of feedback panel
+    (front) Fix #3
+    (back) Change config location. We won't be migrating settings, since they're probably in /mnt/cache or /mnt/user/data, we can't guess all the places it can be. Closes #1.
+    (unbalance) Replace screenshot of the home page
+    (front) Scramble disk serial number for screenshot purposes
+    (back) Remove artificial delay during calculate operation
+    (unbalance) Upgrade package.json version
+
+
 Version 1.1.0 - 2016-01-02
     (front) Add missing api parameter
     (front) Reset each disk when a calcuation has begun
