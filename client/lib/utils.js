@@ -1,3 +1,9 @@
+module.exports = {
+	humanBytes,
+	percentage,
+	scramble,
+}
+
 function humanBytes(bytes) {
 	if (bytes == 0) return '0 Byte';
 
@@ -15,7 +21,34 @@ function percentage(input, decimals, suffix) {
 	return Math.round(input * Math.pow(10, decimals + 2))/Math.pow(10, decimals) + suffix
 }
 
-module.exports = {
-	humanBytes,
-	percentage,
+function scramble(serial) {
+	if (serial.startsWith('WDC_WD30EZRX'))
+		return 'WDC_WD30EZRX-' + makeid()
+	else if (serial.startsWith('ST3000DM001'))
+		return 'ST3000DM001-' + makeid()
+	else if (serial.startsWith('TOSHIBA_DT01ACA300'))
+		return 'TOSHIBA_DT01ACA300-' + makeid()
+	else if (serial.startsWith('ST4000DM000'))
+		return 'ST4000DM000-' + makeid()
+	else if (serial.startsWith('WDC_WD40EZRX'))
+		return 'WDC_WD40EZRX-' + makeid()
+	else if (serial.startsWith('WDC_WD30EFRX'))
+		return 'WDC_WD30EFRX-' + makeid()
+	else if (serial.startsWith('ST4000VN000'))
+		return 'ST4000VN000-' + makeid()
+	else if (serial.startsWith('ST4000DM000'))
+		return 'ST4000DM000-' + makeid()
+	else
+		return serial
+}
+
+
+function makeid() {
+    var text = ""
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+    for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length))
+
+    return text
 }
