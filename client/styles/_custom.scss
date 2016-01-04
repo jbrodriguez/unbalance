@@ -155,12 +155,12 @@ p {
 }
 
 .feedback {
-	color: white;
+	color: darken($state-feedback-bg, 40%);
 	font-size: 0.8em;
 
-	.divider {
+	.title {
 		font-size: 0.5em;
-		border-bottom: 1px solid white;
+		// border-bottom: 1px solid darken($state-feedback-bg, 10%);
 	}
 }
 

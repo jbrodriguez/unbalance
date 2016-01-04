@@ -10,10 +10,10 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
-	componentDidMount() {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.getConfig)
-	}
+	// componentDidMount() {
+	// 	let { actions, dispatch } = this.props.store
+	// 	dispatch(actions.getConfig)
+	// }
 
 	render() {
 		// let { dispatch, state } = this.props
@@ -24,8 +24,15 @@ export default class Settings extends Component {
 			return null
 		}
 
+		// console.log('state.unraid: ', state.unraid)
+		if (!state.unraid) {
+			// dispatch(actions.getStorage)
+			return null
+		}
+
 		const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
 		if (!stateOk) {
+			console.log('stateOk: ', stateOk)
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -35,7 +42,7 @@ export default class Settings extends Component {
 			)
 		}		
 
-		if (state.opInProgress) {
+		if (state.opInProgress === actions.calculate || state.opInProgress === actions.move) {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>

@@ -59,6 +59,24 @@ function _setNotifyMove({state, actions, dispatch}, {api, _}, notify) {
 
 
 function _addFolder({state, actions, dispatch}, {api, _}, folder) {
+	let proceed = true
+	state.config.folders.some( chosen => {
+		if (folder === chosen || chosen.indexOf(folder) > -1 || folder.indexOf(chosen) > -1) {
+			proceed = false
+			return true
+		}
+	})
+
+	if (!proceed) {
+		let newState = Object.assign({}, state)
+		newState.feedback = [].concat(["The folder you're trying to add is already selected, contains or is contained by an already selected folder. Please choose another folder or remove one of the selected folders and try again."])
+
+		// set a seven second timeout for the feedback panel
+		window.setTimeout( _ => dispatch(actions.removeFeedback), 7*1000)
+
+		return newState
+	}
+
 	if (state.config.folders.indexOf(folder) !== -1) {
 		return state
 	}

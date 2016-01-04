@@ -2,6 +2,7 @@ import path from 'path'
 
 module.exports = [
 	{type: "treeItemClicked", fn: _treeItemClicked},
+	{type: "getTree", fn: _getTree},
 	{type: "gotTree", fn: _gotTree},
 ]
 
@@ -20,10 +21,11 @@ function _treeItemClicked({state, actions, dispatch}, {api, _}, item) {
 		})
 
 	} else {
-		api.getTree(item.path)
-			.then(json => {
-				dispatch(actions.gotTree, json)
-			})
+		dispatch(actions.getTree, item.path)
+		// api.getTree(item.path)
+		// 	.then(json => {
+		// 		dispatch(actions.gotTree, json)
+		// 	})
 	}
 
 	newState.tree.selected = item.path
@@ -34,6 +36,15 @@ function _treeItemClicked({state, actions, dispatch}, {api, _}, item) {
 	// 	...state,
 	// 	tree: {items, selected: item.path, fetching},
 	// }
+}
+
+function _getTree({state, actions, dispatch}, {api, _}, path) {
+	api.getTree(path)
+		.then(json => {
+			dispatch(actions.gotTree, json)
+		})
+
+	return state
 }
 
 function _gotTree({state, actions, dispatch}, _, newTree) {

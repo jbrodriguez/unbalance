@@ -118,9 +118,9 @@ function onClick(actions, dispatch, item, e) {
 	// }
 }
 
-function onAdd({actions, dispatch}, item, e) {
+function onAdd(actions, dispatch, item, e) {
+	console.log('onAdd.item: ', item)
 	e.preventDefault()
-	// console.log('onAdd.item: ', item)
 
 	dispatch(actions.addFolder, item.path)
 	// this.props.dispatch(C.ADD_FOLDER, item.path)

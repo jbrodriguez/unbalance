@@ -17,16 +17,16 @@ export default class Home extends Component {
 		}
 	}
 
-	componentDidMount() {
-		// // let { model, history } = this.props
-		// // if (!model.config) {
-		// // 	history.pushState(null, '/settings')
-		// // }
-		// // console.log('home.didmount.props: ', this.props)
-		// this.props.dispatch(C.GET_STORAGE)
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.getStorage)
-	}
+	// componentDidMount() {
+	// 	// // let { model, history } = this.props
+	// 	// // if (!model.config) {
+	// 	// // 	history.pushState(null, '/settings')
+	// 	// // }
+	// 	// // console.log('home.didmount.props: ', this.props)
+	// 	// this.props.dispatch(C.GET_STORAGE)
+	// 	let { actions, dispatch } = this.props.store
+	// 	dispatch(actions.getStorage)
+	// }
 
 	render() {
 		let { state, actions, dispatch } = this.props.store

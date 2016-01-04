@@ -58,58 +58,100 @@ import Settings from './components/settings'
 //	feedback: []
 // }
 
+let initialState = {
+	config: null,
+	unraid: null,
+	fromDisk: null,
+	toDisk: null,
+	opInProgress: null,
+	moveDisabled: true,
+	lines: [],
+	tree: {
+		items: [],
+		selected: '',
+		fetching: false,
+	},
+	feedback: [],
+}
+
+let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
+
 const api = new Api()
 const ws = new WSApi()
 
-Promise.all([api.getConfig(), api.getTree('/')])
-	.then( boot )
+const store = createStore(initialState, actions, {api, ws})
 
-function boot([config, entry]) {
-	// console.log('config: ', config)
-	// console.log('entry: ', entry)
+store.subscribe(
+	store => {
+		// console.log('main.store: ', store)
 
-	let treeItems = {}
-	treeItems[entry.path] = entry.nodes
-
-	let initialState = {
-		config,
-		unraid: null,
-		fromDisk: null,
-		toDisk: null,
-		opInProgress: null,
-		moveDisabled: true,
-		lines: [],
-		tree: {
-			items: treeItems,
-			selected: '',
-			fetching: false,
-		},
-		feedback: [],
-	}
-
-	let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
-
-	const store = createStore(initialState, actions, {api, ws})
-
-	store.subscribe(
-		store => {
-			// console.log('main.store: ', store)
-
-			function createElement(Component, props) {
-				return <Component {...props} store={store} />
-			}
-
-			render(
-				<Router createElement={createElement}>
-					<Route path='/' component={App}>
-						<IndexRoute component={Home} />
-						<Route path='settings' component={Settings} />
-					</Route>
-				</Router>,
-				document.getElementById('mnt')
-			)
+		function createElement(Component, props) {
+			return <Component {...props} store={store} />
 		}
-	)
 
-	store.dispatch(store.actions.start)	
-}
+		render(
+			<Router createElement={createElement}>
+				<Route path='/' component={App}>
+					<IndexRoute component={Home} />
+					<Route path='settings' component={Settings} />
+				</Route>
+			</Router>,
+			document.getElementById('mnt')
+		)
+	}
+)
+
+store.dispatch(store.actions.start)	
+
+// Promise.all([api.getConfig(), api.getTree('/')])
+// 	.then( boot )
+
+// function boot([config, entry]) {
+// 	// console.log('config: ', config)
+// 	// console.log('entry: ', entry)
+
+// 	let treeItems = {}
+// 	treeItems[entry.path] = entry.nodes
+
+// 	let initialState = {
+// 		config,
+// 		unraid: null,
+// 		fromDisk: null,
+// 		toDisk: null,
+// 		opInProgress: null,
+// 		moveDisabled: true,
+// 		lines: [],
+// 		tree: {
+// 			items: treeItems,
+// 			selected: '',
+// 			fetching: false,
+// 		},
+// 		feedback: [],
+// 	}
+
+// 	let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
+
+// 	const store = createStore(initialState, actions, {api, ws})
+
+// 	store.subscribe(
+// 		store => {
+// 			// console.log('main.store: ', store)
+
+// 			function createElement(Component, props) {
+// 				return <Component {...props} store={store} />
+// 			}
+
+// 			render(
+// 				<Router createElement={createElement}>
+// 					<Route path='/' component={App}>
+// 						<IndexRoute component={Home} />
+// 						<Route path='settings' component={Settings} />
+// 					</Route>
+// 				</Router>,
+// 				document.getElementById('mnt')
+// 			)
+// 		}
+// 	)
+
+// 	store.dispatch(store.actions.start)	
+// }

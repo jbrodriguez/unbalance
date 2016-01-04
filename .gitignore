@@ -6,7 +6,10 @@ staging/
 log/
 art/
 
+unbalance.plg
+
 *.tar.gz
+*.tgz
 *.zip
 *.7z
 *.log
