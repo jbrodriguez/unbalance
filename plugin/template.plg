@@ -18,7 +18,7 @@
 >
 
 <CHANGES>
-###2016-01-03 - v1.1.x
+###2016-01-04 - v1.2.1
 - Convert to plugin (supports 6.1+ only)
 - Notification system based on unRAID
 - Improved Settings page
