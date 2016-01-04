@@ -1,2 +1,2 @@
 #!/bin/bash
-/usr/local/emhttp/plugins/unbalance/unbalance
+/usr/local/emhttp/plugins/unbalance/unbalance > /dev/null & 2>&1
