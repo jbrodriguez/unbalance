@@ -38,7 +38,7 @@ cp -r plugin/event $UB_RELEASE
 cp plugin/README.md $UB_RELEASE
 cp plugin/unbalance.png $UB_RELEASE
 pushd release 
-tar czvf ./$UB_FILE usr 
+tar czvf ./$UB_FILE unbalance 
 mv ./$UB_FILE ..
 popd
 
