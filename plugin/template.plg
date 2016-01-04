@@ -75,6 +75,9 @@ Prepare for installation.
 -->
 <FILE Run="/bin/bash">
 <INLINE>
+# Let's kill the unbalance process, if it's running
+killall unbalance
+
 # Remove emhttp files so we can re-install.
 rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
 
