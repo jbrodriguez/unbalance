@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import ConsolePanel from './consolePanel'
 
-import { humanBytes, percentage } from '../lib/utils'
+import { humanBytes, percentage, scramble } from '../lib/utils'
 
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
@@ -68,6 +68,8 @@ export default class Home extends Component {
 			})
 
 			const percent = percentage((disk.size - disk.free) / disk.size)
+
+			// let serial = scramble(disk.serial)
 
 			return (
 				<tr key={i}>
