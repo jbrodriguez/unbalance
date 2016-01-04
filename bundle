@@ -35,8 +35,8 @@ rm -rf release && mkdir -p $UB_RELEASE
 cp -r dist/* $UB_RELEASE
 cp server/diskmv $UB_RELEASE/diskmv
 cp -r plugin/event $UB_RELEASE
-cp README.md $UB_RELEASE
-cp unbalance.png $UB_RELEASE
+cp plugin/README.md $UB_RELEASE
+cp plugin/unbalance.png $UB_RELEASE
 pushd release 
 tar czvf ./$UB_FILE usr 
 mv ./$UB_FILE ..
