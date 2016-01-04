@@ -49,7 +49,7 @@ func NewSettings(version string) (*Settings, error) {
 	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 
-	flag.Set("config", "/boot/config/plugins/unBALANCE/unbalance.conf")
+	flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
 	flag.Parse()
 
 	// fmt.Printf("folders: %s\nconfig: %s\n", folders, config)
@@ -120,4 +120,8 @@ func (s *Settings) Save() (err error) {
 	os.Rename(tmpFile, s.Conf)
 
 	return
+}
+
+func (s *Settings) Migrate() {
+	if 
 }
