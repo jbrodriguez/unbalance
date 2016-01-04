@@ -1,3 +1,7 @@
+Version 1.2.8 - 2016-01-04
+    (unbalance) Fix instruction to run unbalance
+
+
 Version 1.2.7 - 2016-01-04
     (back) Fix diskmv path and invocation
     (unbalance) Update version
