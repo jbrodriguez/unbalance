@@ -85,14 +85,14 @@ func (c *Core) Start() (err error) {
 	}
 
 	locations := []string{
-		"/usr/local/emhttp/plugins/unBALANCE",
+		"/usr/local/emhttp/plugins/unbalance",
 		".",
 	}
 
 	c.diskmvLocation = lib.SearchFile("diskmv", locations)
 	if c.diskmvLocation == "" {
 		msg := ""
-		for _, loc := range c.diskmvLocation {
+		for _, loc := range locations {
 			msg += fmt.Sprintf("%s, ", loc)
 		}
 		mlog.Fatalf("Unable to find diskmv. Exiting now. (searched in %s)", msg)
@@ -607,7 +607,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 				sanePath = sanePath[1:]
 			}
 
-			cmd := fmt.Sprintf("diskmv %s \"%s\" %s %s", dry, sanePath, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("%s/diskmv %s \"%s\" %s %s", c.diskmvLocation, dry, sanePath, c.storage.SourceDiskName, disk.Path)
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
