@@ -1,6 +1,6 @@
 {
   "name": "unBalance",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "unRaid app",
   "main": "server.js",
   "author": "Juan B. Rodriguez",
