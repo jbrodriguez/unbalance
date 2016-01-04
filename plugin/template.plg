@@ -1,11 +1,11 @@
 <?xml version='1.0' standalone='yes'?>
 
 <!DOCTYPE PLUGIN [
-<!ENTITY name        "unBALANCE">
+<!ENTITY name        "unbalance">
 <!ENTITY author      "Juan B. Rodriguez">
 <!ENTITY version     "{{version}}">
 <!ENTITY launch      "Settings/&name;">
-<!ENTITY pluginURL   "https://github.com/jbrodriguez/unraid-plugin/raw/master/&name;.plg">
+<!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/&name;.plg">
 <!ENTITY bundle      "&name;-&version;.tgz">
 <!ENTITY md5         "{{md5}}">
 ]>
@@ -18,7 +18,7 @@
 >
 
 <CHANGES>
-###2016-01-04 - v1.2.1
+###2016-01-04 - v1.2.2
 - Convert to plugin (supports 6.1+ only)
 - Notification system based on unRAID
 - Improved Settings page
