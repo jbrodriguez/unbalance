@@ -9,7 +9,7 @@ unBALANCE
 ## Upgrade Notes for v1.2.x
 For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
 
-- unBALANCE is now distributed as a plugin rather than as a docker container. This is mostly to have unRAID's files more readily available. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to copy Apple's Time Machine backups.
+- unBALANCE is now distributed as a plugin rather than a docker container. The reason is to have easier access to  unRAID's filesystem, for proper operation of the app. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to copy Apple's Time Machine backups.
 - The notifications system is based on unRAID's settings, so you need to set up unRAID's notifications first. This also means that you must be running 6.1 to receive emails and other unRAID alerts
 - The configuration file format has changed, so you need to set up folders from scratch (it will be easier with this version).
 
