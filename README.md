@@ -9,7 +9,7 @@ unBALANCE
 ## Upgrade Notes for v1.2.x
 For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
 
-- unBALANCE is now distributed as a plugin rather than a docker container. The reason is to have easier access to  unRAID's filesystem, for proper operation of the app. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to copy Apple's Time Machine backups.
+- unBALANCE is now distributed as a plugin rather than a docker container. The reason is to have easier access to  unRAID's filesystem, for proper app operation. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to move Apple's Time Machine backups.
 - The notifications system is based on unRAID's settings, so you need to set up unRAID's notifications first. This also means that you must be running 6.1 to receive emails and other unRAID alerts
 - The configuration file format has changed, so you need to set up folders from scratch (it will be easier with this version).
 
@@ -35,39 +35,26 @@ You can Select an entire user share (/films in the screenshot below) or any fold
 ## Install
 There are 2 ways to install this application
 
-- Plugin (Community Application)
-Go to the Apps tab
-Click on the Plugins button (the last one)
-Look for unBALANCE
-Install
+- Apps Tab (Community Application)<br/>
+Go to the Apps tab<br/>
+Click on the Plugins button (the last one)<br/>
+Look for unBALANCE<br/>
+Click Install
 
-- Plugin (manual)
-Go to the Plugins tab
-Click on Install Plugin
-Paste 
-
-- Manual
-```Shell
-# mkdir -p /boot/custom
-# cd /boot/custom
-# wget https://github.com/jbrodriguez/unbalance/releases/download/<enter latest version here>/unbalance-<enter latest version here>-linux-amd64.tar.gz -O - | tar -zxf - -C .
-```
-*NOTE*: If run manually, move operations will be performed as root user. Please take that into account.
+- Plugins Tab (manual)<br/>
+Go to the Plugins tab<br/>
+Click on Install Plugin<br/>
+Paste the following address in the input field: https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/unbalance.plg<br/>
+Click install
 
 ## Running the app
-Start the container or 
+When the array is started, the app is ready to be used, so you can reach the web interface at http://Tower:6237/ (replace Tower with the address/name of your unRAID server)
 
-```Shell
-# cd /boot/custom/unbalance
-# ./unbalance
-```
-As mentioned previously, the app will show the Settings page the first time it's run. Choose the elegible folders now.
+As mentioned previously, the app will show the Settings page the first time it's run.
 
-By default, the dry-run option is selected.
+Also, on the main page, the dry-run option is selected by default, which  means that the move operation is simulated (no folders/files will be moved).
 
-It means that operations are simulated, it only shows what it would actually do.
-
-To perform the operations, uncheck the dry-run checkbox.
+To perform an actual move operation, uncheck the dry-run checkbox.
 
 ## Credits
 This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).
