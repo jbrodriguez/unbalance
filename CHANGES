@@ -1,3 +1,9 @@
+Version 1.2.2 - 2016-01-04
+    (unbalance) Fix plugin url, update version and rename app (lowercase it)
+    (unbalance) Update version
+    (unbalance) Fix copy
+
+
 Version 1.2.1 - 2016-01-04
     (unbalance) Fix cp instruction
     (unbalance) Fix tar instruction
