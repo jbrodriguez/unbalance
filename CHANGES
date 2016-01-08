@@ -1,3 +1,11 @@
+Version 1.2.11 - 2016-01-08
+    (unbalance) Ignore archive folder
+    (front) Add new dependencies and setup webpack
+    (unbalance) Fix credits
+    (front) Rewrite front end to use latest reactorx version
+    Release 1.2.11
+
+
 Version 1.2.10 - 2016-01-04
     (back) Don't send notifications if the user said so
     (unbalance) Kill unbalance process when installing/updating
