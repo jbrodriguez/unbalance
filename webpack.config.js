@@ -3,7 +3,7 @@ var webpack = require('webpack')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-	devtool: 'eval-source-map',
+	devtool: 'inline-source-map',
 	entry: [
 		'webpack-hot-middleware/client?reload=true',
 		path.join(__dirname, 'client/main.js')
@@ -28,12 +28,12 @@ module.exports = {
 	],
 	module: {
 		loaders: [{
-			loader: 'babel-loader',
+			loader: 'babel',
 			exclude: /node_modules/,
-			test: /\.js$/,
+			test: /\.jsx?$/,
 			query: {
 				plugins: ['transform-runtime'],
-				presets: ['es2015', 'react']
+				presets: ['react', 'es2015', 'stage-2']
 			}
 		}, {
 			test: /\.json?$/,

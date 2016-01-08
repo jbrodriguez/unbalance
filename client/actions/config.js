@@ -1,141 +1,132 @@
-module.exports = [
-	{type: "getConfig", fn: _getConfig},
-	{type: "gotConfig", fn: _gotConfig},
+module.exports = {
+	getConfig,
+	gotConfig,
 
-	{type: "setNotifyCalc", fn: _setNotifyCalc},
-	{type: "setNotifyMove", fn: _setNotifyMove},
+	setNotifyCalc,
+	setNotifyMove,
 
-	{type: "addFolder", fn: _addFolder},
-	{type: "folderAdded", fn: _folderAdded},
-	{type: "deleteFolder", fn: _deleteFolder},
-	{type: "folderDeleted", fn: _folderDeleted},
+	addFolder,
+	folderAdded,
+	deleteFolder,
+	folderDeleted,
 
-	{type: "toggleDryRun", fn: _toggleDryRun},
-	{type: "dryRunToggled", fn: _dryRunToggled},
-]
+	toggleDryRun,
+	dryRunToggled,
+}
 
-function _getConfig({state, actions, dispatch}, {api, _}) {
-	dispatch(actions.opInProgress, actions.getConfig)
+function getConfig({state, actions, opts: {api}}) {
+	actions.setOpInProgress("Getting configuration")
 
 	api.getConfig()
 		.then(json => {
-			dispatch(actions.gotConfig, json)
+			actions.gotConfig(json)
 		})
 	// here i can catch the error and show an appropriate message
 
 	return state
 }
 
-function _gotConfig({state, actions, dispatch}, _, config) {
-	let newState = Object.assign({}, state)
-
-	newState.config = config
-	newState.opInProgress = null
-
-	return newState
+function gotConfig({state, actions}, config) {
+	return {
+		...state,
+		config,
+		opInProgress: null
+	}
 }
 
-function _setNotifyCalc({state, actions, dispatch}, {api, _}, notify) {
+function setNotifyCalc({state, actions, opts: {api}}, notify) {
 	if (state.config.notifyCalc !== notify) {
 		api.setNotifyCalc(notify)
 			.then(json => {
-				dispatch(actions.gotConfig, json)
+				actions.gotConfig(json)
 			})
 	}
 
 	return state
 }
 
-function _setNotifyMove({state, actions, dispatch}, {api, _}, notify) {
+function setNotifyMove({state, actions, opts: {api}}, notify) {
 	if (state.config.notifyMove !== notify) {
 		api.setNotifyMove(notify)
 			.then(json => {
-				dispatch(actions.gotConfig, json)
+				actions.gotConfig(json)
 			})
 	}
 
 	return state
 }
 
-
-function _addFolder({state, actions, dispatch}, {api, _}, folder) {
-	let proceed = true
-	state.config.folders.some( chosen => {
-		if (folder === chosen || chosen.indexOf(folder) > -1 || folder.indexOf(chosen) > -1) {
-			proceed = false
-			return true
-		}
+function addFolder({state, actions, opts: {api}}, folder) {
+	const exists = state.config.folders.some( chosen => {
+		return (folder === chosen || chosen.indexOf(folder) > -1 || folder.indexOf(chosen) > -1)
 	})
 
-	if (!proceed) {
-		let newState = Object.assign({}, state)
-		newState.feedback = [].concat(["The folder you're trying to add is already selected, contains or is contained by an already selected folder. Please choose another folder or remove one of the selected folders and try again."])
+	if (exists) {
+		// set a seven second timeout to remove the feedback panel
+		window.setTimeout( _ => actions.removeFeedback(), 15*1000)
 
-		// set a seven second timeout for the feedback panel
-		window.setTimeout( _ => dispatch(actions.removeFeedback), 7*1000)
-
-		return newState
+		return {
+			...state,
+			feedback: [].concat(["The folder you're trying to add is already selected or contains or is contained by a folder that you already added. Please choose another folder or remove one of the selected folders and try again."])
+		}
 	}
 
-	if (state.config.folders.indexOf(folder) !== -1) {
-		return state
-	}
+	// if (state.config.folders.indexOf(folder) !== -1) {
+	// 	return state
+	// }
 
-	dispatch(actions.opInProgress, actions.addFolder)
+	actions.setOpInProgress("Adding folder")
 
 	api.addFolder(folder)
 		.then(json => {
-			dispatch(actions.folderAdded, json)
+			actions.folderAdded(json)
 		})
 
 	return state
 }
 
-function _folderAdded({state, actions, dispatch}, _, config) {
-	let newState = Object.assign({}, state)
-
-	newState.config = config
-	newState.opInProgress = null
-
-	return newState
+function folderAdded({state}, config) {
+	return {
+		...state,
+		config,
+		opInProgress: null
+	}
 }
 
-function _deleteFolder({state, actions, dispatch}, {api, _}, folder) {
-	dispatch(actions.opInProgress, actions.deleteFolder)
+function deleteFolder({state, actions, opts: {api}}, folder) {
+	actions.setOpInProgress("Deleting folder")
 
 	api.deleteFolder(folder)
 		.then(json => {
-			dispatch(actions.folderDeleted, json)
+			actions.folderDeleted(json)
 		})
 
 	return state
 }
 
-function _folderDeleted({state, actions, dispatch}, _, config) {
-	let newState = Object.assign({}, state)
-
-	newState.config = config
-	newState.opInProgress = null
-
-	return newState
+function folderDeleted({state}, config) {
+	return {
+		...state,
+		config,
+		opInProgress: null
+	}
 }
 
-function _toggleDryRun({state, actions, dispatch}, {api, _}) {
-	dispatch(actions.opInProgress, actions.toggleDryRun)
+function toggleDryRun({state, actions, opts: {api}}) {
+	actions.setOpInProgress("Toggling dry run")
 
 	api.toggleDryRun()
 		.then(json => {
-			dispatch(actions.dryRunToggled, json)
+			actions.dryRunToggled(json)
 		})	
 
 	return state			
 }
 
-function _dryRunToggled({state, actions, dispatch}, _, config) {
-	let newState = Object.assign({}, state)
-
-	newState.config = config
-	newState.opInProgress = null
-
-	return newState
+function dryRunToggled({state}, config) {
+	return {
+		...state,
+		config,
+		opInProgress: null
+	}	
 }

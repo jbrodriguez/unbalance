@@ -67,10 +67,9 @@ It was built with:
 - [echo](https://github.com/labstack/echo) - REST and websocket api
 - [pubsub](https://github.com/tuxychandru/pubsub/) (slightly modified)
 - [React](https://facebook.github.io/react/) - Front End
-- [reactorx](https://github.com/jbrodriguez/reactorx) - Flux/Redux-like React 
+- [reactorx](https://github.com/jbrodriguez/reactorx) - Flux/Redux-like React framework
 - [flexboxgrid](http://flexboxgrid.com/) - CSS3 flex based grid system
 framework
-- [js-csp](https://github.com/ubolonton/js-csp) - Go-like concurrency for javascript
 - [Webpack](https://webpack.github.io/) - Build toolchain
 
 ## License

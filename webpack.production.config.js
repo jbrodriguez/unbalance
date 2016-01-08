@@ -32,7 +32,7 @@ module.exports = {
 			test: /\.js$/,
 			query: {
 				plugins: ['transform-runtime'],
-				presets: ['es2015', 'react']
+				presets: ['react', 'es2015', 'stage-2']
 			}
 		}, {
 			test: /\.json?$/,

@@ -29,7 +29,7 @@ export default class Home extends Component {
 	// }
 
 	render() {
-		let { state, actions, dispatch } = this.props.store
+		let { state, actions } = this.props.store
 		// let { dispatch, model } = this.props
 
 		if (!state.unraid) {
@@ -50,6 +50,7 @@ export default class Home extends Component {
 
 		let consolePanel = null
 		if (state.lines.length !== 0) {
+			console.log('more feeling')
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -139,33 +140,32 @@ export default class Home extends Component {
 	// { warning }
 
 	_checkFrom(path, e) {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.checkFrom, path)
+		let { checkFrom } = this.props.store.actions
+		checkFrom(path)
 	}
 
 	_checkTo(path, e) {
-		let { state, actions, dispatch } = this.props.store
+		let { state, actions: {checkTo} } = this.props.store
 		if (state.fromDisk[path]) {
 			e.preventDefault()
 			return
 		}
 
-		dispatch(actions.checkTo, path)
+		checkTo(path)
 	}
 
 	_flipDryRun(e) {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.toggleDryRun)
+		let { toggleDryRun } = this.props.store.actions
+		toggleDryRun()
 	}
 
 	_calculate(e) {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.calculate)
+		let { calculate } = this.props.store.actions
+		calculate()
 	}
 
 	_move(e) {
-		let { actions, dispatch } = this.props.store
-		dispatch(actions.move)
+		let { move } = this.props.store.actions
+		move()
 	}
-
 }

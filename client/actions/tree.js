@@ -1,63 +1,68 @@
 import path from 'path'
 
-module.exports = [
-	{type: "treeItemClicked", fn: _treeItemClicked},
-	{type: "getTree", fn: _getTree},
-	{type: "gotTree", fn: _gotTree},
-]
+module.exports = {
+	treeItemClicked,
+	getTree,
+	gotTree,
+}
 
-function _treeItemClicked({state, actions, dispatch}, {api, _}, item) {
-	let newState = Object.assign({}, state)
+function treeItemClicked({state, actions, opts: {api}}, item) {
+	let items = Object.assign({}, state.tree.items)
 
-	let open = newState.tree.items[item.path]
-
-	// if (item.type !== 'folder') dispatch(C.TREE_FILE_SELECTED, item)
-
+	const open = items[item.path]
 	if (open) {
 		// dispatch(C.CLOSE_TREE_ITEM, item)
-		delete newState.tree.items[item.path]
-		Object.keys(newState.tree.items).forEach( p => {
-			if (path.join(p, '/').indexOf(path.join(item.path, '/')) === 0) delete newState.tree.items[p]
+		delete items[item.path]
+		Object.keys(items).forEach( p => {
+			if (path.join(p, '/').indexOf(path.join(item.path, '/')) === 0) delete items[p]
 		})
 
 	} else {
-		dispatch(actions.getTree, item.path)
+		actions.getTree(item.path)
 		// api.getTree(item.path)
 		// 	.then(json => {
 		// 		dispatch(actions.gotTree, json)
 		// 	})
 	}
 
-	newState.tree.selected = item.path
-	newState.tree.fetching = !open
+	return {
+		...state,
+		tree: {
+			items,
+			selected: item.path,
+			fetching: !open,
+		},
+	}	
 
-	return newState
+	// tree.selected = item.path
+	// tree.fetching = !open
+	// return newState
+
 	// return {
 	// 	...state,
 	// 	tree: {items, selected: item.path, fetching},
 	// }
 }
 
-function _getTree({state, actions, dispatch}, {api, _}, path) {
+function getTree({state, actions,  opts: {api}}, path) {
 	api.getTree(path)
 		.then(json => {
-			dispatch(actions.gotTree, json)
+			actions.gotTree(json)
 		})
 
 	return state
 }
 
-function _gotTree({state, actions, dispatch}, _, newTree) {
-	// console.log('newTree: ', newTree)
-
-	let newState = Object.assign({}, state)
-
-	newState.tree.items[newTree.path] = newTree.nodes
-	newState.tree.fetching = false
-
-	return newState
-	// return {
-	// 	...state,
-	// 	tree
-	// }
+function gotTree({state}, newTree) {
+	return {
+		...state,
+		tree: {
+			...state.tree,
+			fetching: false,
+			items: {
+				...state.tree.items,
+				[newTree.path]: newTree.nodes
+			},
+		},
+	}
 }

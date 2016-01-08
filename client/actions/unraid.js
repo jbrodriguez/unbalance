@@ -1,37 +1,36 @@
-module.exports = [
-	{type: "getStorage", fn: _getStorage},
-	{type: "gotStorage", fn: _gotStorage},
+module.exports = {
+	getStorage,
+	gotStorage,
 
-	{type: "checkFrom", fn: _checkFrom},
-	{type: "checkTo", fn: _checkTo},
+	checkFrom,
+	checkTo,
 
-	{type: "calculate", fn: _calculate},
-	{type: "calcStarted", fn: _calcStarted},
-	{type: "calcProgress", fn: _calcProgress},
-	{type: "calcFinished", fn: _calcFinished},
-	// {type: "calcIsRunning", fn: _calcIsRunning},
+	calculate,
+	calcStarted,
+	calcProgress,
+	calcFinished,
 
-	{type: "move", fn: _move},
-	{type: "moveStarted", fn: _moveStarted},
-	{type: "moveProgress", fn: _moveProgress},
-	{type: "moveFinished", fn: _moveFinished},
+	move,
+	moveStarted,
+	moveProgress,
+	moveFinished,
 
-	{type: "opError", fn: _opError},
-]
+	opError,
+}
 
-function _getStorage({state, actions, dispatch}, {api, _}) {
-	dispatch(actions.opInProgress, actions.getStorage)
+function getStorage({state, actions, opts: {api}}) {
+	actions.setOpInProgress("Getting storage info")
 
 	api.getStorage()
 		.then(json => {
-			dispatch(actions.gotStorage, json)
+			actions.gotStorage(json)
 		})
 	// here i can catch the error and show an appropriate message
 
 	return state
 }
 
-function _gotStorage({state, actions, dispatch}, _, unraid) {
+function gotStorage({state}, unraid) {
 	// console.log('unraid: ', unraid)
 
 	// let toDisk = {}
@@ -64,57 +63,53 @@ function _gotStorage({state, actions, dispatch}, _, unraid) {
 		toDisk[disk.path] = disk.dst
 	})
 
-	let newState = Object.assign({}, state)
-
-	newState.opInProgress = null
-	newState.moveDisabled = true
-	newState.lines = []
-	newState.unraid = unraid
-	newState.fromDisk = fromDisk
-	newState.toDisk = toDisk
-
-	return newState
-	// return {
-	// 	...state,
-	// 	opInProgress: null,
-	// 	moveDisabled: true,
-	// 	lines: [],
-	// 	unraid,
-	// 	fromDisk,
-	// 	toDisk,
-	// }
+	return {
+		...state,
+		unraid,
+		fromDisk,
+		toDisk,
+		opInProgress: null,
+		moveDisabled: true,
+		lines: [],
+	}
 }
 
-function _checkFrom({state, actions, dispatch}, _, path) {
-	let newState = Object.assign({}, state)
+function checkFrom({state}, path) {
+	let fromDisk = Object.assign({}, state.fromDisk)
+	let toDisk = Object.assign({}, state.toDisk)
 
-	for (var key in newState.fromDisk) {
+	for (var key in fromDisk) {
 		if (key !== path) {
-			newState.fromDisk[key] = false
+			fromDisk[key] = false
 		}
 	}
-	newState.fromDisk[path] = true
+	fromDisk[path] = true
 
-	for (var key in newState.toDisk) {
-		newState.toDisk[key] = !(key === path)
+	for (var key in toDisk) {
+		toDisk[key] = !(key === path)
 	}
 
-	return newState
+	return {
+		...state,
+		fromDisk,
+		toDisk,
+	}
 }
 
-function _checkTo({state, actions, dispatch}, _, path) {
-	let newState = Object.assign({}, state)
-
-	newState.toDisk[path] = !newState.toDisk[path]
-
-	return newState
+function checkTo({state}, path) {
+	return {
+		...state,
+		toDisk: {
+			...state.toDisk,
+			[path]: !state.toDisk[path]
+		}
+	}
 }
 
-function _calculate({state, actions, dispatch}, {_, ws}) {
-	dispatch(actions.opInProgress, actions.calculate)
+function calculate({state, actions, opts: {api, ws}}) {
+	actions.setOpInProgress("Calculating")
 
 	let srcDisk = ""
-
 	for (var key in state.fromDisk) {
 		if (state.fromDisk[key]) {
 			srcDisk = key
@@ -122,22 +117,35 @@ function _calculate({state, actions, dispatch}, {_, ws}) {
 		}
 	}			
 
-	ws.send({topic: actions.calculate, payload: {srcDisk, dstDisks: state.toDisk}})
+	ws.send({topic: "calculate", payload: {srcDisk, dstDisks: state.toDisk}})
 
 	return state
 }
 
-function _calcStarted({state, actions, dispatch}, _, line) {
-	let newState = Object.assign({}, state)
+function calcStarted({state}, line) {
+	return {
+		...state,
+		lines: [].concat('CALCULATE: ' + line),
+		unraid: {
+			...state.unraid,
+			disks: state.unraid.disks.map( disk => {
+				disk.newFree = disk.free
+				return disk
+			})
+		}
+	}
 
-	// make sure we clean out the lines array
-	newState.lines = [].concat('CALCULATE: ' + line)
 
-	newState.unraid.disks.forEach( disk => {
-		disk.newFree = disk.free
-	})
+	// let newState = Object.assign({}, state)
 
-	return newState
+	// // make sure we clean out the lines array
+	// newState.lines = [].concat('CALCULATE: ' + line)
+
+	// newState.unraid.disks.forEach( disk => {
+	// 	disk.newFree = disk.free
+	// })
+
+	// return newState
 
 
 	// return {
@@ -146,17 +154,24 @@ function _calcStarted({state, actions, dispatch}, _, line) {
 	// }
 }
 
-function _calcProgress({state, actions, dispatch}, _, line) {
-	let newState = Object.assign({}, state)
+function calcProgress({state}, line) {
+	return {
+		...state,
+		opInProgress: "calculate",
+		moveDisabled: true,
+		lines: state.lines.concat('CALCULATE: ' + line),
+	}
 
-	// make sure we disable the interface, in case another browser is open
-	// or even the initial browser is woken from sleep 
-	newState.opInProgress = actions.calculate
-	newState.moveDisabled = true
+	// let newState = Object.assign({}, state)
 
-	newState.lines.push('CALCULATE: ' + line)
+	// // make sure we disable the interface, in case another browser is open
+	// // or even the initial browser is woken from sleep 
+	// newState.opInProgress = actions.calculate
+	// newState.moveDisabled = true
 
-	return newState
+	// newState.lines.push('CALCULATE: ' + line)
+
+	// return newState
 
 	// return {
 	// 	...state,
@@ -164,19 +179,36 @@ function _calcProgress({state, actions, dispatch}, _, line) {
 	// }
 }
 
-function _calcFinished({state, actions, dispatch}, _, unraid) {
-	let newState = Object.assign({}, state)
-
-	newState.unraid = unraid
-	newState.opInProgress = null
-	newState.moveDisabled = false
-
-	if (newState.unraid.bytesToMove === 0) {
-		newState.feedback.push("There's no space available to move any of the folders you selected.")
-		newState.feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
+function calcFinished({state, actions}, unraid) {
+	let feedback = []
+	if (unraid.bytesToMove === 0) {
+		feedback.push("There's no space available in any of the target disks, to move the folders you selected.")
+		feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
 	}
 
-	return newState
+	window.setTimeout( _ => actions.removeFeedback(), 15*1000)
+
+	return {
+		...state,
+		unraid,
+		feedback,
+		opInProgress: null,
+		moveDisabled: false,
+	}
+
+
+	// let newState = Object.assign({}, state)
+
+	// newState.unraid = unraid
+	// newState.opInProgress = null
+	// newState.moveDisabled = false
+
+	// // if (newState.unraid.bytesToMove === 0) {
+	// // 	newState.feedback.push("There's no space available to move any of the folders you selected.")
+	// // 	newState.feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
+	// // }
+
+	// return newState
 
 	// return {
 	// 	...state,
@@ -187,7 +219,7 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 }
 
 // // this message is received when the browser requests
-// function _calcIsRunning({state, actions, dispatch}, _, unraid) {
+// function calcIsRunning({state, actions, dispatch}, _, unraid) {
 // 	let newState = Object.assign({}, state)
 
 // 	newState.opInProgress = actions.calculate
@@ -197,21 +229,26 @@ function _calcFinished({state, actions, dispatch}, _, unraid) {
 // 	return newState
 // }
 
-function _move({state, actions, dispatch}, {_, ws}) {
-	dispatch(actions.opInProgress, actions.move)
+function move({state, actions, opts: {api, ws}}) {
+	actions.setOpInProgress("Moving")
 
-	ws.send({topic: actions.move})
+	ws.send({topic: "move"})
 
 	return state
 }
 
-function _moveStarted({state, actions, dispatch}, _, line) {
-	let newState = Object.assign({}, state)
+function moveStarted({state}, line) {
+	return {
+		...state,
+		lines: [].concat('MOVE: ' + line)
+	}
 
-	// make sure we clean out the lines array
-	newState.lines = [].concat('MOVE: ' + line)
+	// let newState = Object.assign({}, state)
 
-	return newState
+	// // make sure we clean out the lines array
+	// newState.lines = [].concat('MOVE: ' + line)
+
+	// return newState
 
 	// return {
 	// 	...state,
@@ -219,26 +256,34 @@ function _moveStarted({state, actions, dispatch}, _, line) {
 	// }
 }
 
-function _moveProgress({state, actions, dispatch}, _, line) {
-	let newState = Object.assign({}, state)
+function moveProgress({state}, line) {
+	return {
+		...state,
+		lines: state.lines.concat('MOVE: ' + line)
+	}
 
-	newState.lines.push('MOVE: ' + line)
-
-	return newState
 	// return {
 	// 	...state,
 	// 	lines: state.lines.concat('MOVE: ' + payload),
 	// }
 }
 
-function _moveFinished({state, actions, dispatch}, _, unraid) {
-	let newState = Object.assign({}, state)
+function moveFinished({state}, unraid) {
+	return {
+		...state,
+		unraid,
+		opInProgress: null,
+		moveDisabled: !state.config.dryRun
+	}
 
-	newState.unraid = unraid
-	newState.opInProgress = null
-	newState.moveDisabled = !state.config.dryRun
 
-	return newState
+	// let newState = Object.assign({}, state)
+
+	// newState.unraid = unraid
+	// newState.opInProgress = null
+	// newState.moveDisabled = !state.config.dryRun
+
+	// return newState
 	
 	// let moveDisabled = !state.config.dryRun
 	// console.log('moveDisabled: ', moveDisabled)
@@ -250,10 +295,14 @@ function _moveFinished({state, actions, dispatch}, _, unraid) {
 	// }
 }
 
-function _opError({state, actions, dispatch}, _, error) {
-	let newState = Object.assign({}, state)
+function opError({state}, error) {
+	return {
+		...state,
+		feedback: state.feedback.concat(error)
+	}
+	// let newState = Object.assign({}, state)
 
-	newState.feedback.push(error)
+	// newState.feedback.push(error)
 	
-	return newState
+	// return newState
 }
