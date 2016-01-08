@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import fetch from 'isomorphic-fetch'
 
 export default class Api {
 	constructor() {

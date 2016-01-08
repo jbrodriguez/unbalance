@@ -18,7 +18,7 @@ export default class Settings extends Component {
 	render() {
 		// let { dispatch, state } = this.props
 		// console.log('settings.render: ', this.props.store)
-		let { state, actions, dispatch } = this.props.store
+		let { state, actions } = this.props.store
 
 		if (!state.config) {
 			return null
@@ -180,7 +180,7 @@ export default class Settings extends Component {
 								<div className={cx('explorerContent')}>
 									<section className={cx('row')}>
 										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<TreePanel tree={state.tree} actions={actions} dispatch={dispatch} />
+											<TreePanel tree={state.tree} {...actions} />
 										</div>
 										<div className={cx('col-xs-12', 'col-sm-4', 'flex', 'flexOne')}>
 											<div className={cx('explorerChosen')}>
@@ -228,18 +228,17 @@ export default class Settings extends Component {
 	// }
 
 	_deleteFolder(folder, e) {
-		let { dispatch, actions } = this.props.store
-		dispatch(actions.deleteFolder, folder)
+		let { deleteFolder } = this.props.store.actions
+		deleteFolder(folder)
 	}
 
 	_setNotifyCalc(notify, e) {
-		let { dispatch, actions } = this.props.store
-		dispatch(actions.setNotifyCalc, notify)
+		let { setNotifyCalc } = this.props.store.actions
+		setNotifyCalc(notify)
 	}
 
 	_setNotifyMove(notify, e) {
-		let { dispatch, actions } = this.props.store
-		dispatch(actions.setNotifyMove, notify)
+		let { setNotifyMove } = this.props.store.actions
+		setNotifyMove(notify)
 	}
-
 }

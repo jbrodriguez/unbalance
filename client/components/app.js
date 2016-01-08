@@ -25,7 +25,7 @@ export default function App({ location, children, store }) {
 
 	// console.log('app.location: ', location)
 
-	let { state, dispatch, actions } = store
+	let { state, actions } = store
 
 	if (!state.config) {
 		return (
@@ -78,11 +78,11 @@ export default function App({ location, children, store }) {
 
 		buttons = (
 			<div className={cx('flexSection', 'end-xs')}>
-				<button className={cx('btn', 'btn-primary')} onClick={calculate.bind(null, actions, dispatch)} disabled={disabled}>CALCULATE</button>
-				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions, dispatch)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
+				<button className={cx('btn', 'btn-primary')} onClick={() => actions.calculate()} disabled={disabled}>CALCULATE</button>
+				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
-					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions, dispatch)} disabled={disabled} />
+					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions)} disabled={disabled} />
 					&nbsp;
 					<label>dry run</label>
 				</div>
@@ -200,14 +200,10 @@ export default function App({ location, children, store }) {
 	)
 }
 
-function calculate(actions, dispatch, e) {
-	dispatch(actions.calculate)
+function move(actions, e) {
+	actions.move()
 }
 
-function move(actions, dispatch, e) {
-	dispatch(actions.move)
-}
-
-function toggleDryRun(actions, dispatch, e) {
-	dispatch(actions.toggleDryRun)
+function toggleDryRun(actions, e) {
+	actions.toggleDryRun()
 }

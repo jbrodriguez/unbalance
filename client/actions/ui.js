@@ -1,30 +1,26 @@
-module.exports = [
-	{type: "opInProgress", fn: _opInProgress},
-	{type: "feedback", fn: _addFeedback},
-	{type: "removeFeedback", fn: _removeFeedback},
-]
-
-function _opInProgress({state, actions, dispatch}, _, action) {
-	let newState = Object.assign({}, state)
-
-	newState.opInProgress = action
-
-	return newState
+module.exports = {
+	setOpInProgress,
+	addFeedback,
+	removeFeedback,
 }
 
-function _addFeedback({state, actions, dispatch}, _, feedback) {
-	let newState = Object.assign({}, state)
-
-	newState.feedback = [].concat[feedback]
-
-	return newState
+function setOpInProgress({state}, action) {
+	return {
+		...state,
+		opInProgress: action
+	}
 }
 
+function addFeedback({state}, feedback) {
+	return {
+		...state,
+		feedback: [].concat[feedback]
+	}
+}
 
-function _removeFeedback({state, actions, dispatch}) {
-	let newState = Object.assign({}, state)
-
-	newState.feedback = []
-
-	return newState
+function removeFeedback({state}) {
+	return {
+		...state,
+		feedback: []
+	}
 }

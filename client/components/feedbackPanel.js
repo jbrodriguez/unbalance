@@ -6,14 +6,14 @@ import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
-export default function FeedbackPanel({state, actions, dispatch}) {
+export default function FeedbackPanel({state, removeFeedback}) {
 	return (
 		<div className={cx('bg-feedback', 'feedback')}>
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12', 'end-xs')}>
 					<div className={cx('flexSection', 'middle-xs', 'between-xs', 'title')}>
 						<span className={cx('lspacer')}>OPERATION FEEDBACK</span>
-						<i className={cx('fa fa-remove', 'rspacer')} onClick={_removeFeedback.bind(null, actions, dispatch)}></i>
+						<i className={cx('fa fa-remove', 'rspacer')} onClick={_removeFeedback.bind(null)}></i>
 					</div>
 				</div>
 			</section>
@@ -34,8 +34,8 @@ export default function FeedbackPanel({state, actions, dispatch}) {
 	)
 }
 
-function _removeFeedback(actions, dispatch, e) {
-	dispatch(actions.removeFeedback)
+function _removeFeedback(e) {
+	removeFeedback()
 }
 
 

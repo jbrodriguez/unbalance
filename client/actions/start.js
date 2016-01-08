@@ -1,18 +1,18 @@
-module.exports = [
-	{type: "start", fn: _start},
-]
+module.exports = {
+	start,
+}
 
-function _start({state, actions, dispatch}, {api, ws}) {
+function start({state, actions, opts: {ws}}) {
 	ws.receive(event => {
 		let data = JSON.parse(event.data)
-		dispatch(data.topic, data.payload)
+		actions[data.topic](data.payload)
 	})
 
-	dispatch(actions.getConfig)
+	actions.getConfig()
 
-	dispatch(actions.getTree, "/")
+	actions.getTree("/")
 
-	dispatch(actions.getStorage)
+	actions.getStorage()
 
 	return state
 }

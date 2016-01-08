@@ -2,7 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, IndexRoute } from 'react-router'
 
-import { createStore } from 'reactorx'
+import { createStore, combineActions } from 'reactorx'
 
 import startActions from './actions/start'
 import uiActions from './actions/ui'
@@ -58,7 +58,7 @@ import Settings from './components/settings'
 //	feedback: []
 // }
 
-let initialState = {
+const initialState = {
 	config: null,
 	unraid: null,
 	fromDisk: null,
@@ -74,7 +74,13 @@ let initialState = {
 	feedback: [],
 }
 
-let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
+const actions = combineActions(
+	startActions, 
+	uiActions, 
+	configActions, 
+	treeActions, 
+	unraidActions
+)
 
 const api = new Api()
 const ws = new WSApi()
@@ -83,7 +89,7 @@ const store = createStore(initialState, actions, {api, ws})
 
 store.subscribe(
 	store => {
-		// console.log('main.store: ', store)
+		// console.log('main.store.state: ', store.state)
 
 		function createElement(Component, props) {
 			return <Component {...props} store={store} />
@@ -101,7 +107,7 @@ store.subscribe(
 	}
 )
 
-store.dispatch(store.actions.start)	
+store.actions.start()
 
 // Promise.all([api.getConfig(), api.getTree('/')])
 // 	.then( boot )

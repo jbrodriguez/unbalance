@@ -159,6 +159,7 @@ p {
 	font-size: 0.8em;
 
 	.title {
+		color: $footerBackground;
 		font-size: 0.5em;
 		// border-bottom: 1px solid darken($state-feedback-bg, 10%);
 	}

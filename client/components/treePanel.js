@@ -7,16 +7,16 @@ import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
-export default function TreePanel({tree, actions, dispatch}) {
+export default function TreePanel({tree, treeItemClicked, addFolder}) {
 	// console.log('treepanel.tree: ', tree)
 	return (
 		<div className={cx('treeView')}>
-			{ renderTree('/', tree, actions, dispatch) }
+			{ renderTree('/', tree, treeItemClicked, addFolder) }
 		</div>
 	)
 }
 
-function renderTree(entry, {items, fetching}, actions, dispatch) {
+function renderTree(entry, {items, fetching}, treeItemClicked, addFolder) {
 	// console.log('entry: ', entry)
 	// let { items, selected, fetching } = state.tree
 	let entries = items[entry]
@@ -68,11 +68,11 @@ function renderTree(entry, {items, fetching}, actions, dispatch) {
 			<li key={item.path} className={cx()}>
 				<div className={cx('flex', 'listItem')}>
 					<div className={cx('floating')}>
-						<button className={cx('btn', 'btn-alert')} onClick={onAdd.bind(null, actions, dispatch, item)}>add</button>
+						<button className={cx('btn', 'btn-alert')} onClick={onAdd.bind(null, addFolder, item)}>add</button>
 						{ spacer }
 						{ spinner }
 					</div>
-					<div onClick={onClick.bind(null, actions, dispatch, item)}>
+					<div onClick={onClick.bind(null, treeItemClicked, item)}>
 						&nbsp; &nbsp;
 						<i className={chevron} />
 						&nbsp; &nbsp;
@@ -81,7 +81,7 @@ function renderTree(entry, {items, fetching}, actions, dispatch) {
 						<span className={cx('name')} >{name}</span>
 					</div>
 				</div>
-				{ renderTree(item.path, {items, fetching}, actions, dispatch) }
+				{ renderTree(item.path, {items, fetching}, treeItemClicked, addFolder) }
 			</li>
 		)
 
@@ -95,7 +95,7 @@ function renderTree(entry, {items, fetching}, actions, dispatch) {
 }
 
 // function onClick({actions, dispatch}, item, e) {
-function onClick(actions, dispatch, item, e) {
+function onClick(treeItemClicked, item, e) {
 	// console.log('args: ', ...args)
 
 	// console.log('alpha: ', alpha)
@@ -103,7 +103,7 @@ function onClick(actions, dispatch, item, e) {
 	// console.log('dispatch: ', dispatch)
 	// console.log('onClick.item: ', item)
 	// console.log('e: ', e)
-	dispatch(actions.treeItemClicked, item)
+	treeItemClicked(item)
 	// let { tree, onFolder, onFile, onClose }
 	// let open = tree[item.path]
 
@@ -118,11 +118,11 @@ function onClick(actions, dispatch, item, e) {
 	// }
 }
 
-function onAdd(actions, dispatch, item, e) {
+function onAdd(addFolder, item, e) {
 	console.log('onAdd.item: ', item)
 	e.preventDefault()
 
-	dispatch(actions.addFolder, item.path)
+	addFolder(item.path)
 	// this.props.dispatch(C.ADD_FOLDER, item.path)
 }
 
