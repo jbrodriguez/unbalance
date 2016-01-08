@@ -1,11 +1,10 @@
-/* eslint no-console: 0 */
-// import path from 'path';
-// import express from 'express';
-// import webpack from 'webpack';
-// import webpackMiddleware from 'webpack-dev-middleware';
-// import webpackHotMiddleware from 'webpack-hot-middleware';
-// import config from './webpack.config.js';
-// import httpProxy from 'http-proxy'
+// import path 				from 'path'
+// import express 				from 'express'
+// import webpack 				from 'webpack'
+// import webpackMiddleware 	from 'webpack-dev-middleware'
+// import webpackHotMiddleware from 'webpack-hot-middleware'
+// import config 				from './webpack.config.js'
+// import httpProxy 			from 'http-proxy'
 
 var path = require('path');
 var express = require('express');
@@ -73,7 +72,9 @@ if (isDeveloping) {
 	});
 }
 
-// var server = require('http').createServer(app);
+// module.exports = app
+
+// // var server = require('http').createServer(app);
 server.listen(port, '0.0.0.0', function onStart(err) {
 	if (err) {
 		console.log(err);
