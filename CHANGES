@@ -1,3 +1,13 @@
+Version 1.2.12 - 2016-01-09
+    - Add settings page and menu page
+    - Implement new logic for starting/stopping the app
+    - Amend  template to use new stop logic and default config
+    (back) Enable port to be an argument
+    (unbalance) Put image in required location
+    - Update build logic
+    Release 1.2.12
+
+
 Version 1.2.11 - 2016-01-08
     (unbalance) Ignore archive folder
     (front) Add new dependencies and setup webpack
