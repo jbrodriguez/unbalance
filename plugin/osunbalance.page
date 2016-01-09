@@ -1,0 +1,30 @@
+Menu="UNRAID-OS"
+Title="unBALANCE"
+Type="xmenu"
+---
+<?php
+$sName = "unbalance";
+$unbalance_cfg = parse_plugin_cfg("unbalance");
+$unbalance_host = $var['NAME'];
+$unbalance_port = (isset($unbalance_cfg['PORT']) && is_numeric($unbalance_cfg['PORT']) && $unbalance_cfg['PORT'] > 0 && $unbalance_cfg['PORT'] < 65535 ) ? $unbalance_cfg['PORT'] : "6237";
+?>
+<style>
+iframe {
+  height: 600px;
+  width: 100%;
+  resize: both;
+  overflow: auto;
+  border: 0px;
+}
+</style>
+
+<div>
+	<iframe id="shell" src="http://<?=$unbalance_host?>:<?=$unbalance_port;?>">
+	</iframe>
+</div>
+
+<script type="text/javascript">
+$(function(){
+	showStatus('<?=$sName;?>');
+});
+</script>

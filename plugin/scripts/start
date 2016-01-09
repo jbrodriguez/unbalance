@@ -1,0 +1,12 @@
+#!/bin/bash
+# read our configuration
+source /boot/config/plugins/unbalance/unbalance.cfg
+
+prog="/plugins/unbalance/unbalance"
+running=$(pidof unbalance | wc -w)
+
+# no-op if already running
+if [ $running -eq 0 ]; then
+	# nohup sudo -H -u nobody bash -c "/usr/local/emhttp/plugins/unbalance/unbalance -port $PORT > /dev/null 2>&1" &
+	nohup sudo -H -u nobody bash -c "$prog -port $PORT" > /dev/null 2>&1 &	
+fi

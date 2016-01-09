@@ -1,2 +1,3 @@
 #!/bin/bash
-killall unbalance
+# killall unbalance
+/usr/local/emhttp/plugins/unbalance/scripts/stop
