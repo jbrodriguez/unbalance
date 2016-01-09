@@ -50,17 +50,17 @@ Click Install
 ## Running the app
 After installing the plugin, you can access the web UI, via the following methods:
 
-- Method 1
+- Method 1<br/>
 Go to Settings > Utilities<br/>
 Click on unBALANCE<br/>
 Click on Open Web UI<br/>
 
-- Method 2
+- Method 2<br/>
 Go to Plugins > Installed Plugins<br/>
 Click on unBALANCE<br/>
 Click on Open Web UI<br/>
 
-- Method 3 
+- Method 3<br/>
 Navigate with your browser to http://Tower:6237/ (replace Tower with the address/name of your unRAID server)<br/>
 
 As mentioned previously, the app will show the Settings page the first time it's run.
