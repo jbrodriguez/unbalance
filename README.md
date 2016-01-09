@@ -32,7 +32,7 @@ You can Select an entire user share (/films in the screenshot below) or any fold
 ![Settings](110-settings.png)
 
 
-## Install
+## Installation
 There are 2 ways to install this application
 
 - Apps Tab (Community Application)<br/>
@@ -45,10 +45,23 @@ Click Install
 Go to the Plugins tab<br/>
 Click on Install Plugin<br/>
 Paste the following address in the input field: https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/unbalance.plg<br/>
-Click install
+Click Install
 
 ## Running the app
-When the array is started, the app is ready to be used, so you can reach the web interface at http://Tower:6237/ (replace Tower with the address/name of your unRAID server)
+After installing the plugin, you can access the web UI, via the following methods:
+
+- Method 1<br/>
+Go to Settings > Utilities<br/>
+Click on unBALANCE<br/>
+Click on Open Web UI<br/>
+
+- Method 2<br/>
+Go to Plugins > Installed Plugins<br/>
+Click on unBALANCE<br/>
+Click on Open Web UI<br/>
+
+- Method 3<br/>
+Navigate with your browser to http://Tower:6237/ (replace Tower with the address/name of your unRAID server)<br/>
 
 As mentioned previously, the app will show the Settings page the first time it's run.
 
