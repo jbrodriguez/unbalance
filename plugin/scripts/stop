@@ -1,0 +1,20 @@
+#!/bin/sh
+# read our configuration
+source /boot/config/plugins/unbalance/unbalance.cfg
+
+prog="unbalance"
+running=$(pidof unbalance | wc -w)
+
+# no-op if already running
+if [ $running -ge 1 ]; then
+TIMER=0
+while `killall $prog 2>/dev/null`; do
+	sleep 1
+	TIMER=$((TIMER+1))
+	if [ $TIMER -ge 30 ]; then
+		killall -9 $prog
+		sleep 1
+		break
+	fi
+done
+fi
