@@ -75,8 +75,8 @@ Prepare for installation.
 -->
 <FILE Run="/bin/bash">
 <INLINE>
-# Let's kill the unbalance process, if it's running
-killall unbalance
+# Let's stop the unbalance process, if it's running
+/usr/local/emhttp/plugins/&name;/scripts/stop
 
 # Remove emhttp files so we can re-install.
 rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
@@ -94,9 +94,24 @@ The 'remove' script.
 -->
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
+/usr/local/emhttp/plugins/&name;/scripts/stop
 # Remove all plugin files.
 rm -rf /usr/local/emhttp/plugins/&name;
 rm -rf /boot/config/plugins/&name;
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/unbalance-chkconf" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# This will check each entry in the config so nothing is missing, and if missing, sets to default
+CFGFILE=/boot/config/plugins/unbalance/unbalance.cfg
+[ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"enable\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"6237\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
+rm /tmp/unbalance-chkconf
+]]>
 </INLINE>
 </FILE>
 
