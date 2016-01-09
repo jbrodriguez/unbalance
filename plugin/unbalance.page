@@ -1,5 +1,5 @@
+Menu="Utilities"
 Icon="unbalance.png"
-Menu="UserUtilities"
 Title="unBALANCE"
 ---
 <?php
@@ -11,17 +11,17 @@ $unbalance_port = (isset($unbalance_cfg['PORT']) && is_numeric($unbalance_cfg['P
 $unbalance_running = shell_exec("pidof unbalance | wc -w");
 $unbalance_version = shell_exec("cat /usr/local/emhttp/plugins/unbalance/VERSION");
 $unbalance_version = ($unbalance_running == 1) ? 
-	"<a style='color:green;' target='_blank' href='http://".$var['NAME'].":".$unbalance_port."' title='unBALANCE plugin'><b>$unbalance_version</b></a>":
-	"<b><font style='color:orange;'>$unbalance_version</font></b>";
+	"<a style='color:green;' target='_blank' href='http://".$var['NAME'].":".$unbalance_port."' title='unBALANCE plugin'><b>Open Web UI ( v$unbalance_version)</b></a>":
+	"<b><font style='color:orange;'>unBALANCE v$unbalance_version</font></b>";
 ?>
-
-Running is <?=$unbalance_running;?>
 
 <form markdown="1" name="unbalance_settings" method="POST" action="/update.php" target="progressFrame">
 <input type="hidden" name="#file" value="unbalance/unbalance.cfg" />
 <input type="hidden" id="command" name="#command" value="" />
 
-Enable unBALANCE Server <?=$unbalance_version;?>:
+<p><?=$unbalance_version;?></p>
+
+Enable unBALANCE Server :
 : <select id="SERVICE" name="SERVICE" size="1" onChange="checkRUNNING(this.form);">
   <?=mk_option($unbalance_service, "disable", "No");?>
   <?=mk_option($unbalance_service, "enable", "Yes");?>
@@ -55,7 +55,7 @@ function resetDATA(form) {
 }
 
 function checkRUNNING(form) {
-	if ("<?=$unbalance_running;?>" == "yes")
+	if (<?=$unbalance_running;?> == 1)
 	{
 		$(".stopped").prop("disabled", true);
 		form.btnApply.disabled = "disabled";	
