@@ -2,7 +2,7 @@
 # read our configuration
 source /boot/config/plugins/unbalance/unbalance.cfg
 
-prog="/plugins/unbalance/unbalance"
+prog="/usr/local/emhttp/plugins/unbalance/unbalance"
 running=$(pidof unbalance | wc -w)
 
 # no-op if already running
