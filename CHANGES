@@ -1,3 +1,15 @@
+Version 1.2.13 - 2016-01-09
+    (unbalance) Remove page that is no longer needed
+    (unbalance) Install cfg file with default settings
+    (unbalance) Add some logging when installing and removing
+    (plugin) Fix menu entry
+    (plugin) Add link to open Web UI
+    (plugin) Fix comparison (it was comparing string/string instead of int/int)
+    (plugin) Fix icon size
+    (plugin) Fix app path
+    Release 1.2.13
+
+
 Version 1.2.12 - 2016-01-09
     - Add settings page and menu page
     - Implement new logic for starting/stopping the app
