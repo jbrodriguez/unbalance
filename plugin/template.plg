@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-01-09 - v1.2.12
+- New settings page (unRAID interface)
+
 ###2016-01-08 - v1.2.11
 - Converted to a plugin. The docker version is no longer maintained.
 - Notification system based on unRAID
