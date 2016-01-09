@@ -82,12 +82,14 @@ func (s *Server) Start() {
 	api.Post("/tree", s.getTree)
 	api.Put("/config/dryRun", s.toggleDryRun)
 
-	go s.engine.Run(":6237")
+	port := fmt.Sprintf(":%s", s.settings.Port)
+
+	go s.engine.Run(port)
 
 	s.mailbox = s.register(s.bus, "socket:broadcast", s.broadcast)
 	go s.react()
 
-	mlog.Info("Server started listening on :6237")
+	mlog.Info("Server started listening on %s", port)
 }
 
 func (s *Server) Stop() {

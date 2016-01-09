@@ -27,12 +27,13 @@ type Settings struct {
 	Config
 
 	Conf          string
+	Port          string
 	Log           string
 	ReservedSpace int64
 }
 
 func NewSettings(version string) (*Settings, error) {
-	var config, log, folders string
+	var config, port, log, folders string
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
@@ -43,6 +44,7 @@ func NewSettings(version string) (*Settings, error) {
 
 	// /boot/config/plugins/unbalance/
 	flag.StringVar(&config, "config", "", "config location")
+	flag.StringVar(&port, "port", "6237", "port to run the server")
 	flag.StringVar(&log, "log", "/boot/logs/unbalance.log", "pathname where log file will be written to")
 	flag.StringVar(&folders, "folders", "", "folders that will be scanned for media")
 	flag.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
@@ -66,6 +68,7 @@ func NewSettings(version string) (*Settings, error) {
 	s.Version = version
 
 	s.Conf = config
+	s.Port = port
 	s.Log = log
 	s.ReservedSpace = RESERVED_SPACE
 
