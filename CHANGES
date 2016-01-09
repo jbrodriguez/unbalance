@@ -1,3 +1,10 @@
+Version 1.2.14 - 2016-01-09
+    (unbalance) Update instructions to run the app
+    (unbalance) Fix visual layout of instructions
+    (unbalance) Add newlines
+    Release 1.2.14
+
+
 Version 1.2.13 - 2016-01-09
     (unbalance) Remove page that is no longer needed
     (unbalance) Install cfg file with default settings
