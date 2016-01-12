@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-01-12 - v1.2.15
+- Support Safari browser (and some older browsers)
+
 ###2016-01-09 - v1.2.14
 - Fixed plugin startup issues
 - Update instructions on how to run the app
