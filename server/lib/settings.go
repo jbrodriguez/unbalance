@@ -11,11 +11,13 @@ import (
 const RESERVED_SPACE = 450000000 // 450Mb
 
 type Config struct {
-	Folders    []string `json:"folders"`
-	DryRun     bool     `json:"dryRun"`
-	NotifyCalc int      `json:"notifyCalc"`
-	NotifyMove int      `json:"notifyMove"`
-	Version    string   `json:"version"`
+	Folders        []string `json:"folders"`
+	DryRun         bool     `json:"dryRun"`
+	NotifyCalc     int      `json:"notifyCalc"`
+	NotifyMove     int      `json:"notifyMove"`
+	ReservedAmount int64    `json:"reservedAmount"`
+	ReservedUnit   string   `json:"reservedUnit"`
+	Version        string   `json:"version"`
 }
 
 // NotifyCalc/NotifyMove possible values
@@ -26,10 +28,10 @@ type Config struct {
 type Settings struct {
 	Config
 
-	Conf          string
-	Port          string
-	Log           string
-	ReservedSpace int64
+	Conf string
+	Port string
+	Log  string
+	// ReservedSpace int64
 }
 
 func NewSettings(version string) (*Settings, error) {
@@ -65,12 +67,13 @@ func NewSettings(version string) (*Settings, error) {
 	s.DryRun = dryRun
 	s.NotifyCalc = notifyCalc
 	s.NotifyMove = notifyMove
+	s.ReservedAmount = RESERVED_SPACE / 1000 / 1000
+	s.ReservedUnit = "Mb"
 	s.Version = version
 
 	s.Conf = config
 	s.Port = port
 	s.Log = log
-	s.ReservedSpace = RESERVED_SPACE
 
 	return s, nil
 }

@@ -75,6 +75,8 @@ func (s *Server) Start() {
 	api := s.engine.Group(API_VERSION)
 	api.Put("/config/notifyCalc", s.setNotifyCalc)
 	api.Put("/config/notifyMove", s.setNotifyMove)
+	api.Put("/config/reservedAmount", s.setReservedAmount)
+	api.Put("/config/reservedUnit", s.setReservedUnit)
 	api.Put("/config/folder", s.addFolder)
 	api.Delete("/config/folder", s.deleteFolder)
 	api.Get("/config", s.getConfig)
@@ -142,6 +144,42 @@ func (s *Server) setNotifyMove(c *echo.Context) (err error) {
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/config/set/notifyMove")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) setReservedAmount(c *echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/set/reservedAmount")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) setReservedUnit(c *echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/set/reservedUnit")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)

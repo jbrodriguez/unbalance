@@ -69,6 +69,8 @@ func (c *Core) Start() (err error) {
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/reservedAmount", c.setReservedAmount, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/reservedUnit", c.setReservedUnit, c.mailbox)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
@@ -144,6 +146,29 @@ func (c *Core) setNotifyMove(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
+func (c *Core) setReservedAmount(msg *pubsub.Message) {
+	famount := msg.Payload.(float64)
+	amount := int64(famount)
+
+	mlog.Info("Setting reservedAmount to (%d)", amount)
+
+	c.settings.ReservedAmount = amount
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setReservedUnit(msg *pubsub.Message) {
+	unit := msg.Payload.(string)
+
+	mlog.Info("Setting reservedUnit to (%s)", unit)
+
+	c.settings.ReservedUnit = unit
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
 func (c *Core) addFolder(msg *pubsub.Message) {
 
 	folder := msg.Payload.(string)
@@ -181,33 +206,7 @@ func (c *Core) deleteFolder(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-// func (c *Core) setConfig(msg *pubsub.Message) {
-// 	mlog.Info("Saving config")
-
-// 	config := msg.Payload.(*lib.Config)
-// 	c.settings.Config = *config
-// 	// c.config.Folders = config.Folders
-// 	// c.config.DryRun = config.DryRun
-// 	// c.config.Notifications = config.Notifications
-// 	// c.Notifications = config.Notifications
-// 	// c.NotiFrom = config.NotiFrom
-// 	// c.NotiTo = config.NotiTo
-// 	// c.NotiHost = config.NotiHost
-// 	// c.NotiPort = config.NotiPort
-// 	// c.NotiEncrypt = config.NotiEncrypt
-// 	// c.NotiUser = config.NotiUser
-// 	// c.NotiPassword = config.NotiPassword
-
-// 	c.settings.Save()
-
-// 	msg.Reply <- &c.settings.Config
-// }
-
 func (c *Core) getStorage(msg *pubsub.Message) {
-	// mlog.Info("c.storage: (%+v)", c.storage)
-	// if c.storage.Condition.State == "STARTED" {
-	// 	c.storage.Refresh(c.settings.RunningInDocker)
-	// }
 	if !c.opIsRunning {
 		c.storage.Refresh()
 	}
@@ -219,17 +218,6 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
 
 	c.settings.ToggleDryRun()
-	// c.config.Folders = config.Folders
-	// c.config.DryRun = config.DryRun
-	// c.config.Notifications = config.Notifications
-	// c.Notifications = config.Notifications
-	// c.NotiFrom = config.NotiFrom
-	// c.NotiTo = config.NotiTo
-	// c.NotiHost = config.NotiHost
-	// c.NotiPort = config.NotiPort
-	// c.NotiEncrypt = config.NotiEncrypt
-	// c.NotiUser = config.NotiUser
-	// c.NotiPassword = config.NotiPassword
 
 	c.settings.Save()
 
@@ -347,7 +335,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
 
-			packer := algorithm.NewKnapsack(disk, folders, c.settings.ReservedSpace)
+			packer := algorithm.NewKnapsack(disk, folders, c.settings.ReservedAmount, c.settings.ReservedUnit, lib.RESERVED_SPACE)
 			bin := packer.BestFit()
 			if bin != nil {
 				srcDisk.NewFree += bin.Size
