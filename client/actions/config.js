@@ -5,6 +5,9 @@ module.exports = {
 	setNotifyCalc,
 	setNotifyMove,
 
+	setReservedAmount,
+	setReservedUnit,
+
 	addFolder,
 	folderAdded,
 	deleteFolder,
@@ -54,6 +57,20 @@ function setNotifyMove({state, actions, opts: {api}}, notify) {
 	}
 
 	return state
+}
+
+function setReservedAmount({state, actions}, amount) {
+	if (state.config.reservedAmount !== amount) {
+		api.setReservedAmount(amount)
+			.then(json => actions.gotConfig(json))
+	}
+}
+
+function setReservedUnit({state, actions}, unit) {
+	if (state.config.reservedAmount !== amount) {
+		api.setReservedUnit(unit)
+			.then(json => actions.gotConfig(json))
+	}
 }
 
 function addFolder({state, actions, opts: {api}}, folder) {
