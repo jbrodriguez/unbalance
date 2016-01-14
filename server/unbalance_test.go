@@ -6,6 +6,7 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/stretchr/testify/assert"
+	"jbrodriguez/unbalance/server/algorithm"
 	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	"jbrodriguez/unbalance/server/model"
@@ -18,8 +19,24 @@ import (
 	"time"
 )
 
-func TestOk(t *testing.T) {
+func TestMain(m *testing.M) {
 	mlog.Start(mlog.LevelInfo, "")
+
+	// home := os.Getenv("HOME")
+	// path := filepath.Join(home, "tmp/mgtest")
+	// os.RemoveAll(path)
+
+	ret := m.Run()
+
+	// os.RemoveAll(path)
+
+	// mlog.Stop()
+
+	os.Exit(ret)
+}
+
+func TestOk(t *testing.T) {
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -46,7 +63,7 @@ func TestOk(t *testing.T) {
 
 	assert.Equal(t, 7, len(folders))
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -66,7 +83,7 @@ func TestOk(t *testing.T) {
 }
 
 func TestFit1(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -89,7 +106,7 @@ func TestFit1(t *testing.T) {
 
 	assert.Equal(t, 3, len(folders))
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -108,7 +125,7 @@ func TestFit1(t *testing.T) {
 }
 
 func TestFit2(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -131,7 +148,7 @@ func TestFit2(t *testing.T) {
 
 	assert.Equal(t, 3, len(folders))
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -209,7 +226,7 @@ func createFile(home, folder, name string, size int64) error {
 }
 
 func TestFoldersNotMoved(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	home := os.Getenv("HOME")
 
