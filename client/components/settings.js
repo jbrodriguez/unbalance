@@ -10,10 +10,31 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
+	constructor(props) {
+		super(props)
+
+		this.state = {
+			reservedAmount: props.store.state.config.reservedAmount,
+			reservedUnit: props.store.state.config.reservedUnit,
+		}
+	}
 	// componentDidMount() {
 	// 	let { actions, dispatch } = this.props.store
 	// 	dispatch(actions.getConfig)
 	// }
+
+						// <p>Set up the minimum amount of space that should be left free on each disk, after moving folders.</p>
+
+
+	componentWillReceiveProps(next) {
+		const { reservedAmount, reservedUnit } = next.store.state.config
+		if (reservedAmount !== this.state.reservedAmount || reservedUnit !== this.state.reservedUnit) {
+			this.setState({
+				reservedUnit,
+				reservedAmount,
+			})
+		}
+	}
 
 	render() {
 		// let { dispatch, state } = this.props
@@ -92,20 +113,22 @@ export default class Settings extends Component {
 					<div>
 						<h3>RESERVED SPACE</h3>
 
-						<p>Set up the minimum amount of space that should be left free on each disk, after moving folders.</p>
-						<p>When calculating how to fill a target disk, unBALANCE will not leave less free space than the threshold you set here.</p>
-						<p>This threshold cannot represent less than 450Mb (hard limit set by this app).</p>
+						<p>unBALANCE uses the threshold defined here as the minimum free space that should be kept available in a target disk, when calculating how much the disk can be filled.</p>
+						<p>This threshold cannot be less than 450Mb (hard limit set by this app).</p>
 
 						<div className={cx('row')}>
 							<div className={cx('col-xs-2')}>
 								<div className={cx('addon')}>
-									<input className={cx('addon-field')} type="text" value={state.config.reservedAmount} onChange={this._setReservedAmount.bind(this)} />
-									<select className={cx('addon-item')} name="unit" value={state.config.reservedUnit} onChange={this._setReservedUnit.bind(this)}>
+									<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this._setReservedAmount.bind(this)} />
+									<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this._setReservedUnit.bind(this)}>
 										<option value="%">%</option> 
 										<option value="Mb">Mb</option> 
 										<option value="Gb">Gb</option> 
 									</select>
 								</div>
+							</div>
+							<div className={cx('col-xs-1')}>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setReservedSpace.bind(this)}>Apply</button>
 							</div>
 						</div>
 					</div>
@@ -212,18 +235,20 @@ export default class Settings extends Component {
 	}
 
 	_setReservedAmount(e) {
-		const { setReservedAmount, addFeedback } = this.props.store.actions
-
-		if (typeof e.target.value !== 'number') {
-			addFeedback('Reserved space must be a number')
-			return
-		}
-
-		setReservedAmount(e.target.value)
+		this.setState({
+			reservedAmount: e.target.value
+		})
 	}
 
 	_setReservedUnit(e) {
-		const { setReservedUnit } = this.props.store.actions
-		setReservedUnit(e.target.value)
+		this.setState({
+			reservedUnit: e.target.value
+		})		
 	}
+
+	_setReservedSpace(e) {
+		const { setReservedSpace } = this.props.store.actions
+		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
+	}
+
 }

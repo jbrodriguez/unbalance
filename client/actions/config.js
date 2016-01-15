@@ -5,8 +5,7 @@ module.exports = {
 	setNotifyCalc,
 	setNotifyMove,
 
-	setReservedAmount,
-	setReservedUnit,
+	setReservedSpace,
 
 	addFolder,
 	folderAdded,
@@ -59,18 +58,50 @@ function setNotifyMove({state, actions, opts: {api}}, notify) {
 	return state
 }
 
-function setReservedAmount({state, actions}, amount) {
-	if (state.config.reservedAmount !== amount) {
-		api.setReservedAmount(amount)
-			.then(json => actions.gotConfig(json))
-	}
-}
+function setReservedSpace({state, actions, opts: {api}}, stringAmount, unit) {
+	// console.log('typeof: ', typeof amount)
+	// if (typeof amount !== 'number') {
+	// 	actions.addFeedback('Reserved space must be a number')
+	// 	return state
+	// }
 
-function setReservedUnit({state, actions}, unit) {
-	if (state.config.reservedAmount !== amount) {
-		api.setReservedUnit(unit)
+	const amount = Number(stringAmount)
+	// if (typeof amount !== 'number') {
+	// 	actions.addFeedback('Reserved space must be a number')
+	// 	return state
+	// }
+
+	switch (unit) {
+		case "%":
+			if (amount < 0 || amount > 100) {
+				actions.addFeedback('Percentage value must be between 0 and 100')
+				return state
+			}
+			break
+
+		case "Mb":
+			if (amount < 450) {
+				actions.addFeedback('Mb value must be higher than 450')
+				return state
+			}
+			break
+
+		case "Gb":
+			if (amount < 0.45) {
+				actions.addFeedback('Gb value must be higher than 0.45')
+				return state
+			}
+			break
+	}
+
+	if (state.config.reservedAmount !== amount || state.config.reservedUnit !== unit) {
+		actions.setOpInProgress("Setting Reserved Space")
+
+		api.setReservedSpace(amount, unit)
 			.then(json => actions.gotConfig(json))
 	}
+
+	return state
 }
 
 function addFolder({state, actions, opts: {api}}, folder) {

@@ -29,20 +29,11 @@ export default class Api {
 		.then(resp => resp.json())
 	}
 
-	setReservedAmount(amount) {
-		return fetch(this.hostr + '/config/reservedAmount', {
+	setReservedSpace(amount, unit) {
+		return fetch(this.hostr + '/config/reservedSpace', {
 			method: 'PUT',
 			headers: {'content-type': 'application/json'},
-			body: JSON.stringify({payload: amount})
-		})
-		.then(resp => resp.json())
-	}
-
-	setReservedUnit(unit) {
-		return fetch(this.hostr + '/config/reservedUnit', {
-			method: 'PUT',
-			headers: {'content-type': 'application/json'},
-			body: JSON.stringify({payload: unit})
+			body: JSON.stringify({payload: JSON.stringify({amount, unit})})
 		})
 		.then(resp => resp.json())
 	}
