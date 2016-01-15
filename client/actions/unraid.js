@@ -295,11 +295,13 @@ function moveFinished({state}, unraid) {
 	// }
 }
 
-function opError({state}, error) {
-	return {
-		...state,
-		feedback: state.feedback.concat(error)
-	}
+function opError({state, actions}, error) {
+	actions.addFeedback(error)
+	return state
+	// return {
+	// 	...state,
+	// 	feedback: [].concat(error)
+	// }
 	// let newState = Object.assign({}, state)
 
 	// newState.feedback.push(error)
