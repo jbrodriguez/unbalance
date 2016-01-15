@@ -11,10 +11,12 @@ function setOpInProgress({state}, action) {
 	}
 }
 
-function addFeedback({state}, feedback) {
+function addFeedback({state, actions}, feedback) {
+	window.setTimeout(() => actions.removeFeedback(), 15000)
+
 	return {
 		...state,
-		feedback: [].concat[feedback]
+		feedback: [].concat(feedback)
 	}
 }
 
