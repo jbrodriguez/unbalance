@@ -17,35 +17,11 @@ type Knapsack struct {
 	buffer int64
 }
 
-func max(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func NewKnapsack(disk *model.Disk, items []*model.Item, amount int64, unit string, floor int64) *Knapsack {
+func NewKnapsack(disk *model.Disk, items []*model.Item, reserved int64) *Knapsack {
 	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
-
-	var reserved int64
-	switch unit {
-	case "%":
-		fcalc := disk.Size * amount / 100
-		reserved = int64(fcalc)
-		break
-	case "Mb":
-		reserved = amount * 1000 * 1000
-		break
-	case "Gb":
-		reserved = amount * 1000 * 1000 * 1000
-		break
-	default:
-		reserved = floor
-	}
-
-	p.buffer = max(floor, reserved)
+	p.buffer = reserved
 	return p
 }
 
