@@ -6,14 +6,14 @@ import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
-export default function FeedbackPanel({state, removeFeedback}) {
+export default function FeedbackPanel({state, actions: {removeFeedback}}) {
 	return (
 		<div className={cx('bg-feedback', 'feedback')}>
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12', 'end-xs')}>
 					<div className={cx('flexSection', 'middle-xs', 'between-xs', 'title')}>
 						<span className={cx('lspacer')}>OPERATION FEEDBACK</span>
-						<i className={cx('fa fa-remove', 'rspacer')} onClick={_removeFeedback.bind(null)}></i>
+						<i className={cx('fa fa-remove', 'rspacer')} onClick={() => removeFeedback()}></i>
 					</div>
 				</div>
 			</section>
@@ -33,11 +33,6 @@ export default function FeedbackPanel({state, removeFeedback}) {
 		</div>
 	)
 }
-
-function _removeFeedback(e) {
-	removeFeedback()
-}
-
 
 
 // export default class AlertPanel extends Component {
