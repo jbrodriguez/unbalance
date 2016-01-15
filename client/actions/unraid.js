@@ -182,8 +182,8 @@ function calcProgress({state}, line) {
 function calcFinished({state, actions}, unraid) {
 	let feedback = []
 	if (unraid.bytesToMove === 0) {
-		feedback.push("There's no space available in any of the target disks, to move the folders you selected.")
-		feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving.")
+		feedback.push("There isn't available space in any of the target disks, to move the folders you selected.")
+		feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving or to change the amount of reserved space.")
 	}
 
 	window.setTimeout( _ => actions.removeFeedback(), 15*1000)
@@ -193,7 +193,7 @@ function calcFinished({state, actions}, unraid) {
 		unraid,
 		feedback,
 		opInProgress: null,
-		moveDisabled: false,
+		moveDisabled: unraid.bytesToMove === 0,
 	}
 
 
