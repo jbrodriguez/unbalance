@@ -16,12 +16,15 @@ For those upgrading from previous versions (v0.7.4 and below), please take note 
 ## Introduction
 With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move the folders/files to other disks filling them up, as space allows.
 
+In other words, it takes everything off a disk and spreads it among your other disks to clear the selected disk.
+
 The logic is quite simple:<br>
 Get all elegible folders from the source disk<br>
 Order the target disks by free space available<br>
 For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).<br>
 
 Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).
+The icon was created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508)
 
 The array must be started for the app to work.
 
@@ -31,6 +34,11 @@ You can Select an entire user share (/films in the screenshot below) or any fold
 
 ![Settings](110-settings.png)
 
+## Use Cases
+This is one of the use cases for unBALANCE
+
+[kizer](http://lime-technology.com/forum/index.php?topic=45352.msg435488#msg435488)  
+"For example, I'm trying to remove all files off my Disk4 so I can format it to XFS. I selected all the shares I want moved on a particular disk in Settings, then to Home and clicked all the drives I want it to populate, clicked the Calculate button to make sure it has room among all the disks, finally clicked Move and it rips along"
 
 ## Installation
 There are 2 ways to install this application
