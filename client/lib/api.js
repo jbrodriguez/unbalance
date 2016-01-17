@@ -29,6 +29,14 @@ export default class Api {
 		.then(resp => resp.json())
 	}
 
+	setReservedSpace(amount, unit) {
+		return fetch(this.hostr + '/config/reservedSpace', {
+			method: 'PUT',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: JSON.stringify({amount, unit})})
+		})
+		.then(resp => resp.json())
+	}
 
 	addFolder(folder) {
 		// console.log('sending: ', folder)

@@ -1,25 +1,47 @@
 package main
 
 import (
-	// "jbrodriguez/unbalance/server/dto"
-	// "jbrodriguez/unbalance/server/helper"
+	"encoding/json"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"jbrodriguez/unbalance/server/algorithm"
 	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	"jbrodriguez/unbalance/server/model"
 	"jbrodriguez/unbalance/server/services"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	// "regexp"
 	// "strconv"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
 
-func TestOk(t *testing.T) {
+func TestMain(m *testing.M) {
 	mlog.Start(mlog.LevelInfo, "")
+
+	// home := os.Getenv("HOME")
+	// path := filepath.Join(home, "tmp/mgtest")
+	// os.RemoveAll(path)
+
+	ret := m.Run()
+
+	// os.RemoveAll(path)
+
+	// mlog.Stop()
+
+	os.Exit(ret)
+}
+
+func TestOk(t *testing.T) {
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -44,9 +66,9 @@ func TestOk(t *testing.T) {
 		&model.Item{Name: "movie7", Size: 7, Path: "/mnt/disk1/Movies/movie7"},
 	)
 
-	assert.Equal(t, 7, len(folders))
+	assert.Equal(t, 7, len(folders), "there should be 7 folders")
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -60,13 +82,13 @@ func TestOk(t *testing.T) {
 	var size int64
 	size = 28
 
-	assert.Equal(t, size, bin.Size)
+	assert.Equal(t, size, bin.Size, "bin size should be 28")
 
 	// mlog.Stop()
 }
 
 func TestFit1(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -83,13 +105,13 @@ func TestFit1(t *testing.T) {
 	folders := make([]*model.Item, 0)
 	folders = append(folders,
 		&model.Item{Name: "movie1", Size: 100, Path: "/mnt/disk1/Movies/movie1"},
-		&model.Item{Name: "movie2", Size: 99, Path: "/mnt/disk1/Movies/movie2"},
 		&model.Item{Name: "movie3", Size: 98, Path: "/mnt/disk1/Movies/movie3"},
+		&model.Item{Name: "movie2", Size: 99, Path: "/mnt/disk1/Movies/movie2"},
 	)
 
-	assert.Equal(t, 3, len(folders))
+	assert.Equal(t, 3, len(folders), "there should be 3 folders")
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -102,13 +124,13 @@ func TestFit1(t *testing.T) {
 
 	var size int64
 	size = 99
-	assert.Equal(t, size, bin.Size)
+	assert.Equal(t, size, bin.Size, "bin.size should be 99")
 
 	// mlog.Stop()
 }
 
 func TestFit2(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
 		Id:      1,
@@ -129,9 +151,9 @@ func TestFit2(t *testing.T) {
 		&model.Item{Name: "movie3", Size: 1, Path: "/mnt/disk1/Movies/movie3"},
 	)
 
-	assert.Equal(t, 3, len(folders))
+	assert.Equal(t, 3, len(folders), "there should be 3 folders")
 
-	packer := lib.NewKnapsack(disk, folders, 1)
+	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
 	if assert.NotNil(t, bin) {
@@ -144,52 +166,10 @@ func TestFit2(t *testing.T) {
 
 	var size int64
 	size = 99
-	assert.Equal(t, size, bin.Size)
+	assert.Equal(t, size, bin.Size, "bin.size should be 99")
 
 	// mlog.Stop()
 }
-
-// func TestFolders(t *testing.T) {
-// 	re, _ := regexp.Compile(`(\d+)\s+(.*?)$`)
-
-// 	samples := []string{
-// 		"1670755474  /mnt/disk2/tv shows/./High Def",
-// 		"6 /mnt/disk2/tv shows/./empty",
-// 		"99297588  /mnt/disk2/tv shows/./Interstellar.mkv",
-// 		"6 /mnt/disk2/tv shows/./.TemporaryFiles",
-// 	}
-
-// 	for _, sample := range samples {
-// 		result := re.FindStringSubmatch(sample)
-// 		// mlog.Info("[%s] %s", result[1], result[2])
-
-// 		size, _ := strconv.ParseInt(result[1], 10, 64)
-
-// 		name := result[2]
-// 		path := filepath.Join("tv shows", filepath.Base(result[2]))
-
-// 		mlog.Info("name(%s); path(%s); size(%d)", name, path, size)
-// 	}
-
-// 	samples2 := []string{
-// 		"1670755474	/mnt/disk2/tv shows/High Def",
-// 		"99297588	/mnt/disk2/tv shows/Interstellar.mkv",
-// 		"6	/mnt/disk2/tv shows/empty",
-// 	}
-
-// 	for _, sample := range samples2 {
-// 		result := re.FindStringSubmatch(sample)
-// 		// mlog.Info("[%s] %s", result[1], result[2])
-
-// 		size, _ := strconv.ParseInt(result[1], 10, 64)
-
-// 		name := result[2]
-// 		path := filepath.Join("tv shows", filepath.Base(result[2]))
-
-// 		mlog.Info("name(%s); path(%s); size(%d)", name, path, size)
-// 	}
-
-// }
 
 func createFile(home, folder, name string, size int64) error {
 
@@ -209,7 +189,7 @@ func createFile(home, folder, name string, size int64) error {
 }
 
 func TestFoldersNotMoved(t *testing.T) {
-	mlog.Start(mlog.LevelInfo, "")
+	// mlog.Start(mlog.LevelInfo, "")
 
 	home := os.Getenv("HOME")
 
@@ -229,22 +209,19 @@ func TestFoldersNotMoved(t *testing.T) {
 		"tvshows",
 	}
 
-	bus := pubsub.New(1)
+	bus := pubsub.New(23)
 
-	settings := &model.Settings{}
+	settings, _ := lib.NewSettings("test")
 	settings.Folders = folders
 	settings.DryRun = true
-	settings.ConfigDir = filepath.Join(home, "tmp/unbalance")
-	settings.LogDir = ""
-	settings.Save()
-
-	settings.ReservedSpace = 200
+	settings.ReservedAmount = 5
+	settings.ReservedUnit = "%"
 
 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPrcnt: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 	disks := []*model.Disk{
-		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 2000, NewFree: 0, Size: 2500, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
-		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 2000, NewFree: 0, Size: 2500, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
-		&model.Disk{Id: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 300, NewFree: 0, Size: 2500, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
+		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
+		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
+		&model.Disk{Id: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
 	}
 
 	assert.Equal(t, 3, len(disks))
@@ -258,29 +235,86 @@ func TestFoldersNotMoved(t *testing.T) {
 	core := services.NewCore(bus, settings)
 	core.SetStorage(unraid)
 
-	core.Start()
+	mlog.Info("before start")
+	err = core.Start()
+	require.Nil(t, err, "core.start error should be nil")
 
-	destDisks := make(map[string]bool, 2)
-	destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk2")] = true
-	destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk3")] = true
+	var packet dto.Packet
+	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":true}}"}`
+	calcJson := fmt.Sprintf(template,
+		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
+	)
 
-	bestFit := &dto.BestFit{
-		SourceDisk: filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
-		DestDisks:  destDisks,
-	}
+	mlog.Info("json: %s", calcJson)
+	err = json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+	mlog.Info("error: %s", err)
+	mlog.Info("packet: %+v", packet)
+	mlog.Info("payload: %s", packet.Payload)
+	require.Nil(t, err)
 
-	msg := &pubsub.Message{Payload: bestFit, Reply: make(chan interface{})}
-	bus.Pub(msg, "cmd.calculateBestFit")
+	// destDisks := make(map[string]bool, 2)
+	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk2")] = true
+	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk3")] = true
+
+	// args := &dto.Calculate{
+	// 	SourceDisk: filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+	// 	DestDisks:  destDisks,
+	// }
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{})}
+	bus.Pub(msg, "calculate")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
 
 	mlog.Info("Unraid: %+v", resp)
 
-	cmd := &pubsub.Message{Reply: make(chan interface{})}
-	bus.Pub(cmd, "storage:move")
+	// cmd := &pubsub.Message{Reply: make(chan interface{})}
+	// bus.Pub(cmd, "storage:move")
 
-	reply = <-msg.Reply
+	// reply = <-msg.Reply
 
 	core.Stop()
+}
+
+func TestBind(t *testing.T) {
+	// userJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+	userJSON := `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`
+
+	e := echo.New()
+
+	req, _ := http.NewRequest(echo.POST, "/", strings.NewReader(userJSON))
+	rec := httptest.NewRecorder()
+	c := echo.NewContext(req, echo.NewResponse(rec, e), e)
+
+	testBind(t, c, "application/json")
+}
+
+// {\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}
+// {\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}
+
+func testBind(t *testing.T, c *echo.Context, ct string) {
+	c.Request().Header.Set(echo.ContentType, ct)
+	var args dto.Calculate
+	err := c.Bind(&args)
+	if ct == "" {
+		assert.Error(t, echo.UnsupportedMediaType)
+	} else if assert.NoError(t, err) {
+		assert.Equal(t, "/mnt/disk1", args.SourceDisk)
+		assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, args.DestDisks)
+
+		// assert.Equal(t, "calculate", args.Topic)
+		// assert.Equal(t, `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`, args.Payload)
+
+		// var param dto.Calculate
+		// err := c.Bind(&param)
+		// if assert.NoError(t, err) {
+		// 	assert.Equal(t, "/mnt/disk1", param.SourceDisk)
+		// 	assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, param.DestDisks)
+		// }
+	}
 }

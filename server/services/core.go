@@ -69,6 +69,7 @@ func (c *Core) Start() (err error) {
 	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
 	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/reservedSpace", c.setReservedSpace, c.mailbox)
 	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
@@ -107,6 +108,10 @@ func (c *Core) Stop() {
 	mlog.Info("stopped service Core ...")
 }
 
+func (c *Core) SetStorage(unraid *model.Unraid) {
+	c.storage = unraid
+}
+
 func (c *Core) react() {
 	for mbox := range c.mailbox {
 		// mlog.Info("Core:Topic: %s", mbox.Topic)
@@ -139,6 +144,42 @@ func (c *Core) setNotifyMove(msg *pubsub.Message) {
 	mlog.Info("Setting notifyMove to (%d)", notify)
 
 	c.settings.NotifyMove = notify
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setReservedSpace(msg *pubsub.Message) {
+	mlog.Warning("payload: %+v", msg.Payload)
+	payload, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert Reserved Space parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert Reserved Space parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		msg.Reply <- &c.settings.Config
+
+		return
+	}
+
+	var reserved dto.Reserved
+	err := json.Unmarshal([]byte(payload), &reserved)
+	if err != nil {
+		mlog.Warning("Unable to bind reservedSpace parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind reservedSpace parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	amount := int64(reserved.Amount)
+	unit := reserved.Unit
+
+	mlog.Info("Setting reservedAmount to (%d)", amount)
+	mlog.Info("Setting reservedUnit to (%s)", unit)
+
+	c.settings.ReservedAmount = amount
+	c.settings.ReservedUnit = unit
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
@@ -181,33 +222,7 @@ func (c *Core) deleteFolder(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-// func (c *Core) setConfig(msg *pubsub.Message) {
-// 	mlog.Info("Saving config")
-
-// 	config := msg.Payload.(*lib.Config)
-// 	c.settings.Config = *config
-// 	// c.config.Folders = config.Folders
-// 	// c.config.DryRun = config.DryRun
-// 	// c.config.Notifications = config.Notifications
-// 	// c.Notifications = config.Notifications
-// 	// c.NotiFrom = config.NotiFrom
-// 	// c.NotiTo = config.NotiTo
-// 	// c.NotiHost = config.NotiHost
-// 	// c.NotiPort = config.NotiPort
-// 	// c.NotiEncrypt = config.NotiEncrypt
-// 	// c.NotiUser = config.NotiUser
-// 	// c.NotiPassword = config.NotiPassword
-
-// 	c.settings.Save()
-
-// 	msg.Reply <- &c.settings.Config
-// }
-
 func (c *Core) getStorage(msg *pubsub.Message) {
-	// mlog.Info("c.storage: (%+v)", c.storage)
-	// if c.storage.Condition.State == "STARTED" {
-	// 	c.storage.Refresh(c.settings.RunningInDocker)
-	// }
 	if !c.opIsRunning {
 		c.storage.Refresh()
 	}
@@ -219,17 +234,6 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
 
 	c.settings.ToggleDryRun()
-	// c.config.Folders = config.Folders
-	// c.config.DryRun = config.DryRun
-	// c.config.Notifications = config.Notifications
-	// c.Notifications = config.Notifications
-	// c.NotiFrom = config.NotiFrom
-	// c.NotiTo = config.NotiTo
-	// c.NotiHost = config.NotiHost
-	// c.NotiPort = config.NotiPort
-	// c.NotiEncrypt = config.NotiEncrypt
-	// c.NotiUser = config.NotiUser
-	// c.NotiPassword = config.NotiPassword
 
 	c.settings.Save()
 
@@ -267,6 +271,14 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		return
 		// mlog.Fatalf(err.Error())
 	}
+
+	// dtoCalc, ok := msg.Payload.(*dto.Calculate)
+	// if !ok {
+	// 	mlog.Warning("Unable to convert calculate parameters")
+	// 	outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert calculate parameters"}
+	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	// 	return
+	// }
 
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
@@ -347,7 +359,26 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
 
-			packer := algorithm.NewKnapsack(disk, folders, c.settings.ReservedSpace)
+			var reserved int64
+			switch c.settings.ReservedUnit {
+			case "%":
+				fcalc := disk.Size * c.settings.ReservedAmount / 100
+				reserved = int64(fcalc)
+				break
+			case "Mb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000
+				break
+			case "Gb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
+				break
+			default:
+				reserved = lib.RESERVED_SPACE
+			}
+
+			ceil := lib.Max(lib.RESERVED_SPACE, reserved)
+			mlog.Info("calculateBestFit:ReservedSpace(%d)", ceil)
+
+			packer := algorithm.NewKnapsack(disk, folders, ceil)
 			bin := packer.BestFit()
 			if bin != nil {
 				srcDisk.NewFree += bin.Size

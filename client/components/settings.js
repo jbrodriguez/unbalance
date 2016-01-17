@@ -10,10 +10,31 @@ import classNames from 'classnames/bind'
 let cx = classNames.bind(styles)
 
 export default class Settings extends Component {
+	constructor(props) {
+		super(props)
+
+		this.state = {
+			reservedAmount: props.store.state.config.reservedAmount,
+			reservedUnit: props.store.state.config.reservedUnit,
+		}
+	}
 	// componentDidMount() {
 	// 	let { actions, dispatch } = this.props.store
 	// 	dispatch(actions.getConfig)
 	// }
+
+						// <p>Set up the minimum amount of space that should be left free on each disk, after moving folders.</p>
+
+
+	componentWillReceiveProps(next) {
+		const { reservedAmount, reservedUnit } = next.store.state.config
+		if (reservedAmount !== this.state.reservedAmount || reservedUnit !== this.state.reservedUnit) {
+			this.setState({
+				reservedUnit,
+				reservedAmount,
+			})
+		}
+	}
 
 	render() {
 		// let { dispatch, state } = this.props
@@ -50,71 +71,7 @@ export default class Settings extends Component {
 					</div>
 				</section>
 			)
-		}	
-
-		// let warning = null
-		// if (state.config.folders.length === 0) {
-		// 	warning = (
-		// 		<div className={cx('col-xs-12', 'bottom-spacer-half')}>
-		// 			<p className={cx('bg-warning')}>There are no folders elegible for moving. Please enter them, in the input box below</p>
-		// 		</div>	
-		// 	)
-		// }
-
-		// let alert = null
-		// if ( state.alerts.length !== 0) {
-		// 	alert = (
-		// 		<section className={cx('row', 'bottom-spacer-half')}>
-		// 			<div className={cx('col-xs-12')}>				
-		// 				<AlertPanel {...store} />
-		// 			</div>
-		// 		</section>		
-		// 	)
-		// }
-
-
-		// let tree = {}
-		// tree['/'] = [
-		// 	{type: 'folder', path: 'films'},
-		// 	{type: 'folder', path: 'tvshows'},
-		// 	{type: 'folder', path: 'storage'},
-		// 	{type: 'folder', path: 'backup'},
-		// ]
-
-		// let selected = ""
-
-		// console.log('state.tree: ', state.tree)
-
-						// <div className={cx('row', 'bottom-spacer-large')}>
-						// 	<div className={cx('col-xs-12')}>
-						// 		<table>
-						// 		<thead>
-						// 			<th width="50">#</th>
-						// 			<th>Folder</th>
-						// 		</thead>
-						// 		<tbody>
-						// 			{ 
-						// 				state.config.folders.map( (item, i) => {
-						// 					return (
-						// 						<tr key={i}>
-						// 							<td><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
-						// 							<td>{item}</td>
-						// 						</tr>
-						// 					)
-						// 				})
-						// 			}
-						// 		</tbody>
-						// 		</table>
-						// 	</div>
-						// </div>		
-
-//							<thead>
-//								<th width="50">#</th>
-//								<th>Folder</th>
-//							</thead>						
-
-			// { alert }
-
+		}
 
 		return (
 			<div>
@@ -126,22 +83,57 @@ export default class Settings extends Component {
 
 						<p>Notifications rely on unRAID's notifications settings, so you need to set up unRAID first, in order to receive notifications from unBALANCE.</p>
 
-						<br />
-
 						<span> Calculate: </span>
-						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc.bind(this, 0)} /> <span>No Notifications</span>
-						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc.bind(this, 1)} /> <span>Basic</span>
-						<input className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc.bind(this, 2)} /> <span>Detailed</span>
+						<input id="calc0" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc.bind(this, 0)} />
+						<label id="calc0" >No Notifications</label>
+						
+						<input id="calc1" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc.bind(this, 1)} />
+						<label id="calc1" >Basic</label>
+						
+						<input id="calc2" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc.bind(this, 2)} />
+						<label id="calc2" >Detailed</label>
 
 						<br />
 
 						<span> Move: </span>
-						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove.bind(this, 0)} /> <span>No Notifications</span>
-						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove.bind(this, 1)} /> <span>Basic</span>
-						<input className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove.bind(this, 2)} /> <span>Detailed</span>
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove.bind(this, 0)} />
+						<label id="move0">No Notifications</label>
+						
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove.bind(this, 1)} />
+						<label id="move0">Basic</label>
+						
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove.bind(this, 2)} />
+						<label id="move0">Detailed</label>
 					</div>
 				</div>
-			</section>			
+			</section>
+
+			<section className={cx('row', 'bottom-spacer-large')}>
+				<div className={cx('col-xs-12')}>
+					<div>
+						<h3>RESERVED SPACE</h3>
+
+						<p>unBALANCE uses the threshold defined here as the minimum free space that should be kept available in a target disk, when calculating how much the disk can be filled.</p>
+						<p>This threshold cannot be less than 450Mb (hard limit set by this app).</p>
+
+						<div className={cx('row')}>
+							<div className={cx('col-xs-2')}>
+								<div className={cx('addon')}>
+									<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this._setReservedAmount.bind(this)} />
+									<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this._setReservedUnit.bind(this)}>
+										<option value="%">%</option> 
+										<option value="Mb">Mb</option> 
+										<option value="Gb">Gb</option> 
+									</select>
+								</div>
+							</div>
+							<div className={cx('col-xs-1')}>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setReservedSpace.bind(this)}>Apply</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>				
 
 			<section className={cx('row', 'bottom-spacer-large')}>
 				<div className={cx('col-xs-12')}>
@@ -228,17 +220,35 @@ export default class Settings extends Component {
 	// }
 
 	_deleteFolder(folder, e) {
-		let { deleteFolder } = this.props.store.actions
+		const { deleteFolder } = this.props.store.actions
 		deleteFolder(folder)
 	}
 
 	_setNotifyCalc(notify, e) {
-		let { setNotifyCalc } = this.props.store.actions
+		const { setNotifyCalc } = this.props.store.actions
 		setNotifyCalc(notify)
 	}
 
 	_setNotifyMove(notify, e) {
-		let { setNotifyMove } = this.props.store.actions
+		const { setNotifyMove } = this.props.store.actions
 		setNotifyMove(notify)
 	}
+
+	_setReservedAmount(e) {
+		this.setState({
+			reservedAmount: e.target.value
+		})
+	}
+
+	_setReservedUnit(e) {
+		this.setState({
+			reservedUnit: e.target.value
+		})		
+	}
+
+	_setReservedSpace(e) {
+		const { setReservedSpace } = this.props.store.actions
+		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
+	}
+
 }
