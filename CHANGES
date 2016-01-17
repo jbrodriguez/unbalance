@@ -1,3 +1,26 @@
+Version 1.3.0 - 2016-01-17
+    (front) Add ui and logic for setResevedAmount/setReservedUnit
+    (back) Add boilerplate for setReservedAmount/setReservedUnit
+    (back) Calculate reserved space based on user selections
+    (back) Adjust testing
+    (front) Fix wrong concat call
+    (front) Set a timeout on the feedback panel, after which clean the lines to remove it from screen
+    (front) Fix call to manually remove feedback panel
+    (front) Dispatch an action to set feedback rather than setting it directly
+    (front) Move reservedAmount and reservedSpace to state in the settings component, so that the user can play around with them freely. When apply is clicked, integrity checks are made and if they pass a single api call is made to set both values.
+    (back) Leave knapsack unmodified from how it was at the beginning of time. Let calculate the buffer space beforehand and send this parameter, rather than the hard limit of before.
+    (back) Calculate reserved space (buffer) before calling knapsack algorithm
+    (back) Handle a single message to set reservedamount and reservedunit instead of 2 as before
+    (back) Add tests
+    (back) Add test dependency
+    (unbalance) Make the plugin disabled by default
+    (front) Adjust message
+    (unbalance) Fix app name
+    (front) Improve check for a subfolder
+    (unbalance) Add use cases and icon credit
+    Release 1.3.0
+
+
 Version 1.2.15 - 2016-01-12
     - Update dependencies
     - Fixes for dev env
