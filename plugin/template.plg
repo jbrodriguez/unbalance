@@ -18,6 +18,11 @@
 >
 
 <CHANGES>
+###2016-01-17 - v1.3.0
+- Choose a minimum reserved space in either Mb, Gb or a percentage (there's a hard limit of 450Mb)
+- Plugin is disabled by default
+- Better check for subfolders when adding a share/folder in the settings page
+
 ###2016-01-12 - v1.2.15
 - Support Safari browser (and some older browsers)
 
