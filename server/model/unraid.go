@@ -25,7 +25,7 @@ type Unraid struct {
 	SourceDiskName string
 	BytesToMove    int64 `json:"bytesToMove"`
 
-	// InProgress bool `json:"inProgress"`
+	OpState   uint64 `json:"opState"`
 	unraidCmd string
 
 	disks [25]*Disk
