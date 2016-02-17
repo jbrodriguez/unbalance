@@ -2,6 +2,7 @@ module.exports = {
 	setOpInProgress,
 	addFeedback,
 	removeFeedback,
+	// setConsole,
 }
 
 function setOpInProgress({state}, action) {
@@ -26,3 +27,10 @@ function removeFeedback({state}) {
 		feedback: []
 	}
 }
+
+// function setConsole({state}, line) {
+// 	return {
+// 		...state,
+// 		lines: [].concat(line)
+// 	}
+// }

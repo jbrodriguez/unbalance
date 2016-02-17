@@ -50,7 +50,6 @@ export default class Home extends Component {
 
 		let consolePanel = null
 		if (state.lines.length !== 0) {
-			console.log('more feeling')
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>

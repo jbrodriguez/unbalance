@@ -26,6 +26,12 @@ const (
 	TIME_FORMAT = "Jan _2, 2006 15:04:05"
 )
 
+const (
+	IDLE = 0
+	CALC = 1
+	MOVE = 2
+)
+
 type Core struct {
 	Service
 
@@ -33,7 +39,7 @@ type Core struct {
 	storage  *model.Unraid
 	settings *lib.Settings
 
-	opIsRunning bool
+	opState uint64
 
 	foldersNotMoved []string
 
@@ -47,10 +53,10 @@ type Core struct {
 
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core := &Core{
-		bus:         bus,
-		settings:    settings,
-		opIsRunning: false,
-		storage:     &model.Unraid{},
+		bus:      bus,
+		settings: settings,
+		opState:  IDLE,
+		storage:  &model.Unraid{},
 	}
 	core.init()
 
@@ -223,10 +229,11 @@ func (c *Core) deleteFolder(msg *pubsub.Message) {
 }
 
 func (c *Core) getStorage(msg *pubsub.Message) {
-	if !c.opIsRunning {
+	if c.opState == IDLE {
 		c.storage.Refresh()
 	}
 
+	c.storage.OpState = c.opState
 	msg.Reply <- c.storage
 }
 
@@ -247,12 +254,12 @@ func (c *Core) getTree(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
-	c.opIsRunning = true
+	c.opState = CALC
 	go c._calc(msg)
 }
 
 func (c *Core) _calc(msg *pubsub.Message) {
-	defer func() { c.opIsRunning = false }()
+	defer func() { c.opState = IDLE }()
 
 	payload, ok := msg.Payload.(string)
 	if !ok {
@@ -589,12 +596,12 @@ loop:
 }
 
 func (c *Core) move(msg *pubsub.Message) {
-	c.opIsRunning = true
+	c.opState = MOVE
 	go c._move(msg)
 }
 
 func (c *Core) _move(msg *pubsub.Message) {
-	defer func() { c.opIsRunning = false }()
+	defer func() { c.opState = IDLE }()
 
 	mlog.Info("Running move operation ...")
 	started := time.Now()
@@ -650,6 +657,8 @@ func (c *Core) _move(msg *pubsub.Message) {
 
 				mlog.Info(line)
 			})
+
+			// time.Sleep(time.Second * 10)
 
 			if err != nil {
 				finished := time.Now()
