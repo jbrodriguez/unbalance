@@ -18,6 +18,11 @@
 >
 
 <CHANGES>
+###2016-02-17 - v1.3.1
+- Use ip address instead of hostname when opening app window
+- Improve UI feedback when an operation is in progress (browser is being reopened)
+- Set a 1000 lines buffer for the console (older messages will be removed)
+
 ###2016-01-17 - v1.3.0
 - Choose a minimum reserved space in either Mb, Gb or a percentage (there's a hard limit of 450Mb)
 - Plugin is disabled by default
