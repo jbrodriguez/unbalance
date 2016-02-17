@@ -11,7 +11,7 @@ $unbalance_port = (isset($unbalance_cfg['PORT']) && is_numeric($unbalance_cfg['P
 $unbalance_running = shell_exec("pidof unbalance | wc -w");
 $unbalance_version = shell_exec("cat /usr/local/emhttp/plugins/unbalance/VERSION");
 $unbalance_version = ($unbalance_running == 1) ? 
-	"<a style='color:green;' target='_blank' href='http://".$var['NAME'].":".$unbalance_port."' title='unBALANCE plugin'><b>Open Web UI ( v$unbalance_version)</b></a>":
+	"<a style='color:green;' target='_blank' href='http://".$var['IPADDR'].":".$unbalance_port."' title='unBALANCE plugin'><b>Open Web UI ( v$unbalance_version)</b></a>":
 	"<b><font style='color:orange;'>unBALANCE v$unbalance_version</font></b>";
 ?>
 
