@@ -30,7 +30,7 @@ function getStorage({state, actions, opts: {api}}) {
 	return state
 }
 
-function gotStorage({state}, unraid) {
+function gotStorage({state, actions}, unraid) {
 	// console.log('unraid: ', unraid)
 
 	// let toDisk = {}
@@ -63,14 +63,29 @@ function gotStorage({state}, unraid) {
 		toDisk[disk.path] = disk.dst
 	})
 
+	var lines = []
+	var opState = null
+	switch(unraid.opState) {
+		case 1: 
+			opState = "Calculate operation in progress ..."
+			break
+		case 2: 
+			opState = "Move operation in progress ..."
+			break
+	}
+
+	if (opState) {
+		lines.push(opState)
+	}
+
 	return {
 		...state,
 		unraid,
 		fromDisk,
 		toDisk,
-		opInProgress: null,
+		opInProgress: opState,
 		moveDisabled: true,
-		lines: [],
+		lines,
 	}
 }
 
@@ -155,11 +170,13 @@ function calcStarted({state}, line) {
 }
 
 function calcProgress({state}, line) {
+	lines = state.lines > 1000 ? [] : state.lines
+
 	return {
 		...state,
 		opInProgress: "calculate",
 		moveDisabled: true,
-		lines: state.lines.concat('CALCULATE: ' + line),
+		lines: lines.concat('CALCULATE: ' + line),
 	}
 
 	// let newState = Object.assign({}, state)
@@ -257,9 +274,11 @@ function moveStarted({state}, line) {
 }
 
 function moveProgress({state}, line) {
+	lines = state.lines > 1000 ? [] : state.lines
+
 	return {
 		...state,
-		lines: state.lines.concat('MOVE: ' + line)
+		lines: lines.concat('MOVE: ' + line)
 	}
 
 	// return {
