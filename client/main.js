@@ -87,6 +87,13 @@ const ws = new WSApi()
 
 const store = createStore(initialState, actions, {api, ws})
 
+const routes = (
+	<Route path='/' component={App}>
+		<IndexRoute component={Home} />
+		<Route path='settings' component={Settings} />
+	</Route>		
+)
+
 store.subscribe(
 	store => {
 		// console.log('main.store.state: ', store.state)
@@ -96,11 +103,7 @@ store.subscribe(
 		}
 
 		render(
-			<Router createElement={createElement}>
-				<Route path='/' component={App}>
-					<IndexRoute component={Home} />
-					<Route path='settings' component={Settings} />
-				</Route>
+			<Router createElement={createElement} children={routes}>
 			</Router>,
 			document.getElementById('mnt')
 		)
