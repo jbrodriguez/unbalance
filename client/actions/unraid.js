@@ -170,7 +170,7 @@ function calcStarted({state}, line) {
 }
 
 function calcProgress({state}, line) {
-	let lines = state.lines > 1000 ? [] : state.lines
+	let lines = state.lines.length > 1000 ? [] : state.lines
 
 	return {
 		...state,
@@ -274,7 +274,7 @@ function moveStarted({state}, line) {
 }
 
 function moveProgress({state}, line) {
-	let lines = state.lines > 1000 ? [] : state.lines
+	let lines = state.lines.length > 1000 ? [] : state.lines
 
 	return {
 		...state,
