@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-02-18 - v1.3.4
+- Add progress stats when moving folders (percentage of completion, estimated time left and approximate MB/s)
+
 ###2016-02-18 - v1.3.3
 - Fix check for console lines (1000 lines limit)
 
