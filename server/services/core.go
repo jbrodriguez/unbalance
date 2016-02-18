@@ -558,6 +558,11 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
 		items = append(items, item)
+
+		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 		// fmt.Println(line)
 		// mlog.Info("getFolders:item: %+v", item)
 	}
