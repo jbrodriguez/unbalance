@@ -1,3 +1,9 @@
+Version 1.3.2 - 2016-02-18
+    front: Fix syntax error
+    back: Send progress message when a new folder is found
+    Release 1.3.2
+
+
 Version 1.3.1 - 2016-02-17
     back: Change opInProgress to opState, so we know what operation is in progress (0=idle, 1=calc, 2=move)
     front: Move route definition to prevent warning messages

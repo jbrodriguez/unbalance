@@ -18,6 +18,10 @@
 >
 
 <CHANGES>
+###2016-02-18 - v1.3.2
+- Fix bug where progress messages were not showing
+- Add additional progress notification when calculating
+
 ###2016-02-17 - v1.3.1
 - Use ip address instead of hostname when opening app window
 - Improve UI feedback when an operation is in progress (browser is being reopened)
