@@ -49,6 +49,9 @@ type Core struct {
 	reItems     *regexp.Regexp
 
 	diskmvLocation string
+
+	bytesMoved int64
+	started    time.Time
 }
 
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
@@ -229,10 +232,16 @@ func (c *Core) deleteFolder(msg *pubsub.Message) {
 }
 
 func (c *Core) getStorage(msg *pubsub.Message) {
+	var stats string
+
 	if c.opState == IDLE {
 		c.storage.Refresh()
+	} else if c.opState == MOVE {
+		percent, left, speed := progress(c.storage.BytesToMove, c.bytesMoved, c.started)
+		stats = fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 	}
 
+	c.storage.Stats = stats
 	c.storage.OpState = c.opState
 	msg.Reply <- c.storage
 }
@@ -606,10 +615,14 @@ func (c *Core) move(msg *pubsub.Message) {
 }
 
 func (c *Core) _move(msg *pubsub.Message) {
-	defer func() { c.opState = IDLE }()
+	defer func() {
+		c.opState = IDLE
+		c.started = time.Time{}
+		c.bytesMoved = 0
+	}()
 
 	mlog.Info("Running move operation ...")
-	started := time.Now()
+	c.started = time.Now()
 
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -630,6 +643,9 @@ func (c *Core) _move(msg *pubsub.Message) {
 	// 		notMoved += folder + "\n"
 	// 	}
 	// }
+
+	outbound = &dto.Packet{Topic: "movePercentage", Payload: "Waiting to collect stats ..."}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	for _, disk := range c.storage.Disks {
 		if disk.Bin == nil || disk.Path == c.storage.SourceDiskName {
@@ -667,7 +683,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 
 			if err != nil {
 				finished := time.Now()
-				elapsed := time.Since(started)
+				elapsed := time.Since(c.started)
 
 				subject := "unBALANCE - MOVE operation INTERRUPTED"
 				headline := fmt.Sprintf("Move command (%s) was interrupted: %s", cmd, err.Error())
@@ -676,22 +692,32 @@ func (c *Core) _move(msg *pubsub.Message) {
 				outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-				c.finishMoveOperation(subject, headline, commands, started, finished, elapsed)
+				c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
 
 				return
 			}
+
+			c.bytesMoved = c.bytesMoved + item.Size
+
+			percent, left, speed := progress(c.storage.BytesToMove, c.bytesMoved, c.started)
+
+			msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
+			mlog.Info("Current progress: %s", msg)
+
+			outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			commands = append(commands, cmd)
 		}
 	}
 
 	finished := time.Now()
-	elapsed := time.Since(started)
+	elapsed := time.Since(c.started)
 
 	subject := "unBALANCE - MOVE operation completed"
 	headline := "Move operation has finished"
 
-	c.finishMoveOperation(subject, headline, commands, started, finished, elapsed)
+	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
 
 }
 
@@ -800,6 +826,19 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err e
 	// if err != nil {
 	// 	return err
 	// }
+
+	return
+}
+
+func progress(bytesToMove, bytesMoved int64, started time.Time) (percent float64, left time.Duration, speed float64) {
+	delta := time.Since(started)
+
+	bytesPerSec := float64(bytesMoved) / delta.Seconds()
+	speed = bytesPerSec / 1024 / 1024 // MB/s
+
+	percent = (float64(bytesMoved) / float64(bytesToMove)) * 100 // %
+
+	left = time.Duration(float64(bytesToMove-bytesMoved)/bytesPerSec) * time.Second
 
 	return
 }

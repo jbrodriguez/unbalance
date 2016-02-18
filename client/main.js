@@ -65,6 +65,7 @@ const initialState = {
 	toDisk: null,
 	opInProgress: null,
 	moveDisabled: true,
+	stats: '',
 	lines: [],
 	tree: {
 		items: [],

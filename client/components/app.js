@@ -44,6 +44,13 @@ export default function App({ location, children, store }) {
 		)
 	}
 
+	let stats = null
+	if (state.stats !== '') {
+		stats = (
+			<span>{state.stats}</span>
+		)
+	}
+
 	let progress = null
 	if (state.opInProgress) {
 		progress = (
@@ -67,14 +74,14 @@ export default function App({ location, children, store }) {
 		'label-alert': !stateOk,
 	})
 	
-	let status = null
+	// let status = null
 	let buttons = null
 	if (location.pathname === '/' && state.unraid) {
-		status = (
-			<div className={cx('flexSection', 'middle-xs')}>
-				<span className={labelStyle}>{state.unraid.condition.state}</span>
-			</div>
-		)
+		// status = (
+		// 	<div className={cx('flexSection', 'middle-xs')}>
+		// 		<span className={labelStyle}>{state.unraid.condition.state}</span>
+		// 	</div>
+		// )
 
 		buttons = (
 			<div className={cx('flexSection', 'end-xs')}>
@@ -130,25 +137,25 @@ export default function App({ location, children, store }) {
 								<Link to="settings" activeClassName={active}>SETTINGS</Link>						
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-7')}>
+							<div className={cx('col-xs-12', 'col-sm-8')}>
 								<div className={cx('gridHeader')}>
 									<section className={cx('row', 'between-xs')}>
-										<div className={cx('col-xs-12', 'col-sm-3')}>
-											{ status}
-										</div>
-
 										<div className={cx('col-xs-12', 'col-sm-1', 'flexSection', 'center-xs', 'middle-xs')}>
 											{ progress }
 										</div>
 
-										<div className={cx('col-xs-12', 'col-sm-8')}>
+										<div className={cx('col-xs-12', 'col-sm-5', 'statsSection')}>
+											{ stats}
+										</div>
+
+										<div className={cx('col-xs-12', 'col-sm-6')}>
 											{ buttons }
 										</div>
 									</section>
 								</div>
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-2', 'middle-xs', 'end-xs', 'flexSection')}>
+							<div className={cx('col-xs-12', 'col-sm-1', 'middle-xs', 'end-xs', 'flexSection')}>
 								<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><i className={cx('fa fa-twitter')} /></a>
 								<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><i className={cx('fa fa-github')} /></a>
 								<img src={vm} />

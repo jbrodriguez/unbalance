@@ -16,6 +16,7 @@ module.exports = {
 	moveFinished,
 
 	opError,
+	progressStats,
 }
 
 function getStorage({state, actions, opts: {api}}) {
@@ -84,6 +85,7 @@ function gotStorage({state, actions}, unraid) {
 		fromDisk,
 		toDisk,
 		opInProgress: opState,
+		stats: unraid.stats,
 		moveDisabled: true,
 		lines,
 	}
@@ -292,6 +294,7 @@ function moveFinished({state}, unraid) {
 		...state,
 		unraid,
 		opInProgress: null,
+		stats: '',
 		moveDisabled: !state.config.dryRun
 	}
 
@@ -326,4 +329,11 @@ function opError({state, actions}, error) {
 	// newState.feedback.push(error)
 	
 	// return newState
+}
+
+function progressStats({state, actions}, stats) {
+	return {
+		...state,
+		stats,
+	}
 }
