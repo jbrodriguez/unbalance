@@ -318,3 +318,20 @@ func testBind(t *testing.T, c *echo.Context, ct string) {
 		// }
 	}
 }
+
+func TestPercentProgress(t *testing.T) {
+	started := time.Now()
+
+	var bytesToMove int64 = 1299623666930
+
+	var bytesMoved int64 = 19515085445
+	delta := time.Since(started) + (time.Minute * 23)
+
+	speed := float64(bytesMoved) / delta.Seconds()
+	mbs := speed / 1024 / 1024
+
+	left := float64(bytesToMove-bytesMoved) / speed
+	duration := time.Duration(left) * time.Second
+
+	mlog.Info("left(%s) | mbs(%.2f MB/s) | (delta=%d)", duration, mbs, delta)
+}
