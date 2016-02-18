@@ -1,3 +1,10 @@
+Version 1.3.4 - 2016-02-18
+    front: Show progress stats as received from the server
+    back: Test progress stats functionality
+    back: Calculate progress stats when moving files. Granularity is at the folder level, so stats jump in big chunks.
+    Release 1.3.4
+
+
 Version 1.3.3 - 2016-02-18
     front: Fix syntax (checking array length)
     Release 1.3.3
