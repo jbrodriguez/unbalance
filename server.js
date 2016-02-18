@@ -47,16 +47,16 @@ if (isDeveloping) {
 	app.use(webpackHotMiddleware(compiler));
 
 	app.all('/api/*', function(req, res) {
-		proxy.web(req, res, {target: 'http://hal.apertoire.org:6237'})
+		proxy.web(req, res, {target: 'http://wopr.apertoire.org:6237'})
 	})
 
 	server.on('upgrade', function(req, socket, head) {
-		proxy.ws(req, socket, head, {target: 'http://hal.apertoire.org:6237'})
+		proxy.ws(req, socket, head, {target: 'http://wopr.apertoire.org:6237'})
 	});
 
 	// app.all('/skt', function(req, res) {
 	// 	proxy.ws(req, res, {
-	// 		target: 'ws://hal.apertoire.org:6237/skt'
+	// 		target: 'ws://wopr.apertoire.org:6237/skt'
 	// 	})
 	// })
 
