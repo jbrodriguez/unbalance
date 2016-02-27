@@ -10,7 +10,6 @@ type Condition struct {
 	Synced       time.Time `json:"synced"`
 	SyncErrs     int64     `json:"syncErrs"`
 	Resync       int64     `json:"resync"`
-	ResyncPrcnt  int64     `json:"resyncPrct"`
 	ResyncPos    int64     `json:"resyncPos"`
 	State        string    `json:"state"`
 	Size         int64     `json:"size"`
