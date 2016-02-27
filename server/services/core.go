@@ -553,6 +553,11 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		if err == io.EOF {
 			mlog.Fatalf("getFolders:Last line not terminated: %s", err)
 		}
+
+		if err != nil {
+			mlog.Fatalf("getFolders:Unable to ReadString: %s", err)
+		}
+
 		line = line[:len(line)-1] // drop the '\n'
 		if line[len(line)-1] == '\r' {
 			line = line[:len(line)-1] // drop the '\r'
