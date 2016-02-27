@@ -4,3 +4,4 @@ gom	'github.com/jbrodriguez/pubsub', :commit => 'adb0f108803dfb17dc292f377492a3d
 gom 'github.com/labstack/echo', :commit => '5cd194b6b073541a5ab6c80d7ba8162be373d007'
 gom 'github.com/namsral/flag', :commit => '881a43080604bcf99ab1118a814d1cb2c268fc36'
 gom 'github.com/stretchr/testify', :commit => 'f390dcf405f7b83c997eac1b06768bb9f44dec18'
+gom 'github.com/vaughan0/go-ini', :commit => 'a98ad7ee00ec53921f08832bc06ecf7fd600e6a1'
