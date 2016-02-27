@@ -3,20 +3,22 @@ package model
 import (
 	"fmt"
 	"github.com/jbrodriguez/mlog"
+	"github.com/vaughan0/go-ini"
 	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	// "os"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	UNRAID_CMD = "mdcmd"
-)
+// const (
+// 	UNRAID_CMD = "mdcmd"
+// )
 
 type Unraid struct {
 	Condition *Condition `json:"condition"`
@@ -25,25 +27,37 @@ type Unraid struct {
 	SourceDiskName string
 	BytesToMove    int64 `json:"bytesToMove"`
 
-	OpState   uint64 `json:"opState"`
-	Stats     string `json:"stats"`
-	unraidCmd string
-
-	disks [25]*Disk
+	OpState uint64 `json:"opState"`
+	Stats   string `json:"stats"`
+	// unraidCmd string
 }
 
 func (u *Unraid) SanityCheck() error {
+	// locations := []string{
+	// 	"/usr/local/sbin",
+	// 	"/root",
+	// }
+
+	// location := lib.SearchFile(UNRAID_CMD, locations)
+	// if location == "" {
+	// 	return errors.New(fmt.Sprintf("Unable to find unRAID mdcmd (%s)", strings.Join(locations, ", ")))
+	// }
+
+	// u.unraidCmd = filepath.Join(location, UNRAID_CMD)
+
 	locations := []string{
-		"/usr/local/sbin",
-		"/root",
+		"/var/local/emhttp",
 	}
 
-	location := lib.SearchFile(UNRAID_CMD, locations)
+	location := lib.SearchFile("var.ini", locations)
 	if location == "" {
-		return errors.New(fmt.Sprintf("Unable to find unRAID mdcmd (%s)", strings.Join(locations, ", ")))
+		return errors.New(fmt.Sprintf("Unable to find var.ini (%s)", strings.Join(locations, ", ")))
 	}
 
-	u.unraidCmd = filepath.Join(location, UNRAID_CMD)
+	location = lib.SearchFile("disks.ini", locations)
+	if location == "" {
+		return errors.New(fmt.Sprintf("Unable to find var.ini (%s)", strings.Join(locations, ", ")))
+	}
 
 	return nil
 }
@@ -53,127 +67,140 @@ func (u *Unraid) Refresh() {
 	// 	return u
 	// }
 
+	var err error
+	u.Condition, err = u.getCondition()
+	if err != nil {
+		mlog.Warning("Unable to get unRAID status: %s", err)
+	}
+
+	u.Disks, err = u.getDisks()
+	if err != nil {
+		mlog.Warning("Unable to get unRAID disks: %s", err)
+	}
+
 	u.SourceDiskName = ""
 	u.BytesToMove = 0
 
-	u.Disks = make([]*Disk, 0)
-	u.Condition = &Condition{}
+	sort.Sort(ById(u.Disks))
 
-	// helper.Shell("/root/mdcmd status|strings", u.readUnraidConfig, nil)
-	shell := fmt.Sprintf("%s status", u.unraidCmd)
-	lib.Shell(shell, func(line string) {
-		if strings.HasPrefix(line, "sbNumDisks") {
-			nd := strings.Split(line, "=")
-			u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
-		}
+	// u.Disks = make([]*Disk, 0)
+	// u.Condition = &Condition{}
 
-		if strings.HasPrefix(line, "mdNumProtected") {
-			np := strings.Split(line, "=")
-			u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
-		}
+	// // helper.Shell("/root/mdcmd status|strings", u.readUnraidConfig, nil)
+	// shell := fmt.Sprintf("%s status", u.unraidCmd)
+	// lib.Shell(shell, func(line string) {
+	// 	if strings.HasPrefix(line, "sbNumDisks") {
+	// 		nd := strings.Split(line, "=")
+	// 		u.Condition.NumDisks, _ = strconv.ParseInt(nd[1], 10, 64)
+	// 	}
 
-		if strings.HasPrefix(line, "sbSynced") {
-			sd := strings.Split(line, "=")
-			ut, _ := strconv.ParseInt(sd[1], 10, 64)
-			u.Condition.Synced = time.Unix(ut, 0)
-		}
+	// 	if strings.HasPrefix(line, "mdNumProtected") {
+	// 		np := strings.Split(line, "=")
+	// 		u.Condition.NumProtected, _ = strconv.ParseInt(np[1], 10, 64)
+	// 	}
 
-		if strings.HasPrefix(line, "sbSyncErrs") {
-			sr := strings.Split(line, "=")
-			u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
-		}
+	// 	if strings.HasPrefix(line, "sbSynced") {
+	// 		sd := strings.Split(line, "=")
+	// 		ut, _ := strconv.ParseInt(sd[1], 10, 64)
+	// 		u.Condition.Synced = time.Unix(ut, 0)
+	// 	}
 
-		if strings.HasPrefix(line, "mdResync") {
-			rs := strings.Split(line, "=")
-			u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
-		}
+	// 	if strings.HasPrefix(line, "sbSyncErrs") {
+	// 		sr := strings.Split(line, "=")
+	// 		u.Condition.SyncErrs, _ = strconv.ParseInt(sr[1], 10, 64)
+	// 	}
 
-		if strings.HasPrefix(line, "mdResyncPos") {
-			rp := strings.Split(line, "=")
-			u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
-		}
+	// 	if strings.HasPrefix(line, "mdResync") {
+	// 		rs := strings.Split(line, "=")
+	// 		u.Condition.Resync, _ = strconv.ParseInt(rs[1], 10, 64)
+	// 	}
 
-		if strings.HasPrefix(line, "mdState") {
-			st := strings.Split(line, "=")
-			u.Condition.State = st[1]
-		}
+	// 	if strings.HasPrefix(line, "mdResyncPos") {
+	// 		rp := strings.Split(line, "=")
+	// 		u.Condition.ResyncPos, _ = strconv.ParseInt(rp[1], 10, 64)
+	// 	}
 
-		// Get Disks Information
-		if strings.HasPrefix(line, "diskNumber") {
-			dn := strings.FieldsFunc(line, delim)
+	// 	if strings.HasPrefix(line, "mdState") {
+	// 		st := strings.Split(line, "=")
+	// 		u.Condition.State = st[1]
+	// 	}
 
-			diskId, _ := strconv.Atoi(dn[2])
-			// mlog.Info("diskId = %d", diskId)
-			if u.disks[diskId] == nil {
-				u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
-			}
-		}
+	// 	// Get Disks Information
+	// 	if strings.HasPrefix(line, "diskNumber") {
+	// 		dn := strings.FieldsFunc(line, delim)
 
-		if strings.HasPrefix(line, "diskName") {
-			dm := strings.FieldsFunc(line, delim)
+	// 		diskId, _ := strconv.Atoi(dn[2])
+	// 		// mlog.Info("diskId = %d", diskId)
+	// 		if u.disks[diskId] == nil {
+	// 			u.disks[diskId] = &Disk{Id: diskId, Path: "/mnt/disk" + dn[2]}
+	// 		}
+	// 	}
 
-			diskId, _ := strconv.Atoi(dm[1])
-			// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
-			if len(dm) > 2 {
-				u.disks[diskId].Name = dm[2]
-			} else if diskId == 0 {
-				u.disks[diskId].Name = "Parity"
-			}
-		}
+	// 	if strings.HasPrefix(line, "diskName") {
+	// 		dm := strings.FieldsFunc(line, delim)
 
-		if strings.HasPrefix(line, "diskId") {
-			dm := strings.FieldsFunc(line, delim)
+	// 		diskId, _ := strconv.Atoi(dm[1])
+	// 		// mlog.Info("diskName %+v diskId %d", u.disks, diskId)
+	// 		if len(dm) > 2 {
+	// 			u.disks[diskId].Name = dm[2]
+	// 		} else if diskId == 0 {
+	// 			u.disks[diskId].Name = "Parity"
+	// 		}
+	// 	}
 
-			diskId, _ := strconv.Atoi(dm[1])
-			// mlog.Info("diskId diskId %d", diskId)
-			if len(dm) > 2 {
-				u.disks[diskId].Serial = dm[2]
-			}
-		}
+	// 	if strings.HasPrefix(line, "diskId") {
+	// 		dm := strings.FieldsFunc(line, delim)
 
-		if strings.HasPrefix(line, "rdevStatus") {
-			dm := strings.FieldsFunc(line, delim)
+	// 		diskId, _ := strconv.Atoi(dm[1])
+	// 		// mlog.Info("diskId diskId %d", diskId)
+	// 		if len(dm) > 2 {
+	// 			u.disks[diskId].Serial = dm[2]
+	// 		}
+	// 	}
 
-			diskId, _ := strconv.Atoi(dm[1])
-			// mlog.Info("rdevStatus diskId %d", diskId)
-			u.disks[diskId].Status = dm[2]
-		}
+	// 	if strings.HasPrefix(line, "rdevStatus") {
+	// 		dm := strings.FieldsFunc(line, delim)
 
-		if strings.HasPrefix(line, "rdevName") {
-			dm := strings.FieldsFunc(line, delim)
+	// 		diskId, _ := strconv.Atoi(dm[1])
+	// 		// mlog.Info("rdevStatus diskId %d", diskId)
+	// 		u.disks[diskId].Status = dm[2]
+	// 	}
 
-			diskId, _ := strconv.Atoi(dm[1])
-			// mlog.Info("rdevName diskId %d", diskId)
-			if len(dm) > 2 {
-				u.disks[diskId].Device = dm[2]
-			}
-		}
-	})
+	// 	if strings.HasPrefix(line, "rdevName") {
+	// 		dm := strings.FieldsFunc(line, delim)
 
-	if u.Condition.State != "STARTED" {
-		u.Print()
-		return
-	}
+	// 		diskId, _ := strconv.Atoi(dm[1])
+	// 		// mlog.Info("rdevName diskId %d", diskId)
+	// 		if len(dm) > 2 {
+	// 			u.disks[diskId].Device = dm[2]
+	// 		}
+	// 	}
+	// })
+
+	// if u.Condition.State != "STARTED" {
+	// 	u.Print()
+	// 	return
+	// }
 
 	free := make(map[string]int64)
 	size := make(map[string]int64)
-	lib.Shell("df --block-size=1 /mnt/disk*", func(line string) {
+	lib.Shell("df --block-size=1 /mnt/*", func(line string) {
 		data := strings.Fields(line)
 		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
 		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
 	})
 
-	maxFree := int64(0)
+	var maxFree int64 // default value is zero
 	var srcDisk *Disk
 
-	for _, disk := range u.disks {
-		if disk == nil || disk.Name == "Parity" || disk.Status != "DISK_OK" {
-			continue
-		}
+	for _, disk := range u.Disks {
+		// if disk == nil || disk.Name == "Parity" || disk.Status != "DISK_OK" {
+		// 	continue
+		// }
 
-		disk.Size = size[disk.Path]
 		disk.Free = free[disk.Path]
 		disk.NewFree = disk.Free
+		disk.Size = size[disk.Path]
 
 		disk.Src = false
 		disk.Dst = true
@@ -183,11 +210,11 @@ func (u *Unraid) Refresh() {
 			srcDisk = disk
 		}
 
-		u.Condition.Size += disk.Size
 		u.Condition.Free += disk.Free
 		u.Condition.NewFree += disk.Free
+		u.Condition.Size += disk.Size
 
-		u.Disks = append(u.Disks, disk)
+		// u.Disks = append(u.Disks, disk)
 	}
 
 	if srcDisk != nil {
@@ -229,6 +256,80 @@ func (u *Unraid) Refresh() {
 
 	// u.Disks = disks
 	// u.Condition = condition
+}
+
+func (u *Unraid) getCondition() (condition *Condition, err error) {
+	file, err := ini.LoadFile("/var/local/emhttp/var.ini")
+	if err != nil {
+		return
+	}
+
+	condition = &Condition{}
+
+	tmp, _ := file.Get("", "mdNumDisks")
+	numDisks := strings.Replace(tmp, "\"", "", -1)
+	condition.NumDisks, err = strconv.ParseInt(numDisks, 10, 64)
+
+	tmp, _ = file.Get("", "mdNumProtected")
+	numProtected := strings.Replace(tmp, "\"", "", -1)
+	condition.NumProtected, _ = strconv.ParseInt(numProtected, 10, 64)
+
+	tmp, _ = file.Get("", "sbSynced")
+	synced := strings.Replace(tmp, "\"", "", -1)
+	ut, _ := strconv.ParseInt(synced, 10, 64)
+	condition.Synced = time.Unix(ut, 0)
+
+	tmp, _ = file.Get("", "sbSyncErrs")
+	syncErrs := strings.Replace(tmp, "\"", "", -1)
+	condition.SyncErrs, _ = strconv.ParseInt(syncErrs, 10, 64)
+
+	tmp, _ = file.Get("", "mdResync")
+	resync := strings.Replace(tmp, "\"", "", -1)
+	condition.Resync, _ = strconv.ParseInt(resync, 10, 64)
+
+	tmp, _ = file.Get("", "mdResyncPos")
+	resyncPos := strings.Replace(tmp, "\"", "", -1)
+	condition.ResyncPos, _ = strconv.ParseInt(resyncPos, 10, 64)
+
+	tmp, _ = file.Get("", "mdState")
+	condition.State = strings.Replace(tmp, "\"", "", -1)
+
+	return
+}
+
+func (u *Unraid) getDisks() (disks []*Disk, err error) {
+	file, err := ini.LoadFile("/var/local/emhttp/disks.ini")
+	if err != nil {
+		return
+	}
+
+	disks = make([]*Disk, 0)
+
+	for _, section := range file {
+		diskType := strings.Replace(section["type"], "\"", "", -1)
+
+		if diskType == "Parity" || diskType == "Flash" {
+			continue
+		}
+
+		disk := &Disk{}
+
+		disk.Id, _ = strconv.ParseInt(strings.Replace(section["idx"], "\"", "", -1), 10, 64) // 1
+		disk.Name = strings.Replace(section["name"], "\"", "", -1)                           // disk1, cache
+		disk.Path = "/mnt/" + disk.Name                                                      // /mnt/disk1, /mnt/cache
+		disk.Device = strings.Replace(section["device"], "\"", "", -1)                       // sdp
+		disk.Type = diskType                                                                 // Flash, Parity, Data
+		disk.Free = 0
+		disk.NewFree = 0
+		disk.Size = 0
+		disk.Serial = strings.Replace(section["id"], "\"", "", -1)     // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
+		disk.Status = strings.Replace(section["status"], "\"", "", -1) // DISK_OK
+
+		// fmt.Printf("Section name: %s\n", name)
+		disks = append(disks, disk)
+	}
+
+	return
 }
 
 func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
