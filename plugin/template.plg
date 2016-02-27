@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-02-27 - v1.3.5
+- Add support for cache disks (to/from)
+
 ###2016-02-18 - v1.3.4
 - Add progress stats when moving folders (percentage of completion, estimated time left and approximate MB/s)
 
