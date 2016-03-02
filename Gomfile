@@ -1,4 +1,4 @@
-gom 'github.com/jbrodriguez/mlog', :commit => '4adcc10cd8b0500a9a9cc0b8349352729d84603e'
+gom 'github.com/jbrodriguez/mlog', :commit => '5b0c9d26241913084f946c630ab59aa2f7f09dd9'
 gom	'github.com/jbrodriguez/pubsub', :commit => 'adb0f108803dfb17dc292f377492a3de391fa077'
 # gom 'github.com/gorilla/websocket', :commit => '3986be78bf859e01f01af631ad76da5b269d270c'
 gom 'github.com/labstack/echo', :commit => '5cd194b6b073541a5ab6c80d7ba8162be373d007'
