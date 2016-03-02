@@ -322,6 +322,7 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 		disk.Path = "/mnt/" + disk.Name                                                      // /mnt/disk1, /mnt/cache
 		disk.Device = strings.Replace(section["device"], "\"", "", -1)                       // sdp
 		disk.Type = diskType                                                                 // Flash, Parity, Data
+		disk.FsType = strings.Replace(section["fsType"], "\"", "", -1)                       // xfs, reiserfs, btrfs
 		disk.Free = 0
 		disk.NewFree = 0
 		disk.Size = 0

@@ -76,6 +76,7 @@ export default class Home extends Component {
 				return (
 					<tr key={i}>
 						<td>{disk.name}</td>
+						<td>{disk.fsType}</td>
 						<td colSpan="7">{disk.serial} ({disk.device})</td>
 					</tr>
 				)
@@ -83,6 +84,7 @@ export default class Home extends Component {
 				return (
 					<tr key={i}>
 						<td>{disk.name}</td>
+						<td>{disk.fsType}</td>
 						<td>{disk.serial} ({disk.device})</td>
 						<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
 						<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
@@ -108,7 +110,8 @@ export default class Home extends Component {
 					<table>
 						<thead>
 							<tr>
-								<th style={{width: '100px'}}>DISK</th>
+								<th style={{width: '70px'}}>DISK</th>
+								<th style={{width: '75px'}}>TYPE</th>
 								<th>SERIAL</th>
 								<th style={{width: '50px'}}>FROM </th>
 								<th style={{width: '50px'}}>TO</th>
@@ -123,7 +126,7 @@ export default class Home extends Component {
 						</tbody>
 						<tfoot>
 							<tr>
-								<th colSpan="4">TOTAL</th>
+								<th colSpan="5">TOTAL</th>
 								<th>{humanBytes(state.unraid.condition.size)}</th>
 								<th>{humanBytes(state.unraid.condition.free)}</th>
 								<th>
