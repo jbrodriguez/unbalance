@@ -305,7 +305,7 @@ cd "/mnt/$sourceDisk"
 find "./$userShareObj" -depth \
       $printClause \
       $dupClause \
-      -exec stat -c "%A %y %U %G" {} "./${userShareObj}" \; \
+      -exec stat -c "%A %y %U %G" {} \; \
       -exec rsync $rsyncOpts {} "/mnt/${destDisk}/" \; \
       $delClause
 
