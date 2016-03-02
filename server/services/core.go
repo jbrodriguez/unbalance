@@ -1,12 +1,12 @@
 package services
 
 import (
-	"bufio"
+	// "bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
-	"io"
+	// "io"
 	"io/ioutil"
 	"jbrodriguez/unbalance/server/algorithm"
 	"jbrodriguez/unbalance/server/dto"
@@ -322,6 +322,11 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		} else {
 			// add it to the target disk list, only if the user selected it
 			if val, ok := dtoCalc.DestDisks[disk.Path]; ok && val {
+				// double check, if it's a cache disk, make sure it's the main cache disk
+				if disk.Type == "Cache" && len(disk.Name) > 5 {
+					continue
+				}
+
 				disks = append(disks, disk)
 			}
 		}
@@ -329,10 +334,10 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	c.foldersNotMoved = make([]string, 0)
 
-	mlog.Info("calculateBestFit:Begin:srcDisk(%s); dstDisks(%d)", srcDisk.Path, len(disks))
+	mlog.Info("_calc:Begin:srcDisk(%s); dstDisks(%d)", srcDisk.Path, len(disks))
 
 	for _, disk := range disks {
-		mlog.Info("calculateBestFit:elegibleDestDisk(%s)", disk.Path)
+		mlog.Info("_calc:elegibleDestDisk(%s)", disk.Path)
 	}
 
 	// Initialize fields
@@ -356,24 +361,29 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		}
 	}
 
+	mlog.Info("_calc:foldersToBeMovedTotal(%d)", len(folders))
+	var lsal string
 	for _, v := range folders {
-		mlog.Info("calculateBestFit:total(%d):toBeMoved:Path(%s); Size(%s)", len(folders), v.Path, lib.ByteSize(v.Size))
+		lib.Shell(fmt.Sprintf("stat -c \"%%A %%y %%U %%G\" \"%s\"", v.Name), mlog.Warning, "_calc:lsal", func(line string) {
+			lsal = line
+		})
+
+		mlog.Info("_calc:toBeMoved:Path(%s); Size(%s); linux(%s)", v.Path, lib.ByteSize(v.Size), lsal)
 	}
 
 	// srcDisk.NewFree = srcDisk.Free
 
+	willBeMoved := make([]*model.Item, 0)
 	for _, disk := range disks {
 		diskWithoutMnt := disk.Path[5:]
 		msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		mlog.Info("calculateBestFit:%s", msg)
+		mlog.Info("_calc:%s", msg)
 		// time.Sleep(2 * time.Second)
 
 		if disk.Path != srcDisk.Path {
 			// disk.NewFree = disk.Free
-
-			mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
 
 			var reserved int64
 			switch c.settings.ReservedUnit {
@@ -392,7 +402,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 			}
 
 			ceil := lib.Max(lib.RESERVED_SPACE, reserved)
-			mlog.Info("calculateBestFit:ReservedSpace(%d)", ceil)
+			mlog.Info("_calc:FoldersLeft(%d):ReservedSpace(%d)", len(folders), ceil)
 
 			packer := algorithm.NewKnapsack(disk, folders, ceil)
 			bin := packer.BestFit()
@@ -401,11 +411,12 @@ func (c *Core) _calc(msg *pubsub.Message) {
 				disk.NewFree -= bin.Size
 				c.storage.BytesToMove += bin.Size
 
+				willBeMoved = append(willBeMoved, bin.Items...)
 				folders = c.removeFolders(folders, bin.Items)
 
-				mlog.Info("calculateBestFit:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), lib.ByteSize(srcDisk.Free), lib.ByteSize(srcDisk.NewFree))
+				mlog.Info("_calc:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), lib.ByteSize(srcDisk.Free), lib.ByteSize(srcDisk.NewFree))
 			} else {
-				mlog.Info("calculateBestFit:NoBinAllocated=Disk(%s)", disk.Path)
+				mlog.Info("_calc:NoBinAllocated=Disk(%s)", disk.Path)
 			}
 		}
 	}
@@ -428,6 +439,16 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	// send to frontend the folders that will not be moved, if any
 	// notMoved holds a string representation of all the folders, separated by a '\n'
+
+	if len(willBeMoved) == 0 {
+		mlog.Info("_calc:No folders can be moved.")
+	} else {
+		mlog.Info("_calc:%d folders will be moved.", len(willBeMoved))
+		for _, folder := range willBeMoved {
+			mlog.Info("_calc:willBeMoved(%s)", folder.Path)
+		}
+	}
+
 	notMoved := ""
 	if len(folders) > 0 {
 		// c.foldersNotMoved = append(make([]*model.Item, 0), folders...)
@@ -435,6 +456,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+		mlog.Info("_calc:%d folders will NOT be moved.", len(folders))
 		c.foldersNotMoved = make([]string, 0)
 		for _, folder := range folders {
 			c.foldersNotMoved = append(c.foldersNotMoved, folder.Path)
@@ -443,7 +465,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 			outbound = &dto.Packet{Topic: "calcProgress", Payload: folder.Path}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
+			mlog.Info("_calc:notMoved(%s)", folder.Path)
 		}
 
 		// for _, folder := range c.foldersNotMoved {
@@ -470,8 +492,8 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	}
 
 	// some local logging
-	mlog.Info("calculateBestFit:FoldersLeft(%d)", len(folders))
-	mlog.Info("calculateBestFit:src(%s):Listing (%d) disks ...", srcDisk.Path, len(c.storage.Disks))
+	mlog.Info("_calc:FoldersLeft(%d)", len(folders))
+	mlog.Info("_calc:src(%s):Listing (%d) disks ...", srcDisk.Path, len(c.storage.Disks))
 	for _, disk := range c.storage.Disks {
 		// mlog.Info("the mystery of the year(%s)", disk.Path)
 		disk.Print()
@@ -488,7 +510,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	c.storage.Print()
 	// msg.Reply <- c.storage
 
-	mlog.Info("calculateBestFit:End:srcDisk(%s)", srcDisk.Path)
+	mlog.Info("_calc:End:srcDisk(%s)", srcDisk.Path)
 
 	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Operation Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -502,8 +524,6 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	srcFolder := filepath.Join(src, folder)
 
 	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
-	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
-	// mlog.Info("Error: %s", err)
 
 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
 		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
@@ -517,52 +537,17 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 	mlog.Info("getFolders:Readdir(%d)", len(dirs))
 
-	// mlog.Info("Dirs: %+v", dirs)
-
 	if len(dirs) == 0 {
 		mlog.Info("getFolders:No subdirectories under %s", srcFolder)
 		return nil
 	}
-
-	// scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
-	// cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
 
 	scanFolder := srcFolder + "/."
 	cmdText := fmt.Sprintf("find \"%s\" ! -name . -prune -exec du -bs {} +", scanFolder)
 
 	mlog.Info("getFolders:Executing %s", cmdText)
 
-	cmd := exec.Command("sh", "-c", cmdText)
-	out, err := cmd.StdoutPipe()
-	if err != nil {
-		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
-	}
-
-	rd := bufio.NewReader(out)
-
-	if err := cmd.Start(); err != nil {
-		mlog.Fatalf("getFolders:Unable to start du: %s", err)
-	}
-
-	for {
-		line, err := rd.ReadString('\n')
-		if err == io.EOF && len(line) == 0 {
-			// Good end of file with no partial line
-			break
-		}
-		if err == io.EOF {
-			mlog.Fatalf("getFolders:Last line not terminated: %s", err)
-		}
-
-		if err != nil {
-			mlog.Fatalf("getFolders:Unable to ReadString: %s", err)
-		}
-
-		line = line[:len(line)-1] // drop the '\n'
-		if line[len(line)-1] == '\r' {
-			line = line[:len(line)-1] // drop the '\r'
-		}
-
+	lib.Shell(cmdText, mlog.Warning, "getFolders:find/du:", func(line string) {
 		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
@@ -576,26 +561,121 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	})
 
-		// fmt.Println(line)
-		// mlog.Info("getFolders:item: %+v", item)
-	}
-
-	// Wait for the result of the command; also closes our end of the pipe
-	err = cmd.Wait()
-	if err != nil {
-		mlog.Fatalf("getFolders:Unable to wait for process to finish: %s", err)
-	}
-
-	// out, err := lib.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
-	// if err != nil {
-	// 	glog.Fatal(err)
-	// }
-
-	// glog.Info(string(out))
-	// mlog.Info("done")
-	return items
+	return
 }
+
+// func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
+// 	srcFolder := filepath.Join(src, folder)
+
+// 	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
+// 	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
+// 	// mlog.Info("Error: %s", err)
+
+// 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+// 		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
+// 		return nil
+// 	}
+
+// 	dirs, err := ioutil.ReadDir(srcFolder)
+// 	if err != nil {
+// 		mlog.Fatalf("getFolders:Unable to readdir: %s", err)
+// 	}
+
+// 	mlog.Info("getFolders:Readdir(%d)", len(dirs))
+
+// 	// mlog.Info("Dirs: %+v", dirs)
+
+// 	if len(dirs) == 0 {
+// 		mlog.Info("getFolders:No subdirectories under %s", srcFolder)
+// 		return nil
+// 	}
+
+// 	// scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
+// 	// cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
+
+// 	scanFolder := srcFolder + "/."
+// 	cmdText := fmt.Sprintf("find \"%s\" ! -name . -prune -exec du -bs {} +", scanFolder)
+
+// 	mlog.Info("getFolders:Executing %s", cmdText)
+
+// 	cmd := exec.Command("sh", "-c", cmdText)
+// 	out, err := cmd.StdoutPipe()
+// 	if err != nil {
+// 		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
+// 	}
+
+// 	stderr, err := cmd.StderrPipe()
+// 	if err != nil {
+// 		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
+// 	}
+
+// 	rd := bufio.NewReader(out)
+
+// 	if err := cmd.Start(); err != nil {
+// 		mlog.Fatalf("getFolders:Unable to start du: %s", err)
+// 	}
+
+// 	go func() {
+// 		errbuf := bufio.NewScanner(stderr)
+// 		for errbuf.Scan() {
+// 			mlog.Warning("getFolders:find/du:stderr: %s", errbuf.Text())
+// 		}
+// 	}()
+
+// 	for {
+// 		line, err := rd.ReadString('\n')
+// 		if err == io.EOF && len(line) == 0 {
+// 			// Good end of file with no partial line
+// 			break
+// 		}
+// 		if err == io.EOF {
+// 			mlog.Fatalf("getFolders:Last line not terminated: %s", err)
+// 		}
+
+// 		if err != nil {
+// 			mlog.Fatalf("getFolders:Unable to ReadString: %s", err)
+// 		}
+
+// 		line = line[:len(line)-1] // drop the '\n'
+// 		if line[len(line)-1] == '\r' {
+// 			line = line[:len(line)-1] // drop the '\r'
+// 		}
+
+// 		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
+
+// 		result := c.reItems.FindStringSubmatch(line)
+// 		// mlog.Info("[%s] %s", result[1], result[2])
+
+// 		size, _ := strconv.ParseInt(result[1], 10, 64)
+
+// 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
+// 		items = append(items, item)
+
+// 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
+// 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 		// fmt.Println(line)
+// 		// mlog.Info("getFolders:item: %+v", item)
+// 	}
+
+// 	// Wait for the result of the command; also closes our end of the pipe
+// 	err = cmd.Wait()
+// 	if err != nil {
+// 		mlog.Fatalf("getFolders:Unable to wait for process to finish: %s", err)
+// 	}
+
+// 	// out, err := lib.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
+// 	// if err != nil {
+// 	// 	glog.Fatal(err)
+// 	// }
+
+// 	// glog.Info(string(out))
+// 	// mlog.Info("done")
+// 	return items
+// }
 
 func (c *Core) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
 	w := 0 // write index
@@ -677,7 +757,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			err := lib.Shell(cmd, func(line string) {
+			err := lib.Shell(cmd, mlog.Warning, "moveProgress:", func(line string) {
 				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
