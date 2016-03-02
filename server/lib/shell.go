@@ -10,8 +10,45 @@ import (
 )
 
 type Callback func(line string)
+type StderrWriter func(format string, a ...interface{})
 
-func Shell(command string, callback Callback) error {
+type Streamer struct {
+	buf    *bytes.Buffer
+	writer StderrWriter
+	prefix string
+}
+
+func NewStreamer(writer StderrWriter, prefix string) *Streamer {
+	return &Streamer{
+		buf:    bytes.NewBuffer([]byte("")),
+		writer: writer,
+		prefix: prefix,
+	}
+}
+
+func (s *Streamer) Write(p []byte) (n int, err error) {
+	if n, err = s.buf.Write(p); err != nil {
+		return
+	}
+
+	for {
+		var line string
+		line, err = s.buf.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return
+		}
+
+		// l.readLines += line
+		s.writer("%s: %s", s.prefix, line)
+	}
+
+	return
+}
+
+func Shell(command string, writer StderrWriter, prefix string, callback Callback) error {
 	cmd := exec.Command("/bin/sh", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -19,15 +56,17 @@ func Shell(command string, callback Callback) error {
 		//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
 	}
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return err
-		// log.Fatalf("Unable to stderrpipe %s: %s", command, err)
-	}
+	cmd.Stderr = NewStreamer(writer, prefix)
 
-	multi := io.MultiReader(stdout, stderr)
+	// stderr, err := cmd.StderrPipe()
+	// if err != nil {
+	// 	return err
+	// 	// log.Fatalf("Unable to stderrpipe %s: %s", command, err)
+	// }
 
-	scanner := bufio.NewScanner(multi)
+	// multi := io.MultiReader(stdout, stderr)
+
+	scanner := bufio.NewScanner(stdout)
 
 	if err := cmd.Start(); err != nil {
 		return err
