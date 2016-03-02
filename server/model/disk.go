@@ -11,6 +11,7 @@ type Disk struct {
 	Path    string `json:"path"`
 	Device  string `json:"device"`
 	Type    string `json:"type"`
+	FsType  string `json:"fsType"`
 	Free    int64  `json:"free"`
 	NewFree int64  `json:"newFree"`
 	Size    int64  `json:"size"`
@@ -40,12 +41,13 @@ func (self *Disk) Print() {
 }
 
 func (self *Disk) toString() string {
-	return fmt.Sprintf("Id(%d); Name(%s); Path(%s); Device(%s); Type(%s); Free(%s); NewFree(%s); Size(%s); Serial(%s); Status(%s); Bin(%v)",
+	return fmt.Sprintf("Id(%d); Name(%s); Path(%s); Device(%s); Type(%s); FsType(%s); Free(%s); NewFree(%s); Size(%s); Serial(%s); Status(%s); Bin(%v)",
 		self.Id,
 		self.Name,
 		self.Path,
 		self.Device,
 		self.Type,
+		self.FsType,
 		lib.ByteSize(self.Free),
 		lib.ByteSize(self.NewFree),
 		lib.ByteSize(self.Size),
