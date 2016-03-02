@@ -69,26 +69,37 @@ export default class Home extends Component {
 
 			const percent = percentage((disk.size - disk.free) / disk.size)
 
-			// let serial = scramble(disk.serial)
+			// console.log("disk.name.length: ", disk.name.length)
 
-			return (
-				<tr key={i}>
-					<td>{disk.path.replace("/mnt/", "")}</td>
-					<td>{disk.serial} ({disk.device})</td>
-					<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
-					<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
-					<td>{humanBytes(disk.size)}</td>
-					<td>{humanBytes(disk.free)}</td>
-					<td>
-			            <div className={cx('progress')}>
-			                <span style={{width: percent}}></span>
-			            </div>
-					</td>
-					<td>
-						<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
-					</td>
-				</tr>
-			)
+			// let serial = scramble(disk.serial)
+			if (disk.type === "Cache" && disk.name.length > 5) {
+				return (
+					<tr key={i}>
+						<td>{disk.name}</td>
+						<td colSpan="7">{disk.serial} ({disk.device})</td>
+					</tr>
+				)
+			} else {
+				return (
+					<tr key={i}>
+						<td>{disk.name}</td>
+						<td>{disk.serial} ({disk.device})</td>
+						<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
+						<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
+						<td>{humanBytes(disk.size)}</td>
+						<td>{humanBytes(disk.free)}</td>
+						<td>
+				            <div className={cx('progress')}>
+				                <span style={{width: percent}}></span>
+				            </div>
+						</td>
+						<td>
+							<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
+						</td>
+					</tr>
+				)
+
+			}
 		})
 
 		let grid = (

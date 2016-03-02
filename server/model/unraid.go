@@ -184,7 +184,7 @@ func (u *Unraid) Refresh() {
 
 	free := make(map[string]int64)
 	size := make(map[string]int64)
-	lib.Shell("df --block-size=1 /mnt/*", func(line string) {
+	lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", func(line string) {
 		data := strings.Fields(line)
 		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
 		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
@@ -204,6 +204,9 @@ func (u *Unraid) Refresh() {
 
 		disk.Src = false
 		disk.Dst = true
+		if disk.Type == "Cache" && len(disk.Name) > 5 {
+			disk.Dst = false
+		}
 
 		if disk.Free > maxFree {
 			maxFree = disk.Free
