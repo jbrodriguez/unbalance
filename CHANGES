@@ -1,3 +1,15 @@
+Version 1.3.6 - 2016-03-02
+    - Upgrade mlog (with lowered maxSize logs)
+    - Remove fuser calls since it's generating cannot stat warning that ultimately affect operations. This also removes the size, empty and symlinkclauses. The main reason for these changes is that unbalance should be run as the only data modifying app on the unraid server when it's moving files. Any other scenario, will certainly have unpredictable results. I will eventually discuss with trinapicot/Freddie
+    - Add license as per https://github.com/trinapicot/unraid-diskmv/blob/master/LICENSE
+    - Redirect stderr to a logging function providing by the calling party
+    - Add support for cache pools, both in client and server code.
+    - Add some logging and error display
+    - Perform stat on found file only (remove stat for main folder)
+    - Add column to display the filesystem of the disk
+    Release 1.3.6
+
+
 Version 1.3.5 - 2016-02-27
     back: Remove unavailable field
     back: Add disk type

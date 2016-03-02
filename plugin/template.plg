@@ -18,6 +18,12 @@
 >
 
 <CHANGES>
+###2016-03-02 - v1.3.6
+- Add support for cache pools
+- Add column showing file system type
+- Add some logging
+- Log file will now be truncated at 10Mb (with up to 10 log file backups: .1, .2, etc.)
+
 ###2016-02-27 - v1.3.5
 - Add support for cache disks (to/from)
 
