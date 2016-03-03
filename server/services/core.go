@@ -1,12 +1,10 @@
 package services
 
 import (
-	// "bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
-	// "io"
 	"io/ioutil"
 	"jbrodriguez/unbalance/server/algorithm"
 	"jbrodriguez/unbalance/server/dto"
@@ -18,6 +16,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -48,7 +47,7 @@ type Core struct {
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
 
-	diskmvLocation string
+	// diskmvLocation string
 
 	bytesMoved int64
 	started    time.Time
@@ -94,19 +93,19 @@ func (c *Core) Start() (err error) {
 		return err
 	}
 
-	locations := []string{
-		"/usr/local/emhttp/plugins/unbalance",
-		".",
-	}
+	// locations := []string{
+	// 	"/usr/local/emhttp/plugins/unbalance",
+	// 	".",
+	// }
 
-	c.diskmvLocation = lib.SearchFile("diskmv", locations)
-	if c.diskmvLocation == "" {
-		msg := ""
-		for _, loc := range locations {
-			msg += fmt.Sprintf("%s, ", loc)
-		}
-		mlog.Fatalf("Unable to find diskmv. Exiting now. (searched in %s)", msg)
-	}
+	// c.diskmvLocation = lib.SearchFile("diskmv", locations)
+	// if c.diskmvLocation == "" {
+	// 	msg := ""
+	// 	for _, loc := range locations {
+	// 		msg += fmt.Sprintf("%s, ", loc)
+	// 	}
+	// 	mlog.Fatalf("Unable to find diskmv. Exiting now. (searched in %s)", msg)
+	// }
 
 	go c.react()
 
@@ -712,24 +711,18 @@ func (c *Core) _move(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	var dry string
+	rsyncArgs := []string{
+		"-avX",
+		"--partial",
+	}
+
 	if c.settings.DryRun {
-		dry = "-t"
-	} else {
-		dry = "-f"
+		rsyncArgs = append(rsyncArgs, "--dry-run")
 	}
 
 	commands := make([]string, 0)
 
-	// notMoved := ""
-	// if len(c.foldersNotMoved) > 0 {
-	// 	notMoved = "The following folders will not be moved, because there's not enough space in the target disks:\n"
-	// 	for _, folder := range c.foldersNotMoved {
-	// 		notMoved += folder + "\n"
-	// 	}
-	// }
-
-	outbound = &dto.Packet{Topic: "movePercentage", Payload: "Waiting to collect stats ..."}
+	outbound = &dto.Packet{Topic: "progressStats", Payload: "Waiting to collect stats ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	for _, disk := range c.storage.Disks {
@@ -738,33 +731,27 @@ func (c *Core) _move(msg *pubsub.Message) {
 		}
 
 		for _, item := range disk.Bin.Items {
-			//			dst := filepath.Join(disk.Path, item.Path)
+			args := append(make([]string, 0), rsyncArgs...)
+			args = append(
+				args,
+				filepath.Join(c.storage.SourceDiskName, item.Path),
+				filepath.Join(disk.Path, filepath.Dir(item.Path)),
+			)
 
-			// mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
-			// mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
-			// mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
-			//			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
-			//			commands = append(commands, command)
+			// cmd := exec.Command("rsync", args)
 
-			sanePath := item.Path
-			if item.Path[0] == '/' {
-				sanePath = sanePath[1:]
-			}
-
-			cmd := fmt.Sprintf("%s/diskmv %s \"%s\" %s %s", c.diskmvLocation, dry, sanePath, c.storage.SourceDiskName, disk.Path)
+			cmd := fmt.Sprintf("rsync %s \"%s\" \"%s\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			err := lib.Shell(cmd, mlog.Warning, "moveProgress:", func(line string) {
+			err := lib.ShellEx(mlog.Warning, "moveProgress:", func(line string) {
 				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				mlog.Info(line)
-			})
-
-			// time.Sleep(time.Second * 10)
+			}, "rsync", args...)
 
 			if err != nil {
 				finished := time.Now()
@@ -793,6 +780,23 @@ func (c *Core) _move(msg *pubsub.Message) {
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			commands = append(commands, cmd)
+
+			if !c.settings.DryRun {
+				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.storage.SourceDiskName, item.Path))
+				mlog.Info("Removing: (%s)", rmrf)
+				err = lib.Shell(rmrf, mlog.Warning, "moveProgress:", func(line string) {
+					mlog.Info(line)
+				})
+
+				if err != nil {
+					msg := fmt.Sprintf("Unable to remove source folder:(%s)", filepath.Join(c.storage.SourceDiskName, item.Path))
+
+					outbound := &dto.Packet{Topic: "moveProgress", Payload: msg}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+					mlog.Warning(msg)
+				}
+			}
 		}
 	}
 
@@ -803,8 +807,157 @@ func (c *Core) _move(msg *pubsub.Message) {
 	headline := "Move operation has finished"
 
 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
-
 }
+
+// //			dst := filepath.Join(disk.Path, item.Path)
+
+// // mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
+// // mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
+// // mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
+// //			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
+// //			commands = append(commands, command)
+
+// // sanePath := item.Path
+// // if item.Path[0] == '/' {
+// // 	sanePath = sanePath[1:]
+// // }
+
+// // execute shell command inline
+// // command := fmt.Sprintf("%s/diskmv %s \"%s\" %s %s", c.diskmvLocation, dry, sanePath, c.storage.SourceDiskName, disk.Path)
+// // mlog.Info("cmd(%s)", command)
+
+// // cmd := exec.Command("/bin/sh", "-c", command)
+// // cmd := exec.Command(command)
+// cmd := exec.Command("rsync", rsyncArgs, filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, item.Path))
+
+// command := fmt.Sprintf("%s %s \"%s\" \"%s\"", cmd.Path, rsyncArgs, filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, item.Path))
+// mlog.Info("cmd(%s)", command)
+
+// outbound = &dto.Packet{Topic: "moveProgress", Payload: command}
+// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// stdout, err := cmd.StdoutPipe()
+// if err != nil {
+// 	finished := time.Now()
+// 	elapsed := time.Since(c.started)
+
+// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
+// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
+
+// 	mlog.Warning(headline)
+// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
+// 	return
+// 	//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
+// }
+
+// cmd.Stderr = lib.NewStreamer(mlog.Warning, "moveProgress")
+
+// // stderr, err := cmd.StderrPipe()
+// // if err != nil {
+// // 	return err
+// // 	// log.Fatalf("Unable to stderrpipe %s: %s", command, err)
+// // }
+
+// // multi := io.MultiReader(stdout, stderr)
+
+// rd := bufio.NewReader(stdout)
+
+// if err := cmd.Start(); err != nil {
+// 	mlog.Warning("Path(%s):Args(%s):Dir(%s):String(%s)", cmd.Path, cmd.Args, cmd.Dir, cmd.ProcessState.String())
+// 	finished := time.Now()
+// 	elapsed := time.Since(c.started)
+
+// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
+// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
+
+// 	mlog.Warning(headline)
+// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
+// 	return
+// }
+
+// for {
+// 	line, err := rd.ReadString('\n')
+
+// 	if err == io.EOF && len(line) == 0 {
+// 		// Good end of file with no partial line
+// 		mlog.Warning("_move:ExitOk")
+// 		break
+// 	}
+// 	if err == io.EOF {
+// 		mlog.Warning("_move:lineNotTerminated(%s):(%s)", err, line)
+// 		break
+// 	}
+
+// 	// mlog.Info("thisline:(%s)", line)
+// 	line = line[:len(line)-1] // drop the '\n'
+// 	if len(line) > 0 && line[len(line)-1] == '\r' {
+// 		line = line[:len(line)-1] // drop the '\r'
+// 	}
+
+// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
+// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 	mlog.Info(line)
+// }
+
+// // Wait for the result of the command; also closes our end of the pipe
+// err = cmd.Wait()
+// if err != nil {
+// 	var waitStatus syscall.WaitStatus
+// 	if exiterr, ok := err.(*exec.ExitError); ok {
+// 		waitStatus = exiterr.Sys().(syscall.WaitStatus)
+// 		mlog.Warning("_move:waitError:Status(%d):Err(%s):ExitErr(%s)", waitStatus.ExitStatus(), err, exiterr)
+// 	} else {
+// 		mlog.Warning("_move:waitError:(%s)", err)
+// 	}
+
+// 	waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
+// 	mlog.Warning("_move:waitStatus:(%d)", waitStatus.ExitStatus())
+
+// 	finished := time.Now()
+// 	elapsed := time.Since(c.started)
+
+// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
+// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
+
+// 	// mlog.Warning(headline)
+// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
+// 	// log.Fatal("Unable to wait for process to finish: ", err)
+// 	return
+// }
+
+// c.bytesMoved = c.bytesMoved + item.Size
+
+// percent, left, speed := progress(c.storage.BytesToMove, c.bytesMoved, c.started)
+
+// msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
+// mlog.Info("Current progress: %s", msg)
+
+// outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
+// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// commands = append(commands, command)
+// 	}
+// }
+
+// finished := time.Now()
+// elapsed := time.Since(c.started)
+
+// subject := "unBALANCE - MOVE operation completed"
+// headline := "Move operation has finished"
+
+// c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
+
+// }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
 	fstarted := started.Format(TIME_FORMAT)

@@ -7,6 +7,7 @@ import (
 	// "log"
 	"io"
 	"os/exec"
+	"syscall"
 )
 
 type Callback func(line string)
@@ -31,8 +32,8 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 		return
 	}
 
+	var line string
 	for {
-		var line string
 		line, err = s.buf.ReadString('\n')
 		if err == io.EOF {
 			break
@@ -48,24 +49,29 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 	return
 }
 
+func ShellEx(writer StderrWriter, prefix string, callback Callback, name string, args ...string) error {
+	return shell(writer, prefix, callback, name, args...)
+}
+
 func Shell(command string, writer StderrWriter, prefix string, callback Callback) error {
-	cmd := exec.Command("/bin/sh", "-c", command)
+	args := []string{
+		"-c",
+	}
+	args = append(args, command)
+
+	return shell(writer, prefix, callback, "/bin/sh", args...)
+}
+
+func shell(writer StderrWriter, prefix string, callback Callback, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+
+	cmd.Stderr = NewStreamer(writer, prefix)
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 		//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
 	}
-
-	cmd.Stderr = NewStreamer(writer, prefix)
-
-	// stderr, err := cmd.StderrPipe()
-	// if err != nil {
-	// 	return err
-	// 	// log.Fatalf("Unable to stderrpipe %s: %s", command, err)
-	// }
-
-	// multi := io.MultiReader(stdout, stderr)
-
 	scanner := bufio.NewScanner(stdout)
 
 	if err := cmd.Start(); err != nil {
@@ -80,51 +86,17 @@ func Shell(command string, writer StderrWriter, prefix string, callback Callback
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
+		var waitStatus syscall.WaitStatus
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			waitStatus = exiterr.Sys().(syscall.WaitStatus)
+			writer("%s:waitError:Status(%d):Err(%s):ExitErr(%s)", prefix, waitStatus.ExitStatus(), err, exiterr)
+		} else {
+			writer("%s:waitError:(%s)", prefix, err)
+		}
+
 		return err
 		// log.Fatal("Unable to wait for process to finish: ", err)
 	}
 
 	return nil
-}
-
-func Pipeline(cmds ...*exec.Cmd) (pipeLineOutput, collectedStandardError []byte, pipeLineError error) {
-	// Require at least one command
-	if len(cmds) < 1 {
-		return nil, nil, nil
-	}
-
-	// Collect the output from the command(s)
-	var output bytes.Buffer
-	var stderr bytes.Buffer
-
-	last := len(cmds) - 1
-	for i, cmd := range cmds[:last] {
-		var err error
-		// Connect each command's stdin to the previous command's stdout
-		if cmds[i+1].Stdin, err = cmd.StdoutPipe(); err != nil {
-			return nil, nil, err
-		}
-		// Connect each command's stderr to a buffer
-		cmd.Stderr = &stderr
-	}
-
-	// Connect the output and error for the last command
-	cmds[last].Stdout, cmds[last].Stderr = &output, &stderr
-
-	// Start each command
-	for _, cmd := range cmds {
-		if err := cmd.Start(); err != nil {
-			return output.Bytes(), stderr.Bytes(), err
-		}
-	}
-
-	// Wait for each command to complete
-	for _, cmd := range cmds {
-		if err := cmd.Wait(); err != nil {
-			return output.Bytes(), stderr.Bytes(), err
-		}
-	}
-
-	// Return the pipeline output and the collected standard error
-	return output.Bytes(), stderr.Bytes(), nil
 }
