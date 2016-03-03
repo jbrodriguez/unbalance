@@ -310,15 +310,16 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 
 	for _, section := range file {
 		diskType := strings.Replace(section["type"], "\"", "", -1)
+		diskName := strings.Replace(section["name"], "\"", "", -1)
 
-		if diskType == "Parity" || diskType == "Flash" {
+		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && len(diskName) > 5) {
 			continue
 		}
 
 		disk := &Disk{}
 
 		disk.Id, _ = strconv.ParseInt(strings.Replace(section["idx"], "\"", "", -1), 10, 64) // 1
-		disk.Name = strings.Replace(section["name"], "\"", "", -1)                           // disk1, cache
+		disk.Name = diskName                                                                 // disk1, cache
 		disk.Path = "/mnt/" + disk.Name                                                      // /mnt/disk1, /mnt/cache
 		disk.Device = strings.Replace(section["device"], "\"", "", -1)                       // sdp
 		disk.Type = diskType                                                                 // Flash, Parity, Data
