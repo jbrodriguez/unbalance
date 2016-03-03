@@ -1,3 +1,8 @@
+Version 1.3.7 - 2016-03-03
+    - Show only the main cache disk
+    Release 1.3.7
+
+
 Version 1.3.6 - 2016-03-02
     - Upgrade mlog (with lowered maxSize logs)
     - Remove fuser calls since it's generating cannot stat warning that ultimately affect operations. This also removes the size, empty and symlinkclauses. The main reason for these changes is that unbalance should be run as the only data modifying app on the unraid server when it's moving files. Any other scenario, will certainly have unpredictable results. I will eventually discuss with trinapicot/Freddie
