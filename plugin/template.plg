@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-03-03 - v1.3.7
+- Show only the main disk in cache pools
+
 ###2016-03-02 - v1.3.6
 - Add support for cache pools
 - Add column showing file system type
