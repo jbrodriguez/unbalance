@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-03-03 - v1.4.0
+- Replace diskmv script with straight rsync command
+
 ###2016-03-03 - v1.3.7
 - Show only the main disk in cache pools
 

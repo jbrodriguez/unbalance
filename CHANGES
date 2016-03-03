@@ -1,3 +1,10 @@
+Version 1.4.0 - 2016-03-03
+    - Restore diskmv to the original script, but we shouldn't be using it anymore (keep the nofuser version)
+    - Add ShellEx function, that accepts separate command and arguments. This gives me direct access to the output of the given command.
+    - Move from diskmv to straight rsync
+    Release 1.4.0
+
+
 Version 1.3.7 - 2016-03-03
     - Show only the main cache disk
     Release 1.3.7
