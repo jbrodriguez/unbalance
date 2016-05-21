@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/jbrodriguez/mlog"
 	"jbrodriguez/unbalance/server/lib"
 )
 
@@ -25,18 +26,18 @@ type Disk struct {
 func (self *Disk) Print() {
 	// this disk was not assigned to a bin
 	if self.Bin != nil {
-		fmt.Println("=========================================================")
-		fmt.Printf("Disk(%s):ALLOCATED %d folders:[%s/%s] %2.2f%%\n", self.Path, len(self.Bin.Items), lib.ByteSize(self.Bin.Size), lib.ByteSize(self.Free), (float64(self.Bin.Size)/float64(self.Free))*100)
-		fmt.Println("---------------------------------------------------------")
+		mlog.Info("=========================================================")
+		mlog.Info("Disk(%s):ALLOCATED %d folders:[%s/%s] %2.2f%%\n", self.Path, len(self.Bin.Items), lib.ByteSize(self.Bin.Size), lib.ByteSize(self.Free), (float64(self.Bin.Size)/float64(self.Free))*100)
+		mlog.Info("---------------------------------------------------------")
 		self.Bin.Print()
-		fmt.Println("---------------------------------------------------------")
-		fmt.Println("")
+		mlog.Info("---------------------------------------------------------")
+		mlog.Info("")
 	} else {
-		fmt.Println("=========================================================")
-		fmt.Printf("Disk(%s):NO ALLOCATION:[0/%s] 0%%\n", self.Path, lib.ByteSize(self.Free))
-		fmt.Println("---------------------------------------------------------")
-		fmt.Println("---------------------------------------------------------")
-		fmt.Println("")
+		mlog.Info("=========================================================")
+		mlog.Info("Disk(%s):NO ALLOCATION:[0/%s] 0%%\n", self.Path, lib.ByteSize(self.Free))
+		mlog.Info("---------------------------------------------------------")
+		mlog.Info("---------------------------------------------------------")
+		mlog.Info("")
 	}
 }
 
