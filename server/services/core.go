@@ -403,51 +403,53 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	}
 
 	// srcDisk.NewFree = srcDisk.Free
-
 	willBeMoved := make([]*model.Item, 0)
-	for _, disk := range disks {
-		diskWithoutMnt := disk.Path[5:]
-		msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
-		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		mlog.Info("_calc:%s", msg)
-		// time.Sleep(2 * time.Second)
 
-		if disk.Path != srcDisk.Path {
-			// disk.NewFree = disk.Free
+	if len(folders) > 0 {
+		for _, disk := range disks {
+			diskWithoutMnt := disk.Path[5:]
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_calc:%s", msg)
+			// time.Sleep(2 * time.Second)
 
-			var reserved int64
-			switch c.settings.ReservedUnit {
-			case "%":
-				fcalc := disk.Size * c.settings.ReservedAmount / 100
-				reserved = int64(fcalc)
-				break
-			case "Mb":
-				reserved = c.settings.ReservedAmount * 1000 * 1000
-				break
-			case "Gb":
-				reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
-				break
-			default:
-				reserved = lib.RESERVED_SPACE
-			}
+			if disk.Path != srcDisk.Path {
+				// disk.NewFree = disk.Free
 
-			ceil := lib.Max(lib.RESERVED_SPACE, reserved)
-			mlog.Info("_calc:FoldersLeft(%d):ReservedSpace(%d)", len(folders), ceil)
+				var reserved int64
+				switch c.settings.ReservedUnit {
+				case "%":
+					fcalc := disk.Size * c.settings.ReservedAmount / 100
+					reserved = int64(fcalc)
+					break
+				case "Mb":
+					reserved = c.settings.ReservedAmount * 1000 * 1000
+					break
+				case "Gb":
+					reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
+					break
+				default:
+					reserved = lib.RESERVED_SPACE
+				}
 
-			packer := algorithm.NewKnapsack(disk, folders, ceil)
-			bin := packer.BestFit()
-			if bin != nil {
-				srcDisk.NewFree += bin.Size
-				disk.NewFree -= bin.Size
-				c.storage.BytesToMove += bin.Size
+				ceil := lib.Max(lib.RESERVED_SPACE, reserved)
+				mlog.Info("_calc:FoldersLeft(%d):ReservedSpace(%d)", len(folders), ceil)
 
-				willBeMoved = append(willBeMoved, bin.Items...)
-				folders = c.removeFolders(folders, bin.Items)
+				packer := algorithm.NewKnapsack(disk, folders, ceil)
+				bin := packer.BestFit()
+				if bin != nil {
+					srcDisk.NewFree += bin.Size
+					disk.NewFree -= bin.Size
+					c.storage.BytesToMove += bin.Size
 
-				mlog.Info("_calc:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), lib.ByteSize(srcDisk.Free), lib.ByteSize(srcDisk.NewFree))
-			} else {
-				mlog.Info("_calc:NoBinAllocated=Disk(%s)", disk.Path)
+					willBeMoved = append(willBeMoved, bin.Items...)
+					folders = c.removeFolders(folders, bin.Items)
+
+					mlog.Info("_calc:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), lib.ByteSize(srcDisk.Free), lib.ByteSize(srcDisk.NewFree))
+				} else {
+					mlog.Info("_calc:NoBinAllocated=Disk(%s)", disk.Path)
+				}
 			}
 		}
 	}
