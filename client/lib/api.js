@@ -81,4 +81,13 @@ export default class Api {
 		})
 		.then(resp => resp.json())
 	}
+
+	setRsyncFlags(rsyncFlags) {
+		return fetch(this.hostr + '/config/rsyncFlags', {
+			method: 'PUT',
+			headers: {'content-type': 'application/json'},
+			body: JSON.stringify({payload: JSON.stringify({rsyncFlags})})
+		})
+		.then(resp => resp.json())		
+	}
 }

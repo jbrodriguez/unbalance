@@ -201,8 +201,13 @@ function calcProgress({state}, line) {
 function calcFinished({state, actions}, unraid) {
 	let feedback = []
 	if (unraid.bytesToMove === 0) {
-		feedback.push("There isn't available space in any of the target disks, to move the folders you selected.")
-		feedback.push("Check more disks in the TO column or go to the Settings page, to review the folders selected for moving or to change the amount of reserved space.")
+		feedback.push("The calculate operation found that no folders/files can be moved.")
+		feedback.push("")
+		feedback.push("This might be due to one of the following reasons:")
+		feedback.push("- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk")
+		feedback.push("- There isn't available space in any of the target disks, to move the share(s)/folder(s) you selected")
+		feedback.push("")
+		feedback.push("Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving or to change the amount of reserved space.")
 	}
 
 	window.setTimeout( _ => actions.removeFeedback(), 15*1000)

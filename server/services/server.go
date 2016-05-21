@@ -82,6 +82,7 @@ func (s *Server) Start() {
 	api.Get("/storage", s.getStorage)
 	api.Post("/tree", s.getTree)
 	api.Put("/config/dryRun", s.toggleDryRun)
+	api.Put("/config/rsyncFlags", s.setRsyncFlags)
 
 	port := fmt.Sprintf(":%s", s.settings.Port)
 
@@ -237,6 +238,24 @@ func (s *Server) getTree(c *echo.Context) (err error) {
 func (s *Server) toggleDryRun(c *echo.Context) (err error) {
 	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/config/toggle/dryRun")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) setRsyncFlags(c *echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	s.bus.Pub(msg, "/config/set/rsyncFlags")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)

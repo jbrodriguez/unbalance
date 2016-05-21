@@ -1,7 +1,7 @@
 package model
 
 import (
-	"fmt"
+	"github.com/jbrodriguez/mlog"
 	"jbrodriguez/unbalance/server/lib"
 )
 
@@ -17,7 +17,7 @@ func (self *Bin) Add(item *Item) {
 
 func (self *Bin) Print() {
 	for _, item := range self.Items {
-		fmt.Printf("[%s] %s\n", lib.ByteSize(item.Size), item.Name)
+		mlog.Info("[%s] %s\n", lib.ByteSize(item.Size), item.Name)
 	}
 }
 
