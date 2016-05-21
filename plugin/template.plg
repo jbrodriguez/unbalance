@@ -18,6 +18,10 @@
 >
 
 <CHANGES>
+###2016-05-21 - v1.5.0
+- Allow rsync flags to be customized
+- Handle better the case where source share/folder is empty or does not exist
+
 ###2016-03-03 - v1.4.0
 - Replace diskmv script with straight rsync command
 
