@@ -16,6 +16,7 @@ export default class Settings extends Component {
 		this.state = {
 			reservedAmount: props.store.state.config.reservedAmount,
 			reservedUnit: props.store.state.config.reservedUnit,
+			rsyncFlags: props.store.state.config.rsyncFlags,
 		}
 	}
 	// componentDidMount() {
@@ -27,11 +28,12 @@ export default class Settings extends Component {
 
 
 	componentWillReceiveProps(next) {
-		const { reservedAmount, reservedUnit } = next.store.state.config
-		if (reservedAmount !== this.state.reservedAmount || reservedUnit !== this.state.reservedUnit) {
+		const { reservedAmount, reservedUnit, rsyncFlags } = next.store.state.config
+		if (reservedAmount !== this.state.reservedAmount || reservedUnit !== this.state.reservedUnit ||  rsyncFlags !== this.state.rsyncFlags) {
 			this.setState({
 				reservedUnit,
 				reservedAmount,
+				rsyncFlags,
 			})
 		}
 	}
@@ -53,7 +55,7 @@ export default class Settings extends Component {
 
 		const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
 		if (!stateOk) {
-			console.log('stateOk: ', stateOk)
+			// console.log('stateOk: ', stateOk)
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -73,10 +75,12 @@ export default class Settings extends Component {
 			)
 		}
 
+		let flags = this.state.rsyncFlags.join(' ')
+
 		return (
 			<div>
 
-			<section className={cx('row', 'bottom-spacer-large')}>
+			<section className={cx('row', 'bottom-spacer-2x')}>
 				<div className={cx('col-xs-12')}>
 					<div>
 						<h3>SET UP NOTIFICATIONS</h3>
@@ -108,7 +112,7 @@ export default class Settings extends Component {
 				</div>
 			</section>
 
-			<section className={cx('row', 'bottom-spacer-large')}>
+			<section className={cx('row', 'bottom-spacer-2x')}>
 				<div className={cx('col-xs-12')}>
 					<div>
 						<h3>RESERVED SPACE</h3>
@@ -133,7 +137,33 @@ export default class Settings extends Component {
 						</div>
 					</div>
 				</div>
-			</section>				
+			</section>
+
+			<section className={cx('row', 'bottom-spacer-2x')}>
+				<div className={cx('col-xs-12')}>
+					<div>
+						<h3>CUSTOM RSYNC FLAGS</h3>
+
+						<p>Internally unBALANCE uses rsync to transfer files across disks.</p>
+						<p>By default, rsync is invoked with <b>-avX --partial</b> flags.</p>
+						<p>Here you can set custom flags to override the default ones, except for the dry run flag which will be automatically added, if needed.</p>
+						<p>Be careful with the flags you choose, since it can drastically alter the expected behaviour of rsync under unBALANCE.</p>
+
+						<div className={cx('row')}>
+							<div className={cx('col-xs-2')}>
+								<div className={cx('addon')}>
+									<input className={cx('addon-field')} type="string" value={flags} onChange={this._onChangeRsyncFlags.bind(this)} />
+								</div>
+							</div>
+							<div className={cx('col-xs-4')}>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags.bind(this)}>Apply</button>
+								&nbsp;
+								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault.bind(this)}>Reset to default</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>								
 
 			<section className={cx('row', 'bottom-spacer-large')}>
 				<div className={cx('col-xs-12')}>
@@ -201,9 +231,6 @@ export default class Settings extends Component {
 
 			</section>
 
-
-
-
 			</div>
 		)
 	}
@@ -251,4 +278,20 @@ export default class Settings extends Component {
 		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
 	}
 
+	_onChangeRsyncFlags(e) {
+		this.setState({
+			rsyncFlags: e.target.value.split(' ')
+		})
+	}
+
+	_setRsyncFlags() {
+		const { setRsyncFlags } = this.props.store.actions
+		const flags = this.state.rsyncFlags.join(' ')
+		setRsyncFlags(flags.trim().split(' '))
+	}
+
+	_setRsyncDefault(e) {
+		const { setRsyncFlags } = this.props.store.actions
+		setRsyncFlags(['-avX', '--partial'])
+	}	
 }

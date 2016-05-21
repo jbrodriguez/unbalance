@@ -9,9 +9,7 @@ function start({state, actions, opts: {ws}}) {
 	})
 
 	actions.getConfig()
-
 	actions.getTree("/")
-
 	actions.getStorage()
 
 	return state

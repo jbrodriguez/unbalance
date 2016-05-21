@@ -17,6 +17,7 @@ type Config struct {
 	NotifyMove     int      `json:"notifyMove"`
 	ReservedAmount int64    `json:"reservedAmount"`
 	ReservedUnit   string   `json:"reservedUnit"`
+	RsyncFlags     []string `json:"rsyncFlags"`
 	Version        string   `json:"version"`
 }
 
@@ -35,7 +36,7 @@ type Settings struct {
 }
 
 func NewSettings(version string) (*Settings, error) {
-	var config, port, log, folders string
+	var config, port, log, folders, rsyncFlags string
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
@@ -52,6 +53,7 @@ func NewSettings(version string) (*Settings, error) {
 	flag.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
 	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
+	flag.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
 
 	flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
 	flag.Parse()
@@ -59,11 +61,19 @@ func NewSettings(version string) (*Settings, error) {
 	// fmt.Printf("folders: %s\nconfig: %s\n", folders, config)
 
 	s := &Settings{}
+
 	if folders == "" {
 		s.Folders = make([]string, 0)
 	} else {
 		s.Folders = strings.Split(folders, "|")
 	}
+
+	if rsyncFlags == "" {
+		s.RsyncFlags = []string{"-avX", "--partial"}
+	} else {
+		s.RsyncFlags = strings.Split(rsyncFlags, "|")
+	}
+
 	s.DryRun = dryRun
 	s.NotifyCalc = notifyCalc
 	s.NotifyMove = notifyMove
@@ -120,6 +130,11 @@ func (s *Settings) Save() (err error) {
 	}
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("notifyMove=%d", s.NotifyCalc)); err != nil {
+		return err
+	}
+
+	rsyncFlags := strings.Join(s.RsyncFlags, "|")
+	if err = WriteLine(tmpFile, fmt.Sprintf("rsyncFlags=%s", rsyncFlags)); err != nil {
 		return err
 	}
 

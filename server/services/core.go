@@ -83,6 +83,7 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
 	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
+	c.registerAdditional(c.bus, "/config/set/rsyncFlags", c.setRsyncFlags, c.mailbox)
 
 	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
@@ -259,6 +260,37 @@ func (c *Core) getTree(msg *pubsub.Message) {
 	path := msg.Payload.(string)
 
 	msg.Reply <- c.storage.GetTree(path)
+}
+
+func (c *Core) setRsyncFlags(msg *pubsub.Message) {
+	// mlog.Warning("payload: %+v", msg.Payload)
+	payload, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert Rsync Flags parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert Rsync Flags parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		msg.Reply <- &c.settings.Config
+
+		return
+	}
+
+	var rsync dto.Rsync
+	err := json.Unmarshal([]byte(payload), &rsync)
+	if err != nil {
+		mlog.Warning("Unable to bind rsyncFlags parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind rsyncFlags parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	mlog.Info("Setting rsyncFlags to (%s)", strings.Join(rsync.Flags, " "))
+
+	c.settings.RsyncFlags = rsync.Flags
+	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
@@ -711,10 +743,12 @@ func (c *Core) _move(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	rsyncArgs := []string{
-		"-avX",
-		"--partial",
-	}
+	// rsyncArgs := []string{
+	// 	"-avX",
+	// 	"--partial",
+	// }
+
+	rsyncArgs := c.settings.RsyncFlags
 
 	if c.settings.DryRun {
 		rsyncArgs = append(rsyncArgs, "--dry-run")

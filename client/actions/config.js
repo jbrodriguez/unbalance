@@ -16,6 +16,8 @@ module.exports = {
 
 	toggleDryRun,
 	dryRunToggled,
+
+	setRsyncFlags,
 }
 
 function getConfig({state, actions, opts: {api}}) {
@@ -209,4 +211,11 @@ function dryRunToggled({state}, config) {
 		config,
 		opInProgress: null
 	}	
+}
+
+function setRsyncFlags({state, actions, opts: {api}}, flags) {
+	api.setRsyncFlags(flags)
+		.then(json => actions.gotConfig(json))
+
+	return state
 }
