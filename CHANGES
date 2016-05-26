@@ -1,3 +1,8 @@
+Version 1.5.1 - 2016-05-26
+    back: Add trailing slash to destination in rsync cmd
+    app: Bump version
+
+
 Version 1.5.0 - 2016-05-21
     app: Implement custom rsync flags functionality
     back: FIx issue with data not being logged due to fmt.printx statements rather than mlog.info
