@@ -217,7 +217,7 @@ func TestFoldersNotMoved(t *testing.T) {
 	settings.ReservedAmount = 5
 	settings.ReservedUnit = "%"
 
-	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPrcnt: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
+	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 	disks := []*model.Disk{
 		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
 		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
@@ -334,4 +334,27 @@ func TestPercentProgress(t *testing.T) {
 	duration := time.Duration(left) * time.Second
 
 	mlog.Info("left(%s) | mbs(%.2f MB/s) | (delta=%d)", duration, mbs, delta)
+}
+
+func TestCommandCreation(t *testing.T) {
+	rsyncArgs := []string{
+		"-avX",
+		"--partial",
+	}
+
+	diskName := "/mnt/disk2"
+	itemPath := "TVShows/NCIS/NCIS 04x17 - Skeletons.avi"
+	diskPath := "/mnt/disk3"
+
+	cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(diskName, itemPath), filepath.Join(diskPath, filepath.Dir(itemPath)))
+	mlog.Info("cmd(%s)", cmd)
+	assert.Equal(t, `rsync -avX --partial "/mnt/disk2/TVShows/NCIS/NCIS 04x17 - Skeletons.avi" "/mnt/disk3/TVShows/NCIS/"`, cmd)
+
+	diskName = "/mnt/disk3"
+	itemPath = "blurip/Air (2014)"
+	diskPath = "/mnt/disk2"
+
+	cmd = fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(diskName, itemPath), filepath.Join(diskPath, filepath.Dir(itemPath)))
+	mlog.Info("cmd(%s)", cmd)
+	assert.Equal(t, `rsync -avX --partial "/mnt/disk3/blurip/Air (2014)" "/mnt/disk2/blurip/"`, cmd)
 }
