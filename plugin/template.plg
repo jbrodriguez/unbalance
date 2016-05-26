@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-05-26 - v1.5.1
+- Add trailing slash to destination folder in rsync command
+
 ###2016-05-21 - v1.5.0
 - Allow rsync flags to be customized
 - Handle better the case where source share/folder is empty or does not exist
