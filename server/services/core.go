@@ -89,7 +89,7 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
 	// c.registerAdditional(c.bus, "/set/config", c.setConfig)
 
-	err = c.storage.SanityCheck()
+	err = c.storage.SanityCheck(c.settings.ApiFolders)
 	if err != nil {
 		return err
 	}
@@ -395,7 +395,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	mlog.Info("_calc:foldersToBeMovedTotal(%d)", len(folders))
 	var lsal string
 	for _, v := range folders {
-		lib.Shell(fmt.Sprintf("stat -c \"%%A %%y %%U %%G\" \"%s\"", v.Name), mlog.Warning, "_calc:lsal", func(line string) {
+		lib.Shell(fmt.Sprintf("stat -c \"%%A %%y %%U %%G\" \"%s\"", v.Name), mlog.Warning, "_calc:lsal", "", func(line string) {
 			lsal = line
 		})
 
@@ -580,7 +580,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 	mlog.Info("getFolders:Executing %s", cmdText)
 
-	lib.Shell(cmdText, mlog.Warning, "getFolders:find/du:", func(line string) {
+	lib.Shell(cmdText, mlog.Warning, "getFolders:find/du:", "", func(line string) {
 		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
@@ -767,22 +767,44 @@ func (c *Core) _move(msg *pubsub.Message) {
 		}
 
 		for _, item := range disk.Bin.Items {
-			args := append(make([]string, 0), rsyncArgs...)
-			args = append(
-				args,
-				filepath.Join(c.storage.SourceDiskName, item.Path),
-				filepath.Join(disk.Path, filepath.Dir(item.Path)),
-			)
+			workDir := c.storage.SourceDiskName
+			// src := strconv.Quote(filepath.Join(c.storage.SourceDiskName, item.Path))
+			// src := strconv.Quote(c.storage.SourceDiskName+string(filepath.Separator)+"."+string(filepath.Separator)+ item.Path)
+			// src := strconv.Quote(c.storage.SourceDiskName + string(filepath.Separator) + "." + string(filepath.Separator) + item.Path)
+			src := item.Path
+			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)))
+			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator))
+			dst := disk.Path + string(filepath.Separator)
 
+			// args := append(make([]string, 0), rsyncArgs...)
+			// args = append(
+			// 	args,
+			// 	filepath.Join(c.storage.SourceDiskName, item.Path),
+			// 	filepath.Join(disk.Path, filepath.Dir(item.Path)),
+			// )
+
+			args := append(
+				rsyncArgs,
+				src,
+				dst,
+			)
 			// cmd := exec.Command("rsync", args)
 
-			cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
+			// cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
+			cmd := fmt.Sprintf(`rsync %s %s %s`, strings.Join(rsyncArgs, " "), strconv.Quote(src), dst)
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			err := lib.ShellEx(mlog.Warning, "moveProgress:", func(line string) {
+			// err := lib.ShellEx(mlog.Warning, "moveProgress:", func(line string) {
+			// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
+			// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+			// 	mlog.Info(line)
+			// }, "cd", args...)
+
+			err := lib.ShellEx(mlog.Warning, "moveProgress:", workDir, func(line string) {
 				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -820,7 +842,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 			if !c.settings.DryRun {
 				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.storage.SourceDiskName, item.Path))
 				mlog.Info("Removing: (%s)", rmrf)
-				err = lib.Shell(rmrf, mlog.Warning, "moveProgress:", func(line string) {
+				err = lib.Shell(rmrf, mlog.Warning, "moveProgress:", "", func(line string) {
 					mlog.Info(line)
 				})
 
