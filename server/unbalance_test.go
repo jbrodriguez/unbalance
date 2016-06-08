@@ -188,25 +188,136 @@ func createFile(home, folder, name string, size int64) error {
 	return nil
 }
 
-func TestFoldersNotMoved(t *testing.T) {
-	// mlog.Start(mlog.LevelInfo, "")
+// func TestFoldersNotMoved(t *testing.T) {
+// 	// mlog.Start(mlog.LevelInfo, "")
+
+// 	home := os.Getenv("HOME")
+
+// 	os.RemoveAll(filepath.Join(home, "tmp/unbalance/mnt"))
+
+// 	err := createFile(home, "tmp/unbalance/mnt/disk1/movies/Interstellar (2014)", "Interstellar.mkv", 800) // 902
+// 	assert.NoError(t, err)
+
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/movies/Avatar (2009)", "Avatar.mkv", 750) // 852
+// 	assert.NoError(t, err)
+
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/movies", "Blade (1998).mkv", 450) // 450
+// 	assert.NoError(t, err)
+
+// 	folders := []string{
+// 		"movies",
+// 		"tvshows",
+// 	}
+
+// 	bus := pubsub.New(23)
+
+// 	settings, _ := lib.NewSettings("test")
+// 	settings.Folders = folders
+// 	settings.DryRun = true
+// 	settings.ReservedAmount = 5
+// 	settings.ReservedUnit = "%"
+// 	settings.ApiFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
+
+// 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
+// 	disks := []*model.Disk{
+// 		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
+// 		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
+// 		&model.Disk{Id: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
+// 	}
+
+// 	assert.Equal(t, 3, len(disks))
+
+// 	unraid := &model.Unraid{}
+// 	unraid.Condition = condition
+// 	unraid.Disks = disks
+// 	unraid.SourceDiskName = ""
+// 	unraid.BytesToMove = 0
+
+// 	core := services.NewCore(bus, settings)
+// 	core.SetStorage(unraid)
+
+// 	mlog.Info("before start")
+// 	err = core.Start()
+// 	require.Nil(t, err, "core.start error should be nil")
+
+// 	var packet dto.Packet
+// 	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+// 	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":true}}"}`
+// 	calcJson := fmt.Sprintf(template,
+// 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+// 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+// 		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
+// 		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
+// 	)
+
+// 	mlog.Info("json: %s", calcJson)
+// 	err = json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+// 	mlog.Info("error: %s", err)
+// 	mlog.Info("packet: %+v", packet)
+// 	mlog.Info("payload: %s", packet.Payload)
+// 	require.Nil(t, err)
+
+// 	// destDisks := make(map[string]bool, 2)
+// 	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk2")] = true
+// 	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk3")] = true
+
+// 	// args := &dto.Calculate{
+// 	// 	SourceDisk: filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+// 	// 	DestDisks:  destDisks,
+// 	// }
+
+// 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{})}
+// 	bus.Pub(msg, "calculate")
+
+// 	reply := <-msg.Reply
+// 	resp := reply.(*model.Unraid)
+
+// 	mlog.Info("Unraid: %+v", resp)
+
+// 	// cmd := &pubsub.Message{Reply: make(chan interface{})}
+// 	// bus.Pub(cmd, "storage:move")
+
+// 	// reply = <-msg.Reply
+
+// 	core.Stop()
+// }
+
+func TestRsync(t *testing.T) {
+	mlog.Info("TestRsync")
 
 	home := os.Getenv("HOME")
 
-	os.RemoveAll(filepath.Join(home, "tmp/unbalance"))
+	// os.RemoveAll(filepath.Join(home, "tmp/unbalance/mnt"))
 
-	err := createFile(home, "tmp/unbalance/mnt/disk1/movies/Interstellar (2014)", "Interstellar.mkv", 800) // 902
-	assert.NoError(t, err)
+	// os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk2"), 0777)
+	// os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk3"), 0777)
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/movies/Avatar (2009)", "Avatar.mkv", 750) // 852
-	assert.NoError(t, err)
+	// err := createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "The Fast & The Furious.mkv", 800)
+	// assert.NoError(t, err)
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/movies", "Blade (1998).mkv", 450) // 450
-	assert.NoError(t, err)
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "Faster & Furiousest.mkv", 1200)
+	// assert.NoError(t, err)
+
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/", "Synchronicity [2015].mkv", 1500)
+	// assert.NoError(t, err)
+
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/Backup/", "data.txt", 700)
+	// assert.NoError(t, err)
+
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/TVShows/NCIS/", "NCIS 04x17 - Skeletons.avi", 2700)
+	// assert.NoError(t, err)
+
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/Air (2014)", "air.mkv", 1600)
+	// assert.NoError(t, err)
+
+	// err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/", "Interstellar.mkv", 1900)
+	// assert.NoError(t, err)
 
 	folders := []string{
-		"movies",
-		"tvshows",
+		"Files/Media/Videos/Movies",
+		"Backup",
+		"TVShows",
+		"films/blu rip",
 	}
 
 	bus := pubsub.New(23)
@@ -214,8 +325,9 @@ func TestFoldersNotMoved(t *testing.T) {
 	settings, _ := lib.NewSettings("test")
 	settings.Folders = folders
 	settings.DryRun = true
-	settings.ReservedAmount = 5
-	settings.ReservedUnit = "%"
+	settings.ReservedAmount = 450000000 / 1000 / 1000
+	settings.ReservedUnit = "Mb"
+	settings.ApiFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
 
 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 	disks := []*model.Disk{
@@ -236,12 +348,12 @@ func TestFoldersNotMoved(t *testing.T) {
 	core.SetStorage(unraid)
 
 	mlog.Info("before start")
-	err = core.Start()
+	err := core.Start()
 	require.Nil(t, err, "core.start error should be nil")
 
 	var packet dto.Packet
 	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
-	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":true}}"}`
+	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":false}}"}`
 	calcJson := fmt.Sprintf(template,
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
@@ -268,15 +380,18 @@ func TestFoldersNotMoved(t *testing.T) {
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{})}
 	bus.Pub(msg, "calculate")
 
-	reply := <-msg.Reply
-	resp := reply.(*model.Unraid)
+	time.Sleep(5 * time.Second)
 
-	mlog.Info("Unraid: %+v", resp)
+	// mlog.Info("Unraid (after calc): %+v", resp)
 
-	// cmd := &pubsub.Message{Reply: make(chan interface{})}
-	// bus.Pub(cmd, "storage:move")
+	cmd := &pubsub.Message{Reply: make(chan interface{})}
+	bus.Pub(cmd, "move")
+
+	time.Sleep(10 * time.Second)
 
 	// reply = <-msg.Reply
+
+	// mlog.Info("Unraid (after move): %+v", resp)
 
 	core.Stop()
 }
