@@ -1,3 +1,13 @@
+Version 1.5.2 - 2016-06-08
+    back: Allow api endpoint folder (location where var.ini, disks.ini, etc reside) to be specified as settings. This helps with testing.
+    back: Set a workdir for shell commands, if needed.
+    back: Read api endpoint location from params
+    back: Change default rsync arguments to -avRX, so that rsync will always create all folders on the destination
+    back: Due to the previous change, we set the workdir to the source disk when running the rsync process
+    app: Add tests for the latest changes
+    app: Bump Version
+
+
 Version 1.5.1 - 2016-05-26
     back: Add trailing slash to destination in rsync cmd
     app: Bump version
