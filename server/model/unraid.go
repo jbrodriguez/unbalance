@@ -184,7 +184,7 @@ func (u *Unraid) Refresh() {
 
 	free := make(map[string]int64)
 	size := make(map[string]int64)
-	lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "", "Refresh error:", func(line string) {
+	lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
 		data := strings.Fields(line)
 		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
 		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
