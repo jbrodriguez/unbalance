@@ -71,7 +71,9 @@ func Shell(command string, writer StderrWriter, prefix, workDir string, callback
 func shell(writer StderrWriter, prefix, workDir string, callback Callback, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	// cmd.Env = os.Environ()
-	cmd.Dir = workDir
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
 	cmd.Stderr = NewStreamer(writer, prefix)
 
 	stdout, err := cmd.StdoutPipe()
