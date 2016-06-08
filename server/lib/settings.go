@@ -29,14 +29,15 @@ type Config struct {
 type Settings struct {
 	Config
 
-	Conf string
-	Port string
-	Log  string
+	Conf       string
+	Port       string
+	Log        string
+	ApiFolders []string
 	// ReservedSpace int64
 }
 
 func NewSettings(version string) (*Settings, error) {
-	var config, port, log, folders, rsyncFlags string
+	var config, port, log, folders, rsyncFlags, apiFolders string
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
@@ -54,6 +55,7 @@ func NewSettings(version string) (*Settings, error) {
 	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
+	flag.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 
 	flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
 	flag.Parse()
@@ -69,7 +71,7 @@ func NewSettings(version string) (*Settings, error) {
 	}
 
 	if rsyncFlags == "" {
-		s.RsyncFlags = []string{"-avX", "--partial"}
+		s.RsyncFlags = []string{"-avRX", "--partial"}
 	} else {
 		s.RsyncFlags = strings.Split(rsyncFlags, "|")
 	}
@@ -84,6 +86,7 @@ func NewSettings(version string) (*Settings, error) {
 	s.Conf = config
 	s.Port = port
 	s.Log = log
+	s.ApiFolders = strings.Split(apiFolders, "|")
 
 	return s, nil
 }
