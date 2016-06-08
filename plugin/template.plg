@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-06-08 - v1.5.3
+- Fix incorrect param when requesting unRAID disks filesystem data
+
 ###2016-06-08 - v1.5.2
 - Update rsync default flags
 
