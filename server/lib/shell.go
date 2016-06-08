@@ -6,6 +6,7 @@ import (
 	// "errors"
 	// "log"
 	"io"
+	// "os"
 	"os/exec"
 	"syscall"
 )
@@ -49,22 +50,28 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 	return
 }
 
-func ShellEx(writer StderrWriter, prefix string, callback Callback, name string, args ...string) error {
-	return shell(writer, prefix, callback, name, args...)
+func ShellEx(writer StderrWriter, prefix, workDir string, callback Callback, name string, args ...string) error {
+	return shell(writer, prefix, workDir, callback, name, args...)
 }
 
-func Shell(command string, writer StderrWriter, prefix string, callback Callback) error {
+func Shell(command string, writer StderrWriter, prefix, workDir string, callback Callback) error {
 	args := []string{
 		"-c",
 	}
 	args = append(args, command)
 
-	return shell(writer, prefix, callback, "/bin/sh", args...)
+	return shell(writer, prefix, workDir, callback, "/bin/sh", args...)
 }
 
-func shell(writer StderrWriter, prefix string, callback Callback, name string, args ...string) error {
+// writer: mlog.Writer
+// prefix: prefix for each log line
+// callback: invoked on each output line
+// name: command name
+// args: command arguments
+func shell(writer StderrWriter, prefix, workDir string, callback Callback, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-
+	// cmd.Env = os.Environ()
+	cmd.Dir = workDir
 	cmd.Stderr = NewStreamer(writer, prefix)
 
 	stdout, err := cmd.StdoutPipe()
