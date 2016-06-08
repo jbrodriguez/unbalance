@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-06-08 - v1.5.2
+- Update rsync default flags
+
 ###2016-05-26 - v1.5.1
 - Add trailing slash to destination folder in rsync command
 
