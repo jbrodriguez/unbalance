@@ -131,6 +131,12 @@ func (c *Core) react() {
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
 
+	rsyncFlags := strings.Join(c.settings.RsyncFlags, " ")
+	if rsyncFlags == "-avX --partial" {
+		c.settings.RsyncFlags = []string{"-avRX", "--partial"}
+		c.settings.Save()
+	}
+
 	msg.Reply <- &c.settings.Config
 }
 
@@ -768,13 +774,29 @@ func (c *Core) _move(msg *pubsub.Message) {
 
 		for _, item := range disk.Bin.Items {
 			workDir := c.storage.SourceDiskName
+
+			rsyncStrArgs := strings.Join(rsyncArgs, " ")
+
+			var src, dst string
+			if strings.Contains(rsyncStrArgs, "R") {
+				if item.Path[0] == filepath.Separator {
+					src = item.Path[1:]
+				} else {
+					src = item.Path
+				}
+
+				dst = disk.Path + string(filepath.Separator)
+			} else {
+				src = filepath.Join(c.storage.SourceDiskName, item.Path)
+				dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
+			}
+
 			// src := strconv.Quote(filepath.Join(c.storage.SourceDiskName, item.Path))
 			// src := strconv.Quote(c.storage.SourceDiskName+string(filepath.Separator)+"."+string(filepath.Separator)+ item.Path)
 			// src := strconv.Quote(c.storage.SourceDiskName + string(filepath.Separator) + "." + string(filepath.Separator) + item.Path)
-			src := item.Path
+
 			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)))
 			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator))
-			dst := disk.Path + string(filepath.Separator)
 
 			// args := append(make([]string, 0), rsyncArgs...)
 			// args = append(
@@ -791,7 +813,7 @@ func (c *Core) _move(msg *pubsub.Message) {
 			// cmd := exec.Command("rsync", args)
 
 			// cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
-			cmd := fmt.Sprintf(`rsync %s %s %s`, strings.Join(rsyncArgs, " "), strconv.Quote(src), dst)
+			cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrArgs, strconv.Quote(src), strconv.Quote(dst))
 			mlog.Info("cmd(%s)", cmd)
 
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
