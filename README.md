@@ -23,8 +23,13 @@ Get all elegible folders from the source disk<br>
 Order the target disks by free space available<br>
 For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).<br>
 
-Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).
-The icon was created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508)
+~~Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).~~
+
+Internally, it issues a slight variation of [this rsync command](https://lime-technology.com/forum/index.php?topic=37490.msg449941#msg449941).
+
+Check [this post](https://lime-technology.com/forum/index.php?topic=45352.msg476018#msg476018) for additional information.
+
+The icon was created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508).
 
 The array must be started for the app to work.
 
@@ -78,7 +83,7 @@ Also, on the main page, the dry-run option is selected by default, which  means 
 To perform an actual move operation, uncheck the dry-run checkbox.
 
 ## Credits
-This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).
+~~This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).~~
 
 The icon was courteously created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508) (fellow unRAID forums member)
 
