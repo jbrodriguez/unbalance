@@ -1,3 +1,8 @@
+Version 1.7.0 - 2016-06-09
+    app: Update README to reflect latest changes
+    app: Bump version
+
+
 Version 1.6.0 - 2016-06-09
     front: Set updated default rsync flags
     back: Update the rsync flags to new default ("-avRX --partial"), if currently set to the old default ("-avX --partial")
