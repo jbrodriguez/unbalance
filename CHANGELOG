@@ -1,3 +1,7 @@
+###2016-06-09 - v1.7.0
+- Update README.md to reflect latest changes
+- Keep full CHANGELOG in Github
+
 ###2016-06-09 - v1.6.0
 - Update default rsync flags if needed
 - Fix leading slash in relative path
