@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 	settings.ReservedAmount = 450000000 / 1000 / 1000
 	settings.ReservedUnit = "Mb"
 	settings.ApiFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
-	settings.RsyncFlags = []string{"-avX", "--partial"}
+	settings.RsyncFlags = []string{"-avRX", "--partial"}
 
 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 	disks := []*model.Disk{
