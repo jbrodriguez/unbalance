@@ -1,3 +1,12 @@
+Version 1.6.0 - 2016-06-09
+    front: Set updated default rsync flags
+    back: Update the rsync flags to new default ("-avRX --partial"), if currently set to the old default ("-avX --partial")
+    back: If the rsync flags include -R, then set src to relative and dst to just the root path. Otherwise, set both to full absolute paths.
+    app: Set tests for new features
+    app: Test for default flags
+    app: Bump version
+
+
 Version 1.5.3 - 2016-06-08
     back: Fix working directory argument position
     back: Double check anyway, set the working dir only if specified in the argument
