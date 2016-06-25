@@ -8,7 +8,7 @@ import (
 	"io"
 	// "os"
 	"os/exec"
-	"syscall"
+	// "syscall"
 )
 
 type Callback func(line string)
@@ -95,14 +95,7 @@ func shell(writer StderrWriter, prefix, workDir string, callback Callback, name 
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
-		var waitStatus syscall.WaitStatus
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			waitStatus = exiterr.Sys().(syscall.WaitStatus)
-			writer("%s:waitError:Status(%d):Err(%s):ExitErr(%s)", prefix, waitStatus.ExitStatus(), err, exiterr)
-		} else {
-			writer("%s:waitError:(%s)", prefix, err)
-		}
-
+		writer("%s: waitError: %s", prefix, err)
 		return err
 		// log.Fatal("Unable to wait for process to finish: ", err)
 	}

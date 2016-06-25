@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	home := os.Getenv("HOME")
 
-	tearDown(home)
+	// tearDown(home)
 	// assert.NoError(m, err)
 
 	folders := []string{
@@ -370,6 +370,96 @@ func tearDown(home string) error {
 	}
 
 	return nil
+}
+
+func TestRsyncError(t *testing.T) {
+	mlog.Info("TestRsyncError")
+
+	home := os.Getenv("HOME")
+
+	var packet dto.Packet
+	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":false}}"}`
+	calcJson := fmt.Sprintf(template,
+		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
+		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
+	)
+
+	// errChown := os.Chown(filepath.Join(home, "tmp/unbalance", "/mnt/disk1/films/blu rip/Air (2014)/air.mkv"), 0, 0)
+	// if errChown != nil {
+	// 	mlog.Warning("error chowning: %s", errChown)
+	// 	return
+	// }
+
+	// errChown := os.Chown(filepath.Join(home, "tmp/unbalance", "/mnt/disk1/TVShows/NCIS/NCIS 04x17 - Skeletons.avi"), 0, 0)
+	// if errChown != nil {
+	// 	mlog.Warning("error chowning: %s", errChown)
+	// 	return
+	// }
+
+	mlog.Info("json: %s", calcJson)
+	err := json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+	mlog.Info("error: %s", err)
+	mlog.Info("packet: %+v", packet)
+	mlog.Info("payload: %s", packet.Payload)
+	require.Nil(t, err)
+
+	// destDisks := make(map[string]bool, 2)
+	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk2")] = true
+	// destDisks[filepath.Join(home, "tmp/unbalance", "mnt/disk3")] = true
+
+	// args := &dto.Calculate{
+	// 	SourceDisk: filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
+	// 	DestDisks:  destDisks,
+	// }
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{})}
+	bus.Pub(msg, "calculate")
+
+	time.Sleep(5 * time.Second)
+
+	errRemove := os.RemoveAll(filepath.Join(home, "tmp/unbalance", "/mnt/disk1/TVShows"))
+	if errRemove != nil {
+		mlog.Warning("error removing: %s", errRemove)
+	}
+
+	// mlog.Info("Unraid (after calc): %+v", resp)
+
+	cmd := &pubsub.Message{Reply: make(chan interface{})}
+	bus.Pub(cmd, "move")
+
+	time.Sleep(10 * time.Second)
+
+	// err = tearDown(home)
+	// assert.NoError(t, err)
+
+	// mlog.Info("TestRsyncCustom")
+
+	// payload := `{"rsyncFlags":["-avX", "--partial"]}`
+	// msg = &pubsub.Message{Payload: payload, Reply: make(chan interface{})}
+	// bus.Pub(msg, "/config/set/rsyncFlags")
+
+	// mlog.Info("flags set")
+
+	// time.Sleep(5 * time.Second)
+
+	// mlog.Info("packet %+v", packet.Payload)
+
+	// calc := &pubsub.Message{Payload: packet.Payload}
+	// bus.Pub(calc, "calculate")
+
+	// mlog.Info("calculate 2 sent")
+
+	// // mlog.Info("Unraid (after calc): %+v", resp)
+
+	// cmd2 := &pubsub.Message{Reply: make(chan interface{})}
+	// bus.Pub(cmd2, "move")
+
+	// time.Sleep(10 * time.Second)
+
+	// core.Stop()
 }
 
 func TestRsync(t *testing.T) {
