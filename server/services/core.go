@@ -46,6 +46,9 @@ type Core struct {
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
+	reRsync     *regexp.Regexp
+
+	rsyncErrors map[int]string
 
 	// diskmvLocation string
 
@@ -68,6 +71,32 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	re, _ = regexp.Compile(`(\d+)\s+(.*?)$`)
 	core.reItems = re
 
+	re, _ = regexp.Compile(`exit status (\d+)`)
+	core.reRsync = re
+
+	core.rsyncErrors = map[int]string{
+		0:  "Success",
+		1:  "Syntax or usage error",
+		2:  "Protocol incompatibility",
+		3:  "Errors selecting input/output files, dirs",
+		4:  "Requested action not supported: an attempt was made to manipulate 64-bit files on a platform that cannot support them, or an option was specified that is supported by the client and not by the server.",
+		5:  "Error starting client-server protocol",
+		6:  "Daemon unable to append to log-file",
+		10: "Error in socket I/O",
+		11: "Error in file I/O",
+		12: "Error in rsync protocol data stream",
+		13: "Errors with program diagnostics",
+		14: "Error in IPC code",
+		20: "Received SIGUSR1 or SIGINT",
+		21: "Some error returned by waitpid()",
+		22: "Error allocating core memory buffers",
+		23: "Partial transfer due to error",
+		24: "Partial transfer due to vanished source files",
+		25: "The --max-delete limit stopped deletions",
+		30: "Timeout in data send/receive",
+		35: "Timeout waiting for daemon connection",
+	}
+
 	return core
 }
 
@@ -87,26 +116,11 @@ func (c *Core) Start() (err error) {
 
 	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
-	// c.registerAdditional(c.bus, "/set/config", c.setConfig)
 
 	err = c.storage.SanityCheck(c.settings.ApiFolders)
 	if err != nil {
 		return err
 	}
-
-	// locations := []string{
-	// 	"/usr/local/emhttp/plugins/unbalance",
-	// 	".",
-	// }
-
-	// c.diskmvLocation = lib.SearchFile("diskmv", locations)
-	// if c.diskmvLocation == "" {
-	// 	msg := ""
-	// 	for _, loc := range locations {
-	// 		msg += fmt.Sprintf("%s, ", loc)
-	// 	}
-	// 	mlog.Fatalf("Unable to find diskmv. Exiting now. (searched in %s)", msg)
-	// }
 
 	go c.react()
 
@@ -184,7 +198,6 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind reservedSpace parameters"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		return
-		// mlog.Fatalf(err.Error())
 	}
 
 	amount := int64(reserved.Amount)
@@ -201,24 +214,11 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 }
 
 func (c *Core) addFolder(msg *pubsub.Message) {
-
 	folder := msg.Payload.(string)
 
 	mlog.Info("Adding folder (%s)", folder)
 
 	c.settings.AddFolder(folder)
-	// c.config.Folders = config.Folders
-	// c.config.DryRun = config.DryRun
-	// c.config.Notifications = config.Notifications
-	// c.Notifications = config.Notifications
-	// c.NotiFrom = config.NotiFrom
-	// c.NotiTo = config.NotiTo
-	// c.NotiHost = config.NotiHost
-	// c.NotiPort = config.NotiPort
-	// c.NotiEncrypt = config.NotiEncrypt
-	// c.NotiUser = config.NotiUser
-	// c.NotiPassword = config.NotiPassword
-
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
@@ -325,23 +325,11 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		// mlog.Fatalf(err.Error())
 	}
 
-	// dtoCalc, ok := msg.Payload.(*dto.Calculate)
-	// if !ok {
-	// 	mlog.Warning("Unable to convert calculate parameters")
-	// 	outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert calculate parameters"}
-	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-	// 	return
-	// }
-
 	mlog.Info("Running calculate operation ...")
 	started := time.Now()
 
-	// c.storage.Condition.State = "CALCULATING"
-
 	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// mlog.Info("payload received is: (%+v)", msg.Payload)
 
 	disks := make([]*model.Disk, 0)
 
@@ -408,7 +396,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		mlog.Info("_calc:toBeMoved:Path(%s); Size(%s); linux(%s)", v.Path, lib.ByteSize(v.Size), lsal)
 	}
 
-	// srcDisk.NewFree = srcDisk.Free
 	willBeMoved := make([]*model.Item, 0)
 
 	if len(folders) > 0 {
@@ -490,8 +477,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	notMoved := ""
 	if len(folders) > 0 {
-		// c.foldersNotMoved = append(make([]*model.Item, 0), folders...)
-
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -506,12 +491,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("_calc:notMoved(%s)", folder.Path)
 		}
-
-		// for _, folder := range c.foldersNotMoved {
-		// 	notMoved += folder + "\n"
-		// 	outbound = &dto.Packet{Topic: "calcProgress", Payload: folder}
-		// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		// }
 	}
 
 	// send mail according to user preferences
@@ -605,117 +584,6 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	return
 }
 
-// func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
-// 	srcFolder := filepath.Join(src, folder)
-
-// 	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
-// 	// _, err := os.Stat(filepath.Join("/mnt/disk13/films", "*"))
-// 	// mlog.Info("Error: %s", err)
-
-// 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-// 		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
-// 		return nil
-// 	}
-
-// 	dirs, err := ioutil.ReadDir(srcFolder)
-// 	if err != nil {
-// 		mlog.Fatalf("getFolders:Unable to readdir: %s", err)
-// 	}
-
-// 	mlog.Info("getFolders:Readdir(%d)", len(dirs))
-
-// 	// mlog.Info("Dirs: %+v", dirs)
-
-// 	if len(dirs) == 0 {
-// 		mlog.Info("getFolders:No subdirectories under %s", srcFolder)
-// 		return nil
-// 	}
-
-// 	// scanFolder := filepath.Join(fmt.Sprintf("\"%s\"", srcFolder), "*")
-// 	// cmd := exec.Command("sh", "-c", fmt.Sprintf("du -bs %s", scanFolder))
-
-// 	scanFolder := srcFolder + "/."
-// 	cmdText := fmt.Sprintf("find \"%s\" ! -name . -prune -exec du -bs {} +", scanFolder)
-
-// 	mlog.Info("getFolders:Executing %s", cmdText)
-
-// 	cmd := exec.Command("sh", "-c", cmdText)
-// 	out, err := cmd.StdoutPipe()
-// 	if err != nil {
-// 		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
-// 	}
-
-// 	stderr, err := cmd.StderrPipe()
-// 	if err != nil {
-// 		mlog.Fatalf("getFolders:Unable to stdoutpipe cmd(%s): %s", cmdText, err)
-// 	}
-
-// 	rd := bufio.NewReader(out)
-
-// 	if err := cmd.Start(); err != nil {
-// 		mlog.Fatalf("getFolders:Unable to start du: %s", err)
-// 	}
-
-// 	go func() {
-// 		errbuf := bufio.NewScanner(stderr)
-// 		for errbuf.Scan() {
-// 			mlog.Warning("getFolders:find/du:stderr: %s", errbuf.Text())
-// 		}
-// 	}()
-
-// 	for {
-// 		line, err := rd.ReadString('\n')
-// 		if err == io.EOF && len(line) == 0 {
-// 			// Good end of file with no partial line
-// 			break
-// 		}
-// 		if err == io.EOF {
-// 			mlog.Fatalf("getFolders:Last line not terminated: %s", err)
-// 		}
-
-// 		if err != nil {
-// 			mlog.Fatalf("getFolders:Unable to ReadString: %s", err)
-// 		}
-
-// 		line = line[:len(line)-1] // drop the '\n'
-// 		if line[len(line)-1] == '\r' {
-// 			line = line[:len(line)-1] // drop the '\r'
-// 		}
-
-// 		mlog.Info("getFolders:find(%s): %s", scanFolder, line)
-
-// 		result := c.reItems.FindStringSubmatch(line)
-// 		// mlog.Info("[%s] %s", result[1], result[2])
-
-// 		size, _ := strconv.ParseInt(result[1], 10, 64)
-
-// 		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
-// 		items = append(items, item)
-
-// 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
-// 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 		// fmt.Println(line)
-// 		// mlog.Info("getFolders:item: %+v", item)
-// 	}
-
-// 	// Wait for the result of the command; also closes our end of the pipe
-// 	err = cmd.Wait()
-// 	if err != nil {
-// 		mlog.Fatalf("getFolders:Unable to wait for process to finish: %s", err)
-// 	}
-
-// 	// out, err := lib.Shell(fmt.Sprintf("du -sh %s", filepath.Join(disk, folder, "*")))
-// 	// if err != nil {
-// 	// 	glog.Fatal(err)
-// 	// }
-
-// 	// glog.Info(string(out))
-// 	// mlog.Info("done")
-// 	return items
-// }
-
 func (c *Core) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
 	w := 0 // write index
 
@@ -750,11 +618,6 @@ func (c *Core) _move(msg *pubsub.Message) {
 
 	outbound := &dto.Packet{Topic: "moveStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// rsyncArgs := []string{
-	// 	"-avX",
-	// 	"--partial",
-	// }
 
 	rsyncArgs := c.settings.RsyncFlags
 
@@ -791,20 +654,6 @@ func (c *Core) _move(msg *pubsub.Message) {
 				dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
 			}
 
-			// src := strconv.Quote(filepath.Join(c.storage.SourceDiskName, item.Path))
-			// src := strconv.Quote(c.storage.SourceDiskName+string(filepath.Separator)+"."+string(filepath.Separator)+ item.Path)
-			// src := strconv.Quote(c.storage.SourceDiskName + string(filepath.Separator) + "." + string(filepath.Separator) + item.Path)
-
-			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)))
-			// dst := strconv.Quote(filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator))
-
-			// args := append(make([]string, 0), rsyncArgs...)
-			// args = append(
-			// 	args,
-			// 	filepath.Join(c.storage.SourceDiskName, item.Path),
-			// 	filepath.Join(disk.Path, filepath.Dir(item.Path)),
-			// )
-
 			args := append(
 				rsyncArgs,
 				src,
@@ -826,7 +675,13 @@ func (c *Core) _move(msg *pubsub.Message) {
 			// 	mlog.Info(line)
 			// }, "cd", args...)
 
-			err := lib.ShellEx(mlog.Warning, "moveProgress:", workDir, func(line string) {
+			err := lib.ShellEx(mlog.Warning, "moveProgress", workDir, func(line string) {
+				if strings.HasPrefix(line, "moveProgress: waitError: ") {
+					status := line[25:]
+					msg := getError(status, c.reRsync, c.rsyncErrors)
+					line += " : " + msg
+				}
+
 				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -838,10 +693,11 @@ func (c *Core) _move(msg *pubsub.Message) {
 				elapsed := time.Since(c.started)
 
 				subject := "unBALANCE - MOVE operation INTERRUPTED"
-				headline := fmt.Sprintf("Move command (%s) was interrupted: %s", cmd, err.Error())
+
+				headline := fmt.Sprintf("Move command (%s) was interrupted: %s", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
 
 				mlog.Warning(headline)
-				outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
+				outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check log (/boot/logs/unbalance.log) for details."}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
@@ -888,156 +744,6 @@ func (c *Core) _move(msg *pubsub.Message) {
 
 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
 }
-
-// //			dst := filepath.Join(disk.Path, item.Path)
-
-// // mlog.Info("disk.Path = %s | item.Path = %s | dst = %s", disk.Path, item.Path, c.storage.SourceDiskName)
-// // mlog.Info("disk.Path = %s | item.Name = %s | item.Path = %s | dst = %s", disk.Path, item.Name, item.Path, dst)
-// // mlog.Info("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))
-// //			command := &dto.Move{Command: fmt.Sprintf("mv %s %s", strconv.Quote(item.Name), strconv.Quote(dst))}
-// //			commands = append(commands, command)
-
-// // sanePath := item.Path
-// // if item.Path[0] == '/' {
-// // 	sanePath = sanePath[1:]
-// // }
-
-// // execute shell command inline
-// // command := fmt.Sprintf("%s/diskmv %s \"%s\" %s %s", c.diskmvLocation, dry, sanePath, c.storage.SourceDiskName, disk.Path)
-// // mlog.Info("cmd(%s)", command)
-
-// // cmd := exec.Command("/bin/sh", "-c", command)
-// // cmd := exec.Command(command)
-// cmd := exec.Command("rsync", rsyncArgs, filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, item.Path))
-
-// command := fmt.Sprintf("%s %s \"%s\" \"%s\"", cmd.Path, rsyncArgs, filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, item.Path))
-// mlog.Info("cmd(%s)", command)
-
-// outbound = &dto.Packet{Topic: "moveProgress", Payload: command}
-// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// stdout, err := cmd.StdoutPipe()
-// if err != nil {
-// 	finished := time.Now()
-// 	elapsed := time.Since(c.started)
-
-// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
-// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
-
-// 	mlog.Warning(headline)
-// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
-// 	return
-// 	//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
-// }
-
-// cmd.Stderr = lib.NewStreamer(mlog.Warning, "moveProgress")
-
-// // stderr, err := cmd.StderrPipe()
-// // if err != nil {
-// // 	return err
-// // 	// log.Fatalf("Unable to stderrpipe %s: %s", command, err)
-// // }
-
-// // multi := io.MultiReader(stdout, stderr)
-
-// rd := bufio.NewReader(stdout)
-
-// if err := cmd.Start(); err != nil {
-// 	mlog.Warning("Path(%s):Args(%s):Dir(%s):String(%s)", cmd.Path, cmd.Args, cmd.Dir, cmd.ProcessState.String())
-// 	finished := time.Now()
-// 	elapsed := time.Since(c.started)
-
-// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
-// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
-
-// 	mlog.Warning(headline)
-// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
-// 	return
-// }
-
-// for {
-// 	line, err := rd.ReadString('\n')
-
-// 	if err == io.EOF && len(line) == 0 {
-// 		// Good end of file with no partial line
-// 		mlog.Warning("_move:ExitOk")
-// 		break
-// 	}
-// 	if err == io.EOF {
-// 		mlog.Warning("_move:lineNotTerminated(%s):(%s)", err, line)
-// 		break
-// 	}
-
-// 	// mlog.Info("thisline:(%s)", line)
-// 	line = line[:len(line)-1] // drop the '\n'
-// 	if len(line) > 0 && line[len(line)-1] == '\r' {
-// 		line = line[:len(line)-1] // drop the '\r'
-// 	}
-
-// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	mlog.Info(line)
-// }
-
-// // Wait for the result of the command; also closes our end of the pipe
-// err = cmd.Wait()
-// if err != nil {
-// 	var waitStatus syscall.WaitStatus
-// 	if exiterr, ok := err.(*exec.ExitError); ok {
-// 		waitStatus = exiterr.Sys().(syscall.WaitStatus)
-// 		mlog.Warning("_move:waitError:Status(%d):Err(%s):ExitErr(%s)", waitStatus.ExitStatus(), err, exiterr)
-// 	} else {
-// 		mlog.Warning("_move:waitError:(%s)", err)
-// 	}
-
-// 	waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
-// 	mlog.Warning("_move:waitStatus:(%d)", waitStatus.ExitStatus())
-
-// 	finished := time.Now()
-// 	elapsed := time.Since(c.started)
-
-// 	subject := "unBALANCE - MOVE operation INTERRUPTED"
-// 	headline := fmt.Sprintf("Move command (%s) was interrupted: %s", command, err)
-
-// 	// mlog.Warning(headline)
-// 	outbound := &dto.Packet{Topic: "opError", Payload: "Move operation was interrupted. Check logs for details."}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
-// 	// log.Fatal("Unable to wait for process to finish: ", err)
-// 	return
-// }
-
-// c.bytesMoved = c.bytesMoved + item.Size
-
-// percent, left, speed := progress(c.storage.BytesToMove, c.bytesMoved, c.started)
-
-// msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
-// mlog.Info("Current progress: %s", msg)
-
-// outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
-// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// commands = append(commands, command)
-// 	}
-// }
-
-// finished := time.Now()
-// elapsed := time.Since(c.started)
-
-// subject := "unBALANCE - MOVE operation completed"
-// headline := "Move operation has finished"
-
-// c.finishMoveOperation(subject, headline, commands, c.started, finished, elapsed)
-
-// }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
 	fstarted := started.Format(TIME_FORMAT)
@@ -1096,11 +802,6 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 	mlog.Info(message)
 }
 
-// func (c *Core) doStorageUpdate(msg *pubsub.Message) {
-// 	outbound := &dto.Packet{Topic: "storage:update:completed", Payload: c.storage.Refresh()}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// }
-
 func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
 	if notify == 0 {
 		return nil
@@ -1116,34 +817,6 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err e
 	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", MAIL_CMD, subject, msg)
 	cmd := exec.Command(MAIL_CMD, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
 	err = cmd.Run()
-
-	// from := "From: " + c.settings.NotiFrom
-	// to := "To: " + c.settings.NotiTo
-	// subject := "Subject: unBALANCE Notification"
-
-	// dry := ""
-	// if !dryRun {
-	// 	dry = "-------\nDRY RUN\n-------\n"
-	// }
-
-	// mail := "\"" + from + "\n" + to + "\n" + subject + "\n\n" + dry + msg + "\""
-	// mail := from + "\n" + to + "\n" + subject + "\n\n" + dry + msg
-
-	// err := ioutil.WriteFile(msgLocation, []byte(mail), 0644)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// echo := exec.Command("echo", "-e", mail)
-	// ssmtp := exec.Command("ssmtp", c.settings.NotiTo)
-
-	// // mlog.Info("sendmail:echo: %s %s (%s)", echo.Path, echo.Args, echo.Dir)
-	// // mlog.Info("sendmail:ssmtp: %s %s (%s)", ssmtp.Path, ssmtp.Args, ssmtp.Dir)
-
-	// _, _, err := lib.Pipeline(echo, ssmtp)
-	// if err != nil {
-	// 	return err
-	// }
 
 	return
 }
@@ -1161,10 +834,13 @@ func progress(bytesToMove, bytesMoved int64, started time.Time) (percent float64
 	return
 }
 
-// func (c *Core) printCommands(list []string) string {
-// 	var str string
-// 	for _, value := range list {
-// 		str += value
-// 	}
-// 	return str
-// }
+func getError(line string, re *regexp.Regexp, errors map[int]string) string {
+	result := re.FindStringSubmatch(line)
+	status, _ := strconv.Atoi(result[1])
+	msg, ok := errors[status]
+	if !ok {
+		msg = "unknown error"
+	}
+
+	return msg
+}
