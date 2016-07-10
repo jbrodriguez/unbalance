@@ -253,7 +253,7 @@ function calcPermIssue({state, actions}, unraid) {
 	feedback.push("")
 	feedback.push("You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command")
 
-	window.setTimeout( _ => actions.removeFeedback(), 30*1000)
+	window.setTimeout( _ => actions.removeFeedback(), 180*1000)
 
 	return {
 		...state,
