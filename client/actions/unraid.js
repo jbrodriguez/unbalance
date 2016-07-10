@@ -9,6 +9,7 @@ module.exports = {
 	calcStarted,
 	calcProgress,
 	calcFinished,
+	calcPermIssue,
 
 	move,
 	moveStarted,
@@ -241,6 +242,27 @@ function calcFinished({state, actions}, unraid) {
 	// 	moveDisabled: false,
 	// }
 }
+
+function calcPermIssue({state, actions}, unraid) {
+	let feedback = []
+
+	feedback.push("There are some permission issues with the folders/files you want to move")
+	feedback.push("The details of which files have issues can be found in the log (/boot/logs/unbalance.log)")
+	feedback.push("")
+	feedback.push("At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation")
+	feedback.push("")
+	feedback.push("You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command")
+
+	window.setTimeout( _ => actions.removeFeedback(), 30*1000)
+
+	return {
+		...state,
+		feedback,
+		opInProgress: null,
+		moveDisabled: false,
+	}
+}
+
 
 // // this message is received when the browser requests
 // function calcIsRunning({state, actions, dispatch}, _, unraid) {
