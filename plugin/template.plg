@@ -18,6 +18,9 @@
 >
 
 <CHANGES>
+###2016-07-09 - v1.7.1
+- Rsync errors display a description rather than a code
+
 ###2016-06-09 - v1.7.0
 - Update README.md to reflect latest changes
 - Keep full CHANGELOG in Github
