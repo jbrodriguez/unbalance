@@ -659,17 +659,17 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 
 		if fileUID == uid {
 			if u != "6" {
-				mlog.Info("checkOwnerAndPermissions:User doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				mlog.Info("checkOwnerAndPermissions:User doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
 				c.ownerNoPerm++
 			}
 		} else if fileGID == gid {
 			if g != "6" {
-				mlog.Info("checkOwnerAndPermissions:Group doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				mlog.Info("checkOwnerAndPermissions:Group doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
 				c.nonOwnerNoPerm++
 			}
 		} else {
 			if o != "6" {
-				mlog.Info("checkOwnerAndPermissions:Other doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				mlog.Info("checkOwnerAndPermissions:Other doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
 				c.nonOwnerNoPerm++
 			}
 		}
