@@ -566,8 +566,12 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	outbound = &dto.Packet{Topic: "calcPermIssue", Payload: "Permission Issues"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	// only send the perm issue msg if there's actually some work to do (bytestomove > 0)
+	// and there actually perm issues
+	if c.storage.BytesToMove > 0 && (c.ownerNoPerm+c.nonOwnerNoPerm > 0) {
+		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: "Permission Issues"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
 }
 
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
