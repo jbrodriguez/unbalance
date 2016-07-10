@@ -630,6 +630,9 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 	srcFolder := filepath.Join(src, folder)
 
+	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 	mlog.Info("checkOwnerAndPermissions:Scanning disk(%s):folder(%s)", src, folder)
 
 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
@@ -686,8 +689,10 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 		// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	})
 
-	return
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Finished checking permissions ..."}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	return
 }
 
 func (c *Core) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {
