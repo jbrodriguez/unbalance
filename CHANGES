@@ -1,3 +1,12 @@
+Version 1.7.1 - 2016-07-09
+    back: Decode rsync errors
+    We now translate rsync error exit status into their corresponding textual meaning
+    This fixes #13
+    back: Change logic to check permissions
+    Related to #11
+    app: Bump version
+
+
 Version 1.7.0 - 2016-06-09
     app: Update README to reflect latest changes
     app: Bump version
