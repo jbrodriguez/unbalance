@@ -524,6 +524,10 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		}
 	}
 
+	if c.ownerNoPerm > 0 || c.nonOwnerNoPerm > 0 {
+		message += fmt.Sprintf("\n\nThere are some permission issues:\n\n %d instances where the user owns the file/folder but doesn't have permission to move them\n\n %d instance where the user doesn't own the file/folder and doesn't have permission to move them\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command")
+	}
+
 	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, false); sendErr != nil {
 		mlog.Error(sendErr)
 	}
@@ -554,6 +558,9 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	// send to front end the signal of operation finished
 	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "calcPermIssue", Payload: "Permission Issues"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 }
 
