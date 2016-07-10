@@ -525,7 +525,13 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	}
 
 	if c.ownerNoPerm > 0 || c.nonOwnerNoPerm > 0 {
-		message += fmt.Sprintf("\n\nThere are some permission issues:\n\n %d instances where the user owns the file/folder but doesn't have permission to move them\n\n %d instance where the user doesn't own the file/folder and doesn't have permission to move them\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command")
+		message += fmt.Sprintf(`
+			\n\nThere are some permission issues:
+			\n\n%d instances where the user owns the file/folder but doesn't have permission to move them
+			\n\n%d instance where the user doesn't own the file/folder and doesn't have permission to move them
+			\n\nCheck for additional information in the log file (/boot/logs/unbalance.log)
+			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
+		`, c.ownerNoPerm, c.nonOwnerNoPerm)
 	}
 
 	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, false); sendErr != nil {
