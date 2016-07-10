@@ -12,6 +12,7 @@ import (
 	"jbrodriguez/unbalance/server/model"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -47,9 +48,12 @@ type Core struct {
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
 	reRsync     *regexp.Regexp
+	reStat      *regexp.Regexp
 
 	rsyncErrors map[int]string
 
+	ownerNoPerm    int64
+	nonOwnerNoPerm int64
 	// diskmvLocation string
 
 	bytesMoved int64
@@ -74,6 +78,9 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	re, _ = regexp.Compile(`exit status (\d+)`)
 	core.reRsync = re
 
+	re, _ = regexp.Compile(`(\d)(\d)(\d)\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
+	core.reStat = re
+
 	core.rsyncErrors = map[int]string{
 		0:  "Success",
 		1:  "Syntax or usage error",
@@ -96,6 +103,10 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 		30: "Timeout in data send/receive",
 		35: "Timeout waiting for daemon connection",
 	}
+
+	// core.ownerPerms = map[int]bool{
+	// 	644
+	// }
 
 	return core
 }
@@ -373,27 +384,35 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	srcDiskWithoutMnt := srcDisk.Path[5:]
 
+	usr, _ := user.Current()
+
+	c.ownerNoPerm = 0
+	c.nonOwnerNoPerm = 0
+
 	var folders []*model.Item
 	for _, path := range c.settings.Folders {
 		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		list := c.getFolders(dtoCalc.SourceDisk, path)
+		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, usr.Uid, usr.Gid)
 
+		list := c.getFolders(dtoCalc.SourceDisk, path)
 		if list != nil {
 			folders = append(folders, list...)
 		}
+
 	}
 
 	mlog.Info("_calc:foldersToBeMovedTotal(%d)", len(folders))
-	var lsal string
+	// var lsal string
 	for _, v := range folders {
-		lib.Shell(fmt.Sprintf("stat -c \"%%A %%y %%U %%G\" \"%s\"", v.Name), mlog.Warning, "_calc:lsal", "", func(line string) {
-			lsal = line
-		})
+		// lib.Shell(fmt.Sprintf("stat -c \"%%A %%y %%U %%G\" \"%s\"", v.Name), mlog.Warning, "_calc:lsal", "", func(line string) {
+		// 	lsal = line
+		// })
 
-		mlog.Info("_calc:toBeMoved:Path(%s); Size(%s); linux(%s)", v.Path, lib.ByteSize(v.Size), lsal)
+		// mlog.Info("_calc:toBeMoved:Path(%s); Size(%s); linux(%s)", v.Path, lib.ByteSize(v.Size), lsal)
+		mlog.Info("_calc:toBeMoved:Path(%s); Size(%s)", v.Path, lib.ByteSize(v.Size))
 	}
 
 	willBeMoved := make([]*model.Item, 0)
@@ -582,6 +601,69 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	})
 
 	return
+}
+
+func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
+	srcFolder := filepath.Join(src, folder)
+
+	mlog.Info("checkOwnerAndPermissions:Scanning disk(%s):folder(%s)", src, folder)
+
+	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+		mlog.Warning("checkOwnerAndPermissions:Folder does not exist: %s", srcFolder)
+		return
+	}
+
+	// mlog.Info("User %s", usr.Name)
+
+	scanFolder := srcFolder + "/."
+	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%a|%%U|%%F|%%n" {} \;`, scanFolder)
+
+	mlog.Info("checkOwnerAndPermissions:Executing %s", cmdText)
+
+	// hits := make([]string, 0)
+
+	lib.Shell(cmdText, mlog.Warning, "checkOwnerAndPermissions:find/stat:", "", func(line string) {
+		// mlog.Info("checkOwnerAndPermissions:find(%s): %s", scanFolder, line)
+
+		result := c.reStat.FindStringSubmatch(line)
+		// mlog.Info("[%s] %s", result[1], result[2])
+
+		// for index, element := range result {
+		// 	mlog.Info("index(%d);element(%s)", index, element)
+		// }
+
+		u := result[0]
+		g := result[1]
+		o := result[2]
+		fileUID := result[3]
+		fileGID := result[4]
+		kind := result[5]
+		name := result[6]
+
+		if fileUID == uid {
+			if u != "6" {
+				mlog.Info("checkOwnerAndPermissions:User doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				c.ownerNoPerm++
+			}
+		} else if fileGID == gid {
+			if g != "6" {
+				mlog.Info("checkOwnerAndPermissions:Group doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				c.nonOwnerNoPerm++
+			}
+		} else {
+			if o != "6" {
+				mlog.Info("checkOwnerAndPermissions:Other doesn't have permissions: %s%s%s %s %s %s", u, g, o, owner, kind, name)
+				c.nonOwnerNoPerm++
+			}
+		}
+
+		// msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
+		// outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	})
+
+	return
+
 }
 
 func (c *Core) removeFolders(folders []*model.Item, list []*model.Item) []*model.Item {

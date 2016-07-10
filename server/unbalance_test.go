@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/user"
 	"path/filepath"
 	// "regexp"
 	// "strconv"
@@ -417,6 +418,10 @@ func TestRsyncError(t *testing.T) {
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{})}
 	bus.Pub(msg, "calculate")
+
+	usr, _ := user.Current()
+	mlog.Info("Marranidad mas grande")
+	mlog.Info("user %+v", usr)
 
 	time.Sleep(5 * time.Second)
 
