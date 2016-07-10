@@ -12,7 +12,6 @@ import (
 	"jbrodriguez/unbalance/server/model"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -384,7 +383,15 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	srcDiskWithoutMnt := srcDisk.Path[5:]
 
-	usr, _ := user.Current()
+	uid := ""
+	lib.Shell("id -u", mlog.Warning, "uid", "", func(line string) {
+		uid = line
+	})
+
+	gid := ""
+	lib.Shell("id -g", mlog.Warning, "gid", "", func(line string) {
+		gid = line
+	})
 
 	c.ownerNoPerm = 0
 	c.nonOwnerNoPerm = 0
@@ -395,7 +402,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, usr.Uid, usr.Gid)
+		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, uid, gid)
 
 		list := c.getFolders(dtoCalc.SourceDisk, path)
 		if list != nil {
@@ -633,7 +640,7 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 	// mlog.Info("User %s", usr.Name)
 
 	scanFolder := srcFolder + "/."
-	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%a|%%U|%%F|%%n" {} \;`, scanFolder)
+	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%a|%%u:%%g|%%F|%%n" {} \;`, scanFolder)
 
 	mlog.Info("checkOwnerAndPermissions:Executing %s", cmdText)
 
