@@ -21,3 +21,6 @@ unbalance.plg
 # vendoring
 node_modules
 vendor
+
+# binaries
+server/server
