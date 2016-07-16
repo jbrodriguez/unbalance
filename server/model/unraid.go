@@ -311,8 +311,9 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 	for _, section := range file {
 		diskType := strings.Replace(section["type"], "\"", "", -1)
 		diskName := strings.Replace(section["name"], "\"", "", -1)
+		diskStatus := strings.Replace(section["status"], "\"", "", -1)
 
-		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && len(diskName) > 5) {
+		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && len(diskName) > 5 || diskStatus == "DISK_NP") {
 			continue
 		}
 
@@ -328,7 +329,7 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 		disk.NewFree = 0
 		disk.Size = 0
 		disk.Serial = strings.Replace(section["id"], "\"", "", -1)     // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
-		disk.Status = strings.Replace(section["status"], "\"", "", -1) // DISK_OK
+		disk.Status = diskStatus // DISK_OK
 
 		// fmt.Printf("Section name: %s\n", name)
 		disks = append(disks, disk)
