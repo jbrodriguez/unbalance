@@ -534,8 +534,8 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	if c.ownerNoPerm > 0 || c.nonOwnerNoPerm > 0 {
 		message += fmt.Sprintf(`
 			\n\nThere are some permission issues:
-			\n\n%d instances where the user owns the file/folder but doesn't have permission to move them
-			\n\n%d instances where the user doesn't own the file/folder and doesn't have permission to move them
+			\n\n%d instances where the user owns the file/folder but doesn't have permission to move it
+			\n%d instances where the user doesn't own the file/folder and doesn't have permission to move it
 			\n\nCheck the log file (/boot/logs/unbalance.log) for additional information
 			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
 		`, c.ownerNoPerm, c.nonOwnerNoPerm)
@@ -576,7 +576,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	// only send the perm issue msg if there's actually some work to do (bytestomove > 0)
 	// and there actually perm issues
 	if c.storage.BytesToMove > 0 && (c.ownerNoPerm+c.nonOwnerNoPerm > 0) {
-		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: "Permission Issues"}
+		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d", c.ownerNoPerm, c.nonOwnerNoPerm)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 }
@@ -633,10 +633,10 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	mlog.Info("checkOwnerAndPermissions:Scanning disk(%s):folder(%s)", src, folder)
+	mlog.Info("perms:Scanning disk(%s):folder(%s)", src, folder)
 
 	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
-		mlog.Warning("checkOwnerAndPermissions:Folder does not exist: %s", srcFolder)
+		mlog.Warning("perms:Folder does not exist: %s", srcFolder)
 		return
 	}
 
@@ -645,12 +645,12 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 	scanFolder := srcFolder + "/."
 	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%a|%%u:%%g|%%F|%%n" {} \;`, scanFolder)
 
-	mlog.Info("checkOwnerAndPermissions:Executing %s", cmdText)
+	mlog.Info("perms:Executing %s", cmdText)
 
 	// hits := make([]string, 0)
 
-	lib.Shell(cmdText, mlog.Warning, "checkOwnerAndPermissions:find/stat:", "", func(line string) {
-		// mlog.Info("checkOwnerAndPermissions:find(%s): %s", scanFolder, line)
+	lib.Shell(cmdText, mlog.Warning, "perms:find/stat:", "", func(line string) {
+		// mlog.Info("perms:find(%s): %s", scanFolder, line)
 
 		result := c.reStat.FindStringSubmatch(line)
 		// mlog.Info("[%s] %s", result[1], result[2])
@@ -659,27 +659,27 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 		// 	mlog.Info("index(%d);element(%s)", index, element)
 		// }
 
-		u := result[0]
-		g := result[1]
-		o := result[2]
-		fileUID := result[3]
-		fileGID := result[4]
-		kind := result[5]
-		name := result[6]
+		u := result[1]
+		g := result[2]
+		o := result[3]
+		fileUID := result[4]
+		fileGID := result[5]
+		// kind := result[6]
+		name := result[7]
 
 		if fileUID == uid {
-			if u != "6" {
-				mlog.Info("checkOwnerAndPermissions:User doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
+			if !strings.Contains("67", u) {
+				mlog.Info("perms:User doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
 				c.ownerNoPerm++
 			}
 		} else if fileGID == gid {
-			if g != "6" {
-				mlog.Info("checkOwnerAndPermissions:Group doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
+			if !strings.Contains("67", g) {
+				mlog.Info("perms:Group doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
 				c.nonOwnerNoPerm++
 			}
 		} else {
-			if o != "6" {
-				mlog.Info("checkOwnerAndPermissions:Other doesn't have permissions: %s%s%s %s:%s %s %s", u, g, o, uid, gid, kind, name)
+			if !strings.Contains("67", o) {
+				mlog.Info("perms:Other doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
 				c.nonOwnerNoPerm++
 			}
 		}
