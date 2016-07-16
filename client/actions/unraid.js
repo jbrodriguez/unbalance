@@ -68,10 +68,10 @@ function gotStorage({state, actions}, unraid) {
 	var lines = []
 	var opState = null
 	switch(unraid.opState) {
-		case 1: 
+		case 1:
 			opState = "Calculate operation in progress ..."
 			break
-		case 2: 
+		case 2:
 			opState = "Move operation in progress ..."
 			break
 	}
@@ -133,7 +133,7 @@ function calculate({state, actions, opts: {api, ws}}) {
 			srcDisk = key
 			break
 		}
-	}			
+	}
 
 	ws.send({topic: "calculate", payload: {srcDisk, dstDisks: state.toDisk}})
 
@@ -185,7 +185,7 @@ function calcProgress({state}, line) {
 	// let newState = Object.assign({}, state)
 
 	// // make sure we disable the interface, in case another browser is open
-	// // or even the initial browser is woken from sleep 
+	// // or even the initial browser is woken from sleep
 	// newState.opInProgress = actions.calculate
 	// newState.moveDisabled = true
 
@@ -253,23 +253,25 @@ function calcPermIssue({state, actions}, permStats) {
 	let feedback = []
 
 	feedback.push("There are some permission issues with the folders/files you want to move")
-	feedback.push(`${permIssues[0]} instances where the user owns the file/folder but doesn't have permission to move it`)
-	feedback.push(`${permIssues[1]} instances where the user doesn't own the file/folder and doesn't have permission to move it`)
+	feedback.push(`${permIssues[0]} file(s)/folder(s) with an owner other than 'nobody'`)
+	feedback.push(`${permIssues[1]} file(s)/folder(s) with a group other than 'users'`)
+	feedback.push(`${permIssues[2]} folder(s) with a permission other than 'drwxrwxrwx'`)
+	feedback.push(`${permIssues[3]} files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'`)
 	feedback.push("You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)")
 	feedback.push("")
 	feedback.push("At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation")
 	feedback.push("")
 	feedback.push("You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command")
 
-	// if (state.timeout) {
-	// 	window.clearTimeout(state.timeout)
-	// }
-	// const timeout = window.setTimeout( _ => actions.removeFeedback(), 60*1000) // 30s timeout
+	if (state.timeout) {
+		window.clearTimeout(state.timeout)
+	}
+	const timeout = window.setTimeout( _ => actions.removeFeedback(), 5*60*1000) // 60s timeout
 
 	return {
 		...state,
 		feedback,
-		// timeout,
+		timeout,
 		opInProgress: null,
 		moveDisabled: false,
 	}
@@ -345,7 +347,7 @@ function moveFinished({state}, unraid) {
 	// newState.moveDisabled = !state.config.dryRun
 
 	// return newState
-	
+
 	// let moveDisabled = !state.config.dryRun
 	// console.log('moveDisabled: ', moveDisabled)
 	// return {
@@ -366,7 +368,7 @@ function opError({state, actions}, error) {
 	// let newState = Object.assign({}, state)
 
 	// newState.feedback.push(error)
-	
+
 	// return newState
 }
 

@@ -31,6 +31,7 @@ const (
 	MOVE = 2
 )
 
+// Core service
 type Core struct {
 	Service
 
@@ -51,8 +52,10 @@ type Core struct {
 
 	rsyncErrors map[int]string
 
-	ownerNoPerm    int64
-	nonOwnerNoPerm int64
+	ownerIssue int64
+	groupIssue int64
+	folderIssue int64
+	fileIssue int64
 	// diskmvLocation string
 
 	bytesMoved int64
@@ -77,7 +80,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	re, _ = regexp.Compile(`exit status (\d+)`)
 	core.reRsync = re
 
-	re, _ = regexp.Compile(`(\d)(\d)(\d)\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
+	re, _ = regexp.Compile(`[-dclpsbD]([-rwx]{3})([-rwx]{3})([-rwx]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 	core.reStat = re
 
 	core.rsyncErrors = map[int]string{
@@ -383,18 +386,20 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	srcDiskWithoutMnt := srcDisk.Path[5:]
 
-	uid := ""
-	lib.Shell("id -u", mlog.Warning, "uid", "", func(line string) {
-		uid = line
+	owner := ""
+	lib.Shell("id -un", mlog.Warning, "owner", "", func(line string) {
+		owner = line
 	})
 
-	gid := ""
-	lib.Shell("id -g", mlog.Warning, "gid", "", func(line string) {
-		gid = line
+	group := ""
+	lib.Shell("id -gn", mlog.Warning, "group", "", func(line string) {
+		group = line
 	})
 
-	c.ownerNoPerm = 0
-	c.nonOwnerNoPerm = 0
+	c.ownerIssue = 0
+	c.groupIssue = 0
+	c.folderIssue = 0
+	c.fileIssue = 0
 
 	var folders []*model.Item
 	for _, path := range c.settings.Folders {
@@ -402,7 +407,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, uid, gid)
+		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, owner, group)
 
 		list := c.getFolders(dtoCalc.SourceDisk, path)
 		if list != nil {
@@ -531,14 +536,16 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		}
 	}
 
-	if c.ownerNoPerm > 0 || c.nonOwnerNoPerm > 0 {
+	if c.ownerIssue > 0 || c.groupIssue > 0 || c.folderIssue > 0 || c.fileIssue > 0 {
 		message += fmt.Sprintf(`
 			\n\nThere are some permission issues:
-			\n\n%d instances where the user owns the file/folder but doesn't have permission to move it
-			\n%d instances where the user doesn't own the file/folder and doesn't have permission to move it
+			\n\n%d file(s)/folder(s) with an owner other than 'nobody'
+			\n%d file(s)/folder(s) with a group other than 'users'
+			\n%d folder(s) with a permission other than 'drwxrwxrwx'
+			\n%d files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'
 			\n\nCheck the log file (/boot/logs/unbalance.log) for additional information
 			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
-		`, c.ownerNoPerm, c.nonOwnerNoPerm)
+		`, c.ownerIssue, c.groupIssue, c.folderIssue, c.fileIssue)
 	}
 
 	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, false); sendErr != nil {
@@ -575,8 +582,8 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	// only send the perm issue msg if there's actually some work to do (bytestomove > 0)
 	// and there actually perm issues
-	if c.storage.BytesToMove > 0 && (c.ownerNoPerm+c.nonOwnerNoPerm > 0) {
-		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d", c.ownerNoPerm, c.nonOwnerNoPerm)}
+	if c.storage.BytesToMove > 0 && (c.ownerIssue+c.groupIssue+c.folderIssue+c.fileIssue > 0) {
+		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d|%d|%d", c.ownerIssue, c.groupIssue, c.folderIssue, c.fileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 }
@@ -627,7 +634,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	return
 }
 
-func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
+func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string) {
 	srcFolder := filepath.Join(src, folder)
 
 	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
@@ -643,7 +650,7 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 	// mlog.Info("User %s", usr.Name)
 
 	scanFolder := srcFolder + "/."
-	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%a|%%u:%%g|%%F|%%n" {} \;`, scanFolder)
+	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%A|%%U:%%G|%%F|%%n" {} \;`, scanFolder)
 
 	mlog.Info("perms:Executing %s", cmdText)
 
@@ -662,27 +669,51 @@ func (c *Core) checkOwnerAndPermissions(src, folder, uid, gid string) {
 		u := result[1]
 		g := result[2]
 		o := result[3]
-		fileUID := result[4]
-		fileGID := result[5]
-		// kind := result[6]
+		user := result[4]
+		group := result[5]
+		kind := result[6]
 		name := result[7]
 
-		if fileUID == uid {
-			if !strings.Contains("67", u) {
-				mlog.Info("perms:User doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-				c.ownerNoPerm++
-			}
-		} else if fileGID == gid {
-			if !strings.Contains("67", g) {
-				mlog.Info("perms:Group doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-				c.nonOwnerNoPerm++
+		perms := u+g+o
+
+		if (user != "nobody") {
+			mlog.Info("perms:User != nobody: [%s]: %s", user, name)
+			c.ownerIssue++
+		}
+
+		if (group != "users") {
+			mlog.Info("perms:Group != users: [%s]: %s", group, name)
+			c.groupIssue++
+		}
+
+		if kind == "directory" {
+			if perms != "rwxrwxrwx" {
+				mlog.Info("perms:Folder perms != rwxrwxrwx: [%s]: %s", perms, name)
+				c.folderIssue++
 			}
 		} else {
-			if !strings.Contains("67", o) {
-				mlog.Info("perms:Other doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-				c.nonOwnerNoPerm++
+			if (perms != "r--r--r--") || (perms != "rw-rw-rw-") {
+				mlog.Info("perms:File perms != rw-rw-rw- or -r--r--r--: [%s]: %s", perms, name)
+				c.fileIssue++
 			}
 		}
+
+		// if fileUID == uid {
+		// 	if !strings.Contains("67", u) {
+		// 		mlog.Info("perms:User doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
+		// 		c.ownerNoPerm++
+		// 	}
+		// } else if fileGID == gid {
+		// 	if !strings.Contains("67", g) {
+		// 		mlog.Info("perms:Group doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
+		// 		c.nonOwnerNoPerm++
+		// 	}
+		// } else {
+		// 	if !strings.Contains("67", o) {
+		// 		mlog.Info("perms:Other doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
+		// 		c.nonOwnerNoPerm++
+		// 	}
+		// }
 
 		// msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
 		// outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
