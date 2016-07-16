@@ -73,6 +73,7 @@ const initialState = {
 		fetching: false,
 	},
 	feedback: [],
+	timeout: null,
 }
 
 const actions = combineActions(

@@ -13,10 +13,14 @@ function setOpInProgress({state}, action) {
 }
 
 function addFeedback({state, actions}, feedback) {
-	window.setTimeout(() => actions.removeFeedback(), 15000)
+	if (state.timeout) {
+		window.clearTimeout(state.timeout)
+	}
+	const timeout = window.setTimeout( _ => actions.removeFeedback(), 15000)
 
 	return {
 		...state,
+		timeout,
 		feedback: [].concat(feedback)
 	}
 }
@@ -24,7 +28,8 @@ function addFeedback({state, actions}, feedback) {
 function removeFeedback({state}) {
 	return {
 		...state,
-		feedback: []
+		feedback: [],
+		timeout: null,
 	}
 }
 

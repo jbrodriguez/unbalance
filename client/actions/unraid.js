@@ -211,12 +211,16 @@ function calcFinished({state, actions}, unraid) {
 		feedback.push("Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving or to change the amount of reserved space.")
 	}
 
-	window.setTimeout( _ => actions.removeFeedback(), 15*1000)
+	if (state.timeout) {
+		window.clearTimeout(state.timeout)
+	}
+	const timeout = window.setTimeout( _ => actions.removeFeedback(), 15*1000)
 
 	return {
 		...state,
 		unraid,
 		feedback,
+		timeout,
 		opInProgress: null,
 		moveDisabled: unraid.bytesToMove === 0,
 	}
@@ -243,21 +247,29 @@ function calcFinished({state, actions}, unraid) {
 	// }
 }
 
-function calcPermIssue({state, actions}, unraid) {
+function calcPermIssue({state, actions}, permStats) {
+	const permIssues = permStats.split('|')
+
 	let feedback = []
 
 	feedback.push("There are some permission issues with the folders/files you want to move")
-	feedback.push("The details of which files have issues can be found in the log (/boot/logs/unbalance.log)")
+	feedback.push(`${permIssues[0]} instances where the user owns the file/folder but doesn't have permission to move it`)
+	feedback.push(`${permIssues[1]} instances where the user doesn't own the file/folder and doesn't have permission to move it`)
+	feedback.push("You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)")
 	feedback.push("")
 	feedback.push("At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation")
 	feedback.push("")
 	feedback.push("You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command")
 
-	window.setTimeout( _ => actions.removeFeedback(), 5*60*1000) // 5 min timeout
+	// if (state.timeout) {
+	// 	window.clearTimeout(state.timeout)
+	// }
+	// const timeout = window.setTimeout( _ => actions.removeFeedback(), 60*1000) // 30s timeout
 
 	return {
 		...state,
 		feedback,
+		// timeout,
 		opInProgress: null,
 		moveDisabled: false,
 	}
