@@ -1,0 +1,18 @@
+Closes #11 - 2016-07-16
+f4e401d Add messages when permission issues arise Related to #11
+5e477b4 Fix syntax style Related to #11
+9760374 Restrict when to send the perm issues message If bytestomove == 0, no action will take place anyway, so there's no point in sending the perm issue msg Also check that we actually have issues Related to #11
+a3e51e8 Display the warning when perm issues are found Related to #11
+1d71dde Ignore binaries
+46fedcf Fix errors Related to #11
+e53eea3 Use alternate method to get uid/gid Turns out os.User is based on cgo, so it can't be cross-compiled and is currently missing from linux/amd64 Roll out your own Related to #11
+cf3c121 Increase feedback timeout To be able to read it and process it Related to #11
+e25894f Increase the timeout Related to #11
+bbfaf74 Improve begin/end messages Related to #11
+048092b Improve email text Related to #11
+74d0adc Support hal
+a93d500 Fix deployment instructions These are deployment to the 'test' environment
+799b36f Add timeout state There may be occasions when two message arrive in sequence (calcFinished, calcPermission). What was happening is that the timeout set by last event wasn't being honored. By having a timeout state, the last event wins: it grabs the timeout state, if there's any it clears it and sets it's own. Related to #11
+5441c50 First pass at logic to decide whether we need to issue a warning We still need to make sure it works against the new permissions script Related to #11
+ee49313 Fix logic to detect issues Logic checks for Folders rwxrwxrwx Files rw-rw-rw- or r--r--r--
+1f57164 Remove some disks entries Looks like rc2 is polluting the disks space, so we remove those disks that appear as DISK_NP
