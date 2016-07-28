@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+git add remote github gitjbr:jbrodriguez/unb.git
+git checkout -b current
+git merge $BRANCH
+git push --tags github current
