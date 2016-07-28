@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Containers>
+<Plugin>True</Plugin>
+<PluginURL>https://raw.githubusercontent.com/jbrodriguez/unbalance/current/unbalance.plg</PluginURL>
+<PluginAuthor>Juan B. Rodriguez</PluginAuthor>
+<Beta>False</Beta>
+<Category>Tools:</Category>
+<Name>unBALANCE</Name>
+<Description>
+This plugin frees up space space from one of the disks in the array, by moving folders and files to other disks.
+</Description>
+<Support>http://lime-technology.com/forum/index.php?topic=45352.0</Support>
+<Icon>https://i.imgur.com/Lj5l0ni.png</Icon>
+</Containers>
