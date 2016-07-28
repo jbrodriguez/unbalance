@@ -1,0 +1,14 @@
+test:
+    script:
+        - npm-git-lock --repo gitlab:jbrodriguez/unbalance-modules.git -v
+        - gom install -v
+        - ./bundle
+        - ./git-env
+    only:
+        - /^wrk.*$/
+
+deploy:
+    script:
+        - pwd
+    only:
+        - /^rel.*$/
