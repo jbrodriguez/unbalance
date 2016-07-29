@@ -34,20 +34,27 @@ fi
 echo "Building client"
 npm run build
 
+if [ $? -ne 0 ]; then
+	error "Unable to build client. Please check and try again"
+fi
+
 echo "Building server"
 make server
+
+if [ $? -ne 0 ]; then
+	error "Unable to build server. Please check and try again"
+fi
+
 
 echo "Generating release ..."
 rm -rf release && mkdir -p $UB_RELEASE
 cp -r dist/* $UB_RELEASE
-cp server/diskmv $UB_RELEASE/diskmv
 cp -r plugin/event $UB_RELEASE
 cp -r plugin/scripts $UB_RELEASE
 cp -r plugin/images $UB_RELEASE
 cp plugin/README.md $UB_RELEASE
 cp plugin/unbalance.png $UB_RELEASE
 cp plugin/unbalance.page $UB_RELEASE
-cp plugin/osunbalance.page $UB_RELEASE
 cp CHANGES $UB_RELEASE
 cp VERSION $UB_RELEASE
 
@@ -61,4 +68,4 @@ echo $UB_MD5
 sed -e s/'{{md5}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unbalance.plg
 rm -rf release
 
-# git checkout $branch_name
+echo "Succesfully generated unbalance-$UB_VERSION"
