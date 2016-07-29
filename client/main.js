@@ -1,6 +1,8 @@
+// import 'babel-polyfill'
+
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute } from 'react-router'
+import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 
 import { createStore, combineActions } from 'reactorx'
 
@@ -45,7 +47,7 @@ import Settings from './components/settings'
 //  moveDisabled: true,
 //  lines: [],
 // 	tree: {
-// 		items: 
+// 		items:
 // 			'/': [
 // 				{type: 'folder', path: '/films'}
 // 				{type: 'folder', path: '/tvshows'}
@@ -77,10 +79,10 @@ const initialState = {
 }
 
 const actions = combineActions(
-	startActions, 
-	uiActions, 
-	configActions, 
-	treeActions, 
+	startActions,
+	uiActions,
+	configActions,
+	treeActions,
 	unraidActions
 )
 
@@ -93,7 +95,7 @@ const routes = (
 	<Route path='/' component={App}>
 		<IndexRoute component={Home} />
 		<Route path='settings' component={Settings} />
-	</Route>		
+	</Route>
 )
 
 store.subscribe(
@@ -105,7 +107,7 @@ store.subscribe(
 		}
 
 		render(
-			<Router createElement={createElement} children={routes}>
+			<Router history={hashHistory} createElement={createElement} children={routes}>
 			</Router>,
 			document.getElementById('mnt')
 		)
@@ -164,5 +166,5 @@ store.actions.start()
 // 		}
 // 	)
 
-// 	store.dispatch(store.actions.start)	
+// 	store.dispatch(store.actions.start)
 // }
