@@ -1,9 +1,7 @@
 test:
     script:
-        - npm-git-lock --repo gitlab:jbrodriguez/unbalance-modules.git -v
-        - gom install -v
-        - ./bundle
-        - ./git-env
+        - ./build
+        # - ./git-env
     only:
         - /^wrk.*$/
 
