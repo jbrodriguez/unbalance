@@ -13,26 +13,26 @@
 # Update this, if you use features of a newer version
 fastlane_version "1.99.0"
 
-default_platform :web
+default_platform :mac
 
-platform :web do
+platform :mac do
   before_all do
     # ENV["SLACK_URL"] = "https://hooks.slack.com/services/..."
   end
 
-  desc "Test"
-  lane :test do
+  desc "Deploy a new version of unBALANCE"
+  lane :deploy do
 	  version = File.read("../VERSION").strip
-	  binary = unbalance-#{version}.tgz
+	  binary = "unbalance-#{version}.tgz"
 
 	  set_github_release(
-	    repository_name: "jbrodriguez/unb",
+	    repository_name: "jbrodriguez/unbalance",
 	    api_token: ENV['GITHUB_TOKEN'],
 	    name: "#{version}",
 	    tag_name: "#{version}",
-	    description: File.read("../CHANGELOG"),
+	    description: File.read("../changelogs/#{version}.txt"),
 	    commitish: "current",
-	    upload_assets: ["../#{binary}"]
+	    upload_assets: ["#{binary}"]
 	  )
 
 	  slack(
@@ -57,10 +57,10 @@ platform :web do
   end
 
   error do |lane, exception|
-    # slack(
-    #   message: exception.message,
-    #   success: false
-    # )
+    slack(
+      message: exception.message,
+      success: false
+    )
   end
 end
 
