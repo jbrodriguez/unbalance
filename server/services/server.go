@@ -5,11 +5,13 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/engine/standard"
 	mw "github.com/labstack/echo/middleware"
 	"jbrodriguez/unbalance/server/dto"
 	"jbrodriguez/unbalance/server/lib"
 	"jbrodriguez/unbalance/server/model"
 	"jbrodriguez/unbalance/server/net"
+	"golang.org/x/net/websocket"
 	// "os"
 	"path/filepath"
 )
@@ -66,11 +68,11 @@ func (s *Server) Start() {
 	s.engine.Use(mw.Logger())
 	s.engine.Use(mw.Recover())
 
-	s.engine.Index(filepath.Join(location, "index.html"))
+	s.engine.Static("/", filepath.Join(location, "index.html"))
 	s.engine.Static("/app", filepath.Join(location, "app"))
 	s.engine.Static("/img", filepath.Join(location, "img"))
 
-	s.engine.WebSocket("/skt", s.handleWs)
+	s.engine.Get("/skt", standard.WrapHandler(websocket.Handler(s.handleWs)))
 
 	api := s.engine.Group(API_VERSION)
 	api.Put("/config/notifyCalc", s.setNotifyCalc)
@@ -86,7 +88,7 @@ func (s *Server) Start() {
 
 	port := fmt.Sprintf(":%s", s.settings.Port)
 
-	go s.engine.Run(port)
+	go s.engine.Run(standard.New(port))
 
 	s.mailbox = s.register(s.bus, "socket:broadcast", s.broadcast)
 	go s.react()
@@ -105,7 +107,7 @@ func (s *Server) react() {
 	}
 }
 
-func (s *Server) getConfig(c *echo.Context) (err error) {
+func (s *Server) getConfig(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/config")
 
@@ -116,7 +118,7 @@ func (s *Server) getConfig(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) setNotifyCalc(c *echo.Context) (err error) {
+func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -134,7 +136,7 @@ func (s *Server) setNotifyCalc(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) setNotifyMove(c *echo.Context) (err error) {
+func (s *Server) setNotifyMove(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -152,7 +154,7 @@ func (s *Server) setNotifyMove(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) setReservedSpace(c *echo.Context) (err error) {
+func (s *Server) setReservedSpace(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -170,7 +172,7 @@ func (s *Server) setReservedSpace(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) addFolder(c *echo.Context) (err error) {
+func (s *Server) addFolder(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -188,7 +190,7 @@ func (s *Server) addFolder(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) deleteFolder(c *echo.Context) (err error) {
+func (s *Server) deleteFolder(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -206,7 +208,7 @@ func (s *Server) deleteFolder(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getStorage(c *echo.Context) (err error) {
+func (s *Server) getStorage(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/get/storage")
 
@@ -217,7 +219,7 @@ func (s *Server) getStorage(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getTree(c *echo.Context) (err error) {
+func (s *Server) getTree(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -235,7 +237,7 @@ func (s *Server) getTree(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) toggleDryRun(c *echo.Context) (err error) {
+func (s *Server) toggleDryRun(c echo.Context) (err error) {
 	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, CAPACITY)}
 	s.bus.Pub(msg, "/config/toggle/dryRun")
 
@@ -246,7 +248,7 @@ func (s *Server) toggleDryRun(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) setRsyncFlags(c *echo.Context) (err error) {
+func (s *Server) setRsyncFlags(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -264,11 +266,10 @@ func (s *Server) setRsyncFlags(c *echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) handleWs(c *echo.Context) (err error) {
-	conn := net.NewConnection(c.Socket(), s.onMessage, s.onClose)
+func (s *Server) handleWs(ws *websocket.Conn) {
+	conn := net.NewConnection(ws, s.onMessage, s.onClose)
 	s.pool[conn] = true
-	err = conn.Read()
-	return err
+	conn.Read()
 }
 
 func (s *Server) onMessage(packet *dto.Packet) {
@@ -284,7 +285,7 @@ func (s *Server) onClose(c *net.Connection, err error) {
 
 func (s *Server) broadcast(msg *pubsub.Message) {
 	packet := msg.Payload.(*dto.Packet)
-	for conn, _ := range s.pool {
+	for conn := range s.pool {
 		conn.Write(packet)
 	}
 }
