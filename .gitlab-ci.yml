@@ -1,13 +1,19 @@
 test:
     script:
-        - ./build
+        - ./rel-create
+        - fastlane mac test
+        - pwd
     only:
         - /^wrk.*$/
 
 deploy:
     script:
-        - ./build
-        - ./git-env
+        - ./rel-create
+        - ./rel-push-unbalance
         - fastlane mac deploy
+        - ./rel-push-unraid
     only:
         - /^rel.*$/
+    artifacts:
+        paths:
+        - *.tgz
