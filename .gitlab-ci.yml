@@ -1,12 +1,13 @@
 test:
     script:
         - ./build
-        # - ./git-env
     only:
         - /^wrk.*$/
 
 deploy:
     script:
-        - pwd
+        - ./build
+        - ./git-env
+        - fastlane mac deploy
     only:
         - /^rel.*$/

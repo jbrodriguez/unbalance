@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+function error {
+	NAME=$1
+
+	printf "$1"
+	exit 1
+}
+
+APP_VERSION=$(cat VERSION 2> /dev/null)
+
+if [[ -z $APP_VERSION ]]; then
+	error "Unable to find VERSION file. Please check and try again"
+fi
+
+echo "Version is $APP_VERSION"
+
+npm --no-git-tag-version -f version ${APP_VERSION}
+
+TAG=`git describe --abbrev=0 --tags 2> /dev/null`
+
+if [[ -z "$TAG" ]]; then
+	COMMITS=`git --no-pager log --reverse --pretty=format:'- %s' | egrep -v '.*Closes' | egrep -v '.*Merge' 2> /dev/null`
+else
+	COMMITS=`git --no-pager log --reverse --pretty=format:'- %s' "$TAG"...HEAD | egrep -v '.*Closes' | egrep -v '.*Merge' 2> /dev/null`
+fi
+
+PREVIOUS=`cat changelogs/${TAG}.txt 2> /dev/null`
+
+cat <<EOF > changelogs/${APP_VERSION}.txt
+`date +%F` - ${APP_VERSION}
+${COMMITS}
+
+${PREVIOUS}
+EOF
+
+atom changelogs/${APP_VERSION}.txt
+
+echo "Bumped versions successfully"

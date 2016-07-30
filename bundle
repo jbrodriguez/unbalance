@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function error {
   echo -e "$1" >&2
@@ -64,8 +64,11 @@ mv ./$UB_FILE ..
 popd
 
 UB_MD5=$(md5sum ./$UB_FILE | cut -d' ' -f1)
-echo $UB_MD5
-sed -e s/'{{md5}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g plugin/template.plg > ./unbalance.plg
+echo "MD5: ${UB_MD5}"
+
+CHANGES=`cat changelogs/${UB_VERSION}.txt 2> /dev/null`
+
+sed -e s/'{{md5}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g -e s/'{{changes}}'/$CHANGES/g plugin/template.plg > ./unbalance.plg
 rm -rf release
 
 echo "Succesfully generated unbalance-$UB_VERSION"
