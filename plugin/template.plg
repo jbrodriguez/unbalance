@@ -5,7 +5,7 @@
 <!ENTITY author      "Juan B. Rodriguez">
 <!ENTITY version     "{{version}}">
 <!ENTITY launch      "Settings/&name;">
-<!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unbalance/current/&name;.plg">
+<!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/&name;.plg">
 <!ENTITY bundle      "&name;-&version;.tgz">
 <!ENTITY md5         "{{md5}}">
 ]>
