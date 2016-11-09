@@ -2,20 +2,19 @@ var path = require('path')
 var webpack = require('webpack')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
-var StatsPlugin = require('webpack-stats-plugin')
 
 module.exports = {
 	entry: [
-		path.join(__dirname, 'client/main.js')
+		'./src/main.js'
 	],
 	output: {
-		path: path.join(__dirname, '/dist'),
+		path: path.join(__dirname, '..', 'dist'),
 		filename: 'app/[name]-[hash:7].min.js'
 	},
 	plugins: [
 		new webpack.optimize.OccurenceOrderPlugin(),
 		new HtmlWebpackPlugin({
-			template: 'client/index.tpl.html',
+			template: 'index.tpl.html',
 			inject: 'body',
 			filename: 'index.html'
 		}),
@@ -27,12 +26,9 @@ module.exports = {
 	],
 	module: {
 		loaders: [{
+			test: /\.jsx?$/,
 			loader: 'babel',
-			exclude: /node_modules/,
-			test: /\.js$/,
-			query: {
-				presets: ['react', 'es2015-webpack', 'stage-2']
-			}
+			include: path.join(__dirname, 'src'),
 		}, {
 			test: /\.json?$/,
 			loader: 'json'
@@ -44,7 +40,7 @@ module.exports = {
 			loader: "file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]"
 		}, {
 			test: /\.(jpe?g|png|gif|svg)$/i,
-			include: path.resolve(__dirname, 'client/img'),
+			include: path.resolve(__dirname, 'src/img'),
 			loaders: [
 				'file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]',
 				'image-webpack?{progressive:true, optimizationLevel: 7, interlaced: false, pngquant:{quality: "65-90", speed: 4}}'
@@ -62,14 +58,12 @@ module.exports = {
 		// 	loader: 'style!css?modules&localIdentName=[name]---[local]---[hash:base64:5]'
 		// }]
 			test: /\.scss$/,
+			include: path.join(__dirname, 'src/styles'),
 			loader: ExtractTextPlugin.extract('style', 'css?modules&localIdentName=[name]---[local]---[hash:base64:5]!postcss!sass'),
 		}, {
 			test: /\.css$/,
 			loader: ExtractTextPlugin.extract('style', 'css?modules&localIdentName=[name]---[local]---[hash:base64:5]!postcss')
 		}]
-	},
-	sassLoader: {
-		includePaths: path.join(__dirname, '/client/styles/')
 	},
 	postcss: [
 		require('autoprefixer')

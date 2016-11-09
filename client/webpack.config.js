@@ -3,19 +3,19 @@ var webpack = require('webpack')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-	devtool: 'inline-source-map',
+	devtool: 'eval',
 	entry: [
 		'webpack-hot-middleware/client?reload=true',
-		path.join(__dirname, 'client/main.js')
+		'./src/main.js'
 	],
 	output: {
 		path: path.join(__dirname, '/dist/'),
-		filename: 'js/[name].js',
+		filename: '[name].js',
 		publicPath: '/'
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
-			template: 'client/index.tpl.html',
+			template: 'index.tpl.html',
 			inject: 'body',
 			filename: 'index.html'
 		}),
@@ -28,12 +28,9 @@ module.exports = {
 	],
 	module: {
 		loaders: [{
-			loader: 'babel',
-			exclude: /node_modules/,
 			test: /\.jsx?$/,
-			query: {
-				presets: ['react', 'es2015-webpack', 'stage-2']
-			}
+			loader: 'babel',
+			include: path.join(__dirname, 'src'),
 		}, {
 			test: /\.json?$/,
 			loader: 'json'
@@ -45,13 +42,14 @@ module.exports = {
 			loader: "file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]"
 		}, {
     		test: /\.(jpe?g|png|gif|svg)$/i,
-			include: path.resolve(__dirname, 'client/img'),
+			include: path.resolve(__dirname, 'src/img'),
 			loaders: [
 				'file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]',
 				'image-webpack?{progressive:true, optimizationLevel: 7, interlaced: false, pngquant:{quality: "65-90", speed: 4}}'
 			]
 		}, {
 			test: /\.scss$/,
+			include: path.resolve(__dirname, 'src/styles'),
 			loaders: [
 				'style',
 				'css?modules&localIdentName=[name]---[local]---[hash:base64:5]',
@@ -62,8 +60,5 @@ module.exports = {
 			test: /\.css$/,
 			loader: 'style!css?modules&localIdentName=[name]---[local]---[hash:base64:5]'
 		}]
-	},
-	sassLoader: {
-		includePaths: path.join(__dirname, '/client/styles/')
 	}
 }
