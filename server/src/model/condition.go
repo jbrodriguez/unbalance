@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Condition -
 type Condition struct {
 	NumDisks     int64     `json:"numDisks"`
 	NumProtected int64     `json:"numProtected"`

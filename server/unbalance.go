@@ -4,8 +4,8 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	// "jbrodriguez/unbalance/server/model"
-	"jbrodriguez/unbalance/server/lib"
-	"jbrodriguez/unbalance/server/services"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/services"
 	"os"
 	"os/signal"
 	// "path/filepath"
@@ -14,6 +14,7 @@ import (
 	"syscall"
 )
 
+// Version -
 var Version string
 
 func main() {

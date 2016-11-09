@@ -2,12 +2,16 @@ package net
 
 import (
 	"golang.org/x/net/websocket"
-	"jbrodriguez/unbalance/server/dto"
+	"jbrodriguez/unbalance/server/src/dto"
 )
 
+// MessageFunc -
 type MessageFunc func(message *dto.Packet)
+
+// CloseFunc -
 type CloseFunc func(conn *Connection, err error)
 
+// Connection -
 type Connection struct {
 	id        string
 	ws        *websocket.Conn
@@ -15,6 +19,7 @@ type Connection struct {
 	onClose   CloseFunc
 }
 
+// NewConnection -
 func NewConnection(ws *websocket.Conn, onMessage MessageFunc, onClose CloseFunc) *Connection {
 	return &Connection{
 		ws:        ws,
@@ -30,9 +35,9 @@ func (c *Connection) Read() (err error) {
 		if err != nil {
 			go c.onClose(c, err)
 			return
-		} else {
-			go c.onMessage(&packet)
 		}
+
+		go c.onMessage(&packet)
 	}
 }
 

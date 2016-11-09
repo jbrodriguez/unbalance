@@ -12,8 +12,9 @@ package dto
 // 	Payload interface{} `json:"payload"`
 // }
 
+// Packet -
 type Packet struct {
-	Id      string      `json:"-"`
+	ID      string      `json:"-"`
 	Topic   string      `json:"topic"`
 	Payload interface{} `json:"payload"`
 }

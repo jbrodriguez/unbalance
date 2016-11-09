@@ -7,20 +7,21 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 	mw "github.com/labstack/echo/middleware"
-	"jbrodriguez/unbalance/server/dto"
-	"jbrodriguez/unbalance/server/lib"
-	"jbrodriguez/unbalance/server/model"
-	"jbrodriguez/unbalance/server/net"
 	"golang.org/x/net/websocket"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/model"
+	"jbrodriguez/unbalance/server/src/net"
 	// "os"
 	"path/filepath"
 )
 
 const (
-	API_VERSION = "/api/v1"
-	CAPACITY    = 3
+	apiVersion = "/api/v1"
+	capacity   = 3
 )
 
+// Server -
 type Server struct {
 	Service
 
@@ -33,6 +34,7 @@ type Server struct {
 	pool map[*net.Connection]bool
 }
 
+// NewServer -
 func NewServer(bus *pubsub.PubSub, settings *lib.Settings) *Server {
 	server := &Server{
 		bus:      bus,
@@ -43,6 +45,7 @@ func NewServer(bus *pubsub.PubSub, settings *lib.Settings) *Server {
 	return server
 }
 
+// Start -
 func (s *Server) Start() {
 	mlog.Info("Starting service Server ...")
 
@@ -74,7 +77,7 @@ func (s *Server) Start() {
 
 	s.engine.Get("/skt", standard.WrapHandler(websocket.Handler(s.handleWs)))
 
-	api := s.engine.Group(API_VERSION)
+	api := s.engine.Group(apiVersion)
 	api.Put("/config/notifyCalc", s.setNotifyCalc)
 	api.Put("/config/notifyMove", s.setNotifyMove)
 	api.Put("/config/reservedSpace", s.setReservedSpace)
@@ -96,6 +99,7 @@ func (s *Server) Start() {
 	mlog.Info("Server started listening on %s", port)
 }
 
+// Stop -
 func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
 }
@@ -108,7 +112,7 @@ func (s *Server) react() {
 }
 
 func (s *Server) getConfig(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/get/config")
 
 	reply := <-msg.Reply
@@ -126,7 +130,7 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/set/notifyCalc")
 
 	reply := <-msg.Reply
@@ -144,7 +148,7 @@ func (s *Server) setNotifyMove(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/set/notifyMove")
 
 	reply := <-msg.Reply
@@ -162,7 +166,7 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/set/reservedSpace")
 
 	reply := <-msg.Reply
@@ -180,7 +184,7 @@ func (s *Server) addFolder(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/add/folder")
 
 	reply := <-msg.Reply
@@ -198,7 +202,7 @@ func (s *Server) deleteFolder(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/delete/folder")
 
 	reply := <-msg.Reply
@@ -209,7 +213,7 @@ func (s *Server) deleteFolder(c echo.Context) (err error) {
 }
 
 func (s *Server) getStorage(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/get/storage")
 
 	reply := <-msg.Reply
@@ -227,7 +231,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/get/tree")
 
 	reply := <-msg.Reply
@@ -238,7 +242,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 }
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
-	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/toggle/dryRun")
 
 	reply := <-msg.Reply
@@ -256,7 +260,7 @@ func (s *Server) setRsyncFlags(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, CAPACITY)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/set/rsyncFlags")
 
 	reply := <-msg.Reply

@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
-const RESERVED_SPACE = 450000000 // 450Mb
+// ReservedSpace -
+const ReservedSpace = 450000000 // 450Mb
 
+// Config -
 type Config struct {
 	Folders        []string `json:"folders"`
 	DryRun         bool     `json:"dryRun"`
@@ -26,16 +28,18 @@ type Config struct {
 // 1 - simple notification
 // 2 - detailed notification
 
+// Settings -
 type Settings struct {
 	Config
 
 	Conf       string
 	Port       string
 	Log        string
-	ApiFolders []string
+	APIFolders []string
 	// ReservedSpace int64
 }
 
+// NewSettings -
 func NewSettings(version string) (*Settings, error) {
 	var config, port, log, folders, rsyncFlags, apiFolders string
 	var dryRun bool
@@ -79,22 +83,24 @@ func NewSettings(version string) (*Settings, error) {
 	s.DryRun = dryRun
 	s.NotifyCalc = notifyCalc
 	s.NotifyMove = notifyMove
-	s.ReservedAmount = RESERVED_SPACE / 1000 / 1000
+	s.ReservedAmount = ReservedSpace / 1000 / 1000
 	s.ReservedUnit = "Mb"
 	s.Version = version
 
 	s.Conf = config
 	s.Port = port
 	s.Log = log
-	s.ApiFolders = strings.Split(apiFolders, "|")
+	s.APIFolders = strings.Split(apiFolders, "|")
 
 	return s, nil
 }
 
+// AddFolder -
 func (s *Settings) AddFolder(folder string) {
 	s.Folders = append(s.Folders, folder)
 }
 
+// DeleteFolder -
 func (s *Settings) DeleteFolder(folder string) {
 
 	index := -1
@@ -112,10 +118,12 @@ func (s *Settings) DeleteFolder(folder string) {
 	s.Folders = append(s.Folders[:index], s.Folders[index+1:]...)
 }
 
+// ToggleDryRun -
 func (s *Settings) ToggleDryRun() {
 	s.DryRun = !s.DryRun
 }
 
+// Save -
 func (s *Settings) Save() (err error) {
 	tmpFile := s.Conf + ".tmp"
 

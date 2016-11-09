@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/jbrodriguez/mlog"
 	"github.com/vaughan0/go-ini"
-	"jbrodriguez/unbalance/server/dto"
-	"jbrodriguez/unbalance/server/lib"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
 	// "os"
-	"errors"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
@@ -20,6 +19,7 @@ import (
 // 	UNRAID_CMD = "mdcmd"
 // )
 
+// Unraid -
 type Unraid struct {
 	Condition *Condition `json:"condition"`
 	Disks     []*Disk    `json:"disks"`
@@ -32,6 +32,7 @@ type Unraid struct {
 	// unraidCmd string
 }
 
+// SanityCheck -
 func (u *Unraid) SanityCheck(locations []string) error {
 	// locations := []string{
 	// 	"/usr/local/sbin",
@@ -51,17 +52,18 @@ func (u *Unraid) SanityCheck(locations []string) error {
 
 	location := lib.SearchFile("var.ini", locations)
 	if location == "" {
-		return errors.New(fmt.Sprintf("Unable to find var.ini (%s)", strings.Join(locations, ", ")))
+		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
 	}
 
 	location = lib.SearchFile("disks.ini", locations)
 	if location == "" {
-		return errors.New(fmt.Sprintf("Unable to find var.ini (%s)", strings.Join(locations, ", ")))
+		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
 	}
 
 	return nil
 }
 
+// Refresh -
 func (u *Unraid) Refresh() {
 	// if u.InProgress {
 	// 	return u
@@ -81,7 +83,7 @@ func (u *Unraid) Refresh() {
 	u.SourceDiskName = ""
 	u.BytesToMove = 0
 
-	sort.Sort(ById(u.Disks))
+	sort.Sort(ByID(u.Disks))
 
 	// u.Disks = make([]*Disk, 0)
 	// u.Condition = &Condition{}
@@ -319,7 +321,7 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 
 		disk := &Disk{}
 
-		disk.Id, _ = strconv.ParseInt(strings.Replace(section["idx"], "\"", "", -1), 10, 64) // 1
+		disk.ID, _ = strconv.ParseInt(strings.Replace(section["idx"], "\"", "", -1), 10, 64) // 1
 		disk.Name = diskName                                                                 // disk1, cache
 		disk.Path = "/mnt/" + disk.Name                                                      // /mnt/disk1, /mnt/cache
 		disk.Device = strings.Replace(section["device"], "\"", "", -1)                       // sdp
@@ -328,8 +330,8 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 		disk.Free = 0
 		disk.NewFree = 0
 		disk.Size = 0
-		disk.Serial = strings.Replace(section["id"], "\"", "", -1)     // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
-		disk.Status = diskStatus // DISK_OK
+		disk.Serial = strings.Replace(section["id"], "\"", "", -1) // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
+		disk.Status = diskStatus                                   // DISK_OK
 
 		// fmt.Printf("Section name: %s\n", name)
 		disks = append(disks, disk)
@@ -338,6 +340,7 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 	return
 }
 
+// GetTree -
 func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
 	root := filepath.Join("/mnt/user", path)
 
@@ -370,6 +373,7 @@ func delim(r rune) bool {
 // 	di.Free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
 // }
 
+// Print -
 func (u *Unraid) Print() {
 	mlog.Info("Unraid Box Condition: %+v", u.Condition)
 	mlog.Info("Unraid Box SourceDiskName: %+v", u.SourceDiskName)

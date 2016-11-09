@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	BYTE     = 1.0
-	KILOBYTE = 1024 * BYTE
-	MEGABYTE = 1024 * KILOBYTE
-	GIGABYTE = 1024 * MEGABYTE
-	TERABYTE = 1024 * GIGABYTE
+	byteUnit = 1.0
+	kilobyte = 1024 * byteUnit
+	megabyte = 1024 * kilobyte
+	gigabyte = 1024 * megabyte
+	terabyte = 1024 * gigabyte
 )
 
+// Exists -
 // Check if File / Directory Exists
 func Exists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -31,6 +32,7 @@ func Exists(path string) (bool, error) {
 	return false, err
 }
 
+// SearchFile -
 func SearchFile(name string, locations []string) string {
 	for _, location := range locations {
 		if b, _ := Exists(filepath.Join(location, name)); b {
@@ -41,23 +43,24 @@ func SearchFile(name string, locations []string) string {
 	return ""
 }
 
+// ByteSize -
 func ByteSize(bytes int64) string {
 	unit := ""
 	value := float32(bytes)
 
 	switch {
-	case bytes >= TERABYTE:
+	case bytes >= terabyte:
 		unit = "T"
-		value = value / TERABYTE
-	case bytes >= GIGABYTE:
+		value = value / terabyte
+	case bytes >= gigabyte:
 		unit = "G"
-		value = value / GIGABYTE
-	case bytes >= MEGABYTE:
+		value = value / gigabyte
+	case bytes >= megabyte:
 		unit = "M"
-		value = value / MEGABYTE
-	case bytes >= KILOBYTE:
+		value = value / megabyte
+	case bytes >= kilobyte:
 		unit = "K"
-		value = value / KILOBYTE
+		value = value / kilobyte
 	case bytes == 0:
 		return "0"
 	}
@@ -67,6 +70,7 @@ func ByteSize(bytes int64) string {
 	return fmt.Sprintf("%s%s", stringValue, unit)
 }
 
+// WriteLine -
 func WriteLine(fullpath, line string) error {
 	f, err := os.OpenFile(fullpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -82,6 +86,7 @@ func WriteLine(fullpath, line string) error {
 	return nil
 }
 
+// WriteLines -
 func WriteLines(fullpath string, lines []string) error {
 	f, err := os.OpenFile(fullpath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -99,6 +104,7 @@ func WriteLines(fullpath string, lines []string) error {
 	return nil
 }
 
+// Round -
 func Round(d, r time.Duration) time.Duration {
 	if r <= 0 {
 		return d
@@ -118,6 +124,7 @@ func Round(d, r time.Duration) time.Duration {
 	return d
 }
 
+// Max -
 func Max(x, y int64) int64 {
 	if x > y {
 		return x

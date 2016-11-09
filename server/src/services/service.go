@@ -4,8 +4,10 @@ import (
 	"github.com/jbrodriguez/pubsub"
 )
 
+// MailboxHandler -
 type MailboxHandler func(msg *pubsub.Message)
 
+// Service -
 type Service struct {
 	registry map[string]MailboxHandler
 }

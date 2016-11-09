@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
-	"github.com/labstack/echo"
+	// "github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"jbrodriguez/unbalance/server/algorithm"
-	"jbrodriguez/unbalance/server/dto"
-	"jbrodriguez/unbalance/server/lib"
-	"jbrodriguez/unbalance/server/model"
-	"jbrodriguez/unbalance/server/services"
-	"net/http"
-	"net/http/httptest"
+	"jbrodriguez/unbalance/server/src/algorithm"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/model"
+	"jbrodriguez/unbalance/server/src/services"
+	// "net/http"
+	// "net/http/httptest"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -53,14 +53,14 @@ func TestMain(m *testing.M) {
 	settings.DryRun = false
 	settings.ReservedAmount = 450000000 / 1000 / 1000
 	settings.ReservedUnit = "Mb"
-	settings.ApiFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
+	settings.APIFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
 	settings.RsyncFlags = []string{"-avRX", "--partial"}
 
 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 	disks := []*model.Disk{
-		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
-		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
-		&model.Disk{Id: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
+		&model.Disk{ID: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
+		&model.Disk{ID: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
+		&model.Disk{ID: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
 	}
 
 	// assert.Equal(m, 3, len(disks))
@@ -71,13 +71,16 @@ func TestMain(m *testing.M) {
 	unraid.SourceDiskName = ""
 	unraid.BytesToMove = 0
 
+	fmt.Println("siete")
 	core := services.NewCore(bus, settings)
 	core.SetStorage(unraid)
 
+	fmt.Println("ocho")
 	mlog.Info("before start")
 	core.Start()
 	// require.Nil(m, err, "core.start error should be nil")
 
+	fmt.Println("nueve")
 	ret := m.Run()
 
 	// os.RemoveAll(path)
@@ -91,7 +94,7 @@ func TestOk(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
-		Id:      1,
+		ID:      1,
 		Name:    "md1",
 		Path:    "/mnt/disk1",
 		Device:  "sdc",
@@ -138,7 +141,7 @@ func TestFit1(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
-		Id:      1,
+		ID:      1,
 		Name:    "md1",
 		Path:    "/mnt/disk1",
 		Device:  "sdc",
@@ -180,7 +183,7 @@ func TestFit2(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
 	disk := &model.Disk{
-		Id:      1,
+		ID:      1,
 		Name:    "md1",
 		Path:    "/mnt/disk1",
 		Device:  "sdc",
@@ -267,9 +270,9 @@ func createFile(home, folder, name string, size int64) error {
 
 // 	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
 // 	disks := []*model.Disk{
-// 		&model.Disk{Id: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
-// 		&model.Disk{Id: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
-// 		&model.Disk{Id: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
+// 		&model.Disk{ID: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
+// 		&model.Disk{ID: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
+// 		&model.Disk{ID: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
 // 	}
 
 // 	assert.Equal(t, 3, len(disks))
@@ -288,17 +291,17 @@ func createFile(home, folder, name string, size int64) error {
 // 	require.Nil(t, err, "core.start error should be nil")
 
 // 	var packet dto.Packet
-// 	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+// 	// calcJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
 // 	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":true}}"}`
-// 	calcJson := fmt.Sprintf(template,
+// 	calcJSON := fmt.Sprintf(template,
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
 // 	)
 
-// 	mlog.Info("json: %s", calcJson)
-// 	err = json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+// 	mlog.Info("json: %s", calcJSON)
+// 	err = json.NewDecoder(strings.NewReader(calcJSON)).Decode(&packet)
 // 	mlog.Info("error: %s", err)
 // 	mlog.Info("packet: %+v", packet)
 // 	mlog.Info("payload: %s", packet.Payload)
@@ -379,9 +382,9 @@ func TestRsyncError(t *testing.T) {
 	home := os.Getenv("HOME")
 
 	var packet dto.Packet
-	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+	// calcJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
 	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":false}}"}`
-	calcJson := fmt.Sprintf(template,
+	calcJSON := fmt.Sprintf(template,
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
@@ -400,8 +403,8 @@ func TestRsyncError(t *testing.T) {
 	// 	return
 	// }
 
-	mlog.Info("json: %s", calcJson)
-	err := json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+	mlog.Info("json: %s", calcJSON)
+	err := json.NewDecoder(strings.NewReader(calcJSON)).Decode(&packet)
 	mlog.Info("error: %s", err)
 	mlog.Info("packet: %+v", packet)
 	mlog.Info("payload: %s", packet.Payload)
@@ -473,17 +476,17 @@ func TestRsync(t *testing.T) {
 	home := os.Getenv("HOME")
 
 	var packet dto.Packet
-	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+	// calcJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
 	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":false}}"}`
-	calcJson := fmt.Sprintf(template,
+	calcJSON := fmt.Sprintf(template,
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
 		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
 	)
 
-	mlog.Info("json: %s", calcJson)
-	err := json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+	mlog.Info("json: %s", calcJSON)
+	err := json.NewDecoder(strings.NewReader(calcJSON)).Decode(&packet)
 	mlog.Info("error: %s", err)
 	mlog.Info("packet: %+v", packet)
 	mlog.Info("payload: %s", packet.Payload)
@@ -552,17 +555,17 @@ func TestRsync(t *testing.T) {
 // 	mlog.Info("flags set")
 
 // 	var packet dto.Packet
-// 	// calcJson := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+// 	// calcJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
 // 	template := `{"topic":"calculate","payload":"{\"srcDisk\":\"%s\",\"dstDisks\":{\"%s\":false,\"%s\":true,\"%s\":false}}"}`
-// 	calcJson := fmt.Sprintf(template,
+// 	calcJSON := fmt.Sprintf(template,
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk1"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk2"),
 // 		filepath.Join(home, "tmp/unbalance", "mnt/disk3"),
 // 	)
 
-// 	mlog.Info("json: %s", calcJson)
-// 	err := json.NewDecoder(strings.NewReader(calcJson)).Decode(&packet)
+// 	mlog.Info("json: %s", calcJSON)
+// 	err := json.NewDecoder(strings.NewReader(calcJSON)).Decode(&packet)
 // 	mlog.Info("error: %s", err)
 // 	mlog.Info("packet: %+v", packet)
 // 	mlog.Info("payload: %s", packet.Payload)
@@ -619,43 +622,43 @@ func TestRsync(t *testing.T) {
 // 	// core.Stop()
 // }
 
-func TestBind(t *testing.T) {
-	// userJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
-	userJSON := `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`
-
-	e := echo.New()
-
-	req, _ := http.NewRequest(echo.POST, "/", strings.NewReader(userJSON))
-	rec := httptest.NewRecorder()
-	c := echo.NewContext(req, echo.NewResponse(rec, e), e)
-
-	testBind(t, c, "application/json")
-}
+// func TestBind(t *testing.T) {
+// 	// userJSON := `{"topic":"calculate","payload":"{\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}"}`
+// 	userJSON := `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`
+//
+// 	e := echo.New()
+//
+// 	req, _ := http.NewRequest(echo.POST, "/", strings.NewReader(userJSON))
+// 	rec := httptest.NewRecorder()
+// 	c := echo.NewContext(req, echo.NewResponse(rec, e), e)
+//
+// 	testBind(t, c, "application/json")
+// }
 
 // {\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}
 // {\"srcDisk\":\"/mnt/disk1\",\"dstDisks\":{\"/mnt/disk1\":false,\"/mnt/disk2\":true,\"/mnt/disk3\":true}}
 
-func testBind(t *testing.T, c *echo.Context, ct string) {
-	c.Request().Header.Set(echo.ContentType, ct)
-	var args dto.Calculate
-	err := c.Bind(&args)
-	if ct == "" {
-		assert.Error(t, echo.UnsupportedMediaType)
-	} else if assert.NoError(t, err) {
-		assert.Equal(t, "/mnt/disk1", args.SourceDisk)
-		assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, args.DestDisks)
-
-		// assert.Equal(t, "calculate", args.Topic)
-		// assert.Equal(t, `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`, args.Payload)
-
-		// var param dto.Calculate
-		// err := c.Bind(&param)
-		// if assert.NoError(t, err) {
-		// 	assert.Equal(t, "/mnt/disk1", param.SourceDisk)
-		// 	assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, param.DestDisks)
-		// }
-	}
-}
+// func testBind(t *testing.T, c *echo.Context, ct string) {
+// 	c.Request().Header.Set(echo.ContentType, ct)
+// 	var args dto.Calculate
+// 	err := c.Bind(&args)
+// 	if ct == "" {
+// 		assert.Error(t, echo.UnsupportedMediaType)
+// 	} else if assert.NoError(t, err) {
+// 		assert.Equal(t, "/mnt/disk1", args.SourceDisk)
+// 		assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, args.DestDisks)
+//
+// 		// assert.Equal(t, "calculate", args.Topic)
+// 		// assert.Equal(t, `{"srcDisk":"/mnt/disk1","dstDisks":{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}}`, args.Payload)
+//
+// 		// var param dto.Calculate
+// 		// err := c.Bind(&param)
+// 		// if assert.NoError(t, err) {
+// 		// 	assert.Equal(t, "/mnt/disk1", param.SourceDisk)
+// 		// 	assert.Equal(t, `{"/mnt/disk1":false,"/mnt/disk2":true,"/mnt/disk3":true}`, param.DestDisks)
+// 		// }
+// 	}
+// }
 
 func TestPercentProgress(t *testing.T) {
 	started := time.Now()

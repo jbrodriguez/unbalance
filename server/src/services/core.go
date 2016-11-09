@@ -6,10 +6,10 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"io/ioutil"
-	"jbrodriguez/unbalance/server/algorithm"
-	"jbrodriguez/unbalance/server/dto"
-	"jbrodriguez/unbalance/server/lib"
-	"jbrodriguez/unbalance/server/model"
+	"jbrodriguez/unbalance/server/src/algorithm"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/model"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	MAIL_CMD    = "/usr/local/emhttp/webGui/scripts/notify"
-	TIME_FORMAT = "Jan _2, 2006 15:04:05"
+	mailCmd    = "/usr/local/emhttp/webGui/scripts/notify"
+	timeFormat = "Jan _2, 2006 15:04:05"
 )
 
 const (
-	IDLE = 0
-	CALC = 1
-	MOVE = 2
+	stateIdle = 0
+	stateCalc = 1
+	stateMove = 2
 )
 
 // Core service
@@ -52,21 +52,22 @@ type Core struct {
 
 	rsyncErrors map[int]string
 
-	ownerIssue int64
-	groupIssue int64
+	ownerIssue  int64
+	groupIssue  int64
 	folderIssue int64
-	fileIssue int64
+	fileIssue   int64
 	// diskmvLocation string
 
 	bytesMoved int64
 	started    time.Time
 }
 
+// NewCore -
 func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core := &Core{
 		bus:      bus,
 		settings: settings,
-		opState:  IDLE,
+		opState:  stateIdle,
 		storage:  &model.Unraid{},
 	}
 	core.init()
@@ -113,6 +114,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	return core
 }
 
+// Start -
 func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
@@ -130,7 +132,7 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
 
-	err = c.storage.SanityCheck(c.settings.ApiFolders)
+	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
 		return err
 	}
@@ -140,10 +142,12 @@ func (c *Core) Start() (err error) {
 	return nil
 }
 
+// Stop -
 func (c *Core) Stop() {
 	mlog.Info("stopped service Core ...")
 }
 
+// SetStorage -
 func (c *Core) SetStorage(unraid *model.Unraid) {
 	c.storage = unraid
 }
@@ -253,9 +257,9 @@ func (c *Core) deleteFolder(msg *pubsub.Message) {
 func (c *Core) getStorage(msg *pubsub.Message) {
 	var stats string
 
-	if c.opState == IDLE {
+	if c.opState == stateIdle {
 		c.storage.Refresh()
-	} else if c.opState == MOVE {
+	} else if c.opState == stateMove {
 		percent, left, speed := progress(c.storage.BytesToMove, c.bytesMoved, c.started)
 		stats = fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 	}
@@ -313,12 +317,12 @@ func (c *Core) setRsyncFlags(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
-	c.opState = CALC
+	c.opState = stateCalc
 	go c._calc(msg)
 }
 
 func (c *Core) _calc(msg *pubsub.Message) {
-	defer func() { c.opState = IDLE }()
+	defer func() { c.opState = stateIdle }()
 
 	payload, ok := msg.Payload.(string)
 	if !ok {
@@ -404,7 +408,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	var folders []*model.Item
 	for _, path := range c.settings.Folders {
 		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
-		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		c.checkOwnerAndPermissions(dtoCalc.SourceDisk, path, owner, group)
@@ -433,7 +437,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		for _, disk := range disks {
 			diskWithoutMnt := disk.Path[5:]
 			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
-			outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("_calc:%s", msg)
 			// time.Sleep(2 * time.Second)
@@ -454,10 +458,10 @@ func (c *Core) _calc(msg *pubsub.Message) {
 					reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
 					break
 				default:
-					reserved = lib.RESERVED_SPACE
+					reserved = lib.ReservedSpace
 				}
 
-				ceil := lib.Max(lib.RESERVED_SPACE, reserved)
+				ceil := lib.Max(lib.ReservedSpace, reserved)
 				mlog.Info("_calc:FoldersLeft(%d):ReservedSpace(%d)", len(folders), ceil)
 
 				packer := algorithm.NewKnapsack(disk, folders, ceil)
@@ -481,8 +485,8 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	finished := time.Now()
 	elapsed := lib.Round(time.Since(started), time.Millisecond)
 
-	fstarted := started.Format(TIME_FORMAT)
-	ffinished := finished.Format(TIME_FORMAT)
+	fstarted := started.Format(timeFormat)
+	ffinished := finished.Format(timeFormat)
 
 	// Send to frontend console started/ended/elapsed times
 	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
@@ -508,7 +512,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	notMoved := ""
 	if len(folders) > 0 {
-		outbound := &dto.Packet{Topic: "calcProgress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
+		outbound = &dto.Packet{Topic: "calcProgress", Payload: "The following folders will not be moved, because there's not enough space in the target disks:\n"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		mlog.Info("_calc:%d folders will NOT be moved.", len(folders))
@@ -674,14 +678,14 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 		kind := result[6]
 		name := result[7]
 
-		perms := u+g+o
+		perms := u + g + o
 
-		if (user != "nobody") {
+		if user != "nobody" {
 			mlog.Info("perms:User != nobody: [%s]: %s", user, name)
 			c.ownerIssue++
 		}
 
-		if (group != "users") {
+		if group != "users" {
 			mlog.Info("perms:Group != users: [%s]: %s", group, name)
 			c.groupIssue++
 		}
@@ -692,7 +696,7 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 				c.folderIssue++
 			}
 		} else {
-			if (perms != "r--r--r--") || (perms != "rw-rw-rw-") {
+			if strings.Compare(perms, "r--r--r--") != 0 || strings.Compare(perms, "rw-rw-rw-") != 0 {
 				mlog.Info("perms:File perms != rw-rw-rw- or -r--r--r--: [%s]: %s", perms, name)
 				c.fileIssue++
 			}
@@ -744,13 +748,13 @@ loop:
 }
 
 func (c *Core) move(msg *pubsub.Message) {
-	c.opState = MOVE
+	c.opState = stateMove
 	go c._move(msg)
 }
 
 func (c *Core) _move(msg *pubsub.Message) {
 	defer func() {
-		c.opState = IDLE
+		c.opState = stateIdle
 		c.started = time.Time{}
 		c.bytesMoved = 0
 	}()
@@ -888,8 +892,8 @@ func (c *Core) _move(msg *pubsub.Message) {
 }
 
 func (c *Core) finishMoveOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration) {
-	fstarted := started.Format(TIME_FORMAT)
-	ffinished := finished.Format(TIME_FORMAT)
+	fstarted := started.Format(timeFormat)
+	ffinished := finished.Format(timeFormat)
 	elapsed = lib.Round(time.Since(started), time.Millisecond)
 
 	outbound := &dto.Packet{Topic: "moveProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
@@ -956,8 +960,8 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err e
 
 	msg := dry + message
 
-	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", MAIL_CMD, subject, msg)
-	cmd := exec.Command(MAIL_CMD, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", mailCmd, subject, msg)
+	cmd := exec.Command(mailCmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
 	err = cmd.Run()
 
 	return

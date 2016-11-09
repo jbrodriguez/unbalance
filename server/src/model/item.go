@@ -1,11 +1,13 @@
 package model
 
+// Item -
 type Item struct {
 	Name string
 	Size int64
 	Path string
 }
 
+// BySize -
 type BySize []*Item
 
 func (s BySize) Len() int           { return len(s) }

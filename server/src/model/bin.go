@@ -2,25 +2,29 @@ package model
 
 import (
 	"github.com/jbrodriguez/mlog"
-	"jbrodriguez/unbalance/server/lib"
+	"jbrodriguez/unbalance/server/src/lib"
 )
 
+// Bin -
 type Bin struct {
 	Size  int64
 	Items []*Item
 }
 
-func (self *Bin) Add(item *Item) {
-	self.Items = append(self.Items, item)
-	self.Size += item.Size
+// Add -
+func (b *Bin) Add(item *Item) {
+	b.Items = append(b.Items, item)
+	b.Size += item.Size
 }
 
-func (self *Bin) Print() {
-	for _, item := range self.Items {
+// Print -
+func (b *Bin) Print() {
+	for _, item := range b.Items {
 		mlog.Info("[%s] %s\n", lib.ByteSize(item.Size), item.Name)
 	}
 }
 
+// ByFilled -
 type ByFilled []*Bin
 
 func (s ByFilled) Len() int           { return len(s) }

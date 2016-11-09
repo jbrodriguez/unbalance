@@ -11,15 +11,20 @@ import (
 	// "syscall"
 )
 
+// Callback -
 type Callback func(line string)
+
+// StderrWriter -
 type StderrWriter func(format string, a ...interface{})
 
+// Streamer -
 type Streamer struct {
 	buf    *bytes.Buffer
 	writer StderrWriter
 	prefix string
 }
 
+// NewStreamer -
 func NewStreamer(writer StderrWriter, prefix string) *Streamer {
 	return &Streamer{
 		buf:    bytes.NewBuffer([]byte("")),
@@ -50,10 +55,12 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 	return
 }
 
+// ShellEx -
 func ShellEx(writer StderrWriter, prefix, workDir string, callback Callback, name string, args ...string) error {
 	return shell(writer, prefix, workDir, callback, name, args...)
 }
 
+// Shell -
 func Shell(command string, writer StderrWriter, prefix, workDir string, callback Callback) error {
 	args := []string{
 		"-c",
@@ -83,7 +90,7 @@ func shell(writer StderrWriter, prefix, workDir string, callback Callback, name 
 	}
 	scanner := bufio.NewScanner(stdout)
 
-	if err := cmd.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 		// log.Fatal("Unable to start command: ", err)
 	}
