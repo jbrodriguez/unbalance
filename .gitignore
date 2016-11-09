@@ -1,5 +1,3 @@
-**/unbalance
-
 release/
 dist/
 staging/
@@ -24,3 +22,4 @@ vendor
 
 # binaries
 server/server
+server/unbalance
