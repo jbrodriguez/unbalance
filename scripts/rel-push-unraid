@@ -2,22 +2,34 @@
 
 set -e
 
+PROG="unbalance"
+NAME="unBALANCE"
+
 # This section deals with updating the plg in the unraid repo
+
+# current dir is ~/.cix/builds/jbrodriguez/unbalance
 VERSION=`cat VERSION 2> /dev/null`
 if [[ -z "$VERSION" ]]; then
 	error "Unable to retrieve latest version"
 fi
 
+pushd .. # ~/.cix/builds/jbrodriguez
+
 rm -rf unraid
 git clone https://github.com/jbrodriguez/unraid.git
 
-pushd unraid
+pushd unraid # ~/.cix/builds/jbrodriguez/unraid
 
 git remote set-url origin gitjbr:jbrodriguez/unraid.git
 git checkout master
-cat ../unbalance.plg > plugins/unbalance.plg
+rm plugins/$PROG.plg
+cp ../$PROG/$PROG.plg plugins/$PROG.plg
 git add -A
-git commit -m "Update version to ${VERSION}"
-git push origin master
+git commit -m "Release ${NAME} ${VERSION}"
+git push -u origin master
 
-popd
+popd # ~/.cix/builds/jbrodriguez
+
+rm -rf unraid
+
+popd # ~/.cix/builds/jbrodriguez/unbalance

@@ -5,70 +5,65 @@ function error {
   exit 1
 }
 
-UB_RELEASE="release/unbalance"
-UB_VERSION=$(cat VERSION)
-UB_FILE="unbalance-$UB_VERSION.tgz"
-echo $UB_FILE
+PROG="unbalance"
+APP_RELEASE="release/$PROG"
+APP_VERSION=$(cat VERSION)
+APP_FILE="$PROG-$APP_VERSION.tgz"
+echo $APP_FILE
 
-
-if [ -f "$UB_FILE" ]; then
-	echo -e "Bundle $UB_FILE already exists. No further actions will be taken." >&2
+if [ -f "$APP_FILE" ]; then
+	echo -e "Bundle $APP_FILE already exists. No further actions will be taken." >&2
 	exit 0
 fi
 
-if ! git diff --quiet; then
-	error "There are unsaved changes in your current branch. Please commit changes and try again."
-fi
-
-# branch_name=$(git symbolic-ref -q HEAD)
-# branch_name=${branch_name##refs/heads/}
-# branch_name=${branch_name:-HEAD}
-#
-# git checkout master
-#
 # if ! git diff --quiet; then
-# 	git checkout $branch_name
-# 	error "There are unsaved changes in master. Please commit changes and try again."
+# 	error "There are unsaved changes in your current branch. Please commit changes and try again."
 # fi
 
-echo "Building client"
-npm run build
+rm -rf ./dist
 
+echo "Building client"
+pushd client
+npm run build
 if [ $? -ne 0 ]; then
+	popd
 	error "Unable to build client. Please check and try again"
 fi
-
-echo "Building server"
-make server
-
-if [ $? -ne 0 ]; then
-	error "Unable to build server. Please check and try again"
-fi
-
-
-echo "Generating release ..."
-rm -rf release && mkdir -p $UB_RELEASE
-cp -r dist/* $UB_RELEASE
-cp -r plugin/event $UB_RELEASE
-cp -r plugin/scripts $UB_RELEASE
-cp -r plugin/images $UB_RELEASE
-cp plugin/README.md $UB_RELEASE
-cp plugin/unbalance.png $UB_RELEASE
-cp plugin/unbalance.page $UB_RELEASE
-cp CHANGES $UB_RELEASE
-cp VERSION $UB_RELEASE
-
-pushd release
-tar czvf ./$UB_FILE unbalance
-mv ./$UB_FILE ..
 popd
 
-UB_MD5=$(md5sum ./$UB_FILE | cut -d' ' -f1)
-echo "MD5: ${UB_MD5}"
+echo "Building server"
+pushd server
+make server
+if [ $? -ne 0 ]; then
+	popd
+	error "Unable to build server. Please check and try again"
+fi
+popd
 
-CHANGES=`cat changelogs/${UB_VERSION}.txt 2> /dev/null`
+echo "Generating release ..."
+rm -rf release && mkdir -p $APP_RELEASE
+cp -r dist/* $APP_RELEASE
+cp -r plugin/event $APP_RELEASE
+cp -r plugin/scripts $APP_RELEASE
+cp -r plugin/images $APP_RELEASE
+cp plugin/README.md $APP_RELEASE
+cp plugin/$PROG.png $APP_RELEASE
+cp plugin/$PROG.page $APP_RELEASE
+cp CHANGES $APP_RELEASE
+cp VERSION $APP_RELEASE
 
-sed -e s/'{{md5}}'/$UB_MD5/g -e s/'{{version}}'/$UB_VERSION/g -e s/'{{changes}}'/$CHANGES/g plugin/template.plg > ./unbalance.plg
+pushd release
+tar czvf ./$APP_FILE $PROG
+mv ./$APP_FILE ..
+popd
+
+APP_MD5=$(md5sum ./$APP_FILE | cut -d' ' -f1)
+echo "MD5: ${APP_MD5}"
+
+CHANGES=`cat metadata/changes/${APP_VERSION}.txt 2> /dev/null`
+
+# sed -e s/'{{md5}}'/$APP_MD5/g -e s/'{{version}}'/$APP_VERSION/g -e s/'{{changes}}'/$CHANGES/g plugin/template.plg > ./controlr.plg
+perl -0777 -pe 's/{{md5}}/'"${APP_MD5}"'/g ; s/{{version}}/'"${APP_VERSION}"'/g ; s/{{changes}}/'"${CHANGES}"'/g' plugin/template.plg > ./$PROG.plg
 rm -rf release
 
-echo "Succesfully generated unbalance-$UB_VERSION"
+echo "Succesfully generated $PROG-$APP_VERSION"

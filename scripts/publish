@@ -1,0 +1,19 @@
+#!/bin/bash
+
+rm -rf ./dist
+
+TARGET="${1:-all}"
+
+if [ $TARGET == 'all' ] || [ $TARGET == 'client' ] ; then
+	pushd client
+	npm run build
+	popd
+fi
+
+if [ $TARGET == 'all' ] || [ $TARGET == 'server' ] ; then
+	pushd server
+	make server
+	popd
+fi
+
+rsync -avzP -e "ssh" dist/* wopr:/usr/local/emhttp/plugins/unbalance/

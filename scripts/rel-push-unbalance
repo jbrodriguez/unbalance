@@ -5,21 +5,47 @@ function error {
   exit 1
 }
 
+PROG="unbalance"
+
 # This sections deals with pushing the current tag
 # to the unbalance github repo
 REMOTE=`git remote get-url github 2> /dev/null`
 if [[ -z "$REMOTE" ]]; then
-	git remote add github gitjbr:jbrodriguez/unb.git
+	git remote add github gitjbr:jbrodriguez/unbalance.git
 else
-	git remote set_url github gitjbr:jbrodriguez/unb.git
+	git remote set_url github gitjbr:jbrodriguez/unbalance.git
 fi
 
-TAG=`git describe --abbrev=0 --tags 2> /dev/null`
-if [[ -z "$TAG" ]]; then
-	error "Unable to retrieve latest tag"
+# TAG=`git describe --abbrev=0 --tags 2> /dev/null`
+# if [[ -z "$TAG" ]]; then
+# 	error "Unable to retrieve latest tag"
+# fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+if [[ -z $BRANCH ]]; then
+	error "Unable to obtain branch name. Please check and try again."
 fi
 
-git push github ${TAG}
+git push --tags github $BRANCH
 if [ $? -ne 0 ]; then
-	error "Unable to push tag ${TAG} to github"
+	error "Unable to push branch ${BRANCH} to github"
 fi
+
+VERSION=`cat VERSION 2> /dev/null`
+
+BINARY="$PROG-$VERSION.tgz"
+DESCRIPTION=`cat metadata/changes/$VERSION.txt`
+
+github-release --verbose release \
+    --user jbrodriguez \
+    --repo "$PROG" \
+    --tag "$VERSION" \
+    --name "$VERSION" \
+    --description "$DESCRIPTION" \
+
+github-release --verbose upload \
+	--user jbrodriguez \
+	--repo "$PROG" \
+	--tag "$VERSION" \
+	--name "$BINARY" \
+    --file "$BINARY"
