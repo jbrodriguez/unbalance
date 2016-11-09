@@ -3,8 +3,10 @@ unBALANCE
 
 *tl;dr* **unBALANCE** is an [unRAID](http://lime-technology.com) app to free up space from one of the disks in the array, by moving folders and files to other disks.
 
+## [Changelog](https://github.com/jbrodriguez/unbalance/releases)
+
 ## Screenshot
-![Screenshot](110-home.png)
+![Screenshot](metadata/images/110-home.png)
 
 ## Upgrade Notes for v1.2.x
 For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
@@ -37,7 +39,7 @@ The first time you open the app, you are redirected to the settings page, where 
 
 You can Select an entire user share (/films in the screenshot below) or any folder(s) under the user shares (/films/bluray for example).
 
-![Settings](110-settings.png)
+![Settings](metadata/images/110-settings.png)
 
 ## Use Cases
 This is one of the use cases for unBALANCE

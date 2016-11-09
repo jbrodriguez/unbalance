@@ -1,0 +1,15 @@
+test:
+    script:
+        - scripts/rel-create
+        # - scripts/rel-push-unbalance
+        # - scripts/rel-push-unraid
+    only:
+        - /^wrk.*$/
+
+deploy:
+    script:
+        - scripts/rel-create
+        # - scripts/rel-push-unbalance
+        # - scripts/rel-push-unraid
+    only:
+        - /^rel.*$/

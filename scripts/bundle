@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+function error {
+  echo -e "$1" >&2
+  exit 1
+}
+
+PROG="unbalance"
+APP_RELEASE="release/$PROG"
+APP_VERSION=$(cat VERSION)
+APP_FILE="$PROG-$APP_VERSION.tgz"
+echo $APP_FILE
+
+if [ -f "$APP_FILE" ]; then
+	echo -e "Bundle $APP_FILE already exists. No further actions will be taken." >&2
+	exit 0
+fi
+
+# if ! git diff --quiet; then
+# 	error "There are unsaved changes in your current branch. Please commit changes and try again."
+# fi
+
+rm -rf ./dist
+
+echo "Building client"
+pushd client
+npm run build
+if [ $? -ne 0 ]; then
+	popd
+	error "Unable to build client. Please check and try again"
+fi
+popd
+
+echo "Building server"
+pushd server
+make server
+if [ $? -ne 0 ]; then
+	popd
+	error "Unable to build server. Please check and try again"
+fi
+popd
+
+echo "Generating release ..."
+rm -rf release && mkdir -p $APP_RELEASE
+cp -r dist/* $APP_RELEASE
+cp -r plugin/event $APP_RELEASE
+cp -r plugin/scripts $APP_RELEASE
+cp -r plugin/images $APP_RELEASE
+cp plugin/README.md $APP_RELEASE
+cp plugin/$PROG.png $APP_RELEASE
+cp plugin/$PROG.page $APP_RELEASE
+cp CHANGES $APP_RELEASE
+cp VERSION $APP_RELEASE
+
+pushd release
+tar czvf ./$APP_FILE $PROG
+mv ./$APP_FILE ..
+popd
+
+APP_MD5=$(md5sum ./$APP_FILE | cut -d' ' -f1)
+echo "MD5: ${APP_MD5}"
+
+CHANGES=`cat metadata/changes/${APP_VERSION}.txt 2> /dev/null`
+
+perl -0777 -pe 's/{{md5}}/'"${APP_MD5}"'/g ; s/{{version}}/'"${APP_VERSION}"'/g ; s/{{changes}}/'"${CHANGES}"'/g' plugin/template.plg > ./$PROG.plg
+rm -rf release
+
+echo "Successfully generated $PROG-$APP_VERSION.tgz"
