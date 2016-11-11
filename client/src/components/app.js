@@ -37,10 +37,10 @@ export default function App({ location, children, store }) {
 	if ( state.feedback.length !== 0) {
 		alert = (
 			<section className={cx('row', 'bottom-spacer-half')}>
-				<div className={cx('col-xs-12')}>				
+				<div className={cx('col-xs-12')}>
 					<FeedbackPanel {...store} />
 				</div>
-			</section>		
+			</section>
 		)
 	}
 
@@ -73,7 +73,7 @@ export default function App({ location, children, store }) {
 		'label-success': stateOk,
 		'label-alert': !stateOk,
 	})
-	
+
 	// let status = null
 	let buttons = null
 	if (location.pathname === '/' && state.unraid) {
@@ -88,7 +88,7 @@ export default function App({ location, children, store }) {
 				<button className={cx('btn', 'btn-primary')} onClick={() => actions.calculate()} disabled={disabled}>CALCULATE</button>
 				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
-				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
+				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
 					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions)} disabled={disabled} />
 					&nbsp;
 					<label>dry run</label>
@@ -118,9 +118,9 @@ export default function App({ location, children, store }) {
 	return (
 		<div className={cx('container', 'body')}>
 		<header>
-			
+
 			<nav className={cx('row')}>
-				
+
 				<ul className={cx('col-xs-12', 'col-sm-2')}>
 					<li className={cx('center-xs', 'flex', 'headerLogoBg')}>
 						<img src={unbalance} />
@@ -134,7 +134,8 @@ export default function App({ location, children, store }) {
 							<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
 								<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>HOME</IndexLink>
 								<span className={cx('spacer')}>|</span>
-								<Link to="settings" activeClassName={active}>SETTINGS</Link>						
+								<Link to="settings" activeClassName={active}>SETTINGS</Link>
+								<Link to="log" activeClassName={active}>LOG</Link>
 							</div>
 
 							<div className={cx('col-xs-12', 'col-sm-8')}>

@@ -18,7 +18,7 @@ export default class Console extends React.Component {
 	}
 
 	render() {
-		let { lines } = this.props
+		const { lines, style } = this.props
 
 		// if (model.lines.length === 0) {
 		// 	return null
@@ -31,9 +31,9 @@ export default class Console extends React.Component {
 		})
 
 		return (
-			<div className={cx('console')}>
+			<div className={cx('console', style)}>
 				{ items }
 			</div>
-		)		
-	}	
+		)
+	}
 }
