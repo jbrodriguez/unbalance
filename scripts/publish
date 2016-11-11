@@ -3,6 +3,7 @@
 rm -rf ./dist
 
 TARGET="${1:-all}"
+SERVER="${2:-wopr}"
 
 if [ $TARGET == 'all' ] || [ $TARGET == 'client' ] ; then
 	pushd client
@@ -16,4 +17,4 @@ if [ $TARGET == 'all' ] || [ $TARGET == 'server' ] ; then
 	popd
 fi
 
-rsync -avzP -e "ssh" dist/* wopr:/usr/local/emhttp/plugins/unbalance/
+rsync -avzP -e "ssh" dist/* $SERVER:/usr/local/emhttp/plugins/unbalance/
