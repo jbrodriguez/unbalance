@@ -1,3 +1,52 @@
+Version 1.8.0 - 2016-11-11
+- Add messages when permission issues arise Related to #11
+- Fix syntax style Related to #11
+- Restrict when to send the perm issues message If bytestomove == 0, no action will take place anyway, so there's no point in sending the perm issue msg Also check that we actually have issues Related to #11
+- Display the warning when perm issues are found Related to #11
+- Ignore binaries
+- Fix errors Related to #11
+- Use alternate method to get uid/gid Turns out os.User is based on cgo, so it can't be cross-compiled and is currently missing from linux/amd64 Roll out your own Related to #11
+- Increase feedback timeout To be able to read it and process it Related to #11
+- Increase the timeout Related to #11
+- Improve begin/end messages Related to #11
+- Improve email text Related to #11
+- Support hal
+- Fix deployment instructions These are deployment to the 'test' environment
+- Add timeout state There may be occasions when two message arrive in sequence (calcFinished, calcPermission). What was happening is that the timeout set by last event wasn't being honored. By having a timeout state, the last event wins: it grabs the timeout state, if there's any it clears it and sets it's own. Related to #11
+- First pass at logic to decide whether we need to issue a warning We still need to make sure it works against the new permissions script Related to #11
+- Fix logic to detect issues Logic checks for Folders rwxrwxrwx Files rw-rw-rw- or r--r--r--
+- Remove some disks entries Looks like rc2 is polluting the disks space, so we remove those disks that appear as DISK_NP
+- Fix script to run as per user selection instead of always nobody
+- Anchor dependencies to an exact version
+- Initial CI script
+- Remove master requirement
+- Integrate unbalance.xml into this repo
+- Add fastlane tool
+- Add git-env script to setup git environment
+- Add less dependencies
+- Update client libraries
+- Update server libraries
+- Modify CI steps
+- Check for client or server completion before creating release
+- Create script to drive build process
+- Improve git and fastlane scripts
+- Modify logic to create changelogs
+- Keep a separate repo for xml/plg
+- Improve readability of CI steps
+- Initial code reorganization
+- Organize client code
+- Organize server code
+- Organize scripts
+- Organize metadata
+- Fix testing issues
+- Implement Show Log feature (client)
+- Implement Show Log feature (server)
+- Let server name be configurable
+- UI Adjustments
+- Fixes to bump-hook script
+- Fix CI script
+
+
 Version 1.7.1 - 2016-07-09
     back: Decode rsync errors
     We now translate rsync error exit status into their corresponding textual meaning
@@ -670,5 +719,3 @@ Version 0.1.0 - 2015-05-01
     - Add folder to gitignore
     - Add LICENSE (MIT)
     - Add semver scripts to handle app versioning
-
-
