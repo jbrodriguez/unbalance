@@ -37,10 +37,10 @@ export default function App({ location, children, store }) {
 	if ( state.feedback.length !== 0) {
 		alert = (
 			<section className={cx('row', 'bottom-spacer-half')}>
-				<div className={cx('col-xs-12')}>				
+				<div className={cx('col-xs-12')}>
 					<FeedbackPanel {...store} />
 				</div>
-			</section>		
+			</section>
 		)
 	}
 
@@ -73,7 +73,7 @@ export default function App({ location, children, store }) {
 		'label-success': stateOk,
 		'label-alert': !stateOk,
 	})
-	
+
 	// let status = null
 	let buttons = null
 	if (location.pathname === '/' && state.unraid) {
@@ -88,7 +88,7 @@ export default function App({ location, children, store }) {
 				<button className={cx('btn', 'btn-primary')} onClick={() => actions.calculate()} disabled={disabled}>CALCULATE</button>
 				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
-				<div className={cx('flexSection', 'middle-xs', 'rspacer')}> 
+				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
 					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions)} disabled={disabled} />
 					&nbsp;
 					<label>dry run</label>
@@ -118,9 +118,9 @@ export default function App({ location, children, store }) {
 	return (
 		<div className={cx('container', 'body')}>
 		<header>
-			
+
 			<nav className={cx('row')}>
-				
+
 				<ul className={cx('col-xs-12', 'col-sm-2')}>
 					<li className={cx('center-xs', 'flex', 'headerLogoBg')}>
 						<img src={unbalance} />
@@ -133,33 +133,31 @@ export default function App({ location, children, store }) {
 						<section className={cx('row', 'middle-xs')}>
 							<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
 								<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>HOME</IndexLink>
-								<span className={cx('spacer')}>|</span>
-								<Link to="settings" activeClassName={active}>SETTINGS</Link>						
+								<div className={cx('lspacer')} />
+								<Link to="settings" activeClassName={active}>SETTINGS</Link>
+								<div className={cx('lspacer')} />
+								<Link to="log" activeClassName={active}>LOG</Link>
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-8')}>
+							<div className={cx('col-xs-12', 'col-sm-9')}>
 								<div className={cx('gridHeader')}>
-									<section className={cx('row', 'between-xs')}>
+									<section className={cx('row', 'between-xs', 'middle-xs')}>
 										<div className={cx('col-xs-12', 'col-sm-1', 'flexSection', 'center-xs', 'middle-xs')}>
+											<img src={vm} />
 											{ progress }
 										</div>
 
-										<div className={cx('col-xs-12', 'col-sm-5', 'statsSection')}>
+										<div className={cx('col-xs-12', 'col-sm-6', 'statsSection')}>
 											{ stats}
 										</div>
 
-										<div className={cx('col-xs-12', 'col-sm-6')}>
+										<div className={cx('col-xs-12', 'col-sm-5')}>
 											{ buttons }
 										</div>
 									</section>
 								</div>
 							</div>
 
-							<div className={cx('col-xs-12', 'col-sm-1', 'middle-xs', 'end-xs', 'flexSection')}>
-								<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><i className={cx('fa fa-twitter')} /></a>
-								<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><i className={cx('fa fa-github')} /></a>
-								<img src={vm} />
-							</div>
 						</section>
 
 					</li>
@@ -193,7 +191,9 @@ export default function App({ location, children, store }) {
 				</ul>
 
 				<ul className={cx('col-xs-12', 'col-sm-4')}>
-					<div className={cx('flexSection', 'end-xs')}>
+					<div className={cx('flexSection', 'middle-xs', 'end-xs')}>
+						<a className={cx('lspacer')} href="https://twitter.com/jbrodriguezio" title="@jbrodriguezio" target="_blank"><i className={cx('fa fa-twitter', 'social')} /></a>
+						<a className={cx('spacer')} href="https://github.com/jbrodriguez" title="github.com/jbrodriguez" target="_blank"><i className={cx('fa fa-github', 'social')} /></a>
 						<a href="http://lime-technology.com/forum/index.php?topic=36201.0" title="diskmv" target="_blank"><img src={diskmv} alt="Logo for diskmv" /></a>
 						<a className={cx('lspacer')} href="http://lime-technology.com/" title="Lime Technology" target="_blank"><img src={unraid} alt="Logo for unRAID" /></a>
 						<a className={cx('spacer')} href="http://jbrodriguez.io/" title="jbrodriguez.io" target="_blank"><img src={logo} alt="Logo for Juan B. Rodriguez" /></a>

@@ -361,6 +361,19 @@ func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
 	return
 }
 
+// GetLog -
+func (u *Unraid) GetLog() []string {
+	cmd := "tail -n 100 /boot/logs/unbalance.log"
+
+	log := make([]string, 0)
+
+	lib.Shell(cmd, mlog.Warning, "Get Log error:", "", func(line string) {
+		log = append(log, line)
+	})
+
+	return log
+}
+
 func delim(r rune) bool {
 	return r == '.' || r == '='
 }

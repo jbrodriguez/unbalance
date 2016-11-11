@@ -53,9 +53,9 @@ export default class Home extends Component {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.lines} />
+						<ConsolePanel lines={state.lines} style={'console-feedback'} />
 					</div>
-				</section>				
+				</section>
 			)
 		}
 
@@ -136,9 +136,9 @@ export default class Home extends Component {
 								<th>{humanBytes(state.unraid.condition.free)}</th>
 							</tr>
 						</tfoot>
-					</table>					
+					</table>
 				</div>
-			</section>				
+			</section>
 		)
 
 		return (

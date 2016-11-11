@@ -18,6 +18,7 @@ import WSApi from './lib/wsapi'
 import App from './components/app'
 import Home from './components/home'
 import Settings from './components/settings'
+import Log from './components/log'
 
 // SAMPLE STATE
 // state = {
@@ -69,6 +70,7 @@ const initialState = {
 	moveDisabled: true,
 	stats: '',
 	lines: [],
+	log: [],
 	tree: {
 		items: [],
 		selected: '',
@@ -95,6 +97,7 @@ const routes = (
 	<Route path='/' component={App}>
 		<IndexRoute component={Home} />
 		<Route path='settings' component={Settings} />
+		<Route path='log' component={Log} />
 	</Route>
 )
 

@@ -18,6 +18,9 @@ module.exports = {
 
 	opError,
 	progressStats,
+
+	getLog,
+	gotLog,
 }
 
 function getStorage({state, actions, opts: {api}}) {
@@ -376,5 +379,21 @@ function progressStats({state, actions}, stats) {
 	return {
 		...state,
 		stats,
+	}
+}
+
+function getLog({state, actions, opts: {ws}}) {
+	actions.setOpInProgress("Getting logs ...")
+
+	ws.send({topic: 'getLog'})
+
+	return state
+}
+
+function gotLog({state}, log) {
+	return {
+		...state,
+		opInProgress: null,
+		log,
 	}
 }

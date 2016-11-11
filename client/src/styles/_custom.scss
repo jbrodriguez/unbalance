@@ -32,9 +32,13 @@ p {
 	line-height: 2em;
 }
 
+.social {
+	font-size: 2em !important;
+	color: $headerMenuBackground;
+}
 
 .headerLogoBg {
-	background-color: $headerLogoBackground;	
+	background-color: $headerLogoBackground;
 }
 
 .headerMenuBg {
@@ -51,7 +55,7 @@ p {
 			font-weight: bold;
 			border-bottom: 1px solid $headerMenuAnchorColor;
 		}
-	}	
+	}
 }
 
 .statsSection {
@@ -71,11 +75,10 @@ p {
 // }
 
 .console {
-	// display: flex;	
+	// display: flex;
 
 	overflow: auto;
 	// width: 100%;
-	height: 300px;
 	// border: 1px solid $console-border;
 	padding: 0.75em;
 	color: $consoleColor;
@@ -83,13 +86,23 @@ p {
 
 	.consoleLine {
 		font-size: 0.8em;
-	// line-height: 0.5em;    	
+	// line-height: 0.5em;
 	}
 
 	p {
 		margin-bottom: 0;
 		white-space: nowrap;
 	}
+}
+
+.console-feedback {
+	height: 300px;
+}
+
+.console-logs {
+	// flex: 1;
+	// min-height: 100vh;
+	height: 700px;
 }
 
 .treeView {
@@ -107,7 +120,7 @@ p {
 		padding-left: 0;
 	}
 
-	li { 
+	li {
 		list-style-type: none;
 	}
 
@@ -177,7 +190,7 @@ p {
     span {
   		background: $progressMeter;
   		height: 100%;
-  		display: block;    	
+  		display: block;
     }
 }
 
@@ -291,17 +304,17 @@ p {
 // .dashboard {
 // 	@media (min-width: $breakpoint-2) {
 // 		border-collapse: collapse;
-// 		font-size: 0.9em; 
+// 		font-size: 0.9em;
 // 	}
 
 // 	thead {
 // 		display: none;
 
 // 	    @media (min-width: $breakpoint-2) {
-// 	      // Undo display: block 
+// 	      // Undo display: block
 // 	      border-bottom: 1px solid $borderColor;
-// 	      display: table-header-group; 
-// 	    }		
+// 	      display: table-header-group;
+// 	    }
 // 	}
 
 // 	th, td, tr {
@@ -321,13 +334,13 @@ p {
 // 		margin-bottom: 1em;
 
 // 		@media (min-width: $breakpoint-2) {
-// 			// Undo display: block 
+// 			// Undo display: block
 // 			display: table-row;
 // //			padding: 1em 0.25em;
 
-// 			&:nth-of-type(even) { 
-// 				background-color: $borderColor; 
-// 			}	      
+// 			&:nth-of-type(even) {
+// 				background-color: $borderColor;
+// 			}
 // 		}
 // 	}
 
@@ -341,17 +354,17 @@ p {
 // 			font-size: 1em;
 // 			background-color: transparent;
 // //			padding: .5rem .25rem;
-// 		}			
+// 		}
 
 // 		&:first-child {
 // 			color: white;
 // 		    background-color: $footerBackground;
 
 // 		    @media (min-width: $breakpoint-2) {
-// 		      // Undo display: block 
+// 		      // Undo display: block
 // 		      color: $primaryTextColor;
 // 		      background-color: transparent;
-// 		    }		    
+// 		    }
 
 // 		    &:before {
 // 		    	width: auto;
@@ -366,7 +379,7 @@ p {
 
 // 			@media (min-width: $breakpoint-2) {
 // 				display: none;
-// 			}			
+// 			}
 // 		}
 
 // 		// &:nth-of-type(1):before { content: "Disk" }
@@ -376,7 +389,7 @@ p {
 // 		&:nth-of-type(5):before { content: "Size" }
 // 		&:nth-of-type(6):before { content: "Free" }
 // 		&:nth-of-type(7):before { content: "Fill" }
-// 		&:nth-of-type(8):before { content: "Plan" }			
+// 		&:nth-of-type(8):before { content: "Plan" }
 // 	}
 
 // }
