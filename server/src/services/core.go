@@ -131,6 +131,7 @@ func (c *Core) Start() (err error) {
 
 	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
 	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
+	c.registerAdditional(c.bus, "getLog", c.getLog, c.mailbox)
 
 	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
@@ -946,6 +947,15 @@ func (c *Core) finishMoveOperation(subject, headline string, commands []string, 
 
 	mlog.Info(subject)
 	mlog.Info(message)
+}
+
+func (c *Core) getLog(msg *pubsub.Message) {
+	log := c.storage.GetLog()
+
+	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	return
 }
 
 func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
