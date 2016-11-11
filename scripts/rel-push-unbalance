@@ -6,6 +6,9 @@ function error {
 }
 
 PROG="unbalance"
+VERSION=`cat VERSION 2> /dev/null`
+
+git checkout rel/$VERSION
 
 # This sections deals with pushing the current tag
 # to the unbalance github repo
@@ -13,7 +16,7 @@ REMOTE=`git remote get-url github 2> /dev/null`
 if [[ -z "$REMOTE" ]]; then
 	git remote add github gitjbr:jbrodriguez/unbalance.git
 else
-	git remote set_url github gitjbr:jbrodriguez/unbalance.git
+	git remote set-url github gitjbr:jbrodriguez/unbalance.git
 fi
 
 # TAG=`git describe --abbrev=0 --tags 2> /dev/null`
@@ -30,8 +33,6 @@ git push --tags github $BRANCH
 if [ $? -ne 0 ]; then
 	error "Unable to push branch ${BRANCH} to github"
 fi
-
-VERSION=`cat VERSION 2> /dev/null`
 
 BINARY="$PROG-$VERSION.tgz"
 DESCRIPTION=`cat metadata/changes/$VERSION.txt`
