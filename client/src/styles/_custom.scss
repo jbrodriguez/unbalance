@@ -32,6 +32,10 @@ p {
 	line-height: 2em;
 }
 
+.social {
+	font-size: 2em !important;
+	color: $headerMenuBackground;
+}
 
 .headerLogoBg {
 	background-color: $headerLogoBackground;
@@ -96,6 +100,8 @@ p {
 }
 
 .console-logs {
+	// flex: 1;
+	// min-height: 100vh;
 	height: 700px;
 }
 
