@@ -1,6 +1,6 @@
 #!/bin/bash
 # read our configuration
-source /boot/config/plugins/unbalance/unbalance.cfg
+source /boot/config/plugins/unbalance/unbalance.conf
 
 prog="/usr/local/emhttp/plugins/unbalance/unbalance"
 running=$(pidof unbalance | wc -w)
