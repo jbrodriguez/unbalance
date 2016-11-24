@@ -1,0 +1,4 @@
+2016-11-24 - 1.8.1
+- Create correct config file (unbalance.conf)
+- Fix UI not opening from settings page
+- Check for config file presence
