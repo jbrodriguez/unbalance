@@ -1,3 +1,11 @@
+Version 1.8.1 - 2016-11-24
+- Fix rel-push-unbalance script
+- Create correct config file (unbalance.conf)
+- Fix UI not opening from settings page
+- Check for config file presence
+- Wording changes
+
+
 Version 1.8.0 - 2016-11-11
 - Add messages when permission issues arise Related to #11
 - Fix syntax style Related to #11
