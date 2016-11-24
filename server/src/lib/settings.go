@@ -1,7 +1,6 @@
 package lib
 
 import (
-	// "errors"
 	"fmt"
 	"github.com/namsral/flag"
 	"os"
@@ -45,10 +44,15 @@ func NewSettings(version string) (*Settings, error) {
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
-	// location := SearchFile(name, locations)
-	// if location != "" {
-	// 	flag.Set("config", filepath.Join(location, name))
-	// }
+	found, err := Exists("/boot/config/plugins/unbalance/unbalance.conf")
+	if !found || err != nil {
+		msg := "Unable to find /boot/config/plugins/unbalance/unbalance.conf. Either create this file or re-install the plugin."
+		if err != nil {
+			msg += fmt.Sprintf(" (%s)", err)
+		}
+		fmt.Printf("%s\n", msg)
+		os.Exit(3)
+	}
 
 	// /boot/config/plugins/unbalance/
 	flag.StringVar(&config, "config", "", "config location")

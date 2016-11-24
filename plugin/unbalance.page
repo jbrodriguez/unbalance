@@ -8,10 +8,11 @@ $unbalance_cfg = parse_plugin_cfg("unbalance");
 $unbalance_service = isset($unbalance_cfg['SERVICE']) ? $unbalance_cfg['SERVICE'] 	: "disable";
 $unbalance_runas = isset($unbalance_cfg['RUNAS']) 		? $unbalance_cfg['RUNAS'] 		: "nobody";
 $unbalance_port = (isset($unbalance_cfg['PORT']) && is_numeric($unbalance_cfg['PORT']) && $unbalance_cfg['PORT'] > 0 && $unbalance_cfg['PORT'] < 65535 ) ? $unbalance_cfg['PORT'] : "6237";
+$unbalance_ip = (isset($var['IPADDR'])) ? $var['IPADDR'] : $eth0['IPADDR:0'];
 $unbalance_running = shell_exec("pidof unbalance | wc -w");
 $unbalance_version = shell_exec("cat /usr/local/emhttp/plugins/unbalance/VERSION");
-$unbalance_version = ($unbalance_running == 1) ? 
-	"<a style='color:green;' target='_blank' href='http://".$var['IPADDR'].":".$unbalance_port."' title='unBALANCE plugin'><b>Open Web UI ( v$unbalance_version)</b></a>":
+$unbalance_version = ($unbalance_running == 1) ?
+	"<a style='color:green;' target='_blank' href='http://".$unbalance_ip.":".$unbalance_port."' title='unBALANCE plugin'><b>Open Web UI ( v$unbalance_version)</b></a>":
 	"<b><font style='color:orange;'>unBALANCE v$unbalance_version</font></b>";
 ?>
 
@@ -58,15 +59,15 @@ function checkRUNNING(form) {
 	if (<?=$unbalance_running;?> == 1)
 	{
 		$(".stopped").prop("disabled", true);
-		form.btnApply.disabled = "disabled";	
-   } 
+		form.btnApply.disabled = "disabled";
+   }
    else
 	$(".stopped").prop("disabled", (form.SERVICE.value == "enable"));
 	if (form.SERVICE.value == "enable")
 		form.command.value = "/usr/local/emhttp/plugins/unbalance/scripts/start";
 	else {
 		form.command.value = "/usr/local/emhttp/plugins/unbalance/scripts/stop";
-		form.btnApply.disabled = (form.SERVICE.value == "enable");	
+		form.btnApply.disabled = (form.SERVICE.value == "enable");
 	}
 }
 
