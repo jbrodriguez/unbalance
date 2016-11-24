@@ -40,7 +40,7 @@ type Settings struct {
 
 // NewSettings -
 func NewSettings(version string) (*Settings, error) {
-	var config, port, log, folders, rsyncFlags, apiFolders string
+	var config, port, log, folders, rsyncFlags, apiFolders, service, runas string
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
@@ -64,6 +64,8 @@ func NewSettings(version string) (*Settings, error) {
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
 	flag.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
+	flag.StringVar(&service, "SERVICE", "disable", "which state should the plugin start in")
+	flag.StringVar(&runas, "RUNAS", "nobody", "which users should own the plugin process")
 
 	flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
 	flag.Parse()
