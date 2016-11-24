@@ -1,3 +1,10 @@
+Version 1.8.2 - 2016-11-24
+- Rename references to unbalance.cfg
+- Perform a better string comparison
+- Uppercase port flag
+- Add missing flags
+
+
 Version 1.8.1 - 2016-11-24
 - Fix rel-push-unbalance script
 - Create correct config file (unbalance.conf)
