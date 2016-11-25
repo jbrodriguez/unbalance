@@ -17,7 +17,7 @@ $unbalance_version = ($unbalance_running == 1) ?
 ?>
 
 <form markdown="1" name="unbalance_settings" method="POST" action="/update.php" target="progressFrame">
-<input type="hidden" name="#file" value="unbalance/unbalance.conf" />
+<input type="hidden" name="#file" value="unbalance/unbalance.cfg" />
 <input type="hidden" id="command" name="#command" value="" />
 
 <p><?=$unbalance_version;?></p>

@@ -1,6 +1,6 @@
 #!/bin/bash
 # /usr/local/emhttp/plugins/unbalance/unbalance > /dev/null & 2>&1
-source /boot/config/plugins/unbalance/unbalance.conf
-if [ "$SERVICE" = "enable" ]; then
+source /boot/config/plugins/unbalance/unbalance.cfg
+if [ "$SERVICE" == "enable" ]; then
 	/usr/local/emhttp/plugins/unbalance/scripts/start
 fi

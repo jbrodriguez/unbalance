@@ -34,7 +34,7 @@ Get the unBALANCE bundle.
 </FILE>
 
 <!-- Install default plugin cfg  -->
-<FILE Name="/boot/config/plugins/unbalance/unbalance.conf">
+<FILE Name="/boot/config/plugins/unbalance/unbalance.cfg">
 <INLINE>
 <![CDATA[
 SERVICE="disable"
@@ -96,7 +96,7 @@ echo ""
 <![CDATA[
 #!/bin/sh
 # This will check each entry in the config so nothing is missing, and if missing, sets to default
-CFGFILE=/boot/config/plugins/unbalance/unbalance.conf
+CFGFILE=/boot/config/plugins/unbalance/unbalance.cfg
 [ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"disable\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"6237\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
