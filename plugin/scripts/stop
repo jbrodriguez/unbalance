@@ -1,6 +1,6 @@
 #!/bin/sh
 # read our configuration
-source /boot/config/plugins/unbalance/unbalance.conf
+source /boot/config/plugins/unbalance/unbalance.cfg
 
 prog="unbalance"
 running=$(pidof unbalance | wc -w)
