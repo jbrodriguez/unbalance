@@ -1,3 +1,8 @@
+Version 1.8.3 - 2016-11-25
+- Keep separate config files
+- Use unbalance.conf if available
+
+
 Version 1.8.2 - 2016-11-24
 - Rename references to unbalance.cfg
 - Perform a better string comparison
