@@ -1,3 +1,7 @@
+Version 1.8.4 - 2016-12-01
+- Make sure IP is non-empty
+
+
 Version 1.8.3 - 2016-11-25
 - Keep separate config files
 - Use unbalance.conf if available
