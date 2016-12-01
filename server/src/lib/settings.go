@@ -137,7 +137,7 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	if err = WriteLine(tmpFile, fmt.Sprintf("notifyMove=%d", s.NotifyCalc)); err != nil {
+	if err = WriteLine(tmpFile, fmt.Sprintf("notifyMove=%d", s.NotifyMove)); err != nil {
 		return err
 	}
 
