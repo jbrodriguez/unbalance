@@ -699,3 +699,21 @@ func TestCommandCreation(t *testing.T) {
 	mlog.Info("cmd(%s)", cmd)
 	assert.Equal(t, `rsync -avX --partial "/mnt/disk3/blurip/Air (2014)" "/mnt/disk2/blurip/"`, cmd)
 }
+
+func TestComparisons(t *testing.T) {
+	perms := "rw-rw-rw-"
+	match := strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
+	assert.Equal(t, true, match, fmt.Sprintf("perms(%s) should be fine", perms))
+
+	perms = "r--r--r--"
+	match = strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
+	assert.Equal(t, true, match, fmt.Sprintf("perms(%s) should be fine", perms))
+
+	perms = "r-xr--r--"
+	match = strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
+	assert.Equal(t, false, match, fmt.Sprintf("perms(%s) should be fine", perms))
+
+	perms = "rw-rw-rwx"
+	match = strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
+	assert.Equal(t, false, match, fmt.Sprintf("perms(%s) should be fine", perms))
+}

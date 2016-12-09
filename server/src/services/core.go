@@ -697,8 +697,9 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 				c.folderIssue++
 			}
 		} else {
-			if strings.Compare(perms, "r--r--r--") != 0 || strings.Compare(perms, "rw-rw-rw-") != 0 {
-				mlog.Info("perms:File perms != rw-rw-rw- or -r--r--r--: [%s]: %s", perms, name)
+			match := strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
+			if !match {
+				mlog.Info("perms:File perms != rw-rw-rw- or r--r--r--: [%s]: %s", perms, name)
 				c.fileIssue++
 			}
 		}
