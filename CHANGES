@@ -1,3 +1,8 @@
+Version 1.8.5 - 2016-12-09
+- Fix notifyMove setting
+- Fix logic that checks for file permissions
+
+
 Version 1.8.4 - 2016-12-01
 - Make sure IP is non-empty
 
