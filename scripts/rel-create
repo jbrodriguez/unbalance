@@ -23,7 +23,7 @@ rm -rf src
 mkdir -p src/jbrodriguez/unbalance
 mv jbrodriguez/unbalance src/jbrodriguez
 
-# let's go to new starting folder: ~/.cix/builds/src/jbrodriguez/controlr/plugin
+# let's go to new starting folder: ~/.cix/builds/src/jbrodriguez/unbalance
 cd src/jbrodriguez/unbalance
 
 pushd client
