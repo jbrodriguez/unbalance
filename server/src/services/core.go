@@ -81,7 +81,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	re, _ = regexp.Compile(`exit status (\d+)`)
 	core.reRsync = re
 
-	re, _ = regexp.Compile(`[-dclpsbD]([-rwx]{3})([-rwx]{3})([-rwx]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
+	re, _ = regexp.Compile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 	core.reStat = re
 
 	core.rsyncErrors = map[int]string{
@@ -652,24 +652,17 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 		return
 	}
 
-	// mlog.Info("User %s", usr.Name)
-
 	scanFolder := srcFolder + "/."
 	cmdText := fmt.Sprintf(`find "%s" -exec stat --format "%%A|%%U:%%G|%%F|%%n" {} \;`, scanFolder)
 
 	mlog.Info("perms:Executing %s", cmdText)
 
-	// hits := make([]string, 0)
-
 	lib.Shell(cmdText, mlog.Warning, "perms:find/stat:", "", func(line string) {
-		// mlog.Info("perms:find(%s): %s", scanFolder, line)
-
 		result := c.reStat.FindStringSubmatch(line)
-		// mlog.Info("[%s] %s", result[1], result[2])
-
-		// for index, element := range result {
-		// 	mlog.Info("index(%d);element(%s)", index, element)
-		// }
+		if result == nil {
+			mlog.Warning("perms:Unable to parse (%s)", line)
+			return
+		}
 
 		u := result[1]
 		g := result[2]
@@ -703,27 +696,6 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 				c.fileIssue++
 			}
 		}
-
-		// if fileUID == uid {
-		// 	if !strings.Contains("67", u) {
-		// 		mlog.Info("perms:User doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-		// 		c.ownerNoPerm++
-		// 	}
-		// } else if fileGID == gid {
-		// 	if !strings.Contains("67", g) {
-		// 		mlog.Info("perms:Group doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-		// 		c.nonOwnerNoPerm++
-		// 	}
-		// } else {
-		// 	if !strings.Contains("67", o) {
-		// 		mlog.Info("perms:Other doesn't have permissions: owner(%s:%s)-file(%s:%s) %s%s%s %s", uid, gid, fileUID, fileGID, u, g, o, name)
-		// 		c.nonOwnerNoPerm++
-		// 	}
-		// }
-
-		// msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
-		// outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
-		// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	})
 
 	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Finished checking permissions ..."}

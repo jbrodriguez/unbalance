@@ -17,7 +17,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	// "regexp"
+	"regexp"
 	// "strconv"
 	"fmt"
 	"strings"
@@ -716,4 +716,21 @@ func TestComparisons(t *testing.T) {
 	perms = "rw-rw-rwx"
 	match = strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
 	assert.Equal(t, false, match, fmt.Sprintf("perms(%s) should be fine", perms))
+}
+
+func TestPermissionRegex(t *testing.T) {
+	re, _ := regexp.Compile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
+
+	line1 := "drwxrwxrwx|nobody:users|directory|/mnt/disk1/Media/."
+	line2 := "drwxrwsrwx|nobody:users|directory|/mnt/disk1/Media/./Movies"
+	line3 := "drwxrwsrwx|nobody:users|directory|/mnt/disk1/Media/./Movies/A Hologram for the King (2016)"
+
+	result := re.FindStringSubmatch(line1)
+	assert.NotNil(t, result, fmt.Sprintf("line(%s) couldn't be parsed", line1))
+
+	result = re.FindStringSubmatch(line2)
+	assert.NotNil(t, result, fmt.Sprintf("line(%s) couldn't be parsed", line2))
+
+	result = re.FindStringSubmatch(line3)
+	assert.NotNil(t, result, fmt.Sprintf("line(%s) couldn't be parsed", line3))
 }
