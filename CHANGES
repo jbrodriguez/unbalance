@@ -1,3 +1,7 @@
+Version 1.8.6 - 2016-12-11
+- Account for setuid, setgid and/or sticky bit
+
+
 Version 1.8.5 - 2016-12-09
 - Fix notifyMove setting
 - Fix logic that checks for file permissions
