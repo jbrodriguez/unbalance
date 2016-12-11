@@ -1,0 +1,2 @@
+2016-12-11 - 1.8.6
+- Account for setuid, setgid and/or sticky bit
