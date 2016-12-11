@@ -1,3 +1,7 @@
+Version 1.8.7 - 2016-12-11
+- Fix empty plg file
+
+
 Version 1.8.6 - 2016-12-11
 - Account for setuid, setgid and/or sticky bit
 
