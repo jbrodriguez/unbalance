@@ -20,6 +20,7 @@ import (
 	"regexp"
 	// "strconv"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -221,9 +222,9 @@ func TestFit2(t *testing.T) {
 	// mlog.Stop()
 }
 
-func createFile(home, folder, name string, size int64) error {
+func createFile(home, folder, name string, size int64, mode os.FileMode) error {
 
-	os.MkdirAll(filepath.Join(home, folder), 0777)
+	os.MkdirAll(filepath.Join(home, folder), mode)
 
 	fd, err := os.OpenFile(filepath.Join(home, folder, name), os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
@@ -338,37 +339,37 @@ func tearDown(home string) error {
 	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk2"), 0777)
 	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk3"), 0777)
 
-	err := createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "The Fast & The Furious.mkv", 800)
+	err := createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "The Fast & The Furious.mkv", 800, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "Faster & Furiousest.mkv", 1200)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "Faster & Furiousest.mkv", 1200, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/", "Synchronicity [2015].mkv", 1500)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/", "Synchronicity [2015].mkv", 1500, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Backup/", "data.txt", 700)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/Backup/", "data.txt", 700, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/TVShows/NCIS/", "NCIS 04x17 - Skeletons.avi", 2700)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/TVShows/NCIS/", "NCIS 04x17 - Skeletons.avi", 2700, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/Air (2014)", "air.mkv", 1600)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/Air (2014)", "air.mkv", 1600, 0777)
 	if err != nil {
 		return err
 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/", "Interstellar.mkv", 1900)
+	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/", "Interstellar.mkv", 1900, 0777)
 	if err != nil {
 		return err
 	}
@@ -733,4 +734,24 @@ func TestPermissionRegex(t *testing.T) {
 
 	result = re.FindStringSubmatch(line3)
 	assert.NotNil(t, result, fmt.Sprintf("line(%s) couldn't be parsed", line3))
+}
+
+func TestStat(t *testing.T) {
+	home := os.Getenv("HOME")
+
+	folder := filepath.Join(home, "tmp/unbalance/mnt")
+
+	os.RemoveAll(folder)
+
+	err := createFile(home, "tmp/unbalance/mnt/disk1/movies/Interstellar (2014)", "Interstellar.mkv", 800, 222) // 902
+	assert.NoError(t, err)
+
+	dirs, err := ioutil.ReadDir(folder)
+	if err != nil {
+		mlog.Warning("getFolders:Unable to readdir: %s", err)
+	}
+
+	if len(dirs) == 0 {
+		mlog.Info("getFolders:No subdirectories under %s", folder)
+	}
 }

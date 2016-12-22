@@ -605,7 +605,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 	dirs, err := ioutil.ReadDir(srcFolder)
 	if err != nil {
-		mlog.Fatalf("getFolders:Unable to readdir: %s", err)
+		mlog.Warning("getFolders:Unable to readdir: %s", err)
 	}
 
 	mlog.Info("getFolders:Readdir(%d)", len(dirs))
