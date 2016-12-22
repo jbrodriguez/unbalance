@@ -1,3 +1,7 @@
+Version 1.8.8 - 2016-12-22
+- Print a warning when readdir fails
+
+
 Version 1.8.7 - 2016-12-11
 - Fix empty plg file
 
