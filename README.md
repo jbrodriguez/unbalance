@@ -101,4 +101,4 @@ framework
 - [Webpack](https://webpack.github.io/) - Build toolchain
 
 ## License
-[MIT license](http://jbrodriguez.mit-license.org)
+MIT
