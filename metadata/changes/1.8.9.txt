@@ -1,0 +1,2 @@
+2016-12-22 - 1.8.9
+- Fix a crash due to filesystem errors
