@@ -62,7 +62,7 @@ echo "MD5: ${APP_MD5}"
 
 CHANGES=`cat metadata/changes/${APP_VERSION}.txt 2> /dev/null`
 
-perl -0777 -pe 's/{{md5}}/'"${APP_MD5}"'/g ; s/{{version}}/'"${APP_VERSION}"'/g ; s/{{changes}}/'"${CHANGES}"'/g' plugin/template.plg > ./$PROG.plg
+perl -0777 -pe 's~{{md5}}~'"${APP_MD5}"'~g ; s~{{version}}~'"${APP_VERSION}"'~g ; s~{{changes}}~'"${CHANGES}"'~g' plugin/template.plg > ./$PROG.plg
 rm -rf release
 
 echo "Successfully generated $PROG-$APP_VERSION.tgz"
