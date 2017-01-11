@@ -1,11 +1,15 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
+import TreeMenu from 'react-tree-menu'
+
 import ConsolePanel from './consolePanel'
 
 import { humanBytes, percentage, scramble } from '../lib/utils'
 
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
+
+require('./tree-view.css')
 
 let cx = classNames.bind(styles)
 
@@ -31,6 +35,13 @@ export default class Home extends Component {
 	render() {
 		let { state, actions } = this.props.store
 		// let { dispatch, model } = this.props
+
+		const data = [
+			{label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},
+			{label: 'tvshows', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
+			{label: 'storage', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
+			{label: 'backup', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]}
+		]
 
 		if (!state.unraid) {
 			return null
@@ -81,7 +92,9 @@ export default class Home extends Component {
 					</tr>
 				)
 			} else {
-				return (
+				// lines initially contains the disk row, which includes the
+				// checkbox indicating it's either the from disk or a to disk
+				let lines = [
 					<tr key={i}>
 						<td>{disk.name}</td>
 						<td>{disk.fsType}</td>
@@ -91,16 +104,39 @@ export default class Home extends Component {
 						<td>{humanBytes(disk.size)}</td>
 						<td>{humanBytes(disk.free)}</td>
 						<td>
-				            <div className={cx('progress')}>
-				                <span style={{width: percent}}></span>
-				            </div>
+							<div className={cx('progress')}>
+								<span style={{width: percent}}></span>
+							</div>
 						</td>
 						<td>
 							<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
 						</td>
 					</tr>
-				)
+				]
 
+				// if it's the source disk, let's add a second row, with the
+				// tree-menu
+				if (disk.src) {
+					const key = i + 100
+					lines.push(
+						<tr key={key}>
+							<td colSpan="9">
+							<TreeMenu
+								expandIconClass="fa fa-chevron-right"
+						        collapseIconClass="fa fa-chevron-down"
+								onTreeNodeClick={this.onClick}
+								onTreeNodeCollapseChange={this.onCollapse}
+								onTreeNodeCheckChange={this.onCheck}
+								collapsible={true}
+								collapsed={false}
+								data={data}
+							/>
+							</td>
+						</tr>
+					)
+				}
+
+				return lines
 			}
 		})
 
@@ -180,5 +216,17 @@ export default class Home extends Component {
 	_move(e) {
 		let { move } = this.props.store.actions
 		move()
+	}
+
+	onClick = (node) => {
+		console.log(`click-node-${JSON.stringify(node)}`)
+	}
+
+	onCollapse = (node) => {
+		console.log(`collapse-node-${JSON.stringify(node)}`)
+	}
+
+	onCheck = (node) => {
+		console.log(`check-node-${JSON.stringify(node)}`)
 	}
 }
