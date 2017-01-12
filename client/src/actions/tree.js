@@ -75,7 +75,7 @@ function gotTree({state}, newTree) {
 	return {
 		...state,
 		tree: {
-			source: newTree.path,
+			...state.tree,
 			items,
 		},
 	}
@@ -108,6 +108,8 @@ function treeChecked({state, actions}, lineage) {
 	const node = getNode(items, lineage)
 
 	node.checked = !node.checked
+	let chosen = Object.assign({}, state.tree.chosen)
+	chosen[node.path] = true
 	// node.children.forEach( child => {
 	// 	child.checked = node.checked
 	// })
@@ -118,6 +120,7 @@ function treeChecked({state, actions}, lineage) {
 		...state,
 		tree: {
 			...state.tree,
+			chosen,
 			items
 		}
 	}

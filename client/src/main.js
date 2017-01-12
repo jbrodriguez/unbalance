@@ -73,6 +73,7 @@ const initialState = {
 	log: [],
 	tree: {
 		cache: null,
+		chosen: {},
 		items: [],
 	},
 	feedback: [],

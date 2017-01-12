@@ -120,7 +120,7 @@ export default class Home extends Component {
 					const key = i + 100
 					lines.push(
 						<tr key={key}>
-							<td colSpan="9">
+							<td colSpan="3">
 							<TreeMenu
 								expandIconClass="fa fa-chevron-right"
 						        collapseIconClass="fa fa-chevron-down"
@@ -131,6 +131,11 @@ export default class Home extends Component {
 								collapsed={false}
 								data={state.tree.items}
 							/>
+							</td>
+							<td colSpan="6" valign="top">
+								<ul>
+								{ Object.keys(state.tree.chosen).map( chosen => <li>{chosen}</li> )}
+								</ul>
 							</td>
 						</tr>
 					)
