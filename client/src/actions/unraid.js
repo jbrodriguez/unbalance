@@ -107,7 +107,7 @@ function gotStorage({state, actions}, unraid) {
 	}
 }
 
-function checkFrom({state}, path) {
+function checkFrom({state, actions}, path) {
 	let fromDisk = Object.assign({}, state.fromDisk)
 	let toDisk = Object.assign({}, state.toDisk)
 
@@ -121,6 +121,8 @@ function checkFrom({state}, path) {
 	for (var key in toDisk) {
 		toDisk[key] = !(key === path)
 	}
+
+	actions.changeDisk(path)
 
 	return {
 		...state,

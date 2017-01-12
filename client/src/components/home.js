@@ -116,7 +116,7 @@ export default class Home extends Component {
 
 				// if it's the source disk, let's add a second row, with the
 				// tree-menu
-				if (disk.src) {
+				if (state.fromDisk[disk.path]) {
 					const key = i + 100
 					lines.push(
 						<tr key={key}>

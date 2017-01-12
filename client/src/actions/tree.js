@@ -8,8 +8,61 @@ module.exports = {
 
 	treeCollapsed,
 	treeChecked,
+
+	changeDisk,
 }
 
+// utilities
+const getNode = (tree, lineage) => {
+	if (lineage.length === 0) {
+		return null
+	} else if (lineage.length === 1) {
+		return tree[lineage[0]]
+	} else {
+		const node = lineage.shift()
+		return getNode(tree[node].children, lineage)
+	}
+}
+
+const markChosen = (tree, lineage, chosen) => {
+	if (lineage.length === 0) {
+		return
+	} else if (lineage.length === 1) {
+		const node = tree[lineage[0]]
+
+		if (node.checked) {
+			delete chosen[node.path]
+		} else {
+			uncheckChildren(node.children, chosen)
+			chosen[node.path] = true
+		}
+
+		node.checked = !node.checked
+	} else {
+		const index = lineage.shift() // this mutates lineage
+		const node = tree[index]
+
+		if (node.checked) {
+			delete chosen[node.path]
+			node.checked = false
+		}
+
+		markChosen(node.children, lineage, chosen)
+	}
+}
+
+const uncheckChildren = (tree, chosen) => {
+	if (!tree) return
+
+	tree.forEach( node => {
+		delete chosen[node.path]
+		node.checked = false
+
+		uncheckChildren(node.children, chosen)
+	})
+}
+
+// actions
 function treeItemClicked({state, actions, opts: {api}}, item) {
 	let items = Object.assign({}, state.tree.items)
 
@@ -120,51 +173,15 @@ function treeChecked({state, actions}, lineage) {
 	}
 }
 
-const getNode = (tree, lineage) => {
-	if (lineage.length === 0) {
-		return null
-	} else if (lineage.length === 1) {
-		return tree[lineage[0]]
-	} else {
-		const node = lineage.shift()
-		return getNode(tree[node].children, lineage)
-	}
-}
+function changeDisk({state, actions}, path) {
+	actions.getTree(path)
 
-const markChosen = (tree, lineage, chosen) => {
-	if (lineage.length === 0) {
-		return
-	} else if (lineage.length === 1) {
-		const node = tree[lineage[0]]
-
-		if (node.checked) {
-			delete chosen[node.path]
-		} else {
-			uncheckChildren(node.children, chosen)
-			chosen[node.path] = true
+	return {
+		...state,
+		tree: {
+			cache: null,
+			chosen: {},
+			items: [{label: 'Loading ...'}]
 		}
-
-		node.checked = !node.checked
-	} else {
-		const index = lineage.shift() // this mutates lineage
-		const node = tree[index]
-
-		if (node.checked) {
-			delete chosen[node.path]
-			node.checked = false
-		}
-
-		markChosen(node.children, lineage, chosen)
 	}
-}
-
-const uncheckChildren = (tree, chosen) => {
-	if (!tree) return
-
-	tree.forEach( node => {
-		delete chosen[node.path]
-		node.checked = false
-
-		uncheckChildren(node.children, chosen)
-	})
 }
