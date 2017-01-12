@@ -91,7 +91,8 @@ function treeCollapsed({state, actions}, lineage) {
 
 	node.collapsed = !node.collapsed
 
-	actions.getTree(node.path)
+	const notRetrieved = node.children && (node.children.length === 1) && (node.children[0].label === 'Loading ...')
+	notRetrieved && actions.getTree(node.path)
 
 	return {
 		...state,
