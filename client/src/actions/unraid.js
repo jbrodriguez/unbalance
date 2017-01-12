@@ -62,14 +62,18 @@ function gotStorage({state, actions}, unraid) {
 
 	let toDisk = {}
 	let fromDisk = {}
+	let sourceDisk = null
 
 	unraid.disks.forEach( disk => {
 		fromDisk[disk.path] = disk.src
 		toDisk[disk.path] = disk.dst
+		if (disk.src) {
+			sourceDisk = disk
+		}
 	})
 
-	var lines = []
-	var opState = null
+	let lines = []
+	let opState = null
 	switch(unraid.opState) {
 		case 1:
 			opState = "Calculate operation in progress ..."
@@ -79,8 +83,15 @@ function gotStorage({state, actions}, unraid) {
 			break
 	}
 
+	let tree = Object.assign({}, state.tree)
 	if (opState) {
 		lines.push(opState)
+	} else {
+		// console.log(`sourceDisk-${JSON.stringify(sourceDisk)}`)
+		actions.getTree(sourceDisk.path)
+
+		tree.cache = null
+		tree.items = [{label: 'Loading ...'}]
 	}
 
 	return {
@@ -92,6 +103,7 @@ function gotStorage({state, actions}, unraid) {
 		stats: unraid.stats,
 		moveDisabled: true,
 		lines,
+		tree
 	}
 }
 
