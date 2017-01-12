@@ -99,8 +99,8 @@ export default class Home extends Component {
 						<td>{disk.name}</td>
 						<td>{disk.fsType}</td>
 						<td>{disk.serial} ({disk.device})</td>
-						<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this._checkFrom.bind(this, disk.path)} /></td>
-						<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo.bind(this, disk.path)} /></td>
+						<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this._checkFrom(disk.path)} /></td>
+						<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this._checkTo(disk.path)} /></td>
 						<td>{humanBytes(disk.size)}</td>
 						<td>{humanBytes(disk.free)}</td>
 						<td>
@@ -193,36 +193,20 @@ export default class Home extends Component {
 		)
 	}
 
-	// { warning }
-
-	_checkFrom(path, e) {
+	_checkFrom = (path) => (e) => {
 		let { checkFrom } = this.props.store.actions
 		checkFrom(path)
 	}
 
-	_checkTo(path, e) {
+	_checkTo = (path) => (e) => {
 		let { state, actions: {checkTo} } = this.props.store
+
 		if (state.fromDisk[path]) {
 			e.preventDefault()
 			return
 		}
 
 		checkTo(path)
-	}
-
-	_flipDryRun(e) {
-		let { toggleDryRun } = this.props.store.actions
-		toggleDryRun()
-	}
-
-	_calculate(e) {
-		let { calculate } = this.props.store.actions
-		calculate()
-	}
-
-	_move(e) {
-		let { move } = this.props.store.actions
-		move()
 	}
 
 	onClick = (node) => {

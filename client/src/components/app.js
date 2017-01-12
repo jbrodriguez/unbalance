@@ -8,6 +8,13 @@ import classNames from 'classnames/bind'
 
 let cx = classNames.bind(styles)
 
+// var url = require("file!./file.png");
+const unbalance = require("../img/unbalance-logo.png")
+const diskmv = require("../img/diskmv.png")
+const unraid = require('../img/unraid.png')
+const logo = require('../img/logo-small.png')
+const vm = require('../img/v.png')
+
 // Note: Stateless/function components *will not* hot reload!
 // react-transform *only* works on component classes.
 //
@@ -98,13 +105,6 @@ export default function App({ location, children, store }) {
 	}
 
 	let version = state.config ? state.config.version : null
-
-	// var url = require("file!./file.png");
-	let unbalance = require("../img/unbalance-logo.png")
-	let diskmv = require("../img/diskmv.png")
-	let unraid = require('../img/unraid.png')
-	let logo = require('../img/logo-small.png')
-	let vm = require('../img/v.png')
 
 	let indexActive = cx({
 		'lspacer': true,
