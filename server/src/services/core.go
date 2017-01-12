@@ -408,7 +408,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 	var folders []*model.Item
 	for _, path := range dtoCalc.Folders {
-		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
+		msg := fmt.Sprintf("Scanning %s on %s", path, srcDiskWithoutMnt)
 		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -657,8 +657,8 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string) {
 	srcFolder := filepath.Join(src, folder)
 
-	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	// outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
+	// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	mlog.Info("perms:Scanning disk(%s):folder(%s)", src, folder)
 
@@ -713,7 +713,7 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 		}
 	})
 
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Finished checking permissions ..."}
+	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checked permissions ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	return
