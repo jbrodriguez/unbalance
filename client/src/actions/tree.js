@@ -7,6 +7,7 @@ module.exports = {
 	gotTree,
 
 	treeCollapsed,
+	treeChecked,
 }
 
 function treeItemClicked({state, actions, opts: {api}}, item) {
@@ -100,6 +101,27 @@ function treeCollapsed({state, actions}, lineage) {
 			items: tree
 		}
 	}
+}
+
+function treeChecked({state, actions}, lineage) {
+	let items = [].concat(state.tree.items)
+	const node = getNode(items, lineage)
+
+	node.checked = !node.checked
+	// node.children.forEach( child => {
+	// 	child.checked = node.checked
+	// })
+
+	// items = Utils.getNewTreeState(lineage, items, "checked")
+
+	return {
+		...state,
+		tree: {
+			...state.tree,
+			items
+		}
+	}
+
 }
 
 const getNode = (tree, lineage) => {

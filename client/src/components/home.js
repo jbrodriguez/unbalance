@@ -219,16 +219,18 @@ export default class Home extends Component {
 	}
 
 	onClick = (node) => {
-		console.log(`click-node-${JSON.stringify(node)}`)
+		// console.log(`click-node-${JSON.stringify(node)}`)
 	}
 
 	onCollapse = (node) => {
-		console.log(`collapse-node-${JSON.stringify(node)}`)
+		// console.log(`collapse-node-${JSON.stringify(node)}`)
 		let { treeCollapsed } = this.props.store.actions
 		treeCollapsed(node)
 	}
 
 	onCheck = (node) => {
-		console.log(`check-node-${JSON.stringify(node)}`)
+		// console.log(`check-node-${JSON.stringify(node)}`)
+		let { treeChecked } = this.props.store.actions
+		treeChecked(node)
 	}
 }
