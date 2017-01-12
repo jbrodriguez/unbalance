@@ -407,7 +407,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	c.fileIssue = 0
 
 	var folders []*model.Item
-	for _, path := range c.settings.Folders {
+	for _, path := range dtoCalc.Folders {
 		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
 		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")

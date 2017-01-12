@@ -152,7 +152,9 @@ function calculate({state, actions, opts: {api, ws}}) {
 		}
 	}
 
-	ws.send({topic: "calculate", payload: {srcDisk, dstDisks: state.toDisk}})
+	const folders = Object.keys(state.tree.chosen).map( folder => folder.slice(srcDisk.length + 1) )
+
+	ws.send({topic: "calculate", payload: {srcDisk, folders, dstDisks: state.toDisk}})
 
 	return state
 }
