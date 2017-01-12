@@ -64,7 +64,7 @@ export default function App({ location, children, store }) {
 	}
 
 	const stateOk = state.unraid && state.unraid.condition.state === "STARTED"
-	const disabled = state.opInProgress || (!stateOk)
+	const disabled = state.opInProgress || (!stateOk) || (Object.keys(state.tree.chosen).length === 0)
 
 	// <span className={cx('lspacer')}>STATUS:</span>
 	const labelStyle = cx({
@@ -89,7 +89,7 @@ export default function App({ location, children, store }) {
 				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={move.bind(null, actions)} disabled={state.moveDisabled || state.opInProgress}>MOVE</button>
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
-					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions)} disabled={disabled} />
+					<input type="checkbox" checked={state.config.dryRun} onChange={toggleDryRun.bind(null, actions)} disabled={state.moveDisabled || state.opInProgress} />
 					&nbsp;
 					<label>dry run</label>
 				</div>
