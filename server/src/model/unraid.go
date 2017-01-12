@@ -342,23 +342,64 @@ func (u *Unraid) getDisks() (disks []*Disk, err error) {
 
 // GetTree -
 func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
-	root := filepath.Join("/mnt/user", path)
-
 	entry = &dto.Entry{Path: path}
-	items := make([]*dto.Node, 0)
+	items := make([]dto.Node, 0)
 
-	elements, _ := ioutil.ReadDir(root)
+	elements, _ := ioutil.ReadDir(path)
 	for _, element := range elements {
-		if !element.IsDir() {
-			continue
+		var node dto.Node
+
+		// default values
+		node.Label = element.Name()
+		node.Collapsed = true
+		node.Checkbox = true
+		node.Path = filepath.Join(path, element.Name())
+
+		if element.IsDir() {
+			// let's check if the folder is empty
+			// we can still get an i/o error, if that's the case
+			// we assume the folder's empty
+			// otherwise we act accordingly
+			folder := filepath.Join(path, element.Name())
+			empty, err := lib.IsEmpty(folder)
+			if err != nil {
+				mlog.Warning("GetTree - Unable to determine if folder is empty: %s", folder)
+				node.Children = nil
+			} else {
+				if empty {
+					node.Children = nil
+				} else {
+					node.Children = []dto.Node{dto.Node{Label: "Loading ...", Collapsed: true, Checkbox: false, Children: nil}}
+				}
+			}
+		} else {
+			node.Children = nil
 		}
 
-		items = append(items, &dto.Node{Type: "folder", Path: filepath.Join(path, element.Name())})
+		items = append(items, node)
 	}
 
 	entry.Nodes = items
 
 	return
+
+	// root := filepath.Join("/mnt/user", path)
+	//
+	// entry = &dto.Entry{Path: path}
+	// items := make([]*dto.Node, 0)
+	//
+	// elements, _ := ioutil.ReadDir(root)
+	// for _, element := range elements {
+	// 	if !element.IsDir() {
+	// 		continue
+	// 	}
+	//
+	// 	items = append(items, &dto.Node{Type: "folder", Path: filepath.Join(path, element.Name())})
+	// }
+	//
+	// entry.Nodes = items
+	//
+	// return
 }
 
 // GetLog -
