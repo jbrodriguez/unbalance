@@ -72,9 +72,8 @@ const initialState = {
 	lines: [],
 	log: [],
 	tree: {
+		cache: null,
 		items: [],
-		selected: '',
-		fetching: false,
 	},
 	feedback: [],
 	timeout: null,
