@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +31,22 @@ func Exists(path string) (bool, error) {
 	}
 
 	return false, err
+}
+
+// IsEmpty - checks if a folder is empty
+func IsEmpty(folder string) (bool, error) {
+	f, err := os.Open(folder)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+
+	return false, err // Either not empty or error, suits both cases
 }
 
 // SearchFile -

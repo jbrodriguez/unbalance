@@ -2,8 +2,6 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import 'font-awesome-webpack'
 
-import TreePanel from './treePanel'
-
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
@@ -63,7 +61,7 @@ export default class Settings extends Component {
 					</div>
 				</section>
 			)
-		}		
+		}
 
 		if (state.opInProgress === actions.calculate || state.opInProgress === actions.move) {
 			return (
@@ -88,25 +86,25 @@ export default class Settings extends Component {
 						<p>Notifications rely on unRAID's notifications settings, so you need to set up unRAID first, in order to receive notifications from unBALANCE.</p>
 
 						<span> Calculate: </span>
-						<input id="calc0" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc.bind(this, 0)} />
+						<input id="calc0" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc(0)} />
 						<label id="calc0" >No Notifications</label>
-						
-						<input id="calc1" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc.bind(this, 1)} />
+
+						<input id="calc1" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc(1)} />
 						<label id="calc1" >Basic</label>
-						
-						<input id="calc2" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc.bind(this, 2)} />
+
+						<input id="calc2" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc(2)} />
 						<label id="calc2" >Detailed</label>
 
 						<br />
 
 						<span> Move: </span>
-						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove.bind(this, 0)} />
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove(0)} />
 						<label id="move0">No Notifications</label>
-						
-						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove.bind(this, 1)} />
+
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove(1)} />
 						<label id="move0">Basic</label>
-						
-						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove.bind(this, 2)} />
+
+						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove(2)} />
 						<label id="move0">Detailed</label>
 					</div>
 				</div>
@@ -123,16 +121,16 @@ export default class Settings extends Component {
 						<div className={cx('row')}>
 							<div className={cx('col-xs-2')}>
 								<div className={cx('addon')}>
-									<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this._setReservedAmount.bind(this)} />
-									<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this._setReservedUnit.bind(this)}>
-										<option value="%">%</option> 
-										<option value="Mb">Mb</option> 
-										<option value="Gb">Gb</option> 
+									<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this._setReservedAmount} />
+									<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this._setReservedUnit}>
+										<option value="%">%</option>
+										<option value="Mb">Mb</option>
+										<option value="Gb">Gb</option>
 									</select>
 								</div>
 							</div>
 							<div className={cx('col-xs-1')}>
-								<button className={cx('btn', 'btn-primary')} onClick={this._setReservedSpace.bind(this)}>Apply</button>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setReservedSpace}>Apply</button>
 							</div>
 						</div>
 					</div>
@@ -153,83 +151,17 @@ export default class Settings extends Component {
 						<div className={cx('row')}>
 							<div className={cx('col-xs-2')}>
 								<div className={cx('addon')}>
-									<input className={cx('addon-field')} type="string" value={flags} onChange={this._onChangeRsyncFlags.bind(this)} />
+									<input className={cx('addon-field')} type="string" value={flags} onChange={this._onChangeRsyncFlags} />
 								</div>
 							</div>
 							<div className={cx('col-xs-4')}>
-								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags.bind(this)}>Apply</button>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags}>Apply</button>
 								&nbsp;
-								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault.bind(this)}>Reset to default</button>
+								<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault}>Reset to default</button>
 							</div>
 						</div>
 					</div>
 				</div>
-			</section>								
-
-			<section className={cx('row', 'bottom-spacer-large')}>
-				<div className={cx('col-xs-12')}>
-					<div>
-						<h3>WHICH FOLDERS DO YOU WANT TO MOVE ?</h3>
-
-						<p>Define which folders should be moved to free up space on the source disk (you choose the source disk in the main page).</p>
-						<p>You can choose entire user shares (e.g.: /Movies) or any folders below a user share (e.g.: /Movies/Action, /Movies/Comedy/90s).</p>
-						<p>The folders you select will be moved to other disks in the array, as long as there's enough space available.</p>
-						<p>Click on the <button className={cx('btn', 'btn-alert')}>add</button>  button that appears when you hover your mouse over a folder in the "unRAID Shares Explorer" column below, to select it for moving.</p>
-						<p>Click on the <i className={cx('fa fa-remove')}></i> icon that appears next to any folder in the "Folders to be moved" column, to deselect it.</p>
-					</div>
-				</div>
-			</section>
-
-			<section className={cx('row')}>
-				<div className={cx('col-xs-12')}>
-					<div>
-						<section className={cx('row')}>
-							<div className={cx('col-xs-12')}>
-								<div className={cx('explorerHeader')}>
-									<section className={cx('row')}>
-										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<span className={cx('lspacer')}>unRAID Shares Explorer</span>
-										</div>
-										<div className={cx('col-xs-12', 'col-sm-4')}>
-											Folders to be moved
-										</div>
-									</section>
-								</div>
-							</div>
-						</section>
-
-						<section className={cx('row')}>
-							<div className={cx('col-xs-12')}>
-								<div className={cx('explorerContent')}>
-									<section className={cx('row')}>
-										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<TreePanel tree={state.tree} {...actions} />
-										</div>
-										<div className={cx('col-xs-12', 'col-sm-4', 'flex', 'flexOne')}>
-											<div className={cx('explorerChosen')}>
-												<table className={cx('')}>
-													<tbody>
-														{ 
-															state.config.folders.map( (item, i) => {
-																return (
-																	<tr key={i}>
-																		<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
-																		<td>{item}</td>
-																	</tr>
-																)
-															})
-														}
-													</tbody>
-												</table>
-											</div>
-										</div>
-									</section>
-								</div>
-							</div>
-						</section>
-					</div>
-				</div>
-
 			</section>
 
 			</div>
@@ -247,52 +179,47 @@ export default class Settings extends Component {
 	// 	dispatch(C.ADD_FOLDER, e.target.value)
 	// }
 
-	_deleteFolder(folder, e) {
-		const { deleteFolder } = this.props.store.actions
-		deleteFolder(folder)
-	}
-
-	_setNotifyCalc(notify, e) {
+	_setNotifyCalc = (notify) => (e) => {
 		const { setNotifyCalc } = this.props.store.actions
 		setNotifyCalc(notify)
 	}
 
-	_setNotifyMove(notify, e) {
+	_setNotifyMove = (notify) => (e) => {
 		const { setNotifyMove } = this.props.store.actions
 		setNotifyMove(notify)
 	}
 
-	_setReservedAmount(e) {
+	_setReservedAmount = (e) => {
 		this.setState({
 			reservedAmount: e.target.value
 		})
 	}
 
-	_setReservedUnit(e) {
+	_setReservedUnit = (e) => {
 		this.setState({
 			reservedUnit: e.target.value
-		})		
+		})
 	}
 
-	_setReservedSpace(e) {
+	_setReservedSpace = (e) => {
 		const { setReservedSpace } = this.props.store.actions
 		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
 	}
 
-	_onChangeRsyncFlags(e) {
+	_onChangeRsyncFlags = (e) => {
 		this.setState({
 			rsyncFlags: e.target.value.split(' ')
 		})
 	}
 
-	_setRsyncFlags() {
+	_setRsyncFlags = () => {
 		const { setRsyncFlags } = this.props.store.actions
 		const flags = this.state.rsyncFlags.join(' ')
 		setRsyncFlags(flags.trim().split(' '))
 	}
 
-	_setRsyncDefault(e) {
+	_setRsyncDefault = (e) => {
 		const { setRsyncFlags } = this.props.store.actions
 		setRsyncFlags(['-avRX', '--partial'])
-	}	
+	}
 }

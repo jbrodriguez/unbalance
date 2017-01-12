@@ -122,8 +122,6 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/reservedSpace", c.setReservedSpace, c.mailbox)
-	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
-	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
 	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
@@ -226,30 +224,6 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 
 	c.settings.ReservedAmount = amount
 	c.settings.ReservedUnit = unit
-	c.settings.Save()
-
-	msg.Reply <- &c.settings.Config
-}
-
-func (c *Core) addFolder(msg *pubsub.Message) {
-	folder := msg.Payload.(string)
-
-	mlog.Info("Adding folder (%s)", folder)
-
-	c.settings.AddFolder(folder)
-	c.settings.Save()
-
-	msg.Reply <- &c.settings.Config
-}
-
-func (c *Core) deleteFolder(msg *pubsub.Message) {
-
-	folder := msg.Payload.(string)
-
-	mlog.Info("Deleting folder (%s)", folder)
-
-	c.settings.DeleteFolder(folder)
-
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
@@ -407,8 +381,8 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	c.fileIssue = 0
 
 	var folders []*model.Item
-	for _, path := range c.settings.Folders {
-		msg := fmt.Sprintf("Scanning folder %s on %s", path, srcDiskWithoutMnt)
+	for _, path := range dtoCalc.Folders {
+		msg := fmt.Sprintf("Scanning %s on %s", path, srcDiskWithoutMnt)
 		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -598,9 +572,24 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
 
-	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+	var fi os.FileInfo
+	var err error
+	if fi, err = os.Stat(srcFolder); os.IsNotExist(err) {
 		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
 		return nil
+	}
+
+	if !fi.IsDir() {
+		mlog.Info("getFolder-found(%s)-size(%d)", srcFolder, fi.Size())
+
+		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder}
+		items = append(items, item)
+
+		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
 	}
 
 	dirs, err := ioutil.ReadDir(srcFolder)
@@ -642,8 +631,8 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string) {
 	srcFolder := filepath.Join(src, folder)
 
-	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	// outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
+	// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	mlog.Info("perms:Scanning disk(%s):folder(%s)", src, folder)
 
@@ -698,7 +687,7 @@ func (c *Core) checkOwnerAndPermissions(src, folder, ownerName, groupName string
 		}
 	})
 
-	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Finished checking permissions ..."}
+	outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checked permissions ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	return

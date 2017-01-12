@@ -62,14 +62,18 @@ function gotStorage({state, actions}, unraid) {
 
 	let toDisk = {}
 	let fromDisk = {}
+	let sourceDisk = null
 
 	unraid.disks.forEach( disk => {
 		fromDisk[disk.path] = disk.src
 		toDisk[disk.path] = disk.dst
+		if (disk.src) {
+			sourceDisk = disk
+		}
 	})
 
-	var lines = []
-	var opState = null
+	let lines = []
+	let opState = null
 	switch(unraid.opState) {
 		case 1:
 			opState = "Calculate operation in progress ..."
@@ -79,8 +83,15 @@ function gotStorage({state, actions}, unraid) {
 			break
 	}
 
+	let tree = Object.assign({}, state.tree)
 	if (opState) {
 		lines.push(opState)
+	} else {
+		// console.log(`sourceDisk-${JSON.stringify(sourceDisk)}`)
+		actions.getTree(sourceDisk.path)
+
+		tree.cache = null
+		tree.items = [{label: 'Loading ...'}]
 	}
 
 	return {
@@ -92,10 +103,11 @@ function gotStorage({state, actions}, unraid) {
 		stats: unraid.stats,
 		moveDisabled: true,
 		lines,
+		tree
 	}
 }
 
-function checkFrom({state}, path) {
+function checkFrom({state, actions}, path) {
 	let fromDisk = Object.assign({}, state.fromDisk)
 	let toDisk = Object.assign({}, state.toDisk)
 
@@ -109,6 +121,8 @@ function checkFrom({state}, path) {
 	for (var key in toDisk) {
 		toDisk[key] = !(key === path)
 	}
+
+	actions.changeDisk(path)
 
 	return {
 		...state,
@@ -138,7 +152,9 @@ function calculate({state, actions, opts: {api, ws}}) {
 		}
 	}
 
-	ws.send({topic: "calculate", payload: {srcDisk, dstDisks: state.toDisk}})
+	const folders = Object.keys(state.tree.chosen).map( folder => folder.slice(srcDisk.length + 1) )
+
+	ws.send({topic: "calculate", payload: {srcDisk, folders, dstDisks: state.toDisk}})
 
 	return state
 }

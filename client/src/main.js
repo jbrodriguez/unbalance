@@ -72,9 +72,9 @@ const initialState = {
 	lines: [],
 	log: [],
 	tree: {
+		cache: null,
+		chosen: {},
 		items: [],
-		selected: '',
-		fetching: false,
 	},
 	feedback: [],
 	timeout: null,

@@ -12,7 +12,6 @@ const ReservedSpace = 450000000 // 450Mb
 
 // Config -
 type Config struct {
-	Folders        []string `json:"folders"`
 	DryRun         bool     `json:"dryRun"`
 	NotifyCalc     int      `json:"notifyCalc"`
 	NotifyMove     int      `json:"notifyMove"`
@@ -48,7 +47,7 @@ func NewSettings(version string) (*Settings, error) {
 	flag.StringVar(&config, "config", "/boot/config/plugins/unbalance/unbalance.conf", "config location")
 	flag.StringVar(&port, "port", "6237", "port to run the server")
 	flag.StringVar(&log, "log", "/boot/logs/unbalance.log", "pathname where log file will be written to")
-	flag.StringVar(&folders, "folders", "", "folders that will be scanned for media")
+	flag.StringVar(&folders, "folders", "", "deprecated - do not use")
 	flag.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
 	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
@@ -64,12 +63,6 @@ func NewSettings(version string) (*Settings, error) {
 	// fmt.Printf("folders: %s\nconfig: %s\n", folders, config)
 
 	s := &Settings{}
-
-	if folders == "" {
-		s.Folders = make([]string, 0)
-	} else {
-		s.Folders = strings.Split(folders, "|")
-	}
 
 	if rsyncFlags == "" {
 		s.RsyncFlags = []string{"-avRX", "--partial"}
@@ -92,29 +85,6 @@ func NewSettings(version string) (*Settings, error) {
 	return s, nil
 }
 
-// AddFolder -
-func (s *Settings) AddFolder(folder string) {
-	s.Folders = append(s.Folders, folder)
-}
-
-// DeleteFolder -
-func (s *Settings) DeleteFolder(folder string) {
-
-	index := -1
-	for p, v := range s.Folders {
-		if v == folder {
-			index = p
-			break
-		}
-	}
-
-	if index == -1 {
-		return
-	}
-
-	s.Folders = append(s.Folders[:index], s.Folders[index+1:]...)
-}
-
 // ToggleDryRun -
 func (s *Settings) ToggleDryRun() {
 	s.DryRun = !s.DryRun
@@ -123,11 +93,6 @@ func (s *Settings) ToggleDryRun() {
 // Save -
 func (s *Settings) Save() (err error) {
 	tmpFile := s.Conf + ".tmp"
-
-	folders := strings.Join(s.Folders, "|")
-	if err = WriteLine(tmpFile, fmt.Sprintf("folders=%s", folders)); err != nil {
-		return err
-	}
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("dryRun=%t", s.DryRun)); err != nil {
 		return err

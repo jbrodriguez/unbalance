@@ -9,11 +9,6 @@ module.exports = {
 
 	setReservedSpace,
 
-	addFolder,
-	folderAdded,
-	deleteFolder,
-	folderDeleted,
-
 	toggleDryRun,
 	dryRunToggled,
 
@@ -108,101 +103,15 @@ function setReservedSpace({state, actions, opts: {api}}, stringAmount, unit) {
 	return state
 }
 
-function _isSubFolder(folder1, folder2) {
-	// const real1 = path.resolve('/mnt/user', folder1)
-	// const real2 = path.resolve('/mnt/user', folder2)
-
-	const rel = path.relative(folder1, folder2)
-
-	// console.log('real1: ', real1)
-	// console.log('real2: ', real2)
-	// console.log('rel: ', rel)
-
-	
-	return rel.indexOf("..", 0) !== 0
-    // path = os.path.realpath(path)
-    // directory = os.path.realpath(directory)
-
-    // relative = os.path.relpath(path, directory)
-
-    // if relative.startswith(os.pardir):
-    //     return False
-    // else:
-    //     return True	
-}
-
-function addFolder({state, actions, opts: {api}}, folder) {
-	const exists = state.config.folders.some( chosen => {
-		// isSubFolder("/tvshows/NCIS OS", "/tvshows/NCIS LA")
-		// isSubFolder("/tvshows/NCIS LA", "/tvshows/NCIS OS")
-		// const is = isSubFolder(folder, chosen) || isSubFolder(chosen, folder)
-		// const is = isSubFolder("/tvshows/NCIS OS", "/tvshows/NCIS LA") || isSubFolder("/tvshows/NCIS LA", "/tvshows/NCIS OS")
-		// console.log('is: ', is)
-		return (folder === chosen || _isSubFolder(folder, chosen) || _isSubFolder(chosen, folder))
-	})
-
-	if (exists) {
-		actions.addFeedback("The folder you're trying to add is already selected or contains or is contained by a folder that you already added. Please choose another folder or remove one of the selected folders and try again.")
-		return state
-		// set a seven second timeout to remove the feedback panel
-		// window.setTimeout( _ => actions.removeFeedback(), 15*1000)
-
-		// return {
-		// 	...state,
-		// 	feedback: [].concat(["The folder you're trying to add is already selected or contains or is contained by a folder that you already added. Please choose another folder or remove one of the selected folders and try again."])
-		// }
-	}
-
-	// if (state.config.folders.indexOf(folder) !== -1) {
-	// 	return state
-	// }
-
-	actions.setOpInProgress("Adding folder")
-
-	api.addFolder(folder)
-		.then(json => {
-			actions.folderAdded(json)
-		})
-
-	return state
-}
-
-function folderAdded({state}, config) {
-	return {
-		...state,
-		config,
-		opInProgress: null
-	}
-}
-
-function deleteFolder({state, actions, opts: {api}}, folder) {
-	actions.setOpInProgress("Deleting folder")
-
-	api.deleteFolder(folder)
-		.then(json => {
-			actions.folderDeleted(json)
-		})
-
-	return state
-}
-
-function folderDeleted({state}, config) {
-	return {
-		...state,
-		config,
-		opInProgress: null
-	}
-}
-
 function toggleDryRun({state, actions, opts: {api}}) {
 	actions.setOpInProgress("Toggling dry run")
 
 	api.toggleDryRun()
 		.then(json => {
 			actions.dryRunToggled(json)
-		})	
+		})
 
-	return state			
+	return state
 }
 
 function dryRunToggled({state}, config) {
@@ -210,7 +119,7 @@ function dryRunToggled({state}, config) {
 		...state,
 		config,
 		opInProgress: null
-	}	
+	}
 }
 
 function setRsyncFlags({state, actions, opts: {api}}, flags) {
