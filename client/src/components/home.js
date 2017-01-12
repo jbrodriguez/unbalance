@@ -121,6 +121,7 @@ export default class Home extends Component {
 					lines.push(
 						<tr key={key}>
 							<td colSpan="3">
+							<b>Select folders/files to move</b><br/>
 							<TreeMenu
 								expandIconClass="fa fa-chevron-right"
 						        collapseIconClass="fa fa-chevron-down"
@@ -133,8 +134,9 @@ export default class Home extends Component {
 							/>
 							</td>
 							<td colSpan="6" className={cx('topAlign')}>
+								<b>Currently selected</b><br/>
 								<ul>
-								{ Object.keys(state.tree.chosen).map( chosen => <li>{chosen}</li> )}
+								{ Object.keys(state.tree.chosen).map( chosen => <li>- {chosen}</li> )}
 								</ul>
 							</td>
 						</tr>
