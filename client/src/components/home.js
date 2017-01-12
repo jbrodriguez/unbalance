@@ -14,12 +14,12 @@ require('./tree-view.css')
 let cx = classNames.bind(styles)
 
 export default class Home extends Component {
-	componentWillMount() {
-		let { store, history } = this.props
-		if (store.state.config.folders.length === 0) {
-			history.pushState(null, '/settings')
-		}
-	}
+	// componentWillMount() {
+	// 	let { store, history } = this.props
+	// 	if (store.state.config.folders.length === 0) {
+	// 		history.pushState(null, '/settings')
+	// 	}
+	// }
 
 	// componentDidMount() {
 	// 	// // let { model, history } = this.props
@@ -36,12 +36,12 @@ export default class Home extends Component {
 		let { state, actions } = this.props.store
 		// let { dispatch, model } = this.props
 
-		const data = [
-			{label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},
-			{label: 'tvshows', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
-			{label: 'storage', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
-			{label: 'backup', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]}
-		]
+		// const data = [
+		// 	{label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},
+		// 	{label: 'tvshows', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
+		// 	{label: 'storage', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]},
+		// 	{label: 'backup', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'Loading ...'}]}
+		// ]
 
 		if (!state.unraid) {
 			return null
@@ -129,7 +129,7 @@ export default class Home extends Component {
 								onTreeNodeCheckChange={this.onCheck}
 								collapsible={true}
 								collapsed={false}
-								data={data}
+								data={state.tree.items}
 							/>
 							</td>
 						</tr>
@@ -224,6 +224,8 @@ export default class Home extends Component {
 
 	onCollapse = (node) => {
 		console.log(`collapse-node-${JSON.stringify(node)}`)
+		let { treeCollapsed } = this.props.store.actions
+		treeCollapsed(node)
 	}
 
 	onCheck = (node) => {
