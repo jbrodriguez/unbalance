@@ -105,16 +105,9 @@ function treeCollapsed({state, actions}, lineage) {
 
 function treeChecked({state, actions}, lineage) {
 	let items = [].concat(state.tree.items)
-	const node = getNode(items, lineage)
-
-	node.checked = !node.checked
 	let chosen = Object.assign({}, state.tree.chosen)
-	chosen[node.path] = true
-	// node.children.forEach( child => {
-	// 	child.checked = node.checked
-	// })
 
-	// items = Utils.getNewTreeState(lineage, items, "checked")
+	markChosen(items, lineage, chosen)
 
 	return {
 		...state,
@@ -124,18 +117,53 @@ function treeChecked({state, actions}, lineage) {
 			items
 		}
 	}
-
 }
 
 const getNode = (tree, lineage) => {
-	// console.log(`lineage-${JSON.stringify(lineage)}`)
 	if (lineage.length === 0) {
 		return null
 	} else if (lineage.length === 1) {
-		// console.log(`uno-${JSON.stringify(tree[lineage[0]])}`)
 		return tree[lineage[0]]
 	} else {
 		const node = lineage.shift()
 		return getNode(tree[node].children, lineage)
 	}
+}
+
+const markChosen = (tree, lineage, chosen) => {
+	if (lineage.length === 0) {
+		return
+	} else if (lineage.length === 1) {
+		const node = tree[lineage[0]]
+
+		if (node.checked) {
+			delete chosen[node.path]
+		} else {
+			uncheckChildren(node.children, chosen)
+			chosen[node.path] = true
+		}
+
+		node.checked = !node.checked
+	} else {
+		const index = lineage.shift() // this mutates lineage
+		const node = tree[index]
+
+		if (node.checked) {
+			delete chosen[node.path]
+			node.checked = false
+		}
+
+		markChosen(node.children, lineage, chosen)
+	}
+}
+
+const uncheckChildren = (tree, chosen) => {
+	if (!tree) return
+
+	tree.forEach( node => {
+		delete chosen[node.path]
+		node.checked = false
+
+		uncheckChildren(node.children, chosen)
+	})
 }
