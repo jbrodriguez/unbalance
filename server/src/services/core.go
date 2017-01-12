@@ -598,9 +598,24 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
 
-	if _, err := os.Stat(srcFolder); os.IsNotExist(err) {
+	var fi os.FileInfo
+	var err error
+	if fi, err = os.Stat(srcFolder); os.IsNotExist(err) {
 		mlog.Warning("getFolders:Folder does not exist: %s", srcFolder)
 		return nil
+	}
+
+	if !fi.IsDir() {
+		mlog.Info("getFolder-found(%s)-size(%d)", srcFolder, fi.Size())
+
+		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder}
+		items = append(items, item)
+
+		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
+		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
 	}
 
 	dirs, err := ioutil.ReadDir(srcFolder)
