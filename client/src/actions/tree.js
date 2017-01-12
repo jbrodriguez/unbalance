@@ -1,9 +1,12 @@
 import path from 'path'
+import { Utils } from 'react-tree-menu'
 
 module.exports = {
 	treeItemClicked,
 	getTree,
 	gotTree,
+
+	treeCollapsed,
 }
 
 function treeItemClicked({state, actions, opts: {api}}, item) {
@@ -32,7 +35,7 @@ function treeItemClicked({state, actions, opts: {api}}, item) {
 			selected: item.path,
 			fetching: !open,
 		},
-	}	
+	}
 
 	// tree.selected = item.path
 	// tree.fetching = !open
@@ -54,15 +57,60 @@ function getTree({state, actions,  opts: {api}}, path) {
 }
 
 function gotTree({state}, newTree) {
+	let items = [].concat(state.tree.items)
+
+	if (state.tree.cache) {
+		const node = state.tree.cache
+		node.children = newTree.nodes
+
+		// console.log(`node-${JSON.stringify(state.tree.cache)}`)
+		// console.log(`gotTree-${JSON.stringify(newTree.nodes)}`)
+	} else {
+		items = [].concat(newTree.nodes)
+	}
+
+	// items = Utils.getNewTreeState(lineage, items, "collapsed")
+
+	return {
+		...state,
+		tree: {
+			source: newTree.path,
+			items,
+		},
+	}
+}
+
+function treeCollapsed({state, actions}, lineage) {
+	let tree = [].concat(state.tree.items)
+	const node = getNode(tree, lineage)
+	// console.log(`node-${JSON.stringify(node)}`)
+
+	// console.log(`utils-${JSON.stringify(Utils)}`)
+	// return state
+
+	node.collapsed = !node.collapsed
+
+	actions.getTree(node.path)
+
 	return {
 		...state,
 		tree: {
 			...state.tree,
-			fetching: false,
-			items: {
-				...state.tree.items,
-				[newTree.path]: newTree.nodes
-			},
-		},
+			cache: node,
+			items: tree
+		}
+	}
+}
+
+const getNode = (tree, lineage) => {
+	// console.log(`lineage-${JSON.stringify(lineage)}`)
+	if (lineage.length === 0) {
+		return null
+	} else if (lineage.length === 1) {
+		// console.log(`uno-${JSON.stringify(tree[lineage[0]])}`)
+		return tree[lineage[0]]
+	} else {
+		const node = lineage.shift()
+		return getNode(tree[node].children, lineage)
 	}
 }
