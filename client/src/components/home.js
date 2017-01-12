@@ -132,7 +132,7 @@ export default class Home extends Component {
 								data={state.tree.items}
 							/>
 							</td>
-							<td colSpan="6" valign="top">
+							<td colSpan="6" className={cx('topAlign')}>
 								<ul>
 								{ Object.keys(state.tree.chosen).map( chosen => <li>{chosen}</li> )}
 								</ul>
