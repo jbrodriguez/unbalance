@@ -2,8 +2,6 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import 'font-awesome-webpack'
 
-import TreePanel from './treePanel'
-
 import styles from '../styles/core.scss'
 import classNames from 'classnames/bind'
 
@@ -63,7 +61,7 @@ export default class Settings extends Component {
 					</div>
 				</section>
 			)
-		}		
+		}
 
 		if (state.opInProgress === actions.calculate || state.opInProgress === actions.move) {
 			return (
@@ -90,10 +88,10 @@ export default class Settings extends Component {
 						<span> Calculate: </span>
 						<input id="calc0" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this._setNotifyCalc.bind(this, 0)} />
 						<label id="calc0" >No Notifications</label>
-						
+
 						<input id="calc1" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this._setNotifyCalc.bind(this, 1)} />
 						<label id="calc1" >Basic</label>
-						
+
 						<input id="calc2" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this._setNotifyCalc.bind(this, 2)} />
 						<label id="calc2" >Detailed</label>
 
@@ -102,10 +100,10 @@ export default class Settings extends Component {
 						<span> Move: </span>
 						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this._setNotifyMove.bind(this, 0)} />
 						<label id="move0">No Notifications</label>
-						
+
 						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this._setNotifyMove.bind(this, 1)} />
 						<label id="move0">Basic</label>
-						
+
 						<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this._setNotifyMove.bind(this, 2)} />
 						<label id="move0">Detailed</label>
 					</div>
@@ -125,9 +123,9 @@ export default class Settings extends Component {
 								<div className={cx('addon')}>
 									<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this._setReservedAmount.bind(this)} />
 									<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this._setReservedUnit.bind(this)}>
-										<option value="%">%</option> 
-										<option value="Mb">Mb</option> 
-										<option value="Gb">Gb</option> 
+										<option value="%">%</option>
+										<option value="Mb">Mb</option>
+										<option value="Gb">Gb</option>
 									</select>
 								</div>
 							</div>
@@ -164,72 +162,6 @@ export default class Settings extends Component {
 						</div>
 					</div>
 				</div>
-			</section>								
-
-			<section className={cx('row', 'bottom-spacer-large')}>
-				<div className={cx('col-xs-12')}>
-					<div>
-						<h3>WHICH FOLDERS DO YOU WANT TO MOVE ?</h3>
-
-						<p>Define which folders should be moved to free up space on the source disk (you choose the source disk in the main page).</p>
-						<p>You can choose entire user shares (e.g.: /Movies) or any folders below a user share (e.g.: /Movies/Action, /Movies/Comedy/90s).</p>
-						<p>The folders you select will be moved to other disks in the array, as long as there's enough space available.</p>
-						<p>Click on the <button className={cx('btn', 'btn-alert')}>add</button>  button that appears when you hover your mouse over a folder in the "unRAID Shares Explorer" column below, to select it for moving.</p>
-						<p>Click on the <i className={cx('fa fa-remove')}></i> icon that appears next to any folder in the "Folders to be moved" column, to deselect it.</p>
-					</div>
-				</div>
-			</section>
-
-			<section className={cx('row')}>
-				<div className={cx('col-xs-12')}>
-					<div>
-						<section className={cx('row')}>
-							<div className={cx('col-xs-12')}>
-								<div className={cx('explorerHeader')}>
-									<section className={cx('row')}>
-										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<span className={cx('lspacer')}>unRAID Shares Explorer</span>
-										</div>
-										<div className={cx('col-xs-12', 'col-sm-4')}>
-											Folders to be moved
-										</div>
-									</section>
-								</div>
-							</div>
-						</section>
-
-						<section className={cx('row')}>
-							<div className={cx('col-xs-12')}>
-								<div className={cx('explorerContent')}>
-									<section className={cx('row')}>
-										<div className={cx('col-xs-12', 'col-sm-8')}>
-											<TreePanel tree={state.tree} {...actions} />
-										</div>
-										<div className={cx('col-xs-12', 'col-sm-4', 'flex', 'flexOne')}>
-											<div className={cx('explorerChosen')}>
-												<table className={cx('')}>
-													<tbody>
-														{ 
-															state.config.folders.map( (item, i) => {
-																return (
-																	<tr key={i}>
-																		<td width="40"><i className={cx('fa fa-remove')} onClick={this._deleteFolder.bind(this, item)}></i></td>
-																		<td>{item}</td>
-																	</tr>
-																)
-															})
-														}
-													</tbody>
-												</table>
-											</div>
-										</div>
-									</section>
-								</div>
-							</div>
-						</section>
-					</div>
-				</div>
-
 			</section>
 
 			</div>
@@ -246,11 +178,6 @@ export default class Settings extends Component {
 
 	// 	dispatch(C.ADD_FOLDER, e.target.value)
 	// }
-
-	_deleteFolder(folder, e) {
-		const { deleteFolder } = this.props.store.actions
-		deleteFolder(folder)
-	}
 
 	_setNotifyCalc(notify, e) {
 		const { setNotifyCalc } = this.props.store.actions
@@ -271,7 +198,7 @@ export default class Settings extends Component {
 	_setReservedUnit(e) {
 		this.setState({
 			reservedUnit: e.target.value
-		})		
+		})
 	}
 
 	_setReservedSpace(e) {
@@ -294,5 +221,5 @@ export default class Settings extends Component {
 	_setRsyncDefault(e) {
 		const { setRsyncFlags } = this.props.store.actions
 		setRsyncFlags(['-avRX', '--partial'])
-	}	
+	}
 }

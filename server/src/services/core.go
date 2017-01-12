@@ -122,8 +122,6 @@ func (c *Core) Start() (err error) {
 	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
 	c.registerAdditional(c.bus, "/config/set/reservedSpace", c.setReservedSpace, c.mailbox)
-	c.registerAdditional(c.bus, "/config/add/folder", c.addFolder, c.mailbox)
-	c.registerAdditional(c.bus, "/config/delete/folder", c.deleteFolder, c.mailbox)
 	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
 	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
 	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
@@ -226,30 +224,6 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 
 	c.settings.ReservedAmount = amount
 	c.settings.ReservedUnit = unit
-	c.settings.Save()
-
-	msg.Reply <- &c.settings.Config
-}
-
-func (c *Core) addFolder(msg *pubsub.Message) {
-	folder := msg.Payload.(string)
-
-	mlog.Info("Adding folder (%s)", folder)
-
-	c.settings.AddFolder(folder)
-	c.settings.Save()
-
-	msg.Reply <- &c.settings.Config
-}
-
-func (c *Core) deleteFolder(msg *pubsub.Message) {
-
-	folder := msg.Payload.(string)
-
-	mlog.Info("Deleting folder (%s)", folder)
-
-	c.settings.DeleteFolder(folder)
-
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
