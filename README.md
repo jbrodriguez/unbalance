@@ -6,46 +6,40 @@ unBALANCE
 ## [Changelog](https://github.com/jbrodriguez/unbalance/releases)
 
 ## Screenshot
-![Screenshot](metadata/images/110-home.png)
-
-## Upgrade Notes for v1.2.x
-For those upgrading from previous versions (v0.7.4 and below), please take note of the following changes:
-
-- unBALANCE is now distributed as a plugin rather than a docker container. The reason is to have easier access to  unRAID's filesystem, for proper app operation. This should also fix some known issues such as drives not being recognized when recently added or formatted, and being unable to move Apple's Time Machine backups.
-- The notifications system is based on unRAID's settings, so you need to set up unRAID's notifications first. This also means that you must be running 6.1 to receive emails and other unRAID alerts
-- The configuration file format has changed, so you need to set up folders from scratch (it will be easier with this version).
+![Home](metadata/images/200-home.png)
 
 ## Introduction
-With unBALANCE, you select a disk that you want to have as much free space available as possible, and it will move the folders/files to other disks filling them up, as space allows.
+unBALANCE helps you manage the free space of the disks in your unRAID array.
 
-In other words, it takes everything off a disk and spreads it among your other disks to clear the selected disk.
+It's versatile in the fact that it can serve multiple purposes, based on your needs.
 
-The logic is quite simple:<br>
-Get all elegible folders from the source disk<br>
-Order the target disks by free space available<br>
-For each disk, fill it up as much as possible with folders/files from the source disk, leaving some headroom (currently set at 450Mb).<br>
+Some of the use cases are:
+- Empty a disk, in order to change filesystems (read the Use Cases section below).
+- Move a specific folder from a disk to another disk.
+- Split your movies/tv shows/games folder from a disk to other disks.
 
+The core feature is that it will make sure to fill the target disk(s) as much as possible, without
+running out of space.
+
+If it can't move some files/folders, it will inform you in the console and via notifications (if you
+set them up in the settings).
+
+This is the reason it's split into two phases:
+#### Calculate
+The logic is simple
+- Get the contents of the selected files/folders from the source disk
+- Order the target disks by free space available
+- For each target disk, calculate how much it can be filled up with files/folder from the source disk, leaving some headroom (currently set at 450Mb).
+
+Additionally, it will check files/folders permissions, to warn about potential issues during the move phase.
+
+#### Move
 ~~Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/unraid-diskmv).~~
 
 Internally, it issues a slight variation of [this rsync command](https://lime-technology.com/forum/index.php?topic=37490.msg449941#msg449941).
 
 Check [this post](https://lime-technology.com/forum/index.php?topic=45352.msg476018#msg476018) for additional information.
 
-The icon was created by [hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508).
-
-The array must be started for the app to work.
-
-The first time you open the app, you are redirected to the settings page, where you can navigate your user shares, to select which folders you want to move.
-
-You can Select an entire user share (/films in the screenshot below) or any folder(s) under the user shares (/films/bluray for example).
-
-![Settings](metadata/images/110-settings.png)
-
-## Use Cases
-This is one of the use cases for unBALANCE
-
-[kizer](http://lime-technology.com/forum/index.php?topic=45352.msg435488#msg435488)  
-"For example, I'm trying to remove all files off my Disk4 so I can format it to XFS. I selected all the shares I want moved on a particular disk in Settings, then to Home and clicked all the drives I want it to populate, clicked the Calculate button to make sure it has room among all the disks, finally clicked Move and it rips along"
 
 ## Installation
 There are 2 ways to install this application
@@ -61,6 +55,7 @@ Go to the Plugins tab<br/>
 Click on Install Plugin<br/>
 Paste the following address in the input field: https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/unbalance.plg<br/>
 Click Install
+
 
 ## Running the app
 After installing the plugin, you can access the web UI, via the following methods:
@@ -78,11 +73,38 @@ Click on Open Web UI<br/>
 - Method 3<br/>
 Navigate with your browser to http://Tower:6237/ (replace Tower with the address/name of your unRAID server)<br/>
 
-As mentioned previously, the app will show the Settings page the first time it's run.
 
-Also, on the main page, the dry-run option is selected by default, which  means that the move operation is simulated (no folders/files will be moved).
+## Quick Start
+- Click the FROM column of the disk you want to empty
+- Choose one or more files/folders you want to move (the CALCULATE button will now be enabled)
+- Click the TO column of the disks you want the files to be moved to
+- Click the CALCULATE button<br>
+It will display the console showing the progress of the calculate phase.<br>
+Once it's done, it will show how much space both source and target disks will have available (PLAN column).<br>
+The screenshot below shows the warnings from the permissions check, as well as the message console
+![Calculate](metadata/images/200-calculate.png)
 
-To perform an actual move operation, uncheck the dry-run checkbox.
+- Click the MOVE button (dry-run checked/unchecked)<br>
+If dry-run is checked, no files/folder will be actually moved.<br>
+Otherwise the move operation will actually take place.<br>
+In either case, the console will log progress messages.<br>
+Also, a progress status will appear in the navigation bar.
+![Progress](metadata/images/200-move.png)
+
+
+## Other Features
+### Settings
+![Settings](metadata/images/200-settings.png)
+
+These are pretty much straigthforward.
+
+A word of caution with the custom rsync flags: it's for **power users** only.
+
+unBALANCE is optimized to work with the default flags, you must be VERY knowledgeable in rsync if you
+want to change them.
+
+### Log
+![Log](metadata/images/200-log.png)
 
 ## Credits
 ~~This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the [forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).~~
