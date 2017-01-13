@@ -1,3 +1,31 @@
+Version 2.0.0 - 2017-01-13
+- Accept special characters in changelog text
+- Add react-tree-menu
+- Initial tree-view implementation
+- Use css styling
+- Remove call to getTree
+- Implement tree collapse handling
+- Get tree for initial source disk
+- Adjust home screen to new logic
+- Change shape of tree sub-tree
+- Create function to check if folder is empty
+- Change node structure
+- Modify getTree logic
+- Implement treeChecked functionality
+- Display chosen folders
+- Align chosen folders to the top
+- Implement new checked logic
+- Cache retrievals
+- Modify visual cues
+- Move selection pane when source disk changes
+- Modify button disabling logic
+- Use chosen folders for calculate operation
+- Allow top-level files to be moved
+- Modify logging messages
+- Remove folders in settings logic
+- Optimizations
+
+
 Version 1.8.9 - 2016-12-22
 - Fix release
 
