@@ -1,0 +1,3 @@
+2017-01-13 - 2.0.1
+
+The README is now updated to reflect the new features

@@ -1,3 +1,8 @@
+Version 2.0.1 - 2017-01-13
+- Modify instructions based on new UX
+- Modify README based on new UX (fixes)
+
+
 Version 2.0.0 - 2017-01-13
 - Accept special characters in changelog text
 - Add react-tree-menu
