@@ -14,17 +14,23 @@ unBALANCE helps you manage the free space of the disks in your unRAID array.
 It's versatile in the fact that it can serve multiple purposes, based on your needs.
 
 Some of the use cases are:
-- Empty a disk, in order to change filesystems (read the Use Cases section below).
+- Empty a disk, in order to change filesystems (read [kizer's example](http://lime-technology.com/forum/index.php?topic=45352.msg435488#msg435488)).
 - Move a specific folder from a disk to another disk.
 - Split your movies/tv shows/games folder from a disk to other disks.
 
-The core feature is that it will make sure to fill the target disk(s) as much as possible, without
-running out of space.
+You will certainly come up with other examples as soon as you install it.
 
+## Core Features
+ - **Makes sure to fill the target disk(s) as much as possible, without
+running out of space**<br>
 If it can't move some files/folders, it will inform you in the console and via notifications (if you
-set them up in the settings).
+set them up in the settings), before any actual move takes place.
 
-This is the reason it's split into two phases:
+ - **Operates in the background**<br>
+ You can close your browser while the move operation is ongoing. It will keep moving files on the
+ server and show you the current progress as soon as you reopen the browser.
+
+These are the reasons it's split into two phases:
 #### Calculate
 The logic is simple
 - Get the contents of the selected files/folders from the source disk
@@ -85,10 +91,8 @@ The screenshot below shows the warnings from the permissions check, as well as t
 ![Calculate](metadata/images/200-calculate.png)
 
 - Click the MOVE button (dry-run checked/unchecked)<br>
-If dry-run is checked, no files/folder will be actually moved.<br>
-Otherwise the move operation will actually take place.<br>
-In either case, the console will log progress messages.<br>
-Also, a progress status will appear in the navigation bar.
+If dry-run is checked, no files/folder will be actually moved. Otherwise the move operation will actually take place.<br>
+In either case, the console will log progress messages. Also, a progress status will appear in the navigation bar.
 ![Progress](metadata/images/200-move.png)
 
 
