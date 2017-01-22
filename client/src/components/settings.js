@@ -220,6 +220,6 @@ export default class Settings extends Component {
 
 	_setRsyncDefault = (e) => {
 		const { setRsyncFlags } = this.props.store.actions
-		setRsyncFlags(['-avRX', '--partial'])
+		setRsyncFlags(['-avPRX'])
 	}
 }

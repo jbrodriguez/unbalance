@@ -65,7 +65,7 @@ func NewSettings(version string) (*Settings, error) {
 	s := &Settings{}
 
 	if rsyncFlags == "" {
-		s.RsyncFlags = []string{"-avRX", "--partial"}
+		s.RsyncFlags = []string{"-avPRX"}
 	} else {
 		s.RsyncFlags = strings.Split(rsyncFlags, "|")
 	}
