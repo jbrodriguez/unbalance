@@ -180,7 +180,7 @@ export default class Settings extends Component {
 							<h3>CUSTOM RSYNC FLAGS</h3>
 
 							<p>Internally unBALANCE uses rsync to transfer files across disks.</p>
-							<p>By default, rsync is invoked with <b>-avRX --partial</b> flags.</p>
+							<p>By default, rsync is invoked with <b>-avPRX</b> flags.</p>
 							<p>Here you can set custom flags to override the default ones, except for the dry run flag which will be automatically added, if needed.</p>
 							<p>It&apos;s strongly recommended to keep the -R flag, for optimal operation.</p>
 							<p>Be careful with the flags you choose, since it can drastically alter the expected behaviour of rsync under unBALANCE.</p>
