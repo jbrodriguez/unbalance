@@ -1,6 +1,3 @@
-import path from 'path'
-import { Utils } from 'react-tree-menu'
-
 module.exports = {
 	getTree,
 	gotTree,
@@ -17,15 +14,15 @@ const getNode = (tree, lineage) => {
 		return null
 	} else if (lineage.length === 1) {
 		return tree[lineage[0]]
-	} else {
-		const node = lineage.shift()
-		return getNode(tree[node].children, lineage)
 	}
+
+	const node = lineage.shift()
+	return getNode(tree[node].children, lineage)
 }
 
 const markChosen = (tree, lineage, chosen) => {
 	if (lineage.length === 0) {
-		return
+		// no-op
 	} else if (lineage.length === 1) {
 		const node = tree[lineage[0]]
 
@@ -53,7 +50,7 @@ const markChosen = (tree, lineage, chosen) => {
 const uncheckChildren = (tree, chosen) => {
 	if (!tree) return
 
-	tree.forEach( node => {
+	tree.forEach((node) => {
 		delete chosen[node.path]
 		node.checked = false
 
@@ -62,16 +59,14 @@ const uncheckChildren = (tree, chosen) => {
 }
 
 // actions
-function getTree({state, actions,  opts: {api}}, path) {
+function getTree({ state, actions, opts: { api } }, path) {
 	api.getTree(path)
-		.then(json => {
-			actions.gotTree(json)
-		})
+		.then(json => actions.gotTree(json))
 
 	return state
 }
 
-function gotTree({state}, newTree) {
+function gotTree({ state }, newTree) {
 	let items = [].concat(state.tree.items)
 
 	if (state.tree.cache) {
@@ -95,8 +90,8 @@ function gotTree({state}, newTree) {
 	}
 }
 
-function treeCollapsed({state, actions}, lineage) {
-	let tree = [].concat(state.tree.items)
+function treeCollapsed({ state, actions }, lineage) {
+	const tree = [].concat(state.tree.items)
 	const node = getNode(tree, lineage)
 	// console.log(`node-${JSON.stringify(node)}`)
 
@@ -113,14 +108,14 @@ function treeCollapsed({state, actions}, lineage) {
 		tree: {
 			...state.tree,
 			cache: node,
-			items: tree
-		}
+			items: tree,
+		},
 	}
 }
 
-function treeChecked({state, actions}, lineage) {
-	let items = [].concat(state.tree.items)
-	let chosen = Object.assign({}, state.tree.chosen)
+function treeChecked({ state, actions }, lineage) {
+	const items = [].concat(state.tree.items)
+	const chosen = Object.assign({}, state.tree.chosen)
 
 	markChosen(items, lineage, chosen)
 
@@ -129,12 +124,12 @@ function treeChecked({state, actions}, lineage) {
 		tree: {
 			...state.tree,
 			chosen,
-			items
-		}
+			items,
+		},
 	}
 }
 
-function changeDisk({state, actions}, path) {
+function changeDisk({ state, actions }, path) {
 	actions.getTree(path)
 
 	return {
@@ -142,7 +137,7 @@ function changeDisk({state, actions}, path) {
 		tree: {
 			cache: null,
 			chosen: {},
-			items: [{label: 'Loading ...'}]
-		}
+			items: [{ label: 'Loading ...' }],
+		},
 	}
 }
