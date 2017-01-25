@@ -1,0 +1,24 @@
+{
+  "parser": "babel-eslint",
+  "extends": "eslint-config-airbnb",
+  "rules": {
+      "semi": [1, "never"],
+      "no-use-before-define": 0,
+      "no-console": 0,
+      "no-constant-condition": [2, {"checkLoops": false}],
+      "no-unused-expressions": [2, {"allowShortCircuit": true}],
+      "no-tabs": 0,
+      "no-param-reassign": 0,
+      "indent": [1, "tab"],
+      "max-len": 0,
+      "react/jsx-filename-extension": 0,
+      "react/jsx-indent": [1, "tab"],
+      "react/jsx-indent-props": [1, "tab"],
+      "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/server.js", "**/webpack.*.js"]}],
+  },
+  "globals": {
+    "document": true,
+    "window": true,
+    "WebSocket": true,
+  }
+}

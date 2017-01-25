@@ -1,10 +1,16 @@
 import React from 'react'
 import { findDOMNode } from 'react-dom'
-// require('react-dom')
+
+import classNames from 'classnames/bind'
 
 import styles from '../styles/core.scss'
-import classNames from 'classnames/bind'
-let cx = classNames.bind(styles)
+
+const cx = classNames.bind(styles)
+
+const propTypes = {
+	lines: React.PropTypes.arrayOf(React.PropTypes.any).isRequired,
+	styleClass: React.PropTypes.string.isRequired,
+}
 
 export default class Console extends React.Component {
 	componentDidUpdate() {
@@ -12,28 +18,22 @@ export default class Console extends React.Component {
 			return
 		}
 
-		// console.log('being called')
-		var node = findDOMNode(this)
+		const node = findDOMNode(this)
 		node.scrollTop = node.scrollHeight
 	}
 
 	render() {
-		const { lines, style } = this.props
+		const { lines, styleClass } = this.props
 
-		// if (model.lines.length === 0) {
-		// 	return null
-		// }
-
-		let items = lines.map( (line, i) => {
-			return (
-				<p key={i} className={cx('consoleLine')}>{line}</p>
-			)
-		})
+		const items = lines.map((line, i) => (
+				<p key={i} className={cx('consoleLine')}>{line}</p> // eslint-disable-line
+		))
 
 		return (
-			<div className={cx('console', style)}>
+			<div className={cx('console', styleClass)}>
 				{ items }
 			</div>
 		)
 	}
 }
+Console.propTypes = propTypes

@@ -2,40 +2,32 @@ module.exports = {
 	setOpInProgress,
 	addFeedback,
 	removeFeedback,
-	// setConsole,
 }
 
-function setOpInProgress({state}, action) {
+function setOpInProgress({ state }, action) {
 	return {
 		...state,
-		opInProgress: action
+		opInProgress: action,
 	}
 }
 
-function addFeedback({state, actions}, feedback) {
+function addFeedback({ state, actions }, feedback) {
 	if (state.timeout) {
 		window.clearTimeout(state.timeout)
 	}
-	const timeout = window.setTimeout( _ => actions.removeFeedback(), 15000)
+	const timeout = window.setTimeout(() => actions.removeFeedback(), 15000)
 
 	return {
 		...state,
 		timeout,
-		feedback: [].concat(feedback)
+		feedback: [].concat(feedback),
 	}
 }
 
-function removeFeedback({state}) {
+function removeFeedback({ state }) {
 	return {
 		...state,
 		feedback: [],
 		timeout: null,
 	}
 }
-
-// function setConsole({state}, line) {
-// 	return {
-// 		...state,
-// 		lines: [].concat(line)
-// 	}
-// }
