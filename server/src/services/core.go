@@ -49,6 +49,7 @@ type Core struct {
 	reItems     *regexp.Regexp
 	reRsync     *regexp.Regexp
 	reStat      *regexp.Regexp
+	reProgress  *regexp.Regexp
 
 	rsyncErrors map[int]string
 
@@ -72,17 +73,11 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	}
 	core.init()
 
-	re, _ := regexp.Compile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
-	core.reFreeSpace = re
-
-	re, _ = regexp.Compile(`(\d+)\s+(.*?)$`)
-	core.reItems = re
-
-	re, _ = regexp.Compile(`exit status (\d+)`)
-	core.reRsync = re
-
-	re, _ = regexp.Compile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
-	core.reStat = re
+	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
+	core.reItems = regexp.MustCompile(`(\d+)\s+(.*?)$`)
+	core.reRsync = regexp.MustCompile(`exit status (\d+)`)
+	core.reProgress = regexp.MustCompile(`^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
+	core.reStat = regexp.MustCompile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 
 	core.rsyncErrors = map[int]string{
 		0:  "Success",
@@ -162,8 +157,8 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
 
 	rsyncFlags := strings.Join(c.settings.RsyncFlags, " ")
-	if rsyncFlags == "-avX --partial" {
-		c.settings.RsyncFlags = []string{"-avRX", "--partial"}
+	if rsyncFlags == "-avX --partial" || rsyncFlags == "-avRX --partial" {
+		c.settings.RsyncFlags = []string{"-avPRX"}
 		c.settings.Save()
 	}
 
@@ -777,25 +772,47 @@ func (c *Core) _move(msg *pubsub.Message) {
 			outbound = &dto.Packet{Topic: "moveProgress", Payload: cmd}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			// err := lib.ShellEx(mlog.Warning, "moveProgress:", func(line string) {
-			// 	outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
-			// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			bytesMoved := c.bytesMoved
+			var deltaMoved int64
 
-			// 	mlog.Info(line)
-			// }, "cd", args...)
+			err := lib.ShellEx(func(text string) {
+				line := strings.TrimSpace(text)
 
-			err := lib.ShellEx(mlog.Warning, "moveProgress", workDir, func(line string) {
-				if strings.HasPrefix(line, "moveProgress: waitError: ") {
-					status := line[25:]
-					msg := getError(status, c.reRsync, c.rsyncErrors)
-					line += " : " + msg
+				if len(line) <= 0 {
+					return
 				}
 
-				outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
+				match := c.reProgress.FindStringSubmatch(line)
+				if match == nil {
+					// this is a regular output line from rsync, print it
+					mlog.Info("%s", line)
+
+					outbound := &dto.Packet{Topic: "moveProgress", Payload: line}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+					return
+				}
+
+				// this is a file transfer progress output line
+				if match[1] == "" {
+					// this happens when the file hasn't finished transferring
+					moved := strings.Replace(match[2], ",", "", -1)
+					deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
+				} else {
+					// the file has finished transferring
+					moved := strings.Replace(match[1], ",", "", -1)
+					deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
+					bytesMoved += deltaMoved
+				}
+
+				percent, left, speed := progress(c.storage.BytesToMove, bytesMoved+deltaMoved, c.started)
+
+				msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
+
+				outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-				mlog.Info(line)
-			}, "rsync", args...)
+			}, workDir, "rsync", args...)
 
 			if err != nil {
 				finished := time.Now()
