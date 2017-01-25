@@ -3,8 +3,9 @@ import express 				from 'express'
 import webpack 				from 'webpack'
 import webpackMiddleware 	from 'webpack-dev-middleware'
 import webpackHotMiddleware from 'webpack-hot-middleware'
-import config 				from './webpack.config.js'
 import httpProxy 			from 'http-proxy'
+
+import config 				from './webpack.config'
 
 // var path = require('path');
 // var express = require('express');
@@ -17,9 +18,9 @@ import httpProxy 			from 'http-proxy'
 
 // We need to add a configuration to our proxy server,
 // as we are now proxying outside localhost
-var proxy = httpProxy.createProxyServer({
-  changeOrigin: true,
-  ws: true,
+const proxy = httpProxy.createProxyServer({
+	changeOrigin: true,
+	ws: true,
 })
 
 const isDeveloping = process.env.NODE_ENV !== 'production'
@@ -29,7 +30,7 @@ const app = express()
 const server = require('http').createServer(app)
 
 if (isDeveloping) {
-	const compiler = webpack(config);
+	const compiler = webpack(config)
 	const middleware = webpackMiddleware(compiler, {
 		publicPath: config.output.publicPath,
 		contentBase: 'src',
@@ -39,37 +40,30 @@ if (isDeveloping) {
 			timings: true,
 			chunks: false,
 			chunkModules: false,
-			modules: false
-		}
-	});
-
-	app.use(middleware);
-	app.use(webpackHotMiddleware(compiler));
-
-	app.all('/api/*', function(req, res) {
-		proxy.web(req, res, {target: 'http://wopr.apertoire.org:6237'})
+			modules: false,
+		},
 	})
 
-	server.on('upgrade', function(req, socket, head) {
-		proxy.ws(req, socket, head, {target: 'http://wopr.apertoire.org:6237'})
-	});
+	app.use(middleware)
+	app.use(webpackHotMiddleware(compiler))
 
-	// app.all('/skt', function(req, res) {
-	// 	proxy.ws(req, res, {
-	// 		target: 'ws://wopr.apertoire.org:6237/skt'
-	// 	})
-	// })
+	app.all('/api/*', (req, res) => {
+		proxy.web(req, res, { target: 'http://wopr.apertoire.org:6237' })
+	})
 
-	app.get('*', function response(req, res) {
-		res.write(middleware.fileSystem.readFileSync(path.join(__dirname, 'dist/index.html')));
-		res.end();
-	});
+	server.on('upgrade', (req, socket, head) => {
+		proxy.ws(req, socket, head, { target: 'http://wopr.apertoire.org:6237' })
+	})
 
+	app.get('*', (req, res) => {
+		res.write(middleware.fileSystem.readFileSync(path.join(__dirname, 'dist/index.html')))
+		res.end()
+	})
 } else {
-	app.use(express.static(__dirname + '/dist'));
-	app.get('*', function response(req, res) {
-		res.sendFile(path.join(__dirname, 'dist/index.html'));
-	});
+	app.use(express.static(__dirname + '/dist')) // eslint-disable-line
+	app.get('*', (req, res) => {
+		res.sendFile(path.join(__dirname, 'dist/index.html'))
+	})
 }
 
 export default server

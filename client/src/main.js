@@ -85,89 +85,34 @@ const actions = combineActions(
 	uiActions,
 	configActions,
 	treeActions,
-	unraidActions
+	unraidActions,
 )
 
 const api = new Api()
 const ws = new WSApi()
 
-const store = createStore(initialState, actions, {api, ws})
+const store = createStore(initialState, actions, { api, ws })
 
 const routes = (
-	<Route path='/' component={App}>
+	<Route path="/" component={App}>
 		<IndexRoute component={Home} />
-		<Route path='settings' component={Settings} />
-		<Route path='log' component={Log} />
+		<Route path="settings" component={Settings} />
+		<Route path="log" component={Log} />
 	</Route>
 )
 
-store.subscribe(
-	store => {
+store.subscribe((state) => {
 		// console.log('main.store.state: ', store.state)
-
-		function createElement(Component, props) {
-			return <Component {...props} store={store} />
-		}
-
-		render(
-			<Router history={hashHistory} createElement={createElement} children={routes}>
-			</Router>,
-			document.getElementById('mnt')
-		)
+	function createElement(Component, props) {
+		return <Component {...props} store={state} />
 	}
-)
+
+	render(
+		<Router history={hashHistory} createElement={createElement}>
+			{routes}
+		</Router>,
+		document.getElementById('mnt'),
+	)
+})
 
 store.actions.start()
-
-// Promise.all([api.getConfig(), api.getTree('/')])
-// 	.then( boot )
-
-// function boot([config, entry]) {
-// 	// console.log('config: ', config)
-// 	// console.log('entry: ', entry)
-
-// 	let treeItems = {}
-// 	treeItems[entry.path] = entry.nodes
-
-// 	let initialState = {
-// 		config,
-// 		unraid: null,
-// 		fromDisk: null,
-// 		toDisk: null,
-// 		opInProgress: null,
-// 		moveDisabled: true,
-// 		lines: [],
-// 		tree: {
-// 			items: treeItems,
-// 			selected: '',
-// 			fetching: false,
-// 		},
-// 		feedback: [],
-// 	}
-
-// 	let actions = [].concat(startActions, uiActions, configActions, treeActions, unraidActions)
-
-// 	const store = createStore(initialState, actions, {api, ws})
-
-// 	store.subscribe(
-// 		store => {
-// 			// console.log('main.store: ', store)
-
-// 			function createElement(Component, props) {
-// 				return <Component {...props} store={store} />
-// 			}
-
-// 			render(
-// 				<Router createElement={createElement}>
-// 					<Route path='/' component={App}>
-// 						<IndexRoute component={Home} />
-// 						<Route path='settings' component={Settings} />
-// 					</Route>
-// 				</Router>,
-// 				document.getElementById('mnt')
-// 			)
-// 		}
-// 	)
-
-// 	store.dispatch(store.actions.start)
-// }
