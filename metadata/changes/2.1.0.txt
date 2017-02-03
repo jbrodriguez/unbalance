@@ -1,0 +1,8 @@
+2017-02-03 - 2.1.0
+
+This release implements real time move progress !
+
+Progress is synchronized with rsync transfer updates.
+
+Also in this release:
+- Bug fixes and improvements
