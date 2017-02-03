@@ -1,3 +1,15 @@
+Version 2.1.0 - 2017-02-03
+- Implement real time rsync move progress
+- Modify shell output scanning
+- Install lint packages
+- Lint actions
+- Lint components
+- Lint lib
+- Lint project
+- Fix wording
+- Remove api calls no longer required
+
+
 Version 2.0.1 - 2017-01-13
 - Modify instructions based on new UX
 - Modify README based on new UX (fixes)
