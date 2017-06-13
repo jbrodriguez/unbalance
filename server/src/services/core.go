@@ -18,6 +18,7 @@ import (
 	"jbrodriguez/unbalance/server/src/lib"
 	"jbrodriguez/unbalance/server/src/model"
 
+	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 )
@@ -35,8 +36,6 @@ const (
 
 // Core service
 type Core struct {
-	Service
-
 	bus      *pubsub.PubSub
 	storage  *model.Unraid
 	settings *lib.Settings
@@ -45,7 +44,7 @@ type Core struct {
 
 	foldersNotMoved []string
 
-	mailbox chan *pubsub.Mailbox
+	actor *actor.Actor
 
 	reFreeSpace *regexp.Regexp
 	reItems     *regexp.Regexp
@@ -72,8 +71,8 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 		settings: settings,
 		opState:  stateIdle,
 		storage:  &model.Unraid{},
+		actor:    actor.NewActor(bus),
 	}
-	core.init()
 
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reItems = regexp.MustCompile(`(\d+)\s+(.*?)$`)
@@ -115,25 +114,25 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
-	c.mailbox = c.register(c.bus, "/get/config", c.getConfig)
-	c.registerAdditional(c.bus, "/config/set/notifyCalc", c.setNotifyCalc, c.mailbox)
-	c.registerAdditional(c.bus, "/config/set/notifyMove", c.setNotifyMove, c.mailbox)
-	c.registerAdditional(c.bus, "/config/set/reservedSpace", c.setReservedSpace, c.mailbox)
-	c.registerAdditional(c.bus, "/get/storage", c.getStorage, c.mailbox)
-	c.registerAdditional(c.bus, "/config/toggle/dryRun", c.toggleDryRun, c.mailbox)
-	c.registerAdditional(c.bus, "/get/tree", c.getTree, c.mailbox)
-	c.registerAdditional(c.bus, "/config/set/rsyncFlags", c.setRsyncFlags, c.mailbox)
+	c.actor.Register("/get/config", c.getConfig)
+	c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
+	c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
+	c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
+	c.actor.Register("/get/storage", c.getStorage)
+	c.actor.Register("/config/toggle/dryRun", c.toggleDryRun)
+	c.actor.Register("/get/tree", c.getTree)
+	c.actor.Register("/config/set/rsyncFlags", c.setRsyncFlags)
 
-	c.registerAdditional(c.bus, "calculate", c.calc, c.mailbox)
-	c.registerAdditional(c.bus, "move", c.move, c.mailbox)
-	c.registerAdditional(c.bus, "getLog", c.getLog, c.mailbox)
+	c.actor.Register("calculate", c.calc)
+	c.actor.Register("move", c.move)
+	c.actor.Register("getLog", c.getLog)
 
 	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
 		return err
 	}
 
-	go c.react()
+	go c.actor.React()
 
 	return nil
 }
@@ -146,13 +145,6 @@ func (c *Core) Stop() {
 // SetStorage -
 func (c *Core) SetStorage(unraid *model.Unraid) {
 	c.storage = unraid
-}
-
-func (c *Core) react() {
-	for mbox := range c.mailbox {
-		// mlog.Info("Core:Topic: %s", mbox.Topic)
-		c.dispatch(mbox.Topic, mbox.Content)
-	}
 }
 
 func (c *Core) getConfig(msg *pubsub.Message) {
