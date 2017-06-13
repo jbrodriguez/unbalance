@@ -3,13 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jbrodriguez/mlog"
-	"github.com/jbrodriguez/pubsub"
 	"io/ioutil"
-	"jbrodriguez/unbalance/server/src/algorithm"
-	"jbrodriguez/unbalance/server/src/dto"
-	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/model"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +12,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"jbrodriguez/unbalance/server/src/algorithm"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/model"
+
+	"github.com/jbrodriguez/mlog"
+	"github.com/jbrodriguez/pubsub"
 )
 
 const (
@@ -76,7 +78,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reItems = regexp.MustCompile(`(\d+)\s+(.*?)$`)
 	core.reRsync = regexp.MustCompile(`exit status (\d+)`)
-	core.reProgress = regexp.MustCompile(`^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
+	core.reProgress = regexp.MustCompile(`(?s)^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
 	core.reStat = regexp.MustCompile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 
 	core.rsyncErrors = map[int]string{
