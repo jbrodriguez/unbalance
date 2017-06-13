@@ -14,7 +14,6 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/engine/standard"
 	mw "github.com/labstack/echo/middleware"
 
 	"golang.org/x/net/websocket"
@@ -77,21 +76,21 @@ func (s *Server) Start() {
 	s.engine.Static("/app", filepath.Join(location, "app"))
 	s.engine.Static("/img", filepath.Join(location, "img"))
 
-	s.engine.Get("/skt", standard.WrapHandler(websocket.Handler(s.handleWs)))
+	s.engine.GET("/skt", echo.WrapHandler(websocket.Handler(s.handleWs)))
 
 	api := s.engine.Group(apiVersion)
-	api.Put("/config/notifyCalc", s.setNotifyCalc)
-	api.Put("/config/notifyMove", s.setNotifyMove)
-	api.Put("/config/reservedSpace", s.setReservedSpace)
-	api.Get("/config", s.getConfig)
-	api.Get("/storage", s.getStorage)
-	api.Post("/tree", s.getTree)
-	api.Put("/config/dryRun", s.toggleDryRun)
-	api.Put("/config/rsyncFlags", s.setRsyncFlags)
+	api.PUT("/config/notifyCalc", s.setNotifyCalc)
+	api.PUT("/config/notifyMove", s.setNotifyMove)
+	api.PUT("/config/reservedSpace", s.setReservedSpace)
+	api.GET("/config", s.getConfig)
+	api.GET("/storage", s.getStorage)
+	api.POST("/tree", s.getTree)
+	api.PUT("/config/dryRun", s.toggleDryRun)
+	api.PUT("/config/rsyncFlags", s.setRsyncFlags)
 
 	port := fmt.Sprintf(":%s", s.settings.Port)
 
-	go s.engine.Run(standard.New(port))
+	go s.engine.Start(port)
 
 	s.actor.Register("socket:broadcast", s.broadcast)
 	go s.actor.React()
