@@ -2,18 +2,22 @@ package services
 
 import (
 	"fmt"
+	// "os"
+	"path/filepath"
+
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+	"jbrodriguez/unbalance/server/src/model"
+	"jbrodriguez/unbalance/server/src/net"
+
+	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
 	mw "github.com/labstack/echo/middleware"
+
 	"golang.org/x/net/websocket"
-	"jbrodriguez/unbalance/server/src/dto"
-	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/model"
-	"jbrodriguez/unbalance/server/src/net"
-	// "os"
-	"path/filepath"
 )
 
 const (
@@ -23,13 +27,11 @@ const (
 
 // Server -
 type Server struct {
-	Service
-
 	bus      *pubsub.PubSub
 	settings *lib.Settings
 
-	engine  *echo.Echo
-	mailbox chan *pubsub.Mailbox
+	engine *echo.Echo
+	actor  *actor.Actor
 
 	pool map[*net.Connection]bool
 }
@@ -38,10 +40,10 @@ type Server struct {
 func NewServer(bus *pubsub.PubSub, settings *lib.Settings) *Server {
 	server := &Server{
 		bus:      bus,
+		actor:    actor.NewActor(bus),
 		settings: settings,
 		pool:     make(map[*net.Connection]bool),
 	}
-	server.init()
 	return server
 }
 
@@ -91,8 +93,8 @@ func (s *Server) Start() {
 
 	go s.engine.Run(standard.New(port))
 
-	s.mailbox = s.register(s.bus, "socket:broadcast", s.broadcast)
-	go s.react()
+	s.actor.Register("socket:broadcast", s.broadcast)
+	go s.actor.React()
 
 	mlog.Info("Server started listening on %s", port)
 }
@@ -100,13 +102,6 @@ func (s *Server) Start() {
 // Stop -
 func (s *Server) Stop() {
 	mlog.Info("stopped service Server ...")
-}
-
-func (s *Server) react() {
-	for mbox := range s.mailbox {
-		// mlog.Info("Core:Topic: %s", mbox.Topic)
-		s.dispatch(mbox.Topic, mbox.Content)
-	}
 }
 
 func (s *Server) getConfig(c echo.Context) (err error) {
