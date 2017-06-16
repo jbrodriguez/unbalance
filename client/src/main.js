@@ -16,7 +16,9 @@ import Api from './lib/api'
 import WSApi from './lib/wsapi'
 
 import App from './components/app'
-import Home from './components/home'
+// import Home from './components/home'
+import Scatter from './components/scatter'
+import Gather from './components/gather'
 import Settings from './components/settings'
 import Log from './components/log'
 
@@ -89,7 +91,8 @@ const store = createStore(initialState, actions, { api, ws })
 
 const routes = (
 	<Route path="/" component={App}>
-		<IndexRoute component={Home} />
+		<IndexRoute component={Scatter} />
+		<Route path="gather" component={Gather} />
 		<Route path="settings" component={Settings} />
 		<Route path="log" component={Log} />
 	</Route>

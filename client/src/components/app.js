@@ -5,7 +5,6 @@ import { IndexLink, Link } from 'react-router'
 import classNames from 'classnames/bind'
 
 import FeedbackPanel from './feedbackPanel'
-
 import styles from '../styles/core.scss'
 
 const cx = classNames.bind(styles)
@@ -23,7 +22,7 @@ const propTypes = {
 }
 
 export default function App({ location, children, store }) {
-	const { state, actions } = store
+	const { state } = store
 
 	if (!state.config) {
 		return <div />
@@ -57,39 +56,6 @@ export default function App({ location, children, store }) {
 		)
 	}
 
-	const stateOk = state.unraid && state.unraid.condition.state === 'STARTED'
-	const disabled = state.opInProgress || !stateOk || Object.keys(state.tree.chosen).length === 0
-
-	let buttons = null
-	if (location.pathname === '/' && state.unraid) {
-		buttons = (
-			<div className={cx('flexSection', 'end-xs')}>
-				<button className={cx('btn', 'btn-primary')} onClick={() => actions.calculate()} disabled={disabled}>
-					CALCULATE
-				</button>
-				<button
-					className={cx('btn', 'btn-primary', 'lspacer')}
-					onClick={() => actions.move()}
-					disabled={state.moveDisabled || state.opInProgress}
-				>
-					MOVE
-				</button>
-				<span>&nbsp; | &nbsp;</span>
-				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
-					<input
-						id="dryRun"
-						type="checkbox"
-						checked={state.config.dryRun}
-						onChange={() => actions.toggleDryRun()}
-						disabled={state.moveDisabled || state.opInProgress}
-					/>
-					&nbsp;
-					<label htmlFor="dryRun">dry run</label>
-				</div>
-			</div>
-		)
-	}
-
 	const version = state.config ? state.config.version : null
 
 	const indexActive = cx({
@@ -117,17 +83,19 @@ export default function App({ location, children, store }) {
 
 						<li className={cx('headerMenuBg')}>
 							<section className={cx('row', 'middle-xs')}>
-								<div className={cx('col-xs-12', 'col-sm-3', 'flexSection', 'routerSection')}>
+								<div className={cx('col-xs-12', 'col-sm-4', 'flexSection', 'routerSection')}>
 									<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>
-										HOME
+										SCATTER
 									</IndexLink>
+									<div className={cx('lspacer')} />
+									<Link to="gather" activeClassName={active}>GATHER</Link>
 									<div className={cx('lspacer')} />
 									<Link to="settings" activeClassName={active}>SETTINGS</Link>
 									<div className={cx('lspacer')} />
 									<Link to="log" activeClassName={active}>LOG</Link>
 								</div>
 
-								<div className={cx('col-xs-12', 'col-sm-9')}>
+								<div className={cx('col-xs-12', 'col-sm-8')}>
 									<div className={cx('gridHeader')}>
 										<section className={cx('row', 'between-xs', 'middle-xs')}>
 											<div
@@ -143,12 +111,8 @@ export default function App({ location, children, store }) {
 												{progress}
 											</div>
 
-											<div className={cx('col-xs-12', 'col-sm-6', 'statsSection')}>
+											<div className={cx('col-xs-12', 'col-sm-11', 'statsSection')}>
 												{stats}
-											</div>
-
-											<div className={cx('col-xs-12', 'col-sm-5')}>
-												{buttons}
 											</div>
 										</section>
 									</div>
