@@ -3,7 +3,7 @@ module.exports = {
 }
 
 function start({ state, actions, opts: { ws } }) {
-	ws.receive((event) => {
+	ws.receive(event => {
 		const data = JSON.parse(event.data)
 		actions[data.topic](data.payload)
 	})

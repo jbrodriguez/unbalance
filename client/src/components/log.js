@@ -19,7 +19,9 @@ export default class Log extends Component {
 		actions.getLog()
 	}
 
-	getLog = () => { this.props.store.actions.getLog() }
+	getLog = () => {
+		this.props.store.actions.getLog()
+	}
 
 	render() {
 		const { state } = this.props.store
@@ -29,7 +31,9 @@ export default class Log extends Component {
 			<div>
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<button className={cx('btn', 'btn-primary')} onClick={this.getLog} disabled={disabled}>REFRESH</button>
+						<button className={cx('btn', 'btn-primary')} onClick={this.getLog} disabled={disabled}>
+							REFRESH
+						</button>
 					</div>
 				</section>
 				<section className={cx('row', 'bottom-spacer-half')}>

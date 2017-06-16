@@ -26,8 +26,7 @@ module.exports = {
 function getStorage({ state, actions, opts: { api } }) {
 	actions.setOpInProgress('Getting storage info')
 
-	api.getStorage()
-		.then(json => actions.gotStorage(json))
+	api.getStorage().then(json => actions.gotStorage(json))
 	// here i can catch the error and show an appropriate message
 
 	return state
@@ -38,7 +37,7 @@ function gotStorage({ state, actions }, unraid) {
 	const fromDisk = {}
 	let sourceDisk = null
 
-	unraid.disks.forEach((disk) => {
+	unraid.disks.forEach(disk => {
 		fromDisk[disk.path] = disk.src
 		toDisk[disk.path] = disk.dst
 		if (disk.src) {
@@ -49,14 +48,14 @@ function gotStorage({ state, actions }, unraid) {
 	const lines = []
 	let opState = null
 	switch (unraid.opState) {
-	case 1:
-		opState = 'Calculate operation in progress ...'
-		break
-	case 2:
-		opState = 'Move operation in progress ...'
-		break
-	default:
-		break
+		case 1:
+			opState = 'Calculate operation in progress ...'
+			break
+		case 2:
+			opState = 'Move operation in progress ...'
+			break
+		default:
+			break
 	}
 
 	const tree = Object.assign({}, state.tree)
@@ -113,7 +112,7 @@ function calculate({ state, actions, opts: { ws } }) {
 	actions.setOpInProgress('Calculating')
 
 	let srcDisk = ''
-	Object.keys(state.fromDisk).some((key) => {
+	Object.keys(state.fromDisk).some(key => {
 		const isSource = state.fromDisk[key]
 		isSource && (srcDisk = key)
 		return isSource
@@ -132,7 +131,7 @@ function calcStarted({ state }, line) {
 		lines: [].concat(`CALCULATE: ${line}`),
 		unraid: {
 			...state.unraid,
-			disks: state.unraid.disks.map((disk) => {
+			disks: state.unraid.disks.map(disk => {
 				disk.newFree = disk.free
 				return disk
 			}),
@@ -151,16 +150,22 @@ function calcProgress({ state }, line) {
 	}
 }
 
-function calcFinished({ state, actions} , unraid) {
+function calcFinished({ state, actions }, unraid) {
 	const feedback = []
 	if (unraid.bytesToMove === 0) {
 		feedback.push('The calculate operation found that no folders/files can be moved.')
 		feedback.push('')
 		feedback.push('This might be due to one of the following reasons:')
-		feedback.push('- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk')
-		feedback.push('- There isn\'t available space in any of the target disks, to move the share(s)/folder(s) you selected')
+		feedback.push(
+			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
+		)
+		feedback.push(
+			"- There isn't available space in any of the target disks, to move the share(s)/folder(s) you selected",
+		)
 		feedback.push('')
-		feedback.push('Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving or to change the amount of reserved space.')
+		feedback.push(
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving or to change the amount of reserved space.',
+		)
 	}
 
 	if (state.timeout) {
@@ -190,9 +195,13 @@ function calcPermIssue({ state, actions }, permStats) {
 	feedback.push(`${permIssues[3]} files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'`)
 	feedback.push('You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)')
 	feedback.push('')
-	feedback.push('At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation')
+	feedback.push(
+		'At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation',
+	)
 	feedback.push('')
-	feedback.push('You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command')
+	feedback.push(
+		'You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command',
+	)
 
 	if (state.timeout) {
 		window.clearTimeout(state.timeout)

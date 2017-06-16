@@ -7,8 +7,7 @@ export default class Api {
 
 	getConfig() {
 		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/config`)
-			.then(resp => resp.json())
+		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
 	setNotifyCalc(notify) {
@@ -16,8 +15,7 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: notify }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 
 	setNotifyMove(notify) {
@@ -25,8 +23,7 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: notify }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 
 	setReservedSpace(amount, unit) {
@@ -34,14 +31,12 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: JSON.stringify({ amount, unit }) }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 
 	getStorage() {
 		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/storage`)
-			.then(resp => resp.json())
+		return fetch(`${this.hostr}/storage`).then(resp => resp.json())
 	}
 
 	getTree(path) {
@@ -49,8 +44,7 @@ export default class Api {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: path }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 
 	toggleDryRun(dryRun) {
@@ -58,8 +52,7 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: dryRun }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 
 	setRsyncFlags(rsyncFlags) {
@@ -67,7 +60,6 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: JSON.stringify({ rsyncFlags }) }),
-		})
-		.then(resp => resp.json())
+		}).then(resp => resp.json())
 	}
 }

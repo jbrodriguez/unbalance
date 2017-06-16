@@ -25,13 +25,13 @@ export default class Console extends React.Component {
 	render() {
 		const { lines, styleClass } = this.props
 
-		const items = lines.map((line, i) => (
-				<p key={i} className={cx('consoleLine')}>{line}</p> // eslint-disable-line
-		))
+		const items = lines.map((line, i) =>
+			<p key={i} className={cx('consoleLine')}>{line}</p>, // eslint-disable-line
+		)
 
 		return (
 			<div className={cx('console', styleClass)}>
-				{ items }
+				{items}
 			</div>
 		)
 	}

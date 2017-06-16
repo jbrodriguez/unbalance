@@ -50,7 +50,7 @@ const markChosen = (tree, lineage, chosen) => {
 const uncheckChildren = (tree, chosen) => {
 	if (!tree) return
 
-	tree.forEach((node) => {
+	tree.forEach(node => {
 		delete chosen[node.path]
 		node.checked = false
 
@@ -60,8 +60,7 @@ const uncheckChildren = (tree, chosen) => {
 
 // actions
 function getTree({ state, actions, opts: { api } }, path) {
-	api.getTree(path)
-		.then(json => actions.gotTree(json))
+	api.getTree(path).then(json => actions.gotTree(json))
 
 	return state
 }
@@ -100,7 +99,7 @@ function treeCollapsed({ state, actions }, lineage) {
 
 	node.collapsed = !node.collapsed
 
-	const notRetrieved = node.children && (node.children.length === 1) && (node.children[0].label === 'Loading ...')
+	const notRetrieved = node.children && node.children.length === 1 && node.children[0].label === 'Loading ...'
 	notRetrieved && actions.getTree(node.path)
 
 	return {
