@@ -20,13 +20,13 @@ const propTypes = {
 }
 
 export default class Home extends Component {
-	onCollapse = (node) => {
+	onCollapse = node => {
 		// console.log(`collapse-node-${JSON.stringify(node)}`)
 		const { treeCollapsed } = this.props.store.actions
 		treeCollapsed(node)
 	}
 
-	onCheck = (node) => {
+	onCheck = node => {
 		// console.log(`check-node-${JSON.stringify(node)}`)
 		const { treeChecked } = this.props.store.actions
 		treeChecked(node)
@@ -37,7 +37,7 @@ export default class Home extends Component {
 		checkFrom(path)
 	}
 
-	checkTo = path => (e) => {
+	checkTo = path => e => {
 		const { state, actions: { checkTo } } = this.props.store
 
 		if (state.fromDisk[path]) {
@@ -59,7 +59,10 @@ export default class Home extends Component {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>The array is not started. Please start the array before perfoming any operations with unBALANCE.</p>
+						<p className={cx('bg-warning')}>
+							The array is not started. Please start the array before perfoming any operations with
+							unBALANCE.
+						</p>
 					</div>
 				</section>
 			)
@@ -76,9 +79,9 @@ export default class Home extends Component {
 			)
 		}
 
-					// {percentage(disk.free/disk.size)}
+		// {percentage(disk.free/disk.size)}
 
-		const rows = 	state.unraid.disks.map((disk, i) => {
+		const rows = state.unraid.disks.map((disk, i) => {
 			const diskChanged = cx({
 				label: disk.newFree !== disk.free,
 				'label-success': disk.newFree !== disk.free && state.fromDisk[disk.path],
@@ -97,7 +100,8 @@ export default class Home extends Component {
 						<td colSpan="7">{disk.serial} ({disk.device})</td>
 					</tr>
 				)
-			} else { // eslint-disable-line
+			} else {
+				// eslint-disable-line
 				// lines initially contains the disk row, which includes the
 				// checkbox indicating it's either the from disk or a to disk
 				const lines = [
@@ -105,8 +109,20 @@ export default class Home extends Component {
 						<td>{disk.name}</td>
 						<td>{disk.fsType}</td>
 						<td>{disk.serial} ({disk.device})</td>
-						<td><input type="checkbox" checked={state.fromDisk[disk.path]} onChange={this.checkFrom(disk.path)} /></td>
-						<td><input type="checkbox" checked={state.toDisk[disk.path]} onChange={this.checkTo(disk.path)} /></td>
+						<td>
+							<input
+								type="checkbox"
+								checked={state.fromDisk[disk.path]}
+								onChange={this.checkFrom(disk.path)}
+							/>
+						</td>
+						<td>
+							<input
+								type="checkbox"
+								checked={state.toDisk[disk.path]}
+								onChange={this.checkTo(disk.path)}
+							/>
+						</td>
 						<td>{humanBytes(disk.size)}</td>
 						<td>{humanBytes(disk.free)}</td>
 						<td>
@@ -141,7 +157,7 @@ export default class Home extends Component {
 							<td colSpan="6" className={cx('topAlign')}>
 								<b>Currently selected</b><br />
 								<ul>
-									{ Object.keys(state.tree.chosen).map(chosen => <li>- {chosen}</li>) }
+									{Object.keys(state.tree.chosen).map(chosen => <li>- {chosen}</li>)}
 								</ul>
 							</td>
 						</tr>,
@@ -170,7 +186,7 @@ export default class Home extends Component {
 							</tr>
 						</thead>
 						<tbody>
-							{ rows }
+							{rows}
 						</tbody>
 						<tfoot>
 							<tr>
@@ -190,8 +206,8 @@ export default class Home extends Component {
 
 		return (
 			<div>
-				{ consolePanel }
-				{ grid }
+				{consolePanel}
+				{grid}
 			</div>
 		)
 	}

@@ -25,7 +25,11 @@ export default class Settings extends Component {
 
 	componentWillReceiveProps(next) {
 		const { reservedAmount, reservedUnit, rsyncFlags } = next.store.state.config
-		if (reservedAmount !== this.state.reservedAmount || reservedUnit !== this.state.reservedUnit || rsyncFlags !== this.state.rsyncFlags) {
+		if (
+			reservedAmount !== this.state.reservedAmount ||
+			reservedUnit !== this.state.reservedUnit ||
+			rsyncFlags !== this.state.rsyncFlags
+		) {
 			this.setState({
 				reservedUnit,
 				reservedAmount,
@@ -44,13 +48,13 @@ export default class Settings extends Component {
 		setNotifyMove(notify)
 	}
 
-	setReservedAmount = (e) => {
+	setReservedAmount = e => {
 		this.setState({
 			reservedAmount: e.target.value,
 		})
 	}
 
-	setReservedUnit = (e) => {
+	setReservedUnit = e => {
 		this.setState({
 			reservedUnit: e.target.value,
 		})
@@ -61,7 +65,7 @@ export default class Settings extends Component {
 		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
 	}
 
-	_onChangeRsyncFlags = (e) => {
+	_onChangeRsyncFlags = e => {
 		this.setState({
 			rsyncFlags: e.target.value.split(' '),
 		})
@@ -94,7 +98,10 @@ export default class Settings extends Component {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>&nbsp; The array is not started. Please start the array before perfoming any operations with unBALANCE.</p>
+						<p className={cx('bg-warning')}>
+							&nbsp; The array is not started. Please start the array before perfoming any operations with
+							unBALANCE.
+						</p>
 					</div>
 				</section>
 			)
@@ -104,7 +111,10 @@ export default class Settings extends Component {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>&nbsp; {state.opInProgress} operation is currently under way. Wait until the operation has finished to make any settings changes.</p>
+						<p className={cx('bg-warning')}>
+							&nbsp; {state.opInProgress} operation is currently under way. Wait until the operation has
+							finished to make any settings changes.
+						</p>
 					</div>
 				</section>
 			)
@@ -120,28 +130,73 @@ export default class Settings extends Component {
 						<div>
 							<h3>SET UP NOTIFICATIONS</h3>
 
-							<p>Notifications rely on unRAID&apos;s notifications settings, so you need to set up unRAID first, in order to receive notifications from unBALANCE.</p>
+							<p>
+								Notifications rely on unRAID&apos;s notifications settings, so you need to set up unRAID
+								first, in order to receive notifications from unBALANCE.
+							</p>
 
 							<span> Calculate: </span>
-							<input id="calc0" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 0} onChange={this.setNotifyCalc(0)} />
-							<label htmlFor="calc0" >No Notifications</label>
+							<input
+								id="calc0"
+								className={cx('lspacer')}
+								type="radio"
+								name="calc"
+								checked={state.config.notifyCalc === 0}
+								onChange={this.setNotifyCalc(0)}
+							/>
+							<label htmlFor="calc0">No Notifications</label>
 
-							<input id="calc1" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 1} onChange={this.setNotifyCalc(1)} />
-							<label htmlFor="calc1" >Basic</label>
+							<input
+								id="calc1"
+								className={cx('lspacer')}
+								type="radio"
+								name="calc"
+								checked={state.config.notifyCalc === 1}
+								onChange={this.setNotifyCalc(1)}
+							/>
+							<label htmlFor="calc1">Basic</label>
 
-							<input id="calc2" className={cx('lspacer')} type="radio" name="calc" checked={state.config.notifyCalc === 2} onChange={this.setNotifyCalc(2)} />
-							<label htmlFor="calc2" >Detailed</label>
+							<input
+								id="calc2"
+								className={cx('lspacer')}
+								type="radio"
+								name="calc"
+								checked={state.config.notifyCalc === 2}
+								onChange={this.setNotifyCalc(2)}
+							/>
+							<label htmlFor="calc2">Detailed</label>
 
 							<br />
 
 							<span> Move: </span>
-							<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 0} onChange={this.setNotifyMove(0)} />
+							<input
+								id="move0"
+								className={cx('lspacer')}
+								type="radio"
+								name="move"
+								checked={state.config.notifyMove === 0}
+								onChange={this.setNotifyMove(0)}
+							/>
 							<label htmlFor="move0">No Notifications</label>
 
-							<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 1} onChange={this.setNotifyMove(1)} />
+							<input
+								id="move0"
+								className={cx('lspacer')}
+								type="radio"
+								name="move"
+								checked={state.config.notifyMove === 1}
+								onChange={this.setNotifyMove(1)}
+							/>
 							<label htmlFor="move0">Basic</label>
 
-							<input id="move0" className={cx('lspacer')} type="radio" name="move" checked={state.config.notifyMove === 2} onChange={this.setNotifyMove(2)} />
+							<input
+								id="move0"
+								className={cx('lspacer')}
+								type="radio"
+								name="move"
+								checked={state.config.notifyMove === 2}
+								onChange={this.setNotifyMove(2)}
+							/>
 							<label htmlFor="move0">Detailed</label>
 						</div>
 					</div>
@@ -152,14 +207,27 @@ export default class Settings extends Component {
 						<div>
 							<h3>RESERVED SPACE</h3>
 
-							<p>unBALANCE uses the threshold defined here as the minimum free space that should be kept available in a target disk, when calculating how much the disk can be filled.</p>
+							<p>
+								unBALANCE uses the threshold defined here as the minimum free space that should be kept
+								available in a target disk, when calculating how much the disk can be filled.
+							</p>
 							<p>This threshold cannot be less than 450Mb (hard limit set by this app).</p>
 
 							<div className={cx('row')}>
 								<div className={cx('col-xs-2')}>
 									<div className={cx('addon')}>
-										<input className={cx('addon-field')} type="number" value={this.state.reservedAmount} onChange={this.setReservedAmount} />
-										<select className={cx('addon-item')} name="unit" value={this.state.reservedUnit} onChange={this.setReservedUnit}>
+										<input
+											className={cx('addon-field')}
+											type="number"
+											value={this.state.reservedAmount}
+											onChange={this.setReservedAmount}
+										/>
+										<select
+											className={cx('addon-item')}
+											name="unit"
+											value={this.state.reservedUnit}
+											onChange={this.setReservedUnit}
+										>
 											<option value="%">%</option>
 											<option value="Mb">Mb</option>
 											<option value="Gb">Gb</option>
@@ -167,7 +235,9 @@ export default class Settings extends Component {
 									</div>
 								</div>
 								<div className={cx('col-xs-1')}>
-									<button className={cx('btn', 'btn-primary')} onClick={this.setReservedSpace}>Apply</button>
+									<button className={cx('btn', 'btn-primary')} onClick={this.setReservedSpace}>
+										Apply
+									</button>
 								</div>
 							</div>
 						</div>
@@ -181,20 +251,35 @@ export default class Settings extends Component {
 
 							<p>Internally unBALANCE uses rsync to transfer files across disks.</p>
 							<p>By default, rsync is invoked with <b>-avPRX</b> flags.</p>
-							<p>Here you can set custom flags to override the default ones, except for the dry run flag which will be automatically added, if needed.</p>
+							<p>
+								Here you can set custom flags to override the default ones, except for the dry run flag
+								which will be automatically added, if needed.
+							</p>
 							<p>It&apos;s strongly recommended to keep the -R flag, for optimal operation.</p>
-							<p>Be careful with the flags you choose, since it can drastically alter the expected behaviour of rsync under unBALANCE.</p>
+							<p>
+								Be careful with the flags you choose, since it can drastically alter the expected
+								behaviour of rsync under unBALANCE.
+							</p>
 
 							<div className={cx('row')}>
 								<div className={cx('col-xs-2')}>
 									<div className={cx('addon')}>
-										<input className={cx('addon-field')} type="string" value={flags} onChange={this.onChangeRsyncFlags} />
+										<input
+											className={cx('addon-field')}
+											type="string"
+											value={flags}
+											onChange={this.onChangeRsyncFlags}
+										/>
 									</div>
 								</div>
 								<div className={cx('col-xs-4')}>
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncFlags}>Apply</button>
+									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncFlags}>
+										Apply
+									</button>
 									&nbsp;
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncDefault}>Reset to default</button>
+									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncDefault}>
+										Reset to default
+									</button>
 								</div>
 							</div>
 						</div>

@@ -80,13 +80,7 @@ const initialState = {
 	timeout: null,
 }
 
-const actions = combineActions(
-	startActions,
-	uiActions,
-	configActions,
-	treeActions,
-	unraidActions,
-)
+const actions = combineActions(startActions, uiActions, configActions, treeActions, unraidActions)
 
 const api = new Api()
 const ws = new WSApi()
@@ -101,8 +95,8 @@ const routes = (
 	</Route>
 )
 
-store.subscribe((state) => {
-		// console.log('main.store.state: ', store.state)
+store.subscribe(state => {
+	// console.log('main.store.state: ', store.state)
 	function createElement(Component, props) {
 		return <Component {...props} store={state} />
 	}

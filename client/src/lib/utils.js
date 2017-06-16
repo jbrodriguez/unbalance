@@ -40,7 +40,6 @@ function scramble(serial) {
 	return serial
 }
 
-
 function makeid() {
 	let text = ''
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'

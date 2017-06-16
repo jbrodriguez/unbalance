@@ -1,10 +1,10 @@
-require('babel-core/register')({})  // eslint-disable-line
+require('babel-core/register')({})
 
 const server = require('./server').default
 
 const port = process.env.PORT || 3000
 
-server.listen(port, '0.0.0.0', (err) => {
+server.listen(port, '0.0.0.0', err => {
 	if (err) {
 		console.log(err)
 	}
