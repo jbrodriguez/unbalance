@@ -1,4 +1,5 @@
 import React from 'react'
+import { PropTypes } from 'prop-types'
 import { IndexLink, Link } from 'react-router'
 
 import classNames from 'classnames/bind'
@@ -16,9 +17,9 @@ const logo = require('../img/logo-small.png')
 const vm = require('../img/v.png')
 
 const propTypes = {
-	location: React.PropTypes.objectOf(React.PropTypes.any).isRequired,
-	children: React.PropTypes.objectOf(React.PropTypes.any).isRequired,
-	store: React.PropTypes.objectOf(React.PropTypes.any).isRequired,
+	location: PropTypes.objectOf(PropTypes.any).isRequired,
+	children: PropTypes.objectOf(PropTypes.any).isRequired,
+	store: PropTypes.objectOf(PropTypes.any).isRequired,
 }
 
 export default function App({ location, children, store }) {

@@ -1,25 +1,23 @@
-import React, { Component } from 'react'
-import TreeMenu from 'react-tree-menu'
+import React, { PureComponent } from 'react'
+import { PropTypes } from 'prop-types'
 
+import TreeMenu from 'react-tree-menu'
 import classNames from 'classnames/bind'
 
 import ConsolePanel from './consolePanel'
-
 import { humanBytes, percentage } from '../lib/utils'
-
 import styles from '../styles/core.scss'
-
 require('./tree-view.css')
 
 const cx = classNames.bind(styles)
 
-const propTypes = {
-	store: React.PropTypes.arrayOf(React.PropTypes.any).isRequired,
-	actions: React.PropTypes.objectOf(React.PropTypes.func).isRequired,
-	treeCollapsed: React.PropTypes.bool.isRequired,
-}
+export default class Home extends PureComponent {
+	static propTypes = {
+		store: PropTypes.arrayOf(PropTypes.any).isRequired,
+		actions: PropTypes.objectOf(PropTypes.func).isRequired,
+		treeCollapsed: PropTypes.bool.isRequired,
+	}
 
-export default class Home extends Component {
 	onCollapse = node => {
 		// console.log(`collapse-node-${JSON.stringify(node)}`)
 		const { treeCollapsed } = this.props.store.actions
@@ -157,7 +155,7 @@ export default class Home extends Component {
 							<td colSpan="6" className={cx('topAlign')}>
 								<b>Currently selected</b><br />
 								<ul>
-									{Object.keys(state.tree.chosen).map(chosen => <li>- {chosen}</li>)}
+									{Object.keys(state.tree.chosen).map(chosen => <li key={chosen}>- {chosen}</li>)}
 								</ul>
 							</td>
 						</tr>,
@@ -212,4 +210,3 @@ export default class Home extends Component {
 		)
 	}
 }
-Home.propTypes = propTypes
