@@ -1,19 +1,19 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
+import { PropTypes } from 'prop-types'
 
 import classNames from 'classnames/bind'
 
 import ConsolePanel from './consolePanel'
-
 import styles from '../styles/core.scss'
 
 const cx = classNames.bind(styles)
 
-const propTypes = {
-	store: React.PropTypes.arrayOf(React.PropTypes.any).isRequired,
-	actions: React.PropTypes.objectOf(React.PropTypes.func).isRequired,
-}
+export default class Log extends PureComponent {
+	static propTypes = {
+		store: PropTypes.arrayOf(PropTypes.any).isRequired,
+		actions: PropTypes.objectOf(PropTypes.func).isRequired,
+	}
 
-export default class Log extends Component {
 	componentDidMount() {
 		const { actions } = this.props.store
 		actions.getLog()
@@ -45,4 +45,3 @@ export default class Log extends Component {
 		)
 	}
 }
-Log.propTypes = propTypes

@@ -1,5 +1,6 @@
 import React from 'react'
-import 'font-awesome-webpack' // eslint-disable-line
+import { PropTypes } from 'prop-types'
+import 'font-awesome-webpack'
 
 import classNames from 'classnames/bind'
 
@@ -8,8 +9,8 @@ import styles from '../styles/core.scss'
 const cx = classNames.bind(styles)
 
 const propTypes = {
-	state: React.PropTypes.arrayOf(React.PropTypes.any).isRequired,
-	actions: React.PropTypes.objectOf(React.PropTypes.func).isRequired,
+	state: PropTypes.arrayOf(PropTypes.any).isRequired,
+	actions: PropTypes.objectOf(PropTypes.func).isRequired,
 }
 
 export default function FeedbackPanel({ state, actions: { removeFeedback } }) {
@@ -26,8 +27,7 @@ export default function FeedbackPanel({ state, actions: { removeFeedback } }) {
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12')}>
 					<ul className={cx('lspacer')}>
-						{state.feedback.map((feedback, i) => <li key={i}>{feedback}</li>) // eslint-disable-line
-						}
+						{state.feedback.map((feedback, i) => <li key={i}>{feedback}</li>)}
 					</ul>
 				</div>
 			</section>

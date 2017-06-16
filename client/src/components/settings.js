@@ -1,18 +1,19 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
+import { PropTypes } from 'prop-types'
 
-import 'font-awesome-webpack' // eslint-disable-line
+import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
 
 import styles from '../styles/core.scss'
 
 const cx = classNames.bind(styles)
 
-const propTypes = {
-	store: React.PropTypes.arrayOf(React.PropTypes.any).isRequired,
-	actions: React.PropTypes.objectOf(React.PropTypes.func).isRequired,
-}
+export default class Settings extends PureComponent {
+	static propTypes = {
+		store: PropTypes.arrayOf(PropTypes.any).isRequired,
+		actions: PropTypes.objectOf(PropTypes.func).isRequired,
+	}
 
-export default class Settings extends Component {
 	constructor(props) {
 		super(props)
 
@@ -290,4 +291,3 @@ export default class Settings extends Component {
 		)
 	}
 }
-Settings.propTypes = propTypes
