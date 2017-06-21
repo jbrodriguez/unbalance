@@ -47,7 +47,7 @@ import Log from './components/log'
 //  fromDisk: null,
 //  toDisk: null,
 //  opInProgress: null,
-//  moveDisabled: true,
+//  transferDisabled: true,
 //  lines: [],
 // 	tree: {
 // 		items:
@@ -69,7 +69,8 @@ const initialState = {
 	fromDisk: null,
 	toDisk: null,
 	opInProgress: null,
-	moveDisabled: true,
+	transferDisabled: true,
+	validateDisabled: true,
 	stats: '',
 	lines: [],
 	log: [],

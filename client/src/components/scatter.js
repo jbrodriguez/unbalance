@@ -77,15 +77,23 @@ export default class Scatter extends PureComponent {
 				<button
 					className={cx('btn', 'btn-primary')}
 					onClick={() => actions.move()}
-					disabled={state.moveDisabled || state.opInProgress}
+					disabled={state.transferDisabled || state.opInProgress}
 				>
 					MOVE
 				</button>
-				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={() => actions.move()} disabled>
+				<button
+					className={cx('btn', 'btn-primary', 'lspacer')}
+					onClick={() => actions.copy()}
+					disabled={state.transferDisabled || state.opInProgress}
+				>
 					COPY
 				</button>
-				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={() => actions.move()} disabled>
-					COPY & VALIDATE
+				<button
+					className={cx('btn', 'btn-primary', 'lspacer')}
+					onClick={() => actions.validate()}
+					disabled={state.validateDisabled || state.opInProgress}
+				>
+					VALIDATE
 				</button>
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
@@ -94,7 +102,7 @@ export default class Scatter extends PureComponent {
 						type="checkbox"
 						checked={state.config.dryRun}
 						onChange={() => actions.toggleDryRun()}
-						disabled={state.moveDisabled || state.opInProgress}
+						disabled={state.transferDisabled || state.opInProgress}
 					/>
 					&nbsp;
 					<label htmlFor="dryRun">dry run</label>

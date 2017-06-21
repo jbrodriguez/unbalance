@@ -12,9 +12,12 @@ module.exports = {
 	calcPermIssue,
 
 	move,
-	moveStarted,
-	moveProgress,
-	moveFinished,
+	copy,
+	transferStarted,
+	transferProgress,
+	transferFinished,
+
+	validate,
 
 	opError,
 	progressStats,
@@ -22,6 +25,12 @@ module.exports = {
 	getLog,
 	gotLog,
 }
+
+// const stateIdle = 0
+const stateCalc = 1
+const stateMove = 2
+const stateCopy = 3
+const stateValidate = 4
 
 function getStorage({ state, actions, opts: { api } }) {
 	actions.setOpInProgress('Getting storage info')
@@ -48,11 +57,17 @@ function gotStorage({ state, actions }, unraid) {
 	const lines = []
 	let opState = null
 	switch (unraid.opState) {
-		case 1:
+		case stateCalc:
 			opState = 'Calculate operation in progress ...'
 			break
-		case 2:
+		case stateMove:
 			opState = 'Move operation in progress ...'
+			break
+		case stateCopy:
+			opState = 'Copy operation in progress ...'
+			break
+		case stateValidate:
+			opState = 'Validate operation in progress ...'
 			break
 		default:
 			break
@@ -76,7 +91,8 @@ function gotStorage({ state, actions }, unraid) {
 		toDisk,
 		opInProgress: opState,
 		stats: unraid.stats,
-		moveDisabled: true,
+		transferDisabled: true,
+		validateDisabled: unraid.prevState !== stateCopy,
 		lines,
 		tree,
 	}
@@ -145,26 +161,26 @@ function calcProgress({ state }, line) {
 	return {
 		...state,
 		opInProgress: 'calculate',
-		moveDisabled: true,
+		transferDisabled: true,
 		lines: lines.concat(`CALCULATE: ${line}`),
 	}
 }
 
 function calcFinished({ state, actions }, unraid) {
 	const feedback = []
-	if (unraid.bytesToMove === 0) {
-		feedback.push('The calculate operation found that no folders/files can be moved.')
+	if (unraid.bytesToTransfer === 0) {
+		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
 		feedback.push('')
 		feedback.push('This might be due to one of the following reasons:')
 		feedback.push(
 			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
 		)
 		feedback.push(
-			"- There isn't available space in any of the target disks, to move the share(s)/folder(s) you selected",
+			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
 		)
 		feedback.push('')
 		feedback.push(
-			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving or to change the amount of reserved space.',
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving/copying or to change the amount of reserved space.',
 		)
 	}
 
@@ -179,7 +195,8 @@ function calcFinished({ state, actions }, unraid) {
 		feedback,
 		timeout,
 		opInProgress: null,
-		moveDisabled: unraid.bytesToMove === 0,
+		transferDisabled: unraid.bytesToTransfer === 0,
+		validateDisabled: unraid.prevState !== stateCopy,
 	}
 }
 
@@ -213,42 +230,56 @@ function calcPermIssue({ state, actions }, permStats) {
 		feedback,
 		timeout,
 		opInProgress: null,
-		moveDisabled: false,
+		transferDisabled: false,
 	}
 }
 
 function move({ state, actions, opts: { ws } }) {
-	actions.setOpInProgress('Moving')
+	actions.setOpInProgress('MOVE')
 
 	ws.send({ topic: 'move' })
 
 	return state
 }
 
-function moveStarted({ state }, line) {
+function copy({ state, actions, opts: { ws } }) {
+	actions.setOpInProgress('COPY')
+
+	ws.send({ topic: 'copy' })
+
+	return state
+}
+
+function transferStarted({ state }, line) {
 	return {
 		...state,
-		lines: [].concat(`MOVE: ${line}`),
+		lines: [].concat(`${state.opInProgress}: ${line}`),
 	}
 }
 
-function moveProgress({ state }, line) {
+function transferProgress({ state, actions }, line) {
 	const lines = state.lines.length > 1000 ? [] : state.lines
 
 	return {
 		...state,
-		lines: lines.concat(`MOVE: ${line}`),
+		lines: lines.concat(`${state.opInProgress}: ${line}`),
 	}
 }
 
-function moveFinished({ state }, unraid) {
+function transferFinished({ state, actions }) {
+	actions.getStorage()
+
 	return {
 		...state,
-		unraid,
 		opInProgress: null,
 		stats: '',
-		moveDisabled: !state.config.dryRun,
+		transferDisabled: !state.config.dryRun,
 	}
+}
+
+function validate({ state }) {
+	// not implemented yet
+	return state
 }
 
 function opError({ state, actions }, error) {
