@@ -777,6 +777,9 @@ func (c *Core) transfer(msg *pubsub.Message) {
 	outbound = &dto.Packet{Topic: "progressStats", Payload: "Waiting to collect stats ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	var calls int64
+	var callsPerDelta int64
+
 	// execute each rsync command created during the calculate phase
 	for _, command := range c.operation.Commands {
 		args := append(
@@ -794,6 +797,7 @@ func (c *Core) transfer(msg *pubsub.Message) {
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		bytesTransferred := c.operation.BytesTransferred
+
 		var deltaMoved int64
 
 		// actual shell execution
@@ -804,13 +808,26 @@ func (c *Core) transfer(msg *pubsub.Message) {
 				return
 			}
 
+			if callsPerDelta <= 50 {
+				calls++
+			}
+
+			delta := int64(time.Since(c.operation.Started) / time.Second)
+			if delta == 0 {
+				delta = 1
+			}
+			// mlog.Info("calls(%d)-seconds(%d)", calls, delta)
+			callsPerDelta = calls / delta
+
 			match := c.reProgress.FindStringSubmatch(line)
 			if match == nil {
 				// this is a regular output line from rsync, print it
 				mlog.Info("%s", line)
 
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: line}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+				if callsPerDelta <= 50 {
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: line}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+				}
 
 				return
 			}
@@ -831,8 +848,10 @@ func (c *Core) transfer(msg *pubsub.Message) {
 
 			msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 
-			outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
-			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			if callsPerDelta <= 50 {
+				outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			}
 
 		}, c.operation.SourceDiskName, "rsync", args...)
 
