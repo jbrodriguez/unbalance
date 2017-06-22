@@ -82,6 +82,7 @@ function gotStorage({ state, actions }, unraid) {
 
 		tree.cache = null
 		tree.items = [{ label: 'Loading ...' }]
+		tree.chosen = {}
 	}
 
 	return {
