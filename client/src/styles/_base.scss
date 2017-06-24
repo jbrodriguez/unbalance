@@ -1,5 +1,12 @@
 body {
-	font: 100%/1.625em 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	// font: 100%/1.625em 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+	font: 100%/1.625em -apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		'Roboto',
+		'Lucida Sans Unicode',
+		'Lucida Grande',
+		sans-serif;
 	color: $primaryTextColor;
 
 	// background-image: url("paper.png");
@@ -10,9 +17,7 @@ body {
 	// min-height: 100vh;
 }
 
-h1,
-h2,
-h3 {
+h1, h2, h3 {
 	font-family: Lato;
 	color: $primaryHeaderColor;
 	font-weight: bold;
@@ -29,9 +34,9 @@ h2 {
 	margin-bottom: 0.33em;
 }
 
-h3 { 
-    font-size: 1.17em;
-    margin-bottom: 0.5em;
+h3 {
+	font-size: 1.17em;
+	margin-bottom: 0.5em;
 }
 
 // p,
@@ -49,7 +54,7 @@ ul {
 
 	li {
 		list-style-type: none;
-	}	
+	}
 }
 
 ol {
@@ -57,7 +62,7 @@ ol {
 
 	li {
 		list-style-type: none;
-	}	
+	}
 }
 
 table {

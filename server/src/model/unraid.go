@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
-	"github.com/jbrodriguez/mlog"
-	"github.com/vaughan0/go-ini"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
+
+	"github.com/jbrodriguez/mlog"
+	"github.com/vaughan0/go-ini"
 	// "os"
 	"io/ioutil"
 	"path/filepath"
@@ -23,12 +24,13 @@ import (
 type Unraid struct {
 	Condition *Condition `json:"condition"`
 	Disks     []*Disk    `json:"disks"`
+	Operation Operation  `json:"operation"`
 
-	SourceDiskName string
-	BytesToMove    int64 `json:"bytesToMove"`
-
-	OpState uint64 `json:"opState"`
-	Stats   string `json:"stats"`
+	// SourceDiskName  string
+	BytesToTransfer int64  `json:"bytesToTransfer"`
+	OpState         uint64 `json:"opState"`
+	Stats           string `json:"stats"`
+	PrevState       uint64 `json:"prevState"`
 	// unraidCmd string
 }
 
@@ -80,8 +82,8 @@ func (u *Unraid) Refresh() {
 		mlog.Warning("Unable to get unRAID disks: %s", err)
 	}
 
-	u.SourceDiskName = ""
-	u.BytesToMove = 0
+	// u.SourceDiskName = ""
+	u.BytesToTransfer = 0
 
 	sort.Sort(ByID(u.Disks))
 
@@ -430,8 +432,8 @@ func delim(r rune) bool {
 // Print -
 func (u *Unraid) Print() {
 	mlog.Info("Unraid Box Condition: %+v", u.Condition)
-	mlog.Info("Unraid Box SourceDiskName: %+v", u.SourceDiskName)
-	mlog.Info("Unraid Box BytesToMove: %+v", lib.ByteSize(u.BytesToMove))
+	// mlog.Info("Unraid Box SourceDiskName: %+v", u.SourceDiskName)
+	// mlog.Info("Unraid Box BytesToTransfer: %+v", lib.ByteSize(u.BytesToTransfer))
 	// glog.Info("NumDisks: ", u.Box.NumDisks)
 	// glog.Info("NumProtected: ", u.Box.NumProtected)
 	// glog.Info("Synced: ", u.Box.Synced)
