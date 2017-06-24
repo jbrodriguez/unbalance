@@ -60,7 +60,7 @@ popd
 APP_MD5=$(md5sum ./$APP_FILE | cut -d' ' -f1)
 echo "MD5: ${APP_MD5}"
 
-CHANGES=`cat metadata/changes/${APP_VERSION}.txt 2> /dev/null`
+CHANGES=`cat metadata/changes/${APP_VERSION}.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'`
 
 perl -0777 -pe 's~{{md5}}~'"${APP_MD5}"'~g ; s~{{version}}~'"${APP_VERSION}"'~g ; s~{{changes}}~'"${CHANGES}"'~g' plugin/template.plg > ./$PROG.plg
 rm -rf release
