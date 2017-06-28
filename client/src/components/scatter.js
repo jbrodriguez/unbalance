@@ -88,11 +88,7 @@ export default class Scatter extends PureComponent {
 				>
 					COPY
 				</button>
-				<button
-					className={cx('btn', 'btn-primary', 'lspacer')}
-					onClick={() => actions.validate()}
-					disabled={state.validateDisabled || state.opInProgress}
-				>
+				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={() => actions.validate()} disabled>
 					VALIDATE
 				</button>
 				<span>&nbsp; | &nbsp;</span>

@@ -153,6 +153,16 @@ export default function App({ location, children, store }) {
 						<div className={cx('flexSection', 'middle-xs', 'end-xs')}>
 							<a
 								className={cx('lspacer')}
+								href="https://www.paypal.me/jbrodriguezio"
+								title="@jbrodriguezio"
+								rel="noreferrer noopener"
+								target="_blank"
+							>
+								<span className={cx('fund')}>SUPPORT FUND</span>
+							</a>
+
+							<a
+								className={cx('lspacer')}
 								href="https://twitter.com/jbrodriguezio"
 								title="@jbrodriguezio"
 								rel="noreferrer noopener"

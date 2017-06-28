@@ -37,6 +37,11 @@ p {
 	color: $headerMenuBackground;
 }
 
+// SPECIAL TEXT
+.fund {
+	color: $footerColor;
+}
+
 .headerLogoBg {
 	background-color: $headerLogoBackground;
 }
@@ -77,7 +82,8 @@ p {
 .console {
 	// display: flex;
 
-	overflow: auto;
+	overflow: hidden;
+	flow: auto;
 	// width: 100%;
 	// border: 1px solid $console-border;
 	padding: 0.75em;
@@ -86,7 +92,7 @@ p {
 
 	.consoleLine {
 		font-size: 0.8em;
-	// line-height: 0.5em;
+		// line-height: 0.5em;
 	}
 
 	p {
@@ -136,7 +142,6 @@ p {
 	.chevron {
 		color: $silverChalice;
 	}
-
 }
 
 // .sidebar,
@@ -183,15 +188,15 @@ p {
 }
 
 .progress {
-    background-color: $progressBackground;
-    height: 1.5625rem;
-    border: 1px solid white;
+	background-color: $progressBackground;
+	height: 1.5625rem;
+	border: 1px solid white;
 
-    span {
-  		background: $progressMeter;
-  		height: 100%;
-  		display: block;
-    }
+	span {
+		background: $progressMeter;
+		height: 100%;
+		display: block;
+	}
 }
 
 .topAlign {
@@ -202,8 +207,7 @@ p {
 // 	padding: 1em;
 // }
 
-	// border-bottom: 3px solid $headerMenuAnchorColor;
-
+// border-bottom: 3px solid $headerMenuAnchorColor;
 
 // .tree-view {
 // 	font-size: 14px;
@@ -232,12 +236,9 @@ p {
 // 	text-overflow: ellipsis;
 // }
 
-
-
 // .tree-view .listItem:hover > .detail {
 // 	visibility: visible;
 // }
-
 
 // .tree-view .name {
 // 	background-repeat: no-repeat;
@@ -292,7 +293,6 @@ p {
 // 	width: 15px;
 // 	height: 25px;
 // }
-
 
 // .detail {
 //   margin-left: 25px;
