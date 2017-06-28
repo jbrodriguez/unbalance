@@ -3,13 +3,13 @@ unBALANCE
 
 *tl;dr* **unBALANCE** is an [unRAID](http://lime-technology.com) plugin to transfer files/folders between disks in your array.
 
+## Support Fund
+If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:
+
 ## [Changelog](https://github.com/jbrodriguez/unbalance/releases)
 
 ## Screenshot
 ![Home](metadata/images/300-home.png)
-
-## Support Fund
-If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:
 
 ## Introduction
 unBALANCE helps you manage space in your unRAID array, via two different operating modes:
