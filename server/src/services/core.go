@@ -364,7 +364,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("_calc:%s", msg)
 
-		c.checkOwnerAndPermissions(c.operation, dtoCalc.SourceDisk, path, owner, group)
+		c.checkOwnerAndPermissions(&c.operation, dtoCalc.SourceDisk, path, owner, group)
 
 		msg = "Checked permissions ..."
 		outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
@@ -581,8 +581,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 	c.storage.OpState = c.operation.OpState
 	c.storage.PrevState = c.operation.PrevState
 
-	mlog.Warning("prev state (%d)", c.storage.PrevState)
-
 	// send to front end the signal of operation finished
 	outbound = &dto.Packet{Topic: "calcFinished", Payload: c.storage}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -656,7 +654,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	return
 }
 
-func (c *Core) checkOwnerAndPermissions(operation model.Operation, src, folder, ownerName, groupName string) {
+func (c *Core) checkOwnerAndPermissions(operation *model.Operation, src, folder, ownerName, groupName string) {
 	srcFolder := filepath.Join(src, folder)
 
 	// outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}

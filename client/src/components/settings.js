@@ -169,7 +169,7 @@ export default class Settings extends PureComponent {
 
 							<br />
 
-							<span> Move: </span>
+							<span> Transfer: </span>
 							<input
 								id="move0"
 								className={cx('lspacer')}

@@ -9,12 +9,11 @@ i {
 
 	&:disabled {
 		background-color: #dddddd;
-		cursor: default; 		
-	}		
+		cursor: default;
+	}
 }
 
-input:not([type=checkbox]),
-select {
+input:not([type=checkbox]), select {
 	font-size: 0.9em;
 	padding: 0.25em;
 	border: 1px solid $form-element-border;
@@ -35,7 +34,7 @@ select {
 
 select {
 	-webkit-appearance: none !important;
-	-webkit-border-radius: 0px;	
+	-webkit-border-radius: 0px;
 	background-color: #fafafa;
 	background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMTJweCIgeT0iMHB4IiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIzcHgiIHZpZXdCb3g9IjAgMCA2IDMiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDYgMyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHBvbHlnb24gcG9pbnRzPSI1Ljk5MiwwIDIuOTkyLDMgLTAuMDA4LDAgIi8+PC9zdmc+);
 	background-position: 100% center;
@@ -45,16 +44,16 @@ select {
 	// font-size: 0.875rem;
 	color: rgba(0, 0, 0, 0.75);
 	// line-height: normal;
-	// height: 2.3125rem;	
+	// height: 2.3125rem;
 
 	&:hover {
 		background-color: #f3f3f3;
-		border-color: #999999;		
-	}	
+		border-color: #999999;
+	}
 
 	&:disabled {
 		background-color: #dddddd;
-		cursor: default; 		
+		cursor: default;
 	}
 }
 
@@ -63,20 +62,19 @@ form {
 }
 
 fieldset {
-    margin: 0;
-    padding: 0.35em 0 0.75em;
-    border: 0;
+	margin: 0;
+	padding: 0.35em 0 0.75em;
+	border: 0;
 }
 
 legend {
-//    display: block;
-    width: 100%;
-    padding: $padding-default 0;
-    margin-bottom: $padding-default;
-    // color: #333;
-    border-bottom: 1px solid $form-element-border;
+	//    display: block;
+	width: 100%;
+	padding: $padding-default 0;
+	margin-bottom: $padding-default;
+	// color: #333;
+	border-bottom: 1px solid $form-element-border;
 }
-
 
 // LAYOUT
 .body {
@@ -84,10 +82,8 @@ legend {
 	flex-direction: column;
 
 	max-width: 78em;
-	min-height: 100vh;	
+	min-height: 100vh;
 }
-
-
 
 // PANELS
 .bg-warning {
@@ -97,7 +93,6 @@ legend {
 .bg-feedback {
 	@include bg-variant($state-feedback-bg);
 }
-
 
 .addon {
 	display: flex;
@@ -113,19 +108,17 @@ legend {
 
 	&:not(:last-child) {
 		border-right: 0;
-	}	
+	}
 }
 
 .addon-item {
 	background-color: $form-addon-bg;
 }
 
-.addon-field,
-.addon-item {
-  border: 1px solid darken($form-addon-bg, 10%);
-  padding: $form-element-padding-vertical $form-element-padding-horizontal;
+.addon-field, .addon-item {
+	border: 1px solid darken($form-addon-bg, 10%);
+	padding: $form-element-padding-vertical $form-element-padding-horizontal;
 }
-
 
 // LABELS
 .label {
@@ -155,8 +148,8 @@ legend {
 	}
 
 	&-secondary {
-	    background-color: #e7e7e7;
-	    color: #333333;
+		background-color: #e7e7e7;
+		color: #333333;
 	}
 }
 
@@ -169,8 +162,8 @@ legend {
 }
 
 .btn {
-//	display: inline-block;
-//	font-weight: @btn-font-weight;
+	//	display: inline-block;
+	//	font-weight: @btn-font-weight;
 	cursor: pointer;
 	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
 	border: 1px solid transparent;
@@ -178,13 +171,11 @@ legend {
 	padding: $button-padding-vertical $button-padding-horizontal;
 	font-size: 0.75em;
 
-	&.disabled,
-	&[disabled],
-	fieldset[disabled] & {
+	&.disabled, &[disabled], fieldset[disabled] & {
 		cursor: not-allowed;
 		opacity: .65;
 		box-shadow: none;
-	}	
+	}
 }
 
 .btn-default {
@@ -213,7 +204,6 @@ legend {
 	@include button-variant($buttonAlertColor, $buttonAlertBg);
 }
 
-
 // TABLES
 table {
 	background: white;
@@ -222,8 +212,7 @@ table {
 	width: 100%;
 }
 
-thead,
-tfoot {
+thead, tfoot {
 	color: $elegant-blue;
 	// padding: $padding-default;
 }
@@ -236,15 +225,12 @@ tfoot {
 	border-top: 1px solid $form-element-border;
 }
 
-tr,
-th,
-td {
+tr, th, td {
 	padding: $padding-default;
 	font-size: 0.9em;
 }
 
-tr,
-th {
+tr, th {
 	text-align: left;
 }
 
@@ -286,7 +272,7 @@ th {
 	&:nth-child(2) {
 		background-color: #c0392b;
 		animation-delay: 0.09s;
-  	}
+	}
 
 	&:nth-child(3) {
 		background-color: #f1c40f;
@@ -300,15 +286,15 @@ th {
 }
 
 @keyframes loading {
-  0% {
-    transform: scale(1);
-  }
-  20% {
-    transform: scale(1, 2.2);
-  }
-  40% {
-    transform: scale(1);
-  }
+	0% {
+		transform: scale(1);
+	}
+	20% {
+		transform: scale(1, 2.2);
+	}
+	40% {
+		transform: scale(1);
+	}
 }
 
 // social icon
@@ -365,8 +351,6 @@ th {
 // 	flex-direction: row;
 // }
 
-
-
 // .row {
 // //	display: block;
 // 	width: 100%;
@@ -377,7 +361,6 @@ th {
 // .lead {
 // 	border: 1px solid $borderColor;
 // }
-
 
 // // BUTTONS
 // .btn {
@@ -396,7 +379,7 @@ th {
 // 		cursor: not-allowed;
 // 		opacity: .65;
 // 		box-shadow: none;
-// 	}	
+// 	}
 // }
 
 // .btn-default {
@@ -434,7 +417,7 @@ th {
 //     span {
 //   		background: $progress-meter;
 //   		height: 100%;
-//   		display: block;    	
+//   		display: block;
 //     }
 // }
 
@@ -491,7 +474,7 @@ th {
 // 			font-size: 0.5em;
 // 			display: inline-block;
 // 			color: red;
-// 		}		
+// 		}
 // 	}
 
 // 	fieldset {
@@ -499,7 +482,7 @@ th {
 // 	    padding: 0.35em 0 0.75em;
 // 	    border: 0;
 // 	}
-	
+
 // 	legend {
 // 	//    display: block;
 // 	    width: 100%;
@@ -507,7 +490,7 @@ th {
 // 	    margin-bottom: 0.3em;
 // 	    color: #333;
 // 	    border-bottom: 1px solid #e5e5e5;
-// 	}	
+// 	}
 
 // 	label {
 // 		display: block;
@@ -592,13 +575,13 @@ th {
 // 		&:active {
 // 			scale: .9;
 // 		}
-// 	}	
+// 	}
 
 // 	.help-block {
 // 		font-weight: normal;
 // 		font-size: 0.65em;
 // 		color: red;
-// 	}	
+// 	}
 // }
 
 // // #form-success,
@@ -616,22 +599,21 @@ th {
 // // 	background-color: $contactFormErrorBackground;
 // // }
 
-
 // // TABLES
 // .dashboard {
 // 	@media (min-width: $breakpoint-2) {
 // 		border-collapse: collapse;
-// 		font-size: 0.9em; 
+// 		font-size: 0.9em;
 // 	}
 
 // 	thead {
 // 		display: none;
 
 // 	    @media (min-width: $breakpoint-2) {
-// 	      // Undo display: block 
+// 	      // Undo display: block
 // 	      border-bottom: 1px solid $borderColor;
-// 	      display: table-header-group; 
-// 	    }		
+// 	      display: table-header-group;
+// 	    }
 // 	}
 
 // 	th, td, tr {
@@ -651,13 +633,13 @@ th {
 // 		margin-bottom: 1em;
 
 // 		@media (min-width: $breakpoint-2) {
-// 			// Undo display: block 
+// 			// Undo display: block
 // 			display: table-row;
 // //			padding: 1em 0.25em;
 
-// 			&:nth-of-type(even) { 
-// 				background-color: $borderColor; 
-// 			}	      
+// 			&:nth-of-type(even) {
+// 				background-color: $borderColor;
+// 			}
 // 		}
 // 	}
 
@@ -671,17 +653,17 @@ th {
 // 			font-size: 1em;
 // 			background-color: transparent;
 // //			padding: .5rem .25rem;
-// 		}			
+// 		}
 
 // 		&:first-child {
 // 			color: white;
 // 		    background-color: $footerBackground;
 
 // 		    @media (min-width: $breakpoint-2) {
-// 		      // Undo display: block 
+// 		      // Undo display: block
 // 		      color: $primaryColor;
 // 		      background-color: transparent;
-// 		    }		    
+// 		    }
 
 // 		    &:before {
 // 		    	width: auto;
@@ -696,7 +678,7 @@ th {
 
 // 			@media (min-width: $breakpoint-2) {
 // 				display: none;
-// 			}			
+// 			}
 // 		}
 
 // 		// &:nth-of-type(1):before { content: "Disk" }
@@ -706,7 +688,7 @@ th {
 // 		&:nth-of-type(5):before { content: "Size" }
 // 		&:nth-of-type(6):before { content: "Free" }
 // 		&:nth-of-type(7):before { content: "Fill" }
-// 		&:nth-of-type(8):before { content: "Plan" }			
+// 		&:nth-of-type(8):before { content: "Plan" }
 // 	}
 
 // }
@@ -716,17 +698,17 @@ th {
 
 // 	@media (min-width: $breakpoint-2) {
 // 		border-collapse: collapse;
-// 		font-size: 0.9em; 
+// 		font-size: 0.9em;
 // 	}
 
 // 	thead {
 // 		display: none;
 
 // 	    @media (min-width: $breakpoint-2) {
-// 	      // Undo display: block 
+// 	      // Undo display: block
 // 	      border-bottom: 1px solid $borderColor;
-// 	      display: table-header-group; 
-// 	    }		
+// 	      display: table-header-group;
+// 	    }
 // 	}
 
 // 	th, td, tr {
@@ -746,13 +728,13 @@ th {
 // 		margin-bottom: 1em;
 
 // 		@media (min-width: $breakpoint-2) {
-// 			// Undo display: block 
+// 			// Undo display: block
 // 			display: table-row;
 // //			padding: 1em 0.25em;
 
-// 			&:nth-of-type(even) { 
-// 				background-color: $borderColor; 
-// 			}	      
+// 			&:nth-of-type(even) {
+// 				background-color: $borderColor;
+// 			}
 // 		}
 // 	}
 
@@ -766,17 +748,17 @@ th {
 // 			font-size: 1em;
 // 			background-color: transparent;
 // //			padding: .5rem .25rem;
-// 		}			
+// 		}
 
 // 		&:first-child {
 // 			color: white;
 // 		    background-color: $footerBackground;
 
 // 		    @media (min-width: $breakpoint-2) {
-// 		      // Undo display: block 
+// 		      // Undo display: block
 // 		      color: $primaryColor;
 // 		      background-color: transparent;
-// 		    }		    
+// 		    }
 
 // 		    &:before {
 // 		    	width: auto;
@@ -791,7 +773,7 @@ th {
 
 // 			@media (min-width: $breakpoint-2) {
 // 				display: none;
-// 			}			
+// 			}
 // 		}
 
 // 		// &:nth-of-type(1):before { content: "Disk" }
@@ -801,7 +783,7 @@ th {
 // 		&:nth-of-type(5):before { content: "Size" }
 // 		&:nth-of-type(6):before { content: "Free" }
 // 		&:nth-of-type(7):before { content: "Fill" }
-// 		&:nth-of-type(8):before { content: "Plan" }			
+// 		&:nth-of-type(8):before { content: "Plan" }
 // 	}
 
 // }

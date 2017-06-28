@@ -81,7 +81,7 @@ export default class Gather extends PureComponent {
 				{consolePanel}
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<span>Work In Progress ...</span>
+						<span>Coming soon ...</span>
 					</div>
 				</section>
 			</div>
