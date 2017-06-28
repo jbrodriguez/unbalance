@@ -1,0 +1,22 @@
+2017-06-28 - 3.0.0
+
+This is a major internal redesign to allow for new features to be added.
+
+Starting with this release, you can now COPY files (as opposed to only MOVE them in the
+previous version).
+
+In upcoming releases, you will be able to validate the copy (VALIDATE operation) and
+use the completely new GATHER operation.
+
+GATHER consolidates user share folders into a single disk (think for example
+when you want to consolidate all the season of a tv show into one disk)
+
+Additionally, a [support fund](https://www.paypal.me/jbrodriguezio) was established, if
+you want to show your support to the plugin developer.
+
+These are other changes:
+- Prevent spurious rsync lines in logs
+- Use system font in UI
+- Throttle websocket updates (for dry-run simulations)
+- Improve hostname detection in plugin's unRAID settings page
+- Bug fixes and improvements

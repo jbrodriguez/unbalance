@@ -1,3 +1,32 @@
+Version 3.0.0 - 2017-06-28
+- Prevent spurious rsync lines in logs
+- Upgrade actor related packages
+- Remove deprecated package
+- Implement new actor/service architecture
+- Upgrade packages
+- Implement new labstack/echo api
+- Add/Update eslint-standard packages
+- Set up rules
+- Lint code with standard
+- Upgrade packages
+- Add missing package
+- Lint code
+- Add scatter/gather
+- Implement operation state
+- Adjustments to client code
+- Use system fonts
+- Throttle websocket updates
+- Fix issue with chosen folders
+- Improve hostname detection
+- Fix issue with unescaped entities
+- Allow struct data to be modified
+- Rename option
+- Update README
+- General preparations
+- Update docs
+- Update docs
+
+
 Version 2.1.0 - 2017-02-03
 - Implement real time rsync move progress
 - Modify shell output scanning
