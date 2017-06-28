@@ -9,15 +9,15 @@ unBALANCE
 ![Home](metadata/images/300-home.png)
 
 ## Support Fund
-If you'd like to support the developer, [please contribute towards the beer/coffee/soft drinks fund](https://www.paypal.me/jbrodriguezio) :smile: :clap: :+1:
+If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:
 
 ## Introduction
 unBALANCE helps you manage space in your unRAID array, via two different operating modes:
 
-- Scatter<br/>
+- **Scatter**<br/>
 Transfer data out of a disk, into one or more disks
 
-- Gather<br/>
+- **Gather**<br/>
 Consolidate data from a user share into a single disk
 
 It's versatile and can serve multiple purposes, based on your needs.
@@ -41,9 +41,9 @@ If it can't transfer some files/folders, it will inform you in the console and v
 ## SCATTER Instructions
 Scatter will transfer data from a source disk into one or more target disks, according to your selection.
 
-It requires the following steps:
+It involves the following steps:
 
-1 - Calculate <br/>
+**1 - Calculate** <br/>
 The logic is simple
 - Get the contents of the selected files/folders from the source disk
 - Order the target disks by free space available
@@ -51,7 +51,7 @@ The logic is simple
 
 Additionally, it will check files/folders permissions, to warn about potential issues during the transfer phase.
 
-2 - Transfer <br/>
+**2 - Transfer** <br/>
 You can either MOVE or COPY the files.
 
 - MOVE <br/>
@@ -67,7 +67,7 @@ Internally, it issues a slight variation of [this rsync command](https://lime-te
 
 Check [this post](https://lime-technology.com/forum/index.php?topic=45352.msg476018#msg476018) for additional information.
 
-3 - Validate (optional)<br/>
+**3 - Validate (optional)** <br/>
 *Coming soon ...*
 
 ### Quick Start
