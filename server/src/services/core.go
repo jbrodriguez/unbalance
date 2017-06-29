@@ -957,9 +957,11 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 		message += "\n\nThese are the commands that were executed:\n\n" + printedCommands
 	}
 
-	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, c.settings.DryRun); sendErr != nil {
-		mlog.Error(sendErr)
-	}
+	go func() {
+		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+			mlog.Error(sendErr)
+		}
+	}()
 
 	mlog.Info(subject)
 	mlog.Info(message)
