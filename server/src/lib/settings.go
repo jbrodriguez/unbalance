@@ -2,9 +2,11 @@ package lib
 
 import (
 	"fmt"
-	"github.com/namsral/flag"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/namsral/flag"
 )
 
 // ReservedSpace -
@@ -30,37 +32,40 @@ type Config struct {
 type Settings struct {
 	Config
 
-	Conf       string
 	Port       string
-	Log        string
+	LogDir     string
 	APIFolders []string
-	// ReservedSpace int64
+
+	Location string
 }
 
+const defaultConfLocation = "/boot/config/plugins/unbalance/unbalance.conf"
+
 // NewSettings -
-func NewSettings(version string) (*Settings, error) {
-	var config, port, log, folders, rsyncFlags, apiFolders string
+func NewSettings(name, version string, locations []string) (*Settings, error) {
+	var port, logDir, folders, rsyncFlags, apiFolders string
 	var dryRun bool
 	var notifyCalc, notifyMove int
 
-	// /boot/config/plugins/unbalance/
-	flag.StringVar(&config, "config", "/boot/config/plugins/unbalance/unbalance.conf", "config location")
-	flag.StringVar(&port, "port", "6237", "port to run the server")
-	flag.StringVar(&log, "log", "/boot/logs/unbalance.log", "pathname where log file will be written to")
-	flag.StringVar(&folders, "folders", "", "deprecated - do not use")
-	flag.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
-	flag.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
-	flag.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
-	flag.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
-	flag.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
+	flagset := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
-	if found, _ := Exists("/boot/config/plugins/unbalance/unbalance.conf"); found {
-		flag.Set("config", "/boot/config/plugins/unbalance/unbalance.conf")
+	flagset.StringVar(&port, "port", "6237", "port to run the server")
+	flagset.StringVar(&logDir, "logdir", "/boot/logs", "pathname where log file will be written to")
+	flagset.StringVar(&folders, "folders", "", "deprecated - do not use")
+	flagset.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
+	flagset.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
+	flagset.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
+	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
+	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
+
+	location := SearchFile(name, locations)
+	if location != "" {
+		flagset.String("config", filepath.Join(location, name), "config location")
 	}
 
-	flag.Parse()
-
-	// fmt.Printf("folders: %s\nconfig: %s\n", folders, config)
+	if err := flagset.Parse(os.Args[1:]); err != nil {
+		return nil, err
+	}
 
 	s := &Settings{}
 
@@ -77,10 +82,10 @@ func NewSettings(version string) (*Settings, error) {
 	s.ReservedUnit = "Mb"
 	s.Version = version
 
-	s.Conf = config
 	s.Port = port
-	s.Log = log
+	s.LogDir = logDir
 	s.APIFolders = strings.Split(apiFolders, "|")
+	s.Location = location
 
 	return s, nil
 }
@@ -92,7 +97,12 @@ func (s *Settings) ToggleDryRun() {
 
 // Save -
 func (s *Settings) Save() (err error) {
-	tmpFile := s.Conf + ".tmp"
+	location := s.Location
+	if location == "" {
+		location = defaultConfLocation
+	}
+
+	tmpFile := location + ".tmp"
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("dryRun=%t", s.DryRun)); err != nil {
 		return err
@@ -111,7 +121,7 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	os.Rename(tmpFile, s.Conf)
+	os.Rename(tmpFile, location)
 
 	return
 }

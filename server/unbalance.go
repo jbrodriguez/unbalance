@@ -1,57 +1,23 @@
 package main
 
 import (
-	"github.com/jbrodriguez/mlog"
-	"github.com/jbrodriguez/pubsub"
-	// "jbrodriguez/unbalance/server/model"
-	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/services"
-	"os"
-	"os/signal"
-	// "path/filepath"
-	"fmt"
 	"log"
-	"syscall"
+	"os"
+
+	"jbrodriguez/unbalance/server/src/app"
 )
 
 // Version -
 var Version string
 
 func main() {
-	settings, err := lib.NewSettings(Version)
+	app := app.App{}
+
+	settings, err := app.Setup(Version)
 	if err != nil {
-		log.Printf("Unable to load settings: %s", err.Error())
+		log.Printf("Unable to start the app: %s", err)
 		os.Exit(1)
 	}
 
-	mlog.Start(mlog.LevelInfo, settings.Log)
-
-	mlog.Info("unBALANCE v%s starting up ...", Version)
-
-	// mlog.Info("%+v", settings)
-
-	var msg string
-	if exists, _ := lib.Exists(settings.Conf); exists {
-		msg = fmt.Sprintf("Using config file %s ...", settings.Conf)
-	} else {
-		msg = "No config file exists yet. Using app defaults ..."
-	}
-	mlog.Info(msg)
-
-	bus := pubsub.New(23)
-
-	server := services.NewServer(bus, settings)
-	core := services.NewCore(bus, settings)
-
-	server.Start()
-	mlog.FatalIfError(core.Start())
-
-	mlog.Info("Press Ctrl+C to stop ...")
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
-	mlog.Info("Received signal: (%s) ... shutting down the app now ...", <-c)
-
-	core.Stop()
-	server.Stop()
+	app.Run(settings)
 }
