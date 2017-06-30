@@ -1,3 +1,11 @@
+Version 3.1.0 - 2017-06-30
+- Migrate to the update app structure
+- Fix timing issue
+- Improve logging
+- Fix conf location
+- Add log verbosity setting
+
+
 Version 3.0.0 - 2017-06-28
 - Prevent spurious rsync lines in logs
 - Upgrade actor related packages
