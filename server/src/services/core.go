@@ -103,6 +103,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
+	c.actor.Register("/config/set/verbosity", c.setVerbosity)
 	c.actor.Register("/get/storage", c.getStorage)
 	c.actor.Register("/config/toggle/dryRun", c.toggleDryRun)
 	c.actor.Register("/get/tree", c.getTree)
@@ -166,6 +167,21 @@ func (c *Core) setNotifyMove(msg *pubsub.Message) {
 
 	c.settings.NotifyMove = notify
 	c.settings.Save()
+
+	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) setVerbosity(msg *pubsub.Message) {
+	fverbosity := msg.Payload.(float64)
+	verbosity := int(fverbosity)
+
+	mlog.Info("Setting verbosity to (%d)", verbosity)
+
+	c.settings.Verbosity = verbosity
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("not right %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -813,9 +829,10 @@ func (c *Core) transfer(msg *pubsub.Message) {
 			match := c.reProgress.FindStringSubmatch(line)
 			if match == nil {
 				// this is a regular output line from rsync, print it
-				// let's no longer log this, it fills the log with
-				// uninteresting data
-				// mlog.Info("%s", line)
+				// according to verbosity settings
+				if c.settings.Verbosity == 1 {
+					mlog.Info("%s", line)
+				}
 
 				if callsPerDelta <= 50 {
 					outbound := &dto.Packet{Topic: "transferProgress", Payload: line}

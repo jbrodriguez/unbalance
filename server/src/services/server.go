@@ -82,6 +82,7 @@ func (s *Server) Start() {
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
 	api.PUT("/config/notifyMove", s.setNotifyMove)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
+	api.PUT("/config/verbosity", s.setVerbosity)
 	api.GET("/config", s.getConfig)
 	api.GET("/storage", s.getStorage)
 	api.POST("/tree", s.getTree)
@@ -160,6 +161,24 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/config/set/reservedSpace")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) setVerbosity(c echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, "/config/set/verbosity")
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
