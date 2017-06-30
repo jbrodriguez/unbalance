@@ -37,9 +37,10 @@ type Settings struct {
 	APIFolders []string
 
 	Location string
+	confName string
 }
 
-const defaultConfLocation = "/boot/config/plugins/unbalance/unbalance.conf"
+const defaultConfLocation = "/boot/config/plugins/unbalance"
 
 // NewSettings -
 func NewSettings(name, version string, locations []string) (*Settings, error) {
@@ -86,6 +87,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s.LogDir = logDir
 	s.APIFolders = strings.Split(apiFolders, "|")
 	s.Location = location
+	s.confName = name
 
 	return s, nil
 }
@@ -102,7 +104,8 @@ func (s *Settings) Save() (err error) {
 		location = defaultConfLocation
 	}
 
-	tmpFile := location + ".tmp"
+	confLocation := filepath.Join(location, s.confName)
+	tmpFile := confLocation + ".tmp"
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("dryRun=%t", s.DryRun)); err != nil {
 		return err
@@ -121,7 +124,7 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	os.Rename(tmpFile, location)
+	os.Rename(tmpFile, confLocation)
 
 	return
 }
