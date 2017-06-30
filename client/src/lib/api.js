@@ -62,4 +62,12 @@ export default class Api {
 			body: JSON.stringify({ payload: JSON.stringify({ rsyncFlags }) }),
 		}).then(resp => resp.json())
 	}
+
+	setVerbosity(verbosity) {
+		return fetch(`${this.hostr}/config/verbosity`, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ payload: verbosity }),
+		}).then(resp => resp.json())
+	}
 }

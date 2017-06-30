@@ -11,6 +11,8 @@ module.exports = {
 	dryRunToggled,
 
 	setRsyncFlags,
+
+	setVerbosity,
 }
 
 function getConfig({ state, actions, opts: { api } }) {
@@ -110,6 +112,14 @@ function dryRunToggled({ state }, config) {
 
 function setRsyncFlags({ state, actions, opts: { api } }, flags) {
 	api.setRsyncFlags(flags).then(json => actions.gotConfig(json))
+
+	return state
+}
+
+function setVerbosity({ state, actions, opts: { api } }, verbosity) {
+	if (state.config.verbosity !== verbosity) {
+		api.setVerbosity(verbosity).then(json => actions.gotConfig(json))
+	}
 
 	return state
 }

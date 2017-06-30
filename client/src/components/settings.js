@@ -83,6 +83,11 @@ export default class Settings extends PureComponent {
 		setRsyncFlags(['-avPRX'])
 	}
 
+	setVerbosity = verbosity => () => {
+		const { setVerbosity } = this.props.store.actions
+		setVerbosity(verbosity)
+	}
+
 	render() {
 		const { state, actions } = this.props.store
 
@@ -125,7 +130,6 @@ export default class Settings extends PureComponent {
 
 		return (
 			<div>
-
 				<section className={cx('row', 'bottom-spacer-2x')}>
 					<div className={cx('col-xs-12')}>
 						<div>
@@ -251,7 +255,9 @@ export default class Settings extends PureComponent {
 							<h3>CUSTOM RSYNC FLAGS</h3>
 
 							<p>Internally unBALANCE uses rsync to transfer files across disks.</p>
-							<p>By default, rsync is invoked with <b>-avPRX</b> flags.</p>
+							<p>
+								By default, rsync is invoked with <b>-avPRX</b> flags.
+							</p>
 							<p>
 								Here you can set custom flags to override the default ones, except for the dry run flag
 								which will be automatically added, if needed.
@@ -287,6 +293,39 @@ export default class Settings extends PureComponent {
 					</div>
 				</section>
 
+				<section className={cx('row', 'bottom-spacer-2x')}>
+					<div className={cx('col-xs-12')}>
+						<div>
+							<h3>SET LOG VERBOSITY</h3>
+
+							<p>
+								Full verbosity will print each line generated in the transfer (rsync) phase. Normal
+								verbosity will not, thus greatly reducing the amount of logging.
+							</p>
+
+							<span> Verbosity: </span>
+							<input
+								id="verb0"
+								className={cx('lspacer')}
+								type="radio"
+								name="verb"
+								checked={state.config.verbosity === 0}
+								onChange={this.setVerbosity(0)}
+							/>
+							<label htmlFor="verb0">Normal</label>
+
+							<input
+								id="verb1"
+								className={cx('lspacer')}
+								type="radio"
+								name="verb"
+								checked={state.config.verbosity === 1}
+								onChange={this.setVerbosity(1)}
+							/>
+							<label htmlFor="verb1">Full</label>
+						</div>
+					</div>
+				</section>
 			</div>
 		)
 	}
