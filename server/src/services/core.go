@@ -54,9 +54,13 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 		bus:      bus,
 		settings: settings,
 		// opState:  stateIdle,
-		storage:   &model.Unraid{},
-		actor:     actor.NewActor(bus),
-		operation: model.Operation{OpState: model.StateIdle, PrevState: model.StateIdle},
+		storage: &model.Unraid{},
+		actor:   actor.NewActor(bus),
+		operation: model.Operation{
+			OpState:   model.StateIdle,
+			PrevState: model.StateIdle,
+			DryRun:    settings.DryRun,
+		},
 	}
 
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
@@ -243,8 +247,9 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
 
 	c.settings.ToggleDryRun()
-
 	c.settings.Save()
+
+	c.operation.DryRun = c.settings.DryRun
 
 	msg.Reply <- &c.settings.Config
 }
@@ -791,6 +796,13 @@ func (c *Core) transfer(msg *pubsub.Message) {
 	var finished time.Time
 	var elapsed time.Duration
 
+	// user may have changed rsync flags, adjust for it
+	c.operation.RsyncFlags = c.settings.RsyncFlags
+	if c.operation.DryRun {
+		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
+	}
+	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
+
 	// execute each rsync command created during the calculate phase
 	for _, command := range c.operation.Commands {
 		args := append(
@@ -895,7 +907,7 @@ func (c *Core) transfer(msg *pubsub.Message) {
 		commandsExecuted = append(commandsExecuted, cmd)
 
 		// if it isn't a dry-run and the operation is Move, delete the source folder
-		if !c.settings.DryRun && c.operation.OpState == model.StateMove {
+		if !c.operation.DryRun && c.operation.OpState == model.StateMove {
 			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
 			mlog.Info("Removing: %s", rmrf)
 			err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {

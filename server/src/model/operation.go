@@ -28,4 +28,5 @@ type Operation struct {
 	GroupIssue            int64
 	FolderIssue           int64
 	FileIssue             int64
+	DryRun                bool
 }
