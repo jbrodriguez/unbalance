@@ -267,6 +267,12 @@ export default class Settings extends PureComponent {
 								Be careful with the flags you choose, since it can drastically alter the expected
 								behaviour of rsync under unBALANCE.
 							</p>
+							<p>
+								<span className={cx('opWarning')}>
+									Also note that for proper VALIDATE functionality, the custom flags MUST being with
+									&quot;-a&quot;.
+								</span>
+							</p>
 
 							<div className={cx('row')}>
 								<div className={cx('col-xs-2')}>

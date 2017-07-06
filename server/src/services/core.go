@@ -249,8 +249,6 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	c.settings.ToggleDryRun()
 	c.settings.Save()
 
-	c.operation.DryRun = c.settings.DryRun
-
 	msg.Reply <- &c.settings.Config
 }
 
@@ -292,7 +290,7 @@ func (c *Core) setRsyncFlags(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
-	c.operation = model.Operation{OpState: model.StateCalc, PrevState: model.StateIdle, DryRun: c.settings.DryRun}
+	c.operation = model.Operation{OpState: model.StateCalc, PrevState: model.StateIdle}
 
 	go c._calc(msg)
 }
@@ -411,12 +409,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		// c.storage.SourceDiskName = srcDisk.Path
 		c.operation.BytesToTransfer = 0
 		c.operation.SourceDiskName = srcDisk.Path
-		c.operation.RsyncFlags = c.settings.RsyncFlags
-		if c.settings.DryRun {
-			c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
-		}
-		c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
-		c.operation.Commands = make([]model.Command, 0)
 
 		for _, disk := range disks {
 			diskWithoutMnt := disk.Path[5:]
@@ -458,40 +450,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 
 					willBeTransferred = append(willBeTransferred, bin.Items...)
 					folders = c.removeFolders(folders, bin.Items)
-
-					for _, item := range bin.Items {
-						var src, dst string
-						if strings.Contains(c.operation.RsyncStrFlags, "R") {
-							if item.Path[0] == filepath.Separator {
-								src = item.Path[1:]
-							} else {
-								src = item.Path
-							}
-
-							dst = disk.Path + string(filepath.Separator)
-						} else {
-							src = filepath.Join(c.operation.SourceDiskName, item.Path)
-							dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
-						}
-
-						c.operation.Commands = append(c.operation.Commands, model.Command{
-							Src:  src,
-							Dst:  dst,
-							Path: item.Path,
-							Size: item.Size,
-						})
-
-						// args := append(
-						// 	rsyncArgs,
-						// 	src,
-						// 	dst,
-						// )
-						// // cmd := exec.Command("rsync", args)
-
-						// // cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
-						// cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrArgs, strconv.Quote(src), strconv.Quote(dst))
-						// mlog.Info("cmd(%s)", cmd)
-					}
 
 					mlog.Info("_calc:BinAllocated=[Disk(%s); Items(%d)];Freespace=[original(%s); final(%s)]", disk.Path, len(bin.Items), lib.ByteSize(srcDisk.Free), lib.ByteSize(srcDisk.NewFree))
 				} else {
@@ -757,63 +715,151 @@ loop:
 func (c *Core) move(msg *pubsub.Message) {
 	c.operation.OpState = model.StateMove
 	c.operation.PrevState = model.StateMove
-	go c.transfer(msg)
+	go c.transfer("Move", msg)
 }
 
 func (c *Core) copy(msg *pubsub.Message) {
 	c.operation.OpState = model.StateCopy
 	c.operation.PrevState = model.StateCopy
-	go c.transfer(msg)
+	go c.transfer("Copy", msg)
 }
 
 func (c *Core) validate(msg *pubsub.Message) {
 	c.operation.OpState = model.StateValidate
 	c.operation.PrevState = model.StateValidate
-	// go c.checksum(msg)
+	go c.checksum(msg)
 }
 
-func (c *Core) transfer(msg *pubsub.Message) {
+func (c *Core) transfer(opName string, msg *pubsub.Message) {
 	defer func() {
 		c.operation.OpState = model.StateIdle
 		c.operation.Started = time.Time{}
 		c.operation.BytesTransferred = 0
 	}()
 
-	mlog.Info("Running transfer operation ...")
+	mlog.Info("Running %s operation ...", opName)
 	c.operation.Started = time.Now()
 
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	commandsExecuted := make([]string, 0)
-
 	outbound = &dto.Packet{Topic: "progressStats", Payload: "Waiting to collect stats ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	// user may have changed rsync flags or dry-run setting, adjust for it
+	c.operation.RsyncFlags = c.settings.RsyncFlags
+	c.operation.DryRun = c.settings.DryRun
+	if c.operation.DryRun {
+		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
+	}
+	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
+
+	c.operation.Commands = make([]model.Command, 0)
+	for _, disk := range c.storage.Disks {
+		if disk.Bin == nil || disk.Src {
+			continue
+		}
+
+		for _, item := range disk.Bin.Items {
+			var src, dst string
+			if strings.Contains(c.operation.RsyncStrFlags, "R") {
+				if item.Path[0] == filepath.Separator {
+					src = item.Path[1:]
+				} else {
+					src = item.Path
+				}
+
+				dst = disk.Path + string(filepath.Separator)
+			} else {
+				src = filepath.Join(c.operation.SourceDiskName, item.Path)
+				dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
+			}
+
+			c.operation.Commands = append(c.operation.Commands, model.Command{
+				Src:  src,
+				Dst:  dst,
+				Path: item.Path,
+				Size: item.Size,
+			})
+		}
+	}
+
+	// execute each rsync command created in the step above
+	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags)
+}
+
+func (c *Core) checksum(msg *pubsub.Message) {
+	defer func() {
+		c.operation.OpState = model.StateIdle
+		c.operation.PrevState = model.StateIdle
+		c.operation.Started = time.Time{}
+		c.operation.BytesTransferred = 0
+	}()
+
+	opName := "Validate"
+
+	mlog.Info("Running %s operation ...", opName)
+	c.operation.Started = time.Now()
+
+	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	if !strings.HasPrefix(c.operation.RsyncStrFlags, "-a") {
+		finished := time.Now()
+		elapsed := time.Since(c.operation.Started)
+
+		errMsg := fmt.Sprintf("For proper %s operation, rsync flags MUST begin with -a", opName)
+		mlog.Warning(errMsg)
+
+		subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
+		headline := errMsg
+
+		mlog.Warning(headline)
+		outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		_, _, speed := progress(c.operation.BytesToTransfer, 0, elapsed)
+		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed)
+
+		return
+	}
+
+	// Initialize local variables
+	// we use the rsync flags that were created by the transfer operation,
+	// but replace -a with -rc, to perform the validation
+	checkRsyncFlags := make([]string, 0)
+	for _, flag := range c.operation.RsyncFlags {
+		checkRsyncFlags = append(checkRsyncFlags, strings.Replace(flag, "-a", "-rc", -1))
+	}
+
+	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
+
+	// execute each rsync command created in the transfer phase
+	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags)
+}
+
+func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags string) {
+	// Initialize local variables
 	var calls int64
 	var callsPerDelta int64
 
 	var finished time.Time
 	var elapsed time.Duration
 
-	// user may have changed rsync flags, adjust for it
-	c.operation.RsyncFlags = c.settings.RsyncFlags
-	if c.operation.DryRun {
-		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
-	}
-	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
+	commandsExecuted := make([]string, 0)
 
-	// execute each rsync command created during the calculate phase
+	c.operation.BytesTransferred = 0
+
 	for _, command := range c.operation.Commands {
 		args := append(
-			c.operation.RsyncFlags,
+			rsyncFlags,
 			command.Src,
 			command.Dst,
 		)
-		cmd := fmt.Sprintf(`rsync %s %s %s`, c.operation.RsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
+		cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
 		mlog.Info("Command Started: %s", cmd)
 
-		outbound = &dto.Packet{Topic: "transferProgress", Payload: cmd}
+		outbound := &dto.Packet{Topic: "transferProgress", Payload: cmd}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		bytesTransferred := c.operation.BytesTransferred
@@ -880,11 +926,11 @@ func (c *Core) transfer(msg *pubsub.Message) {
 		elapsed = time.Since(c.operation.Started)
 
 		if err != nil {
-			subject := "unBALANCE - TRANSFER operation INTERRUPTED"
+			subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
 			headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
 
 			mlog.Warning(headline)
-			outbound := &dto.Packet{Topic: "opError", Payload: "Transfer operation was interrupted. Check log (/boot/logs/unbalance.log) for details."}
+			outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			_, _, speed := progress(c.operation.BytesToTransfer, bytesTransferred+deltaMoved, elapsed)
@@ -901,7 +947,7 @@ func (c *Core) transfer(msg *pubsub.Message) {
 		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 		mlog.Info("Current progress: %s", msg)
 
-		outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
+		outbound = &dto.Packet{Topic: "progressStats", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		commandsExecuted = append(commandsExecuted, cmd)
@@ -930,8 +976,8 @@ func (c *Core) transfer(msg *pubsub.Message) {
 		}
 	}
 
-	subject := "unBALANCE - TRANSFER operation completed"
-	headline := "Transfer operation has finished"
+	subject := fmt.Sprintf("unBALANCE - %s operation completed", strings.ToUpper(opName))
+	headline := fmt.Sprintf("%s operation has finished", opName)
 
 	_, _, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, elapsed)
 	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed)
@@ -994,129 +1040,6 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 	}()
 
 	mlog.Info("\n%s\n%s", subject, message)
-}
-
-func (c *Core) checksum(msg *pubsub.Message) {
-	defer func() {
-		c.operation.OpState = model.StateIdle
-		c.operation.PrevState = model.StateIdle
-		c.operation.Started = time.Time{}
-		c.operation.BytesTransferred = 0
-	}()
-
-	mlog.Info("Running validate operation ...")
-	c.operation.Started = time.Now()
-
-	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	commandsExecuted := make([]string, 0)
-
-	checkRsyncFlags := make([]string, 0)
-	for _, flag := range c.operation.RsyncFlags {
-		checkRsyncFlags = append(checkRsyncFlags, strings.Replace(flag, "-a", "-rc", -1))
-	}
-
-	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
-
-	var toTransfer int64
-	for _, command := range c.operation.Commands {
-		toTransfer += command.Size
-	}
-
-	var finished time.Time
-	var elapsed time.Duration
-
-	for _, command := range c.operation.Commands {
-		args := append(
-			checkRsyncFlags,
-			command.Src,
-			command.Dst,
-		)
-		// cmd := exec.Command("rsync", args)
-
-		// cmd := fmt.Sprintf("rsync %s \"%s\" \"%s/\"", strings.Join(rsyncArgs, " "), filepath.Join(c.storage.SourceDiskName, item.Path), filepath.Join(disk.Path, filepath.Dir(item.Path)))
-		cmd := fmt.Sprintf(`rsync %s %s %s`, checkRsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
-		mlog.Info("cmd(%s)", cmd)
-
-		outbound = &dto.Packet{Topic: "transferProgress", Payload: cmd}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-		err := lib.ShellEx(func(text string) {
-			line := strings.TrimSpace(text)
-
-			if len(line) <= 0 {
-				return
-			}
-
-			// match := c.reProgress.FindStringSubmatch(line)
-			// if match == nil {
-			// 	// this is a regular output line from rsync, print it
-			// 	mlog.Info("%s", line)
-
-			// 	outbound := &dto.Packet{Topic: "transferProgress", Payload: line}
-			// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-			// 	return
-			// }
-
-			// // this is a file transfer progress output line
-			// if match[1] == "" {
-			// 	// this happens when the file hasn't finished transferring
-			// 	moved := strings.Replace(match[2], ",", "", -1)
-			// 	deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
-			// } else {
-			// 	// the file has finished transferring
-			// 	moved := strings.Replace(match[1], ",", "", -1)
-			// 	deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
-			// 	bytesTransferred += deltaMoved
-			// }
-
-			// percent, left, speed := progress(c.operation.BytesToTransfer, bytesTransferred+deltaMoved, c.operation.Started)
-
-			// msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
-
-			// outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
-			// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-		}, c.operation.SourceDiskName, "rsync", args...)
-
-		finished = time.Now()
-		elapsed = time.Since(c.operation.Started)
-
-		c.operation.BytesTransferred = c.operation.BytesTransferred + command.Size
-		percent, left, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, elapsed)
-
-		if err != nil {
-			subject := "unBALANCE - VALIDATE operation INTERRUPTED"
-
-			headline := fmt.Sprintf("Validate command (%s) was interrupted: %s", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
-
-			mlog.Warning(headline)
-			outbound := &dto.Packet{Topic: "opError", Payload: "Validate operation was interrupted. Check log (/boot/logs/unbalance.log) for details."}
-			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-			c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed)
-
-			return
-		}
-
-		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
-		mlog.Info("Current progress: %s", msg)
-
-		outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-		commandsExecuted = append(commandsExecuted, cmd)
-	}
-
-	// finish validate operation
-	subject := "unBALANCE - VALIDATE operation completed"
-	headline := "Validate operation has finished"
-
-	_, _, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, elapsed)
-	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed)
-
 }
 
 func (c *Core) getLog(msg *pubsub.Message) {
