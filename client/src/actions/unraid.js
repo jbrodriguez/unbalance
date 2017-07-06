@@ -112,6 +112,7 @@ function checkFrom({ state, actions }, path) {
 		...state,
 		fromDisk,
 		toDisk,
+		validateDisabled: true,
 	}
 }
 
@@ -122,6 +123,7 @@ function checkTo({ state }, path) {
 			...state.toDisk,
 			[path]: !state.toDisk[path],
 		},
+		validateDisabled: true,
 	}
 }
 
@@ -278,8 +280,11 @@ function transferFinished({ state, actions }) {
 	}
 }
 
-function validate({ state }) {
-	// not implemented yet
+function validate({ state, actions, opts: { ws } }) {
+	actions.setOpInProgress('VALIDATE')
+
+	ws.send({ topic: 'validate' })
+
 	return state
 }
 

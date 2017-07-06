@@ -24,7 +24,8 @@ footer {
 	}
 }
 
-a, img {
+a,
+img {
 	display: flex;
 }
 
@@ -40,6 +41,10 @@ p {
 // SPECIAL TEXT
 .fund {
 	color: $footerColor;
+}
+
+.opWarning {
+	color: $label-alert-bg;
 }
 
 .headerLogoBg {

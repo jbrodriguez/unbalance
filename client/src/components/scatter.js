@@ -88,7 +88,11 @@ export default class Scatter extends PureComponent {
 				>
 					COPY
 				</button>
-				<button className={cx('btn', 'btn-primary', 'lspacer')} onClick={() => actions.validate()} disabled>
+				<button
+					className={cx('btn', 'btn-primary', 'lspacer')}
+					onClick={() => actions.validate()}
+					disabled={state.validateDisabled || state.opInProgress}
+				>
 					VALIDATE
 				</button>
 				<span>&nbsp; | &nbsp;</span>
@@ -147,9 +151,15 @@ export default class Scatter extends PureComponent {
 			if (disk.type === 'Cache' && disk.name.length > 5) {
 				return (
 					<tr key={disk.id}>
-						<td>{disk.name}</td>
-						<td>{disk.fsType}</td>
-						<td colSpan="7">{disk.serial} ({disk.device})</td>
+						<td>
+							{disk.name}
+						</td>
+						<td>
+							{disk.fsType}
+						</td>
+						<td colSpan="7">
+							{disk.serial} ({disk.device})
+						</td>
 					</tr>
 				)
 			} else {
@@ -157,9 +167,15 @@ export default class Scatter extends PureComponent {
 				// checkbox indicating it's either the from disk or a to disk
 				const lines = [
 					<tr key={disk.id}>
-						<td>{disk.name}</td>
-						<td>{disk.fsType}</td>
-						<td>{disk.serial} ({disk.device})</td>
+						<td>
+							{disk.name}
+						</td>
+						<td>
+							{disk.fsType}
+						</td>
+						<td>
+							{disk.serial} ({disk.device})
+						</td>
 						<td>
 							<input
 								type="checkbox"
@@ -174,15 +190,21 @@ export default class Scatter extends PureComponent {
 								onChange={this.checkTo(disk.path)}
 							/>
 						</td>
-						<td>{humanBytes(disk.size)}</td>
-						<td>{humanBytes(disk.free)}</td>
+						<td>
+							{humanBytes(disk.size)}
+						</td>
+						<td>
+							{humanBytes(disk.free)}
+						</td>
 						<td>
 							<div className={cx('progress')}>
 								<span style={{ width: percent }} />
 							</div>
 						</td>
 						<td>
-							<span className={diskChanged}>{humanBytes(disk.newFree)}</span>
+							<span className={diskChanged}>
+								{humanBytes(disk.newFree)}
+							</span>
 						</td>
 					</tr>,
 				]
@@ -194,7 +216,8 @@ export default class Scatter extends PureComponent {
 					lines.push(
 						<tr key={key}>
 							<td colSpan="3">
-								<b>Select folders/files to move</b><br />
+								<b>Select folders/files to move</b>
+								<br />
 								<TreeMenu
 									expandIconClass="fa fa-chevron-right"
 									collapseIconClass="fa fa-chevron-down"
@@ -206,9 +229,14 @@ export default class Scatter extends PureComponent {
 								/>
 							</td>
 							<td colSpan="6" className={cx('topAlign')}>
-								<b>Currently selected</b><br />
+								<b>Currently selected</b>
+								<br />
 								<ul>
-									{Object.keys(state.tree.chosen).map(chosen => <li key={chosen}>- {chosen}</li>)}
+									{Object.keys(state.tree.chosen).map(chosen =>
+										<li key={chosen}>
+											- {chosen}
+										</li>,
+									)}
 								</ul>
 							</td>
 						</tr>,
@@ -242,12 +270,18 @@ export default class Scatter extends PureComponent {
 						<tfoot>
 							<tr>
 								<th colSpan="5">TOTAL</th>
-								<th>{humanBytes(state.unraid.condition.size)}</th>
-								<th>{humanBytes(state.unraid.condition.free)}</th>
+								<th>
+									{humanBytes(state.unraid.condition.size)}
+								</th>
+								<th>
+									{humanBytes(state.unraid.condition.free)}
+								</th>
 								<th>
 									<div className={cx('progress')} />
 								</th>
-								<th>{humanBytes(state.unraid.condition.free)}</th>
+								<th>
+									{humanBytes(state.unraid.condition.free)}
+								</th>
 							</tr>
 						</tfoot>
 					</table>
