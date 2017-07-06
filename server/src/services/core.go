@@ -292,7 +292,7 @@ func (c *Core) setRsyncFlags(msg *pubsub.Message) {
 }
 
 func (c *Core) calc(msg *pubsub.Message) {
-	c.operation = model.Operation{OpState: model.StateCalc, PrevState: model.StateIdle}
+	c.operation = model.Operation{OpState: model.StateCalc, PrevState: model.StateIdle, DryRun: c.settings.DryRun}
 
 	go c._calc(msg)
 }
@@ -908,19 +908,24 @@ func (c *Core) transfer(msg *pubsub.Message) {
 
 		// if it isn't a dry-run and the operation is Move, delete the source folder
 		if !c.operation.DryRun && c.operation.OpState == model.StateMove {
-			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
-			mlog.Info("Removing: %s", rmrf)
-			err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
-				mlog.Info(line)
-			})
+			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Src))
+			if exists {
+				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
+				mlog.Info("Removing: %s", rmrf)
+				err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
+					mlog.Info(line)
+				})
 
-			if err != nil {
-				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(c.operation.SourceDiskName, command.Path), err)
+				if err != nil {
+					msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(c.operation.SourceDiskName, command.Path), err)
 
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-				mlog.Warning(msg)
+					mlog.Warning(msg)
+				}
+			} else {
+				mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Src))
 			}
 		}
 	}
