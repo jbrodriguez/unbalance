@@ -808,11 +808,8 @@ func (c *Core) checksum(msg *pubsub.Message) {
 		finished := time.Now()
 		elapsed := time.Since(c.operation.Started)
 
-		errMsg := fmt.Sprintf("For proper %s operation, rsync flags MUST begin with -a", opName)
-		mlog.Warning(errMsg)
-
 		subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
-		headline := errMsg
+		headline := fmt.Sprintf("For proper %s operation, rsync flags MUST begin with -a", opName)
 
 		mlog.Warning(headline)
 		outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
