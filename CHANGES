@@ -1,3 +1,8 @@
+Version 3.2.0 - 2017-07-07
+- Complete VALIDATE op implementation
+- Don’t duplicate warning message
+
+
 Version 3.1.2 - 2017-07-06
 - Add folder deletion safeguard
 
