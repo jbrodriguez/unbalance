@@ -1,8 +1,10 @@
 // import 'babel-polyfill'
 
-import React from 'react'
+import React, { PureComponent } from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute, hashHistory } from 'react-router'
+import { PropTypes } from 'prop-types'
+
+import { BrowserRouter, Route } from 'react-router-dom'
 
 import { createStore, combineActions } from 'reactorx'
 
@@ -90,27 +92,50 @@ const ws = new WSApi()
 
 const store = createStore(initialState, actions, { api, ws })
 
-const routes = (
-	<Route path="/" component={App}>
-		<IndexRoute component={Scatter} />
-		<Route path="gather" component={Gather} />
-		<Route path="settings" component={Settings} />
-		<Route path="log" component={Log} />
-	</Route>
-)
-
-store.subscribe(state => {
-	// console.log('main.store.state: ', store.state)
-	function createElement(Component, props) {
-		return <Component {...props} store={state} />
+class Layout extends PureComponent {
+	static propTypes = {
+		store: PropTypes.object.isRequired,
 	}
 
-	render(
-		<Router history={hashHistory} createElement={createElement}>
-			{routes}
-		</Router>,
-		document.getElementById('mnt'),
-	)
-})
+	render() {
+		const store = this.props.store
+
+		return (
+			<BrowserRouter>
+				<App store={store}>
+					<Route exact path="/" render={() => <Scatter store={store} />} />
+					<Route exact path="/gather" render={() => <Gather store={store} />} />
+					<Route exact path="/settings" render={() => <Settings store={store} />} />
+					<Route exact path="/log" render={() => <Log store={store} />} />
+				</App>
+			</BrowserRouter>
+		)
+	}
+}
+
+// const routes = (
+// 	<Route path="/" component={App}>
+// 		<IndexRoute component={Scatter} />
+// 		<Route path="gather" component={Gather} />
+// 		<Route path="settings" component={Settings} />
+// 		<Route path="log" component={Log} />
+// 	</Route>
+// )
+
+// store.subscribe(state => {
+// 	// console.log('main.store.state: ', store.state)
+// 	function createElement(Component, props) {
+// 		return <Component {...props} store={state} />
+// 	}
+
+// 	render(
+// 		<Router history={hashHistory} createElement={createElement}>
+// 			{routes}
+// 		</Router>,
+// 		document.getElementById('mnt'),
+// 	)
+// })
+
+store.subscribe(state => render(<Layout store={state} />, document.getElementById('mnt')))
 
 store.actions.start()

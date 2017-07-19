@@ -10,8 +10,7 @@ const cx = classNames.bind(styles)
 
 export default class Log extends PureComponent {
 	static propTypes = {
-		store: PropTypes.arrayOf(PropTypes.any).isRequired,
-		actions: PropTypes.objectOf(PropTypes.func).isRequired,
+		store: PropTypes.objectOf(PropTypes.any).isRequired,
 	}
 
 	componentDidMount() {
