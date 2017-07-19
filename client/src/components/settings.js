@@ -281,16 +281,16 @@ export default class Settings extends PureComponent {
 											className={cx('addon-field')}
 											type="string"
 											value={flags}
-											onChange={this.onChangeRsyncFlags}
+											onChange={this._onChangeRsyncFlags}
 										/>
 									</div>
 								</div>
 								<div className={cx('col-xs-4')}>
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncFlags}>
+									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags}>
 										Apply
 									</button>
 									&nbsp;
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncDefault}>
+									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault}>
 										Reset to default
 									</button>
 								</div>
