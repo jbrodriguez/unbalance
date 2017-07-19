@@ -10,8 +10,7 @@ const cx = classNames.bind(styles)
 
 export default class Settings extends PureComponent {
 	static propTypes = {
-		store: PropTypes.arrayOf(PropTypes.any).isRequired,
-		actions: PropTypes.objectOf(PropTypes.func).isRequired,
+		store: PropTypes.objectOf(PropTypes.any).isRequired,
 	}
 
 	constructor(props) {
@@ -281,16 +280,16 @@ export default class Settings extends PureComponent {
 											className={cx('addon-field')}
 											type="string"
 											value={flags}
-											onChange={this.onChangeRsyncFlags}
+											onChange={this._onChangeRsyncFlags}
 										/>
 									</div>
 								</div>
 								<div className={cx('col-xs-4')}>
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncFlags}>
+									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags}>
 										Apply
 									</button>
 									&nbsp;
-									<button className={cx('btn', 'btn-primary')} onClick={this.setRsyncDefault}>
+									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault}>
 										Reset to default
 									</button>
 								</div>

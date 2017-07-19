@@ -1,6 +1,6 @@
 import React from 'react'
 import { PropTypes } from 'prop-types'
-import { IndexLink, Link } from 'react-router'
+import { NavLink } from 'react-router-dom'
 
 import classNames from 'classnames/bind'
 
@@ -16,12 +16,11 @@ const logo = require('../img/logo-small.png')
 const vm = require('../img/v.png')
 
 const propTypes = {
-	location: PropTypes.objectOf(PropTypes.any).isRequired,
-	children: PropTypes.objectOf(PropTypes.any).isRequired,
+	children: PropTypes.arrayOf(PropTypes.any).isRequired,
 	store: PropTypes.objectOf(PropTypes.any).isRequired,
 }
 
-export default function App({ location, children, store }) {
+export default function App({ children, store }) {
 	const { state } = store
 
 	if (!state.config) {
@@ -41,7 +40,11 @@ export default function App({ location, children, store }) {
 
 	let stats = null
 	if (state.stats !== '') {
-		stats = <span>{state.stats}</span>
+		stats = (
+			<span>
+				{state.stats}
+			</span>
+		)
 	}
 
 	let progress = null
@@ -70,9 +73,7 @@ export default function App({ location, children, store }) {
 	return (
 		<div className={cx('container', 'body')}>
 			<header>
-
 				<nav className={cx('row')}>
-
 					<ul className={cx('col-xs-12', 'col-sm-2')}>
 						<li className={cx('center-xs', 'flex', 'headerLogoBg')}>
 							<img alt="Logo" src={unbalance} />
@@ -80,19 +81,24 @@ export default function App({ location, children, store }) {
 					</ul>
 
 					<ul className={cx('col-xs-12', 'col-sm-10')}>
-
 						<li className={cx('headerMenuBg')}>
 							<section className={cx('row', 'middle-xs')}>
 								<div className={cx('col-xs-12', 'col-sm-4', 'flexSection', 'routerSection')}>
-									<IndexLink to="/" className={cx('lspacer')} activeClassName={indexActive}>
+									<NavLink exact to="/" className={cx('lspacer')} activeClassName={indexActive}>
 										SCATTER
-									</IndexLink>
+									</NavLink>
 									<div className={cx('lspacer')} />
-									<Link to="gather" activeClassName={active}>GATHER</Link>
+									<NavLink exact to="/gather" activeClassName={active}>
+										GATHER
+									</NavLink>
 									<div className={cx('lspacer')} />
-									<Link to="settings" activeClassName={active}>SETTINGS</Link>
+									<NavLink exact to="/settings" activeClassName={active}>
+										SETTINGS
+									</NavLink>
 									<div className={cx('lspacer')} />
-									<Link to="log" activeClassName={active}>LOG</Link>
+									<NavLink exact to="/log" activeClassName={active}>
+										LOG
+									</NavLink>
 								</div>
 
 								<div className={cx('col-xs-12', 'col-sm-8')}>
@@ -117,15 +123,10 @@ export default function App({ location, children, store }) {
 										</section>
 									</div>
 								</div>
-
 							</section>
-
 						</li>
-
 					</ul>
-
 				</nav>
-
 			</header>
 
 			<main>
@@ -135,9 +136,7 @@ export default function App({ location, children, store }) {
 			</main>
 
 			<footer>
-
 				<nav className={cx('row', 'legal', 'middle-xs')}>
-
 					<ul className={cx('col-xs-12', 'col-sm-4')}>
 						<div className={cx('flexSection')}>
 							<span className={cx('copyright', 'lspacer')}>Copyright &copy; &nbsp;</span>
@@ -146,7 +145,9 @@ export default function App({ location, children, store }) {
 					</ul>
 
 					<ul className={cx('col-xs-12', 'col-sm-4', 'flex', 'center-xs')}>
-						<span className={cx('version')}>unBALANCE v{version}</span>
+						<span className={cx('version')}>
+							unBALANCE v{version}
+						</span>
 					</ul>
 
 					<ul className={cx('col-xs-12', 'col-sm-4')}>
@@ -207,9 +208,7 @@ export default function App({ location, children, store }) {
 							</a>
 						</div>
 					</ul>
-
 				</nav>
-
 			</footer>
 		</div>
 	)
