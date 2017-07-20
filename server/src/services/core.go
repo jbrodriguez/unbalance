@@ -111,6 +111,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("/get/storage", c.getStorage)
 	c.actor.Register("/config/toggle/dryRun", c.toggleDryRun)
 	c.actor.Register("/get/tree", c.getTree)
+	c.actor.Register("/disks/locate", c.locate)
 	c.actor.Register("/config/set/rsyncFlags", c.setRsyncFlags)
 
 	c.actor.Register("calculate", c.calc)
@@ -256,6 +257,11 @@ func (c *Core) getTree(msg *pubsub.Message) {
 	path := msg.Payload.(string)
 
 	msg.Reply <- c.storage.GetTree(path)
+}
+
+func (c *Core) locate(msg *pubsub.Message) {
+	chosen := msg.Payload.([]string)
+	msg.Reply <- c.storage.Locate(chosen)
 }
 
 func (c *Core) setRsyncFlags(msg *pubsub.Message) {

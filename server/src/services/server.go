@@ -86,6 +86,7 @@ func (s *Server) Start() {
 	api.GET("/config", s.getConfig)
 	api.GET("/storage", s.getStorage)
 	api.POST("/tree", s.getTree)
+	api.POST("/locate", s.locate)
 	api.PUT("/config/dryRun", s.toggleDryRun)
 	api.PUT("/config/rsyncFlags", s.setRsyncFlags)
 
@@ -211,6 +212,24 @@ func (s *Server) getTree(c echo.Context) (err error) {
 
 	reply := <-msg.Reply
 	resp := reply.(*dto.Entry)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) locate(c echo.Context) (err error) {
+	var packet dto.Locate
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding packet: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, "/disks/locate")
+
+	reply := <-msg.Reply
+	resp := reply.([]*model.Disk)
 	c.JSON(200, &resp)
 
 	return nil
