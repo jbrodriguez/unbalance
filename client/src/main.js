@@ -12,6 +12,7 @@ import startActions from './actions/start'
 import uiActions from './actions/ui'
 import configActions from './actions/config'
 import treeActions from './actions/tree'
+import gatherTreeActions from './actions/gather'
 import unraidActions from './actions/unraid'
 
 import Api from './lib/api'
@@ -59,8 +60,19 @@ import Log from './components/log'
 // 				{type: 'folder', path: '/storage'}
 // 				{type: 'folder', path: '/data'}
 // 			],
-// 		selected: "",
-// 		fetching: false,
+// 		cache: null,
+//		chosen: {},
+// 	},
+// 	gatherTree: {
+// 		items:
+// 			'/': [
+// 				{type: 'folder', path: '/films'}
+// 				{type: 'folder', path: '/tvshows'}
+// 				{type: 'folder', path: '/storage'}
+// 				{type: 'folder', path: '/data'}
+// 			],
+// 		cache: null,
+//		chosen: {},
 // 	},
 //	feedback: []
 // }
@@ -81,11 +93,18 @@ const initialState = {
 		chosen: {},
 		items: [],
 	},
+	gatherTree: {
+		cache: null,
+		chosen: {},
+		items: [],
+		present: [],
+		elegible: [],
+	},
 	feedback: [],
 	timeout: null,
 }
 
-const actions = combineActions(startActions, uiActions, configActions, treeActions, unraidActions)
+const actions = combineActions(startActions, uiActions, configActions, treeActions, gatherTreeActions, unraidActions)
 
 const api = new Api()
 const ws = new WSApi()
@@ -103,38 +122,15 @@ class Layout extends PureComponent {
 		return (
 			<BrowserRouter>
 				<App store={store}>
-					<Route exact path="/" render={() => <Scatter store={store} />} />
-					<Route exact path="/gather" render={() => <Gather store={store} />} />
-					<Route exact path="/settings" render={() => <Settings store={store} />} />
-					<Route exact path="/log" render={() => <Log store={store} />} />
+					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
+					<Route path="/gather" render={props => <Gather store={store} {...props} />} />
+					<Route exact path="/settings" render={props => <Settings store={store} {...props} />} />
+					<Route exact path="/log" render={props => <Log store={store} {...props} />} />
 				</App>
 			</BrowserRouter>
 		)
 	}
 }
-
-// const routes = (
-// 	<Route path="/" component={App}>
-// 		<IndexRoute component={Scatter} />
-// 		<Route path="gather" component={Gather} />
-// 		<Route path="settings" component={Settings} />
-// 		<Route path="log" component={Log} />
-// 	</Route>
-// )
-
-// store.subscribe(state => {
-// 	// console.log('main.store.state: ', store.state)
-// 	function createElement(Component, props) {
-// 		return <Component {...props} store={state} />
-// 	}
-
-// 	render(
-// 		<Router history={hashHistory} createElement={createElement}>
-// 			{routes}
-// 		</Router>,
-// 		document.getElementById('mnt'),
-// 	)
-// })
 
 store.subscribe(state => render(<Layout store={state} />, document.getElementById('mnt')))
 

@@ -88,7 +88,7 @@ export default function App({ children, store }) {
 										SCATTER
 									</NavLink>
 									<div className={cx('lspacer')} />
-									<NavLink exact to="/gather" activeClassName={active}>
+									<NavLink to="/gather" activeClassName={active}>
 										GATHER
 									</NavLink>
 									<div className={cx('lspacer')} />

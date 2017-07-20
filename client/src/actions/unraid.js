@@ -36,7 +36,6 @@ function getStorage({ state, actions, opts: { api } }) {
 	actions.setOpInProgress('Getting storage info')
 
 	api.getStorage().then(json => actions.gotStorage(json))
-	// here i can catch the error and show an appropriate message
 
 	return state
 }
@@ -74,15 +73,23 @@ function gotStorage({ state, actions }, unraid) {
 	}
 
 	const tree = Object.assign({}, state.tree)
+	const gatherTree = Object.assign({}, state.gatherTree)
 	if (opState) {
 		lines.push(opState)
 	} else {
 		// console.log(`sourceDisk-${JSON.stringify(sourceDisk)}`)
+		// scatter tree
 		actions.getTree(sourceDisk.path)
-
 		tree.cache = null
 		tree.items = [{ label: 'Loading ...' }]
 		tree.chosen = {}
+
+		// gather tree
+		actions.getGatherTree('/mnt/user')
+		gatherTree.cache = null
+		gatherTree.items = [{ label: 'Loading ...' }]
+		gatherTree.chosen = {}
+		gatherTree.present = []
 	}
 
 	return {
@@ -96,6 +103,7 @@ function gotStorage({ state, actions }, unraid) {
 		validateDisabled: unraid.prevState !== stateCopy,
 		lines,
 		tree,
+		gatherTree,
 	}
 }
 

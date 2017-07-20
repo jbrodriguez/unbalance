@@ -70,4 +70,12 @@ export default class Api {
 			body: JSON.stringify({ payload: verbosity }),
 		}).then(resp => resp.json())
 	}
+
+	locate(path) {
+		return fetch(`${this.hostr}/locate`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ payload: path }),
+		}).then(resp => resp.json())
+	}
 }
