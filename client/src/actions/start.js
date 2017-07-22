@@ -9,7 +9,7 @@ function start({ state, actions, opts: { ws } }) {
 	})
 
 	actions.getConfig()
-	actions.getStorage()
+	// actions.getStorage()
 
 	return state
 }

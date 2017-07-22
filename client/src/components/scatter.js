@@ -17,6 +17,11 @@ export default class Scatter extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
+	componentDidMount() {
+		const { actions } = this.props.store
+		actions.getStorage()
+	}
+
 	onCollapse = node => {
 		// console.log(`collapse-node-${JSON.stringify(node)}`)
 		const { treeCollapsed } = this.props.store.actions

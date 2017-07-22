@@ -149,7 +149,7 @@ function gatherTreeLocate({ state, actions, opts: { api } }, chosen) {
 }
 
 function gatherTreeLocated({ state }, disks) {
-	console.log(`disks-(${JSON.stringify(disks)})`)
+	// console.log(`disks-(${JSON.stringify(disks)})`)
 	return {
 		...state,
 		gatherTree: {

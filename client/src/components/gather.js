@@ -18,9 +18,9 @@ export default class Gather extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { history } = this.props
-		console.log('replacer')
+		const { history, store: { actions } } = this.props
 		history.replace({ pathname: '/gather/choose' })
+		actions.getStorage()
 	}
 
 	render() {
