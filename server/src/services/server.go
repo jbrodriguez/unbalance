@@ -218,7 +218,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 }
 
 func (s *Server) locate(c echo.Context) (err error) {
-	var packet dto.Locate
+	var packet dto.Chosen
 
 	err = c.Bind(&packet)
 	if err != nil {
