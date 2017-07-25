@@ -119,6 +119,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("copy", c.copy)
 	c.actor.Register("validate", c.validate)
 	c.actor.Register("getLog", c.getLog)
+	c.actor.Register("findTargets", c.findTargets)
 
 	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
@@ -593,7 +594,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	if !fi.IsDir() {
 		mlog.Info("getFolder-found(%s)-size(%d)", srcFolder, fi.Size())
 
-		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder}
+		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
@@ -628,7 +629,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
 
-		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
+		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src}
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
@@ -1043,6 +1044,203 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 	}()
 
 	mlog.Info("\n%s\n%s", subject, message)
+}
+
+func (c *Core) findTargets(msg *pubsub.Message) {
+	c.operation = model.Operation{OpState: model.StateFindTargets, PrevState: model.StateIdle}
+	go c._findTargets(msg)
+}
+
+func (c *Core) _findTargets(msg *pubsub.Message) {
+	defer func() { c.operation.OpState = model.StateIdle }()
+
+	data, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert findTargets parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert findTargets parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var chosen []string
+	err := json.Unmarshal([]byte(data), &chosen)
+	if err != nil {
+		mlog.Warning("Unable to bind findTargets parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind findTargets parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	mlog.Info("Running findTargets operation ...")
+	c.operation.Started = time.Now()
+
+	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// disks := make([]*model.Disk, 0)
+
+	owner := ""
+	lib.Shell("id -un", mlog.Warning, "owner", "", func(line string) {
+		owner = line
+	})
+
+	group := ""
+	lib.Shell("id -gn", mlog.Warning, "group", "", func(line string) {
+		group = line
+	})
+
+	c.operation.OwnerIssue = 0
+	c.operation.GroupIssue = 0
+	c.operation.FolderIssue = 0
+	c.operation.FileIssue = 0
+
+	entries := make([]*model.Item, 0)
+
+	// Check permission and look for the chosen folders on every disk
+	for _, disk := range c.storage.Disks {
+		for _, path := range chosen {
+			msg := fmt.Sprintf("Scanning %s on %s", path, disk.Path)
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+
+			c.checkOwnerAndPermissions(&c.operation, disk.Path, path, owner, group)
+
+			msg = "Checked permissions ..."
+			outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+
+			list := c.getFolders(disk.Path, path)
+			if list != nil {
+				entries = append(entries, list...)
+			}
+		}
+	}
+
+	mlog.Info("_find:elegibleFolders(%d)", len(entries))
+
+	var totalSize int64
+	for _, entry := range entries {
+		totalSize += entry.Size
+		mlog.Info("_find:elegibleFolder:Location(%s); Size(%s)", filepath.Join(entry.Location, entry.Path), lib.ByteSize(entry.Size))
+	}
+
+	mlog.Info("_find:potentialSizeToBeTransferred(%s)", lib.ByteSize(totalSize))
+
+	if len(entries) > 0 {
+		// Initialize fields
+		// c.storage.BytesToTransfer = 0
+		// c.storage.SourceDiskName = srcDisk.Path
+		c.operation.BytesToTransfer = 0
+		// c.operation.SourceDiskName = mntUser
+
+		for _, disk := range c.storage.Disks {
+			diskWithoutMnt := disk.Path[5:]
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+			// time.Sleep(2 * time.Second)
+
+			var reserved int64
+			switch c.settings.ReservedUnit {
+			case "%":
+				fcalc := disk.Size * c.settings.ReservedAmount / 100
+				reserved = int64(fcalc)
+				break
+			case "Mb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000
+				break
+			case "Gb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
+				break
+			default:
+				reserved = lib.ReservedSpace
+			}
+
+			ceil := lib.Max(lib.ReservedSpace, reserved)
+			mlog.Info("_find:FoldersLeft(%d):ReservedSpace(%d)", len(entries), ceil)
+
+			packer := algorithm.NewGreedy(disk, entries, totalSize, ceil)
+			bin := packer.FitAll()
+			if bin != nil {
+				disk.NewFree -= bin.Size
+				c.operation.BytesToTransfer += bin.Size
+				mlog.Info("_find:BinAllocated=[Disk(%s); Items(%d)]", disk.Path, len(bin.Items))
+			} else {
+				mlog.Info("_find:NoBinAllocated=Disk(%s)", disk.Path)
+			}
+		}
+	}
+
+	c.operation.Finished = time.Now()
+	elapsed := lib.Round(time.Since(c.operation.Started), time.Millisecond)
+
+	fstarted := c.operation.Started.Format(timeFormat)
+	ffinished := c.operation.Finished.Format(timeFormat)
+
+	// Send to frontend console started/ended/elapsed times
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// send to frontend the folders that will not be transferred, if any
+	// notTransferred holds a string representation of all the folders, separated by a '\n'
+	c.operation.FoldersNotTransferred = make([]string, 0)
+
+	// send mail according to user preferences
+	subject := "unBALANCE - CALCULATE operation completed"
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
+
+	if c.operation.OwnerIssue > 0 || c.operation.GroupIssue > 0 || c.operation.FolderIssue > 0 || c.operation.FileIssue > 0 {
+		message += fmt.Sprintf(`
+			\n\nThere are some permission issues:
+			\n\n%d file(s)/folder(s) with an owner other than 'nobody'
+			\n%d file(s)/folder(s) with a group other than 'users'
+			\n%d folder(s) with a permission other than 'drwxrwxrwx'
+			\n%d files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'
+			\n\nCheck the log file (/boot/logs/unbalance.log) for additional information
+			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
+		`, c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)
+	}
+
+	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, false); sendErr != nil {
+		mlog.Error(sendErr)
+	}
+
+	// some local logging
+	mlog.Info("_find:Listing (%d) disks ...", len(c.storage.Disks))
+	for _, disk := range c.storage.Disks {
+		// mlog.Info("the mystery of the year(%s)", disk.Path)
+		disk.Print()
+	}
+
+	c.storage.Print()
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	c.storage.BytesToTransfer = c.operation.BytesToTransfer
+	c.storage.OpState = c.operation.OpState
+	c.storage.PrevState = c.operation.PrevState
+
+	// send to front end the signal of operation finished
+	outbound = &dto.Packet{Topic: "findFinished", Payload: c.storage}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
+	// and there actually perm issues
+	if c.operation.BytesToTransfer > 0 && (c.operation.OwnerIssue+c.operation.GroupIssue+c.operation.FolderIssue+c.operation.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d|%d|%d", c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
 }
 
 func (c *Core) getLog(msg *pubsub.Message) {

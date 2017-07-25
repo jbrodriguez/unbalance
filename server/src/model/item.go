@@ -2,9 +2,10 @@ package model
 
 // Item -
 type Item struct {
-	Name string
-	Size int64
-	Path string
+	Name     string
+	Size     int64
+	Path     string
+	Location string
 }
 
 // BySize -

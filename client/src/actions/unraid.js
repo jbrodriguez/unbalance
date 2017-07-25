@@ -24,6 +24,9 @@ module.exports = {
 
 	getLog,
 	gotLog,
+
+	findTargets,
+	findFinished,
 }
 
 // const stateIdle = 0
@@ -37,7 +40,10 @@ function getStorage({ state, actions, opts: { api } }) {
 
 	api.getStorage().then(json => actions.gotStorage(json))
 
-	return state
+	return {
+		...state,
+		unraid: null,
+	}
 }
 
 function gotStorage({ state, actions }, unraid) {
@@ -321,5 +327,48 @@ function gotLog({ state }, log) {
 		...state,
 		opInProgress: null,
 		log,
+	}
+}
+
+function findTargets({ state, actions, opts: { ws } }) {
+	actions.setOpInProgress('Calculating')
+
+	const folders = Object.keys(state.gatherTree.chosen).map(folder => folder.slice(10))
+	ws.send({ topic: 'findTargets', payload: folders })
+
+	return state
+}
+
+function findFinished({ state, actions }, unraid) {
+	const feedback = []
+	if (unraid.bytesToTransfer === 0) {
+		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
+		feedback.push('')
+		feedback.push('This might be due to one of the following reasons:')
+		feedback.push(
+			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
+		)
+		feedback.push(
+			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
+		)
+		feedback.push('')
+		feedback.push(
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving/copying or to change the amount of reserved space.',
+		)
+	}
+
+	if (state.timeout) {
+		window.clearTimeout(state.timeout)
+	}
+	const timeout = window.setTimeout(() => actions.removeFeedback(), 15 * 1000)
+
+	return {
+		...state,
+		unraid,
+		feedback,
+		timeout,
+		opInProgress: null,
+		transferDisabled: unraid.bytesToTransfer === 0,
+		validateDisabled: unraid.prevState !== stateCopy,
 	}
 }
