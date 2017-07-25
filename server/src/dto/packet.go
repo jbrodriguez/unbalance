@@ -19,6 +19,6 @@ type Packet struct {
 	Payload interface{} `json:"payload"`
 }
 
-type Locate struct {
+type Chosen struct {
 	Payload []string `json:"payload"`
 }
