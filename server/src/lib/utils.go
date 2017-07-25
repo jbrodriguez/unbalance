@@ -3,9 +3,9 @@ package lib
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -60,31 +60,19 @@ func SearchFile(name string, locations []string) string {
 	return ""
 }
 
+var sizes = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+
 // ByteSize -
 func ByteSize(bytes int64) string {
-	unit := ""
-	value := float32(bytes)
-
-	switch {
-	case bytes >= terabyte:
-		unit = "T"
-		value = value / terabyte
-	case bytes >= gigabyte:
-		unit = "G"
-		value = value / gigabyte
-	case bytes >= megabyte:
-		unit = "M"
-		value = value / megabyte
-	case bytes >= kilobyte:
-		unit = "K"
-		value = value / kilobyte
-	case bytes == 0:
-		return "0"
+	if bytes == 0 {
+		return "0B"
 	}
 
-	stringValue := fmt.Sprintf("%.1f", value)
-	stringValue = strings.TrimSuffix(stringValue, ".0")
-	return fmt.Sprintf("%s%s", stringValue, unit)
+	k := float64(1000)
+	i := math.Floor(math.Log(float64(bytes)) / math.Log(k))
+
+	return fmt.Sprintf("%.2f %s", float64(bytes)/math.Pow(k, i), sizes[int64(i)])
+
 }
 
 // WriteLine -
