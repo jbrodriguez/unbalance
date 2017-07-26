@@ -4,7 +4,8 @@ import React, { PureComponent } from 'react'
 import { render } from 'react-dom'
 import { PropTypes } from 'prop-types'
 
-import { BrowserRouter, Route } from 'react-router-dom'
+import { Router, Route } from 'react-router-dom'
+import createBrowserHistory from 'history/createBrowserHistory'
 
 import { createStore, combineActions } from 'reactorx'
 
@@ -76,6 +77,7 @@ import Log from './components/log'
 // 	},
 //	feedback: []
 // }
+const history = createBrowserHistory()
 
 const initialState = {
 	config: null,
@@ -102,6 +104,7 @@ const initialState = {
 	},
 	feedback: [],
 	timeout: null,
+	history,
 }
 
 const actions = combineActions(startActions, uiActions, configActions, treeActions, gatherTreeActions, unraidActions)
@@ -120,14 +123,14 @@ class Layout extends PureComponent {
 		const store = this.props.store
 
 		return (
-			<BrowserRouter>
+			<Router history={history}>
 				<App store={store}>
 					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
 					<Route path="/gather" render={props => <Gather store={store} {...props} />} />
 					<Route exact path="/settings" render={props => <Settings store={store} {...props} />} />
 					<Route exact path="/log" render={props => <Log store={store} {...props} />} />
 				</App>
-			</BrowserRouter>
+			</Router>
 		)
 	}
 }
