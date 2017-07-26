@@ -4,7 +4,7 @@ import { PropTypes } from 'prop-types'
 import TreeMenu from 'react-tree-menu'
 import classNames from 'classnames/bind'
 
-import ConsolePanel from './consolePanel'
+import Wizard from './wizard'
 import styles from '../styles/core.scss'
 
 require('./tree-view.css')
@@ -14,6 +14,7 @@ const cx = classNames.bind(styles)
 export default class GatherSource extends PureComponent {
 	static propTypes = {
 		store: PropTypes.object.isRequired,
+		match: PropTypes.object.isRequired,
 	}
 
 	componentDidMount() {
@@ -38,18 +39,7 @@ export default class GatherSource extends PureComponent {
 	}
 
 	render() {
-		const { state } = this.props.store
-
-		let consolePanel = null
-		if (state.lines.length !== 0) {
-			consolePanel = (
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.lines} styleClass={'console-feedback'} />
-					</div>
-				</section>
-			)
-		}
+		const { match, store: { state } } = this.props
 
 		const grid = (
 			<section className={cx('row', 'bottom-spacer-half', 'height100')}>
@@ -99,7 +89,7 @@ export default class GatherSource extends PureComponent {
 
 		return (
 			<div>
-				{consolePanel}
+				<Wizard match={match} />
 				{grid}
 			</div>
 		)

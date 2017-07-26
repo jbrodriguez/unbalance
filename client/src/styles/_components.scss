@@ -209,6 +209,10 @@ legend {
 	@include button-variant($buttonAlertColor, $buttonAlertBg);
 }
 
+.btn-nav {
+	@include button-variant($buttonNavColor, $buttonNavBg);
+}
+
 // TABLES
 table {
 	background: white;
@@ -387,6 +391,11 @@ tr:nth-of-type(even) {
 	width: 1.6em;
 }
 
+.circular-disabled {
+	color: $bodyBackground;
+	background: $button-primary-bg;
+}
+
 .linkBody {
 	display: inline-block;
 	padding: $button-padding-vertical $button-padding-horizontal;
@@ -394,6 +403,26 @@ tr:nth-of-type(even) {
 
 .linkText {
 	color: $bodyBackground;
+}
+
+.step {
+	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+	// border: 1px solid transparent;
+	white-space: nowrap;
+	padding: $button-padding-vertical $button-padding-horizontal;
+	font-size: 0.75em;
+	color: $button-primary-color;
+	background-color: $button-primary-bg;
+	border-color: darken($button-primary-bg, 5%);
+
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
+		color: $button-primary-bg;
+		background-color: $bodyBackground;
+		// border-color: darken($color, 5%);
+		box-shadow: none;
+	}
 }
 
 // .direction-row {

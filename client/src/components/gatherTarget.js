@@ -3,6 +3,7 @@ import { PropTypes } from 'prop-types'
 
 import classNames from 'classnames/bind'
 
+import Wizard from './wizard'
 import ConsolePanel from './consolePanel'
 import styles from '../styles/core.scss'
 import { humanBytes, percentage } from '../lib/utils'
@@ -14,6 +15,7 @@ const cx = classNames.bind(styles)
 export default class GatherTarget extends PureComponent {
 	static propTypes = {
 		store: PropTypes.object.isRequired,
+		match: PropTypes.object.isRequired,
 	}
 
 	componentDidMount() {
@@ -33,7 +35,7 @@ export default class GatherTarget extends PureComponent {
 	}
 
 	render() {
-		const { state } = this.props.store
+		const { match, store: { state } } = this.props
 
 		let consolePanel = null
 		if (state.lines.length !== 0) {
@@ -55,16 +57,22 @@ export default class GatherTarget extends PureComponent {
 			const xferB = b.free - b.newFree
 			if (xferA < xferB) return -1
 			if (xferA > xferB) return 1
+			if (a.id < b.id) return -1
+			if (a.id > b.id) return 1
 			return 0
 		})
 
 		const rows = targets.map(disk => {
 			const percent = percentage((disk.size - disk.free) / disk.size)
+			const present = state.gatherTree.present.some(presence => presence.id === disk.id)
 
 			return (
 				<tr key={disk.id}>
 					<td>
 						<input type="checkbox" checked={false} onChange={this.checkTarget(disk.path)} />
+					</td>
+					<td>
+						{present && <span>*</span>}
 					</td>
 					<td>
 						{disk.name}
@@ -74,6 +82,9 @@ export default class GatherTarget extends PureComponent {
 					</td>
 					<td>
 						{disk.serial} ({disk.device})
+					</td>
+					<td>
+						{humanBytes(disk.free - disk.newFree)}
 					</td>
 					<td>
 						{humanBytes(disk.size)}
@@ -95,6 +106,24 @@ export default class GatherTarget extends PureComponent {
 			)
 		})
 
+		let noun = ''
+		let verb = 'is'
+		const keys = Object.keys(state.gatherTree.chosen)
+		if (keys.length > 1) {
+			noun = 's'
+			verb = 'are'
+		}
+		const sources = keys.map(chosen => chosen.slice(10)).join()
+		const source = (
+			<section className={cx('row', 'bottom-spacer-half')}>
+				<div className={cx('col-xs-12')}>
+					Source folder{noun} {verb}: <b>{sources}</b> <br />
+					Note: Drives are ordered by the least amount of data transfer. An asterisk next to a disk signals
+					that one or more source folders are present
+				</div>
+			</section>
+		)
+
 		const grid = (
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>
@@ -102,9 +131,11 @@ export default class GatherTarget extends PureComponent {
 						<thead>
 							<tr>
 								<th style={{ width: '100px' }}>CHOOSE</th>
+								<th style={{ width: '50px' }} />
 								<th style={{ width: '120px' }}>DISK</th>
 								<th style={{ width: '75px' }}>TYPE</th>
 								<th>SERIAL</th>
+								<th style={{ width: '100px' }}>TRANSFER</th>
 								<th style={{ width: '100px' }}>SIZE</th>
 								<th style={{ width: '85px' }}>FREE</th>
 								<th style={{ width: '100px' }}>FILL</th>
@@ -121,7 +152,9 @@ export default class GatherTarget extends PureComponent {
 
 		return (
 			<div>
+				<Wizard match={match} />
 				{consolePanel}
+				{source}
 				{grid}
 			</div>
 		)

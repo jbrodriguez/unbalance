@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react'
 import { PropTypes } from 'prop-types'
 
 import classNames from 'classnames/bind'
-import { Switch, Route, Link } from 'react-router-dom'
+import { Switch, Route } from 'react-router-dom'
 
 import GatherSource from './gatherSource'
 import GatherTarget from './gatherTarget'
@@ -18,8 +18,8 @@ export default class Gather extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { history, store: { actions } } = this.props
-		history.replace({ pathname: '/gather/choose' })
+		// we do this in order to populate state.unraid
+		const { actions } = this.props.store
 		actions.getStorage()
 	}
 
@@ -44,32 +44,12 @@ export default class Gather extends PureComponent {
 			)
 		}
 
-		const buttons = (
-			<section className={cx('row', 'bottom-spacer-half')}>
-				<div className={cx('col-xs-12')}>
-					<Link to="/gather/choose" className={cx('btn', 'btn-primary', 'rspacer', 'linkBody')}>
-						<span className={cx('circular')}>1</span>
-						<span className={cx('linkText')}> SELECT FOLDER</span>
-					</Link>
-					<Link to="/gather/target" className={cx('btn', 'btn-primary', 'rspacer', 'linkBody')}>
-						<span className={cx('circular')}>2</span>{' '}
-						<span className={cx('linkText')}> CHOOSE TARGET DRIVE</span>
-					</Link>
-					<Link to="/gather/move" className={cx('btn', 'btn-primary', 'rspacer', 'linkBody')}>
-						<span className={cx('circular')}>3</span>
-						<span className={cx('linkText')}> MOVE</span>
-					</Link>
-				</div>
-			</section>
-		)
-
 		return (
 			<div>
-				{buttons}
 				<Switch>
 					<Route
 						exact
-						path="/gather/choose"
+						path="/gather"
 						render={props => <GatherSource store={this.props.store} {...props} />}
 					/>
 					<Route
