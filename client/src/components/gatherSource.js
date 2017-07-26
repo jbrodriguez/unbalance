@@ -16,10 +16,14 @@ export default class GatherSource extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
-	// componentDidMount() {
-	// 	const { actions } = this.props.store
-	// 	console.log(`going in`)
-	// }
+	componentDidMount() {
+		const { store: { state, actions } } = this.props
+
+		actions.clearConsole()
+		if (Object.keys(state.gatherTree.chosen).length === 0) {
+			actions.getShares()
+		}
+	}
 
 	onCollapse = node => {
 		// console.log(`collapse-node-${JSON.stringify(node)}`)

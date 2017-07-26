@@ -1,4 +1,6 @@
 module.exports = {
+	getShares,
+
 	getGatherTree,
 	gotGatherTree,
 
@@ -60,6 +62,20 @@ const uncheckChildren = (tree, chosen) => {
 }
 
 // actions
+function getShares({ state, actions }) {
+	actions.getGatherTree('/mnt/user')
+
+	return {
+		...state,
+		gatherTree: {
+			cache: null,
+			items: [{ label: 'Loading ...' }],
+			chosen: {},
+			present: [],
+		},
+	}
+}
+
 function getGatherTree({ state, actions, opts: { api } }, path) {
 	api.getTree(path).then(json => actions.gotGatherTree(json))
 
