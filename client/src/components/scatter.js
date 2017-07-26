@@ -62,7 +62,7 @@ export default class Scatter extends PureComponent {
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
 						<p className={cx('bg-warning')}>
-							The array is not started. Please start the array before perfoming any operations with
+							The array is not started. Please start the array before performing any operations with
 							unBALANCE.
 						</p>
 					</div>

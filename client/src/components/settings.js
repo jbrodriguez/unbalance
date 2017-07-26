@@ -104,8 +104,8 @@ export default class Settings extends PureComponent {
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
 						<p className={cx('bg-warning')}>
-							&nbsp; The array is not started. Please start the array before perfoming any operations with
-							unBALANCE.
+							&nbsp; The array is not started. Please start the array before performing any operations
+							with unBALANCE.
 						</p>
 					</div>
 				</section>
