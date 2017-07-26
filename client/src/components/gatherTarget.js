@@ -46,9 +46,17 @@ export default class GatherTarget extends PureComponent {
 			)
 		}
 
-		const targets = state.unraid.disks.filter(disk => disk.free !== disk.newFree)
+		// if free === newFree then this disk isn't elegible as a target
+		const elegible = state.unraid.disks.filter(disk => disk.free !== disk.newFree)
 
-		console.log(`targets-(${JSON.stringify(targets)})`)
+		// sort elegible disks by least amount of data transfer
+		const targets = elegible.sort((a, b) => {
+			const xferA = a.free - a.newFree
+			const xferB = b.free - b.newFree
+			if (xferA < xferB) return -1
+			if (xferA > xferB) return 1
+			return 0
+		})
 
 		const rows = targets.map(disk => {
 			const percent = percentage((disk.size - disk.free) / disk.size)
