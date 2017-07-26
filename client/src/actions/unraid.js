@@ -78,7 +78,6 @@ function gotStorage({ state, actions }, unraid) {
 	}
 
 	const tree = Object.assign({}, state.tree)
-	const gatherTree = Object.assign({}, state.gatherTree)
 	if (opState) {
 		lines.push(opState)
 	} else {
@@ -88,13 +87,6 @@ function gotStorage({ state, actions }, unraid) {
 		tree.cache = null
 		tree.items = [{ label: 'Loading ...' }]
 		tree.chosen = {}
-
-		// gather tree
-		actions.getGatherTree('/mnt/user')
-		gatherTree.cache = null
-		gatherTree.items = [{ label: 'Loading ...' }]
-		gatherTree.chosen = {}
-		gatherTree.present = []
 	}
 
 	return {
@@ -108,7 +100,6 @@ function gotStorage({ state, actions }, unraid) {
 		validateDisabled: unraid.prevState !== constant.stateCopy,
 		lines,
 		tree,
-		gatherTree,
 	}
 }
 
