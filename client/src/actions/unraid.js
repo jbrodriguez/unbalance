@@ -1,3 +1,5 @@
+import * as constant from '../lib/const'
+
 module.exports = {
 	getStorage,
 	gotStorage,
@@ -29,12 +31,6 @@ module.exports = {
 	findFinished,
 }
 
-// const stateIdle = 0
-const stateCalc = 1
-const stateMove = 2
-const stateCopy = 3
-const stateValidate = 4
-
 function getStorage({ state, actions, opts: { api } }) {
 	actions.setOpInProgress('Getting storage info')
 
@@ -62,17 +58,20 @@ function gotStorage({ state, actions }, unraid) {
 	const lines = []
 	let opState = null
 	switch (unraid.opState) {
-		case stateCalc:
+		case constant.stateCalc:
 			opState = 'Calculate operation in progress ...'
 			break
-		case stateMove:
+		case constant.stateMove:
 			opState = 'Move operation in progress ...'
 			break
-		case stateCopy:
+		case constant.stateCopy:
 			opState = 'Copy operation in progress ...'
 			break
-		case stateValidate:
+		case constant.stateValidate:
 			opState = 'Validate operation in progress ...'
+			break
+		case constant.stateFindTargets:
+			opState = 'Find target operation in progress ...'
 			break
 		default:
 			break
@@ -106,7 +105,7 @@ function gotStorage({ state, actions }, unraid) {
 		opInProgress: opState,
 		stats: unraid.stats,
 		transferDisabled: true,
-		validateDisabled: unraid.prevState !== stateCopy,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
 		lines,
 		tree,
 		gatherTree,
@@ -213,7 +212,7 @@ function calcFinished({ state, actions }, unraid) {
 		timeout,
 		opInProgress: null,
 		transferDisabled: unraid.bytesToTransfer === 0,
-		validateDisabled: unraid.prevState !== stateCopy,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
 	}
 }
 
@@ -369,6 +368,6 @@ function findFinished({ state, actions }, unraid) {
 		timeout,
 		opInProgress: null,
 		transferDisabled: unraid.bytesToTransfer === 0,
-		validateDisabled: unraid.prevState !== stateCopy,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
 	}
 }
