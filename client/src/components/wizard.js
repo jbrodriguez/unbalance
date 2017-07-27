@@ -20,11 +20,14 @@ export default class Wizard extends PureComponent {
 
 		let prev = null
 		let next = null
+
 		let prevDisabled = false
 		let nextDisabled = false
+
 		let chooseStyle = cx('circular')
 		let targetStyle = cx('circular')
 		let moveStyle = cx('circular')
+
 		let chooseDisabled = true
 		let targetDisabled = true
 		let moveDisabled = true
@@ -33,6 +36,7 @@ export default class Wizard extends PureComponent {
 			case '/gather/target':
 				prev = '/gather'
 				next = '/gather/move'
+				nextDisabled = state.gatherTree.target === null
 				chooseStyle = cx('circular', 'circular-disabled')
 				moveStyle = cx('circular', 'circular-disabled')
 				targetDisabled = false

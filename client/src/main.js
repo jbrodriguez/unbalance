@@ -101,6 +101,7 @@ const initialState = {
 		items: [],
 		present: [],
 		elegible: [],
+		target: null,
 	},
 	feedback: [],
 	timeout: null,

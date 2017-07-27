@@ -23,15 +23,9 @@ export default class GatherTarget extends PureComponent {
 		actions.findTargets(state.gatherTree.chosen)
 	}
 
-	checkTarget = path => e => {
-		const { state, actions: { checkTo } } = this.props.store
-
-		if (state.fromDisk[path]) {
-			e.preventDefault()
-			return
-		}
-
-		checkTo(path)
+	checkTarget = disk => e => {
+		const { checkTarget } = this.props.store.actions
+		checkTarget(disk, e.target.checked)
 	}
 
 	render() {
@@ -69,7 +63,7 @@ export default class GatherTarget extends PureComponent {
 			return (
 				<tr key={disk.id}>
 					<td>
-						<input type="checkbox" checked={false} onChange={this.checkTarget(disk.path)} />
+						<input type="checkbox" checked={disk.dst} onChange={this.checkTarget(disk)} />
 					</td>
 					<td>
 						{present && <span>*</span>}
@@ -130,7 +124,7 @@ export default class GatherTarget extends PureComponent {
 					<table>
 						<thead>
 							<tr>
-								<th style={{ width: '100px' }}>CHOOSE</th>
+								<th style={{ width: '100px' }}>TARGET</th>
 								<th style={{ width: '50px' }} />
 								<th style={{ width: '120px' }}>DISK</th>
 								<th style={{ width: '75px' }}>TYPE</th>

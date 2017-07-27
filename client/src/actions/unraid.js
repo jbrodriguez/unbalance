@@ -29,6 +29,8 @@ module.exports = {
 
 	findTargets,
 	findFinished,
+
+	checkTarget,
 }
 
 function getStorage({ state, actions, opts: { api } }) {
@@ -326,7 +328,13 @@ function findTargets({ state, actions, opts: { ws } }) {
 	const folders = Object.keys(state.gatherTree.chosen).map(folder => folder.slice(10))
 	ws.send({ topic: 'findTargets', payload: folders })
 
-	return state
+	return {
+		...state,
+		gatherTree: {
+			...state.gatherTree,
+			target: null,
+		},
+	}
 }
 
 function findFinished({ state, actions }, unraid) {
@@ -360,5 +368,27 @@ function findFinished({ state, actions }, unraid) {
 		opInProgress: null,
 		transferDisabled: unraid.bytesToTransfer === 0,
 		validateDisabled: unraid.prevState !== constant.stateCopy,
+	}
+}
+
+function checkTarget({ state }, drive, checked) {
+	const disks = state.unraid.disks.map(disk => {
+		return disk.path === drive.path
+			? Object.assign({}, disk, { dst: checked })
+			: Object.assign({}, disk, { dst: false })
+	})
+
+	const target = checked ? drive : null
+
+	return {
+		...state,
+		unraid: {
+			...state.unraid,
+			disks,
+		},
+		gatherTree: {
+			...state.gatherTree,
+			target,
+		},
 	}
 }

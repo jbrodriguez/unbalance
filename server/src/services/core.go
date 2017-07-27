@@ -1168,6 +1168,8 @@ func (c *Core) _findTargets(msg *pubsub.Message) {
 			bin := packer.FitAll()
 			if bin != nil {
 				disk.NewFree -= bin.Size
+				disk.Src = false
+				disk.Dst = false
 				c.operation.BytesToTransfer += bin.Size
 				mlog.Info("_find:BinAllocated=[Disk(%s); Items(%d)]", disk.Path, len(bin.Items))
 			} else {
