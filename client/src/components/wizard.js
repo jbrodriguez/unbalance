@@ -79,19 +79,18 @@ export default class Wizard extends PureComponent {
 						<span className={moveStyle}>3</span> <span> MOVE</span>
 					</div>
 
-					{targetPresent &&
-						<div className={cx('linkBody')}>
-							<span className={cx('rspacer')}>|</span>
-							<input
-								id="dryRun"
-								type="checkbox"
-								checked={state.config.dryRun}
-								onChange={() => actions.toggleDryRun()}
-								disabled={state.transferDisabled || state.opInProgress}
-							/>
-							&nbsp;
-							<label htmlFor="dryRun">dry run</label>
-						</div>}
+					<div className={cx('linkBody')}>
+						<span className={cx('rspacer')}>|</span>
+						<input
+							id="dryRun"
+							type="checkbox"
+							checked={state.config.dryRun}
+							onChange={() => actions.toggleDryRun()}
+							disabled={state.transferDisabled || state.opInProgress || !targetPresent}
+						/>
+						&nbsp;
+						<label htmlFor="dryRun">dry run</label>
+					</div>
 				</div>
 			</section>
 		)
