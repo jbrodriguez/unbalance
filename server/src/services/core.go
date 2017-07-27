@@ -1079,6 +1079,7 @@ func (c *Core) _findTargets(msg *pubsub.Message) {
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// disks := make([]*model.Disk, 0)
+	c.storage.Refresh()
 
 	owner := ""
 	lib.Shell("id -un", mlog.Warning, "owner", "", func(line string) {
