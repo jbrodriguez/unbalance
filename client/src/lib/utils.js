@@ -2,6 +2,7 @@ module.exports = {
 	humanBytes,
 	percentage,
 	scramble,
+	isValid,
 }
 
 function humanBytes(bytes) {
@@ -49,4 +50,10 @@ function makeid() {
 	}
 
 	return text
+}
+
+function isValid(obj) {
+	if (typeof obj === 'undefined') return false
+	if (!obj) return false
+	return true
 }
