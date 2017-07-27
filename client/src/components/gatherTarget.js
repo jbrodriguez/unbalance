@@ -112,8 +112,8 @@ export default class GatherTarget extends PureComponent {
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>
 					Source folder{noun} {verb}: <b>{sources}</b> <br />
-					Note: Drives are ordered by the least amount of data transfer. An asterisk next to a disk signals
-					that one or more source folders are present
+					Note: Drives are ordered by the least amount of data transfer. An asterisk next to a disk means that
+					one or more source folders are present
 				</div>
 			</section>
 		)
