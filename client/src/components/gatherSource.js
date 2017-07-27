@@ -41,13 +41,33 @@ export default class GatherSource extends PureComponent {
 	render() {
 		const { match, store: { state } } = this.props
 
+		const header = (
+			<section className={cx('row', 'bottom-spacer-half')}>
+				<div className={cx('col-xs-12')}>
+					<div className={cx('row')}>
+						<div className={cx('col-xs-12')}>
+							<div className={cx('flexSection', 'gatherSource')}>
+								<div className={cx('col-xs-6')}>
+									<span>SHARES EXPLORER</span>
+								</div>
+								<div className={cx('col-xs-5')}>
+									<span>SELECTED</span>
+								</div>
+								<div className={cx('col-xs-1')}>
+									<span>WHERE</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		)
+
 		const grid = (
 			<section className={cx('row', 'bottom-spacer-half', 'height100')}>
 				<div className={cx('col-xs-12')}>
 					<div className={cx('row', 'height100')}>
 						<div className={cx('col-xs-6', 'scroller')}>
-							<span>CHOOSE SHARE</span>
-							<br />
 							<TreeMenu
 								expandIconClass="fa fa-chevron-right"
 								collapseIconClass="fa fa-chevron-down"
@@ -60,8 +80,6 @@ export default class GatherSource extends PureComponent {
 						</div>
 
 						<div className={cx('col-xs-5', 'scroller')}>
-							<span>CHOSEN</span>
-							<br />
 							<ul>
 								{Object.keys(state.gatherTree.chosen).map(chosen =>
 									<li key={chosen}>
@@ -72,8 +90,6 @@ export default class GatherSource extends PureComponent {
 						</div>
 
 						<div className={cx('col-xs-1', 'scroller')}>
-							<span>WHERE</span>
-							<br />
 							<ul>
 								{state.gatherTree.present.map(disk =>
 									<li key={disk.id}>
@@ -90,6 +106,7 @@ export default class GatherSource extends PureComponent {
 		return (
 			<div>
 				<Wizard match={match} store={this.props.store} />
+				{header}
 				{grid}
 			</div>
 		)

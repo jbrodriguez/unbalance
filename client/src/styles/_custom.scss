@@ -208,6 +208,14 @@ p {
 	vertical-align: top;
 }
 
+.gatherSource {
+	color: $elegant-blue;
+	background-color: white;
+	border-bottom: 1px solid $form-element-border;
+	padding: $padding-default;
+	font-size: 0.9em;
+}
+
 // .title {
 // 	padding: 1em;
 // }
