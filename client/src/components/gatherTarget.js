@@ -152,7 +152,7 @@ export default class GatherTarget extends PureComponent {
 
 		return (
 			<div>
-				<Wizard match={match} />
+				<Wizard match={match} store={this.props.store} />
 				{consolePanel}
 				{source}
 				{grid}

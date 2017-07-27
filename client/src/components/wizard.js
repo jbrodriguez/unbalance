@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react'
 import { PropTypes } from 'prop-types'
 
-import { Link } from 'react-router-dom'
 import classNames from 'classnames/bind'
-// import { Switch, Route, Link } from 'react-router-dom'
+
+import { NextButton, PrevButton } from './buttons'
 
 import styles from '../styles/core.scss'
 
@@ -11,21 +11,24 @@ const cx = classNames.bind(styles)
 
 export default class Wizard extends PureComponent {
 	static propTypes = {
-		// store: PropTypes.object.isRequired,
+		store: PropTypes.object.isRequired,
 		match: PropTypes.object.isRequired,
 	}
 
 	render() {
-		const { match } = this.props
+		const { match, store: { state } } = this.props
 
 		let prev = null
 		let next = null
+		let prevDisabled = false
+		let nextDisabled = false
 		let chooseStyle = cx('circular')
 		let targetStyle = cx('circular')
 		let moveStyle = cx('circular')
 		let chooseDisabled = true
 		let targetDisabled = true
 		let moveDisabled = true
+
 		switch (match.url) {
 			case '/gather/target':
 				prev = '/gather'
@@ -43,6 +46,7 @@ export default class Wizard extends PureComponent {
 			case '/':
 			default:
 				next = '/gather/target'
+				nextDisabled = Object.keys(state.gatherTree.chosen).length === 0
 				targetStyle = cx('circular', 'circular-disabled')
 				moveStyle = cx('circular', 'circular-disabled')
 				chooseDisabled = false
@@ -52,17 +56,8 @@ export default class Wizard extends PureComponent {
 		return (
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>
-					{prev &&
-						<Link to={prev} className={cx('btn', 'btn-nav', 'rspacer', 'linkBody')}>
-							<span className={cx('linkText')}>&lt;</span>
-							<span className={cx('linkText')}> PREVIOUS</span>
-						</Link>}
-
-					{next &&
-						<Link to={next} className={cx('btn', 'btn-nav', 'rspacer', 'linkBody')}>
-							<span className={cx('linkText')}>&gt;</span>
-							<span className={cx('linkText')}> NEXT</span>
-						</Link>}
+					{prev && <PrevButton to={prev} disabled={prevDisabled} />}
+					{next && <NextButton to={next} disabled={nextDisabled} />}
 
 					<div className={cx('step', 'rspacer', 'linkBody')} disabled={chooseDisabled}>
 						<span className={chooseStyle}>1</span> <span> SELECT FOLDER</span>

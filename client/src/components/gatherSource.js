@@ -89,7 +89,7 @@ export default class GatherSource extends PureComponent {
 
 		return (
 			<div>
-				<Wizard match={match} />
+				<Wizard match={match} store={this.props.store} />
 				{grid}
 			</div>
 		)
