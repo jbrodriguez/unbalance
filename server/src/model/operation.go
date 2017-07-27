@@ -30,4 +30,5 @@ type Operation struct {
 	FolderIssue           int64
 	FileIssue             int64
 	DryRun                bool
+	Target                string
 }

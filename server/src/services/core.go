@@ -120,6 +120,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("validate", c.validate)
 	c.actor.Register("getLog", c.getLog)
 	c.actor.Register("findTargets", c.findTargets)
+	c.actor.Register("gather", c.gather)
 
 	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
@@ -722,13 +723,13 @@ loop:
 func (c *Core) move(msg *pubsub.Message) {
 	c.operation.OpState = model.StateMove
 	c.operation.PrevState = model.StateMove
-	go c.transfer("Move", msg)
+	go c.transfer("Move", false, msg)
 }
 
 func (c *Core) copy(msg *pubsub.Message) {
 	c.operation.OpState = model.StateCopy
 	c.operation.PrevState = model.StateCopy
-	go c.transfer("Copy", msg)
+	go c.transfer("Copy", false, msg)
 }
 
 func (c *Core) validate(msg *pubsub.Message) {
@@ -737,11 +738,12 @@ func (c *Core) validate(msg *pubsub.Message) {
 	go c.checksum(msg)
 }
 
-func (c *Core) transfer(opName string, msg *pubsub.Message) {
+func (c *Core) transfer(opName string, multiSource bool, msg *pubsub.Message) {
 	defer func() {
 		c.operation.OpState = model.StateIdle
 		c.operation.Started = time.Time{}
 		c.operation.BytesTransferred = 0
+		c.operation.Target = ""
 	}()
 
 	mlog.Info("Running %s operation ...", opName)
@@ -760,6 +762,8 @@ func (c *Core) transfer(opName string, msg *pubsub.Message) {
 		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
 	}
 	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
+
+	workdir := c.operation.SourceDiskName
 
 	c.operation.Commands = make([]model.Command, 0)
 	for _, disk := range c.storage.Disks {
@@ -782,17 +786,22 @@ func (c *Core) transfer(opName string, msg *pubsub.Message) {
 				dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
 			}
 
+			if multiSource {
+				workdir = item.Location
+			}
+
 			c.operation.Commands = append(c.operation.Commands, model.Command{
-				Src:  src,
-				Dst:  dst,
-				Path: item.Path,
-				Size: item.Size,
+				Src:     src,
+				Dst:     dst,
+				Path:    item.Path,
+				Size:    item.Size,
+				WorkDir: workdir,
 			})
 		}
 	}
 
 	// execute each rsync command created in the step above
-	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags)
+	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags, multiSource)
 }
 
 func (c *Core) checksum(msg *pubsub.Message) {
@@ -811,6 +820,8 @@ func (c *Core) checksum(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	multiSource := false
+
 	if !strings.HasPrefix(c.operation.RsyncStrFlags, "-a") {
 		finished := time.Now()
 		elapsed := time.Since(c.operation.Started)
@@ -823,7 +834,7 @@ func (c *Core) checksum(msg *pubsub.Message) {
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		_, _, speed := progress(c.operation.BytesToTransfer, 0, elapsed)
-		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed)
+		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed, multiSource)
 
 		return
 	}
@@ -839,10 +850,10 @@ func (c *Core) checksum(msg *pubsub.Message) {
 	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
 
 	// execute each rsync command created in the transfer phase
-	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags)
+	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags, multiSource)
 }
 
-func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags string) {
+func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags string, multiSource bool) {
 	// Initialize local variables
 	var calls int64
 	var callsPerDelta int64
@@ -861,7 +872,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 			command.Dst,
 		)
 		cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
-		mlog.Info("Command Started: %s", cmd)
+		mlog.Info("Command Started: %s (source disk: %s)", cmd, command.WorkDir)
 
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: cmd}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -924,7 +935,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			}
 
-		}, c.operation.SourceDiskName, "rsync", args...)
+		}, command.WorkDir, "rsync", args...)
 
 		finished = time.Now()
 		elapsed = time.Since(c.operation.Started)
@@ -938,7 +949,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			_, _, speed := progress(c.operation.BytesToTransfer, bytesTransferred+deltaMoved, elapsed)
-			c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, bytesTransferred+deltaMoved, speed)
+			c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, bytesTransferred+deltaMoved, speed, multiSource)
 
 			return
 		}
@@ -984,10 +995,10 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
 	_, _, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, elapsed)
-	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed)
+	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed, multiSource)
 }
 
-func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64) {
+func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64, multiSource bool) {
 	fstarted := started.Format(timeFormat)
 	ffinished := finished.Format(timeFormat)
 	elapsed = lib.Round(time.Since(started), time.Millisecond)
@@ -1026,7 +1037,12 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	outbound = &dto.Packet{Topic: "transferFinished", Payload: ""}
+	finishMsg := "transferFinished"
+	if multiSource {
+		finishMsg = "gatherFinished"
+	}
+
+	outbound = &dto.Packet{Topic: finishMsg, Payload: ""}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s", fstarted, ffinished, elapsed, headline, lib.ByteSize(transferred), speed)
@@ -1244,6 +1260,40 @@ func (c *Core) _findTargets(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d|%d|%d", c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
+}
+
+func (c *Core) gather(msg *pubsub.Message) {
+	mlog.Info("%+v", msg.Payload)
+	data, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert gather parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert gather parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var target model.Disk
+	err := json.Unmarshal([]byte(data), &target)
+	if err != nil {
+		mlog.Warning("Unable to bind gather parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind gather parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	// user chose a target disk, remove bin from all other disks, since only the target
+	// will have work to do
+	for _, disk := range c.storage.Disks {
+		if disk.Path != target.Path {
+			disk.Bin = nil
+		}
+	}
+
+	c.operation.OpState = model.StateMove
+	c.operation.PrevState = model.StateMove
+
+	go c.transfer("Move", true, msg)
 }
 
 func (c *Core) getLog(msg *pubsub.Message) {

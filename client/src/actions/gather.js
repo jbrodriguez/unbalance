@@ -72,6 +72,7 @@ function getShares({ state, actions }) {
 			items: [{ label: 'Loading ...' }],
 			chosen: {},
 			present: [],
+			target: null,
 		},
 	}
 }

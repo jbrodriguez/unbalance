@@ -31,6 +31,9 @@ module.exports = {
 	findFinished,
 
 	checkTarget,
+
+	gather,
+	gatherFinished,
 }
 
 function getStorage({ state, actions, opts: { api } }) {
@@ -389,6 +392,34 @@ function checkTarget({ state }, drive, checked) {
 		gatherTree: {
 			...state.gatherTree,
 			target,
+		},
+	}
+}
+
+function gather({ state, actions, opts: { ws } }, drive) {
+	actions.setOpInProgress('MOVE')
+
+	ws.send({ topic: 'gather', payload: drive })
+
+	return state
+}
+
+function gatherFinished({ state, actions }) {
+	actions.getStorage()
+
+	state.history.replace({ pathname: '/gather' })
+
+	return {
+		...state,
+		opInProgress: null,
+		stats: '',
+		transferDisabled: !state.config.dryRun,
+		gatherTree: {
+			cache: null,
+			items: [{ label: 'Loading ...' }],
+			chosen: {},
+			present: [],
+			target: null,
 		},
 	}
 }
