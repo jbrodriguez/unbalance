@@ -872,7 +872,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 			command.Dst,
 		)
 		cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
-		mlog.Info("Command Started: %s (source disk: %s)", cmd, command.WorkDir)
+		mlog.Info("Command Started: (src: %s) %s ", command.WorkDir, cmd)
 
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: cmd}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
