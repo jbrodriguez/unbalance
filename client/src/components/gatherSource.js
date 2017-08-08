@@ -54,7 +54,7 @@ export default class GatherSource extends PureComponent {
 									<span>SELECTED</span>
 								</div>
 								<div className={cx('col-xs-1')}>
-									<span>WHERE</span>
+									<span>LOCATION</span>
 								</div>
 							</div>
 						</div>
