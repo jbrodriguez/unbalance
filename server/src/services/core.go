@@ -800,6 +800,10 @@ func (c *Core) transfer(opName string, multiSource bool, msg *pubsub.Message) {
 		}
 	}
 
+	if c.settings.NotifyMove == 2 {
+		c.notifyCommandsToRun(opName)
+	}
+
 	// execute each rsync command created in the step above
 	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags, multiSource)
 }
@@ -1344,4 +1348,21 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 	}
 
 	return msg
+}
+
+func (c *Core) notifyCommandsToRun(opName string) {
+	message := "\n\nThe following commands will be executed:\n\n"
+
+	for _, command := range c.operation.Commands {
+		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.WorkDir, c.operation.RsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
+		message += cmd + "\n"
+	}
+
+	subject := fmt.Sprintf("unBALANCE - %s operation STARTING", strings.ToUpper(opName))
+
+	go func() {
+		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+			mlog.Error(sendErr)
+		}
+	}()
 }
