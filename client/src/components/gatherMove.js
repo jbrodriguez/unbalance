@@ -6,7 +6,7 @@ import classNames from 'classnames/bind'
 import Wizard from './wizard'
 import ConsolePanel from './consolePanel'
 import styles from '../styles/core.scss'
-import { isValid } from '../lib/utils'
+import { isValid, humanBytes } from '../lib/utils'
 
 const cx = classNames.bind(styles)
 
@@ -45,10 +45,30 @@ export default class GatherMove extends PureComponent {
 			)
 		}
 
-		return (
-			<div>
-				<Wizard match={match} store={this.props.store} />
-				{consolePanel}
+		let summary = null
+		let proceed = null
+		if (!(state.transferDisabled || state.opInProgress)) {
+			let dst = null
+			let size = 0
+
+			state.unraid.disks.forEach(disk => {
+				if (disk.dst) {
+					dst = disk
+					size = dst.free - dst.newFree
+				}
+			})
+
+			if (dst) {
+				summary = (
+					<section className={cx('row', 'bottom-spacer-half')}>
+						<div className={cx('col-xs-12')}>
+							<b>{humanBytes(size)}</b> will be transferred to {dst.path}.
+						</div>
+					</section>
+				)
+			}
+
+			proceed = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
 						<button
@@ -56,10 +76,19 @@ export default class GatherMove extends PureComponent {
 							onClick={() => actions.gather(state.gatherTree.target)}
 							disabled={state.transferDisabled || state.opInProgress}
 						>
-							MOVE
+							PROCEED
 						</button>
 					</div>
 				</section>
+			)
+		}
+
+		return (
+			<div>
+				<Wizard match={match} store={this.props.store} />
+				{consolePanel}
+				{summary}
+				{proceed}
 			</div>
 		)
 	}
