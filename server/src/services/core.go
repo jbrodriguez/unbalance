@@ -396,7 +396,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		msg := fmt.Sprintf("Scanning %s on %s", path, srcDiskWithoutMnt)
 		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		mlog.Info("_calc:%s", msg)
 
 		c.checkOwnerAndPermissions(&c.operation, dtoCalc.SourceDisk, path, owner, group)
 
