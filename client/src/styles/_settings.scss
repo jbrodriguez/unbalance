@@ -2,7 +2,7 @@
 @import url('http://fonts.googleapis.com/css?family=Lato');
 
 // Variables
- $container-max-width: 78em;
+$container-max-width: 78em;
 
 // $screen-sm-min: 48em !default;
 // $screen-md-min: 62em !default;
@@ -34,36 +34,36 @@
 // Palette
 // $rose: #F26A9A;
 $white-gray: #f2f2f2;
-$light-gray: #F6F7F8;
+$light-gray: #f6f7f8;
 $lighter-gray: #e9edef;
-$cement-gray: #DBE1E5;
-$dark-gray: #9DA3A7;
-$darker-gray: #7C8893;
+$cement-gray: #dbe1e5;
+$dark-gray: #9da3a7;
+$darker-gray: #7c8893;
 $silverChalice: #aeaeae;
 
 $elegant-blue: #204862;
-$gray-blue: #57626C;
+$gray-blue: #57626c;
 $charcoal-blue: #343642;
 $cheerful-blue: #008cba;
 $unbalance-blue: #333;
-$unbalance-footer: #1E446F;
+$unbalance-footer: #1e446f;
 $angular-blue: #008cba;
 
-$bright-orange: #C63D0F;
+$bright-orange: #c63d0f;
 $mellow-orange: #f08a24;
 
-$lighter1-red: #F26A9A;
-$mellow-red: #FF3B59;
+$lighter1-red: #f26a9a;
+$mellow-red: #ff3b59;
 $fiery-red: #f04124;
-$bright-red: #D01524;
-$acre-red: #C73429;
-$dark-red: #B21524;
-$soft-red: #F2DEDE;
+$bright-red: #d01524;
+$acre-red: #c73429;
+$dark-red: #b21524;
+$soft-red: #f2dede;
 
 $casual-green: #43ac6a;
-$unbalance-green: #0BD43B;
+$unbalance-green: #0bd43b;
 
-$pale-yellow: #FEF5C4;
+$pale-yellow: #fef5c4;
 
 // Dimensions
 // $maxWidth: 1250px;
@@ -84,7 +84,6 @@ $borderColor: $silverChalice;
 $primaryAnchorColor: $elegant-blue;
 $primaryHeaderColor: $elegant-blue;
 
-
 // ELEMENTS
 $padding-default: 0.5em;
 
@@ -100,6 +99,8 @@ $button-primary-color: white;
 $button-primary-bg: $elegant-blue;
 $buttonAlertColor: white;
 $buttonAlertBg: $dark-red;
+$buttonNavColor: $elegant-blue;
+$buttonNavBg: $casual-green;
 
 $button-padding-vertical: 0.3em;
 $button-padding-horizontal: 1em;
@@ -111,7 +112,6 @@ $form-element-border: $cement-gray;
 $form-addon-bg: $cement-gray;
 $form-element-padding-vertical: 0.3em;
 $form-element-padding-horizontal: 0.6em;
-
 
 // HEADER
 //$headerLegalColor: white;
@@ -150,8 +150,6 @@ $explorerChosen: white;
 $progressBackground: $lighter-gray;
 $progressMeter: $angular-blue;
 
-
-
 // FOOTER
 $footerColor: $darker-gray;
 $footerBackground: $headerMenuAnchorColor;
@@ -160,5 +158,3 @@ $footerAnchorColor: $headerLogoBackground;
 
 // $legalBackground: #7E8F7D;
 // $footer-legal-bg: $gray-blue;
-
-

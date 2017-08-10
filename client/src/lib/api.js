@@ -10,6 +10,11 @@ export default class Api {
 		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
+	getStatus() {
+		// console.log('this.hostr', this.hostr)
+		return fetch(`${this.hostr}/status`).then(resp => resp.json())
+	}
+
 	setNotifyCalc(notify) {
 		return fetch(`${this.hostr}/config/notifyCalc`, {
 			method: 'PUT',
@@ -68,6 +73,14 @@ export default class Api {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: verbosity }),
+		}).then(resp => resp.json())
+	}
+
+	locate(path) {
+		return fetch(`${this.hostr}/locate`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ payload: path }),
 		}).then(resp => resp.json())
 	}
 }

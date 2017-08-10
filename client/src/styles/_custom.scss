@@ -56,9 +56,12 @@ p {
 }
 
 .routerSection {
+	span,
 	a {
 		font-size: 0.9em;
+	}
 
+	a {
 		&.active {
 			color: $headerMenuAnchorColor;
 			// padding-bottom: 3px;
@@ -87,8 +90,8 @@ p {
 .console {
 	// display: flex;
 
-	overflow: hidden;
-	flow: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
 	// width: 100%;
 	// border: 1px solid $console-border;
 	padding: 0.75em;
@@ -206,6 +209,14 @@ p {
 
 .topAlign {
 	vertical-align: top;
+}
+
+.gatherSource {
+	color: $elegant-blue;
+	background-color: white;
+	border-bottom: 1px solid $form-element-border;
+	padding: $padding-default;
+	font-size: 0.9em;
 }
 
 // .title {

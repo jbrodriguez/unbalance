@@ -1,3 +1,5 @@
+import * as constant from '../lib/const'
+
 module.exports = {
 	getStorage,
 	gotStorage,
@@ -24,21 +26,25 @@ module.exports = {
 
 	getLog,
 	gotLog,
-}
 
-// const stateIdle = 0
-const stateCalc = 1
-const stateMove = 2
-const stateCopy = 3
-const stateValidate = 4
+	findTargets,
+	findFinished,
+
+	checkTarget,
+
+	gather,
+	gatherFinished,
+}
 
 function getStorage({ state, actions, opts: { api } }) {
 	actions.setOpInProgress('Getting storage info')
 
 	api.getStorage().then(json => actions.gotStorage(json))
-	// here i can catch the error and show an appropriate message
 
-	return state
+	return {
+		...state,
+		unraid: null,
+	}
 }
 
 function gotStorage({ state, actions }, unraid) {
@@ -57,17 +63,21 @@ function gotStorage({ state, actions }, unraid) {
 	const lines = []
 	let opState = null
 	switch (unraid.opState) {
-		case stateCalc:
+		case constant.stateCalc:
 			opState = 'Calculate operation in progress ...'
 			break
-		case stateMove:
+		case constant.stateGather:
+		case constant.stateMove:
 			opState = 'Move operation in progress ...'
 			break
-		case stateCopy:
+		case constant.stateCopy:
 			opState = 'Copy operation in progress ...'
 			break
-		case stateValidate:
+		case constant.stateValidate:
 			opState = 'Validate operation in progress ...'
+			break
+		case constant.stateFindTargets:
+			opState = 'Find target operation in progress ...'
 			break
 		default:
 			break
@@ -78,12 +88,16 @@ function gotStorage({ state, actions }, unraid) {
 		lines.push(opState)
 	} else {
 		// console.log(`sourceDisk-${JSON.stringify(sourceDisk)}`)
-		actions.getTree(sourceDisk.path)
-
-		tree.cache = null
-		tree.items = [{ label: 'Loading ...' }]
-		tree.chosen = {}
+		// scatter tree
+		if (sourceDisk) {
+			actions.getTree(sourceDisk.path)
+			tree.cache = null
+			tree.items = [{ label: 'Loading ...' }]
+			tree.chosen = {}
+		}
 	}
+
+	actions.setStatus(unraid.opState)
 
 	return {
 		...state,
@@ -93,7 +107,7 @@ function gotStorage({ state, actions }, unraid) {
 		opInProgress: opState,
 		stats: unraid.stats,
 		transferDisabled: true,
-		validateDisabled: unraid.prevState !== stateCopy,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
 		lines,
 		tree,
 	}
@@ -199,7 +213,7 @@ function calcFinished({ state, actions }, unraid) {
 		timeout,
 		opInProgress: null,
 		transferDisabled: unraid.bytesToTransfer === 0,
-		validateDisabled: unraid.prevState !== stateCopy,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
 	}
 }
 
@@ -313,5 +327,104 @@ function gotLog({ state }, log) {
 		...state,
 		opInProgress: null,
 		log,
+	}
+}
+
+function findTargets({ state, actions, opts: { ws } }) {
+	actions.setOpInProgress('Calculating')
+
+	const folders = Object.keys(state.gatherTree.chosen).map(folder => folder.slice(10))
+	ws.send({ topic: 'findTargets', payload: folders })
+
+	return {
+		...state,
+		gatherTree: {
+			...state.gatherTree,
+			target: null,
+		},
+	}
+}
+
+function findFinished({ state, actions }, unraid) {
+	const feedback = []
+	if (unraid.bytesToTransfer === 0) {
+		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
+		feedback.push('')
+		feedback.push('This might be due to one of the following reasons:')
+		feedback.push(
+			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
+		)
+		feedback.push(
+			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
+		)
+		feedback.push('')
+		feedback.push(
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving/copying or to change the amount of reserved space.',
+		)
+	}
+
+	if (state.timeout) {
+		window.clearTimeout(state.timeout)
+	}
+	const timeout = window.setTimeout(() => actions.removeFeedback(), 15 * 1000)
+
+	return {
+		...state,
+		unraid,
+		feedback,
+		timeout,
+		opInProgress: null,
+		transferDisabled: unraid.bytesToTransfer === 0,
+		validateDisabled: unraid.prevState !== constant.stateCopy,
+	}
+}
+
+function checkTarget({ state }, drive, checked) {
+	const disks = state.unraid.disks.map(disk => {
+		return disk.path === drive.path
+			? Object.assign({}, disk, { dst: checked })
+			: Object.assign({}, disk, { dst: false })
+	})
+
+	const target = checked ? drive : null
+
+	return {
+		...state,
+		unraid: {
+			...state.unraid,
+			disks,
+		},
+		gatherTree: {
+			...state.gatherTree,
+			target,
+		},
+	}
+}
+
+function gather({ state, actions, opts: { ws } }, drive) {
+	actions.setOpInProgress('MOVE')
+
+	ws.send({ topic: 'gather', payload: drive })
+
+	return state
+}
+
+function gatherFinished({ state, actions }) {
+	actions.getStorage()
+
+	state.history.replace({ pathname: '/gather' })
+
+	return {
+		...state,
+		opInProgress: null,
+		stats: '',
+		transferDisabled: !state.config.dryRun,
+		gatherTree: {
+			cache: null,
+			items: [{ label: 'Loading ...' }],
+			chosen: {},
+			present: [],
+			target: null,
+		},
 	}
 }

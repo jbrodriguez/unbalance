@@ -104,6 +104,7 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	c.actor.Register("/get/config", c.getConfig)
+	c.actor.Register("/get/status", c.getStatus)
 	c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
@@ -111,6 +112,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("/get/storage", c.getStorage)
 	c.actor.Register("/config/toggle/dryRun", c.toggleDryRun)
 	c.actor.Register("/get/tree", c.getTree)
+	c.actor.Register("/disks/locate", c.locate)
 	c.actor.Register("/config/set/rsyncFlags", c.setRsyncFlags)
 
 	c.actor.Register("calculate", c.calc)
@@ -118,6 +120,8 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("copy", c.copy)
 	c.actor.Register("validate", c.validate)
 	c.actor.Register("getLog", c.getLog)
+	c.actor.Register("findTargets", c.findTargets)
+	c.actor.Register("gather", c.gather)
 
 	err = c.storage.SanityCheck(c.settings.APIFolders)
 	if err != nil {
@@ -149,6 +153,12 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	}
 
 	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) getStatus(msg *pubsub.Message) {
+	mlog.Info("Sending status")
+
+	msg.Reply <- c.operation.OpState
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {
@@ -230,7 +240,7 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 
 	if c.operation.OpState == model.StateIdle {
 		c.storage.Refresh()
-	} else if c.operation.OpState == model.StateMove || c.operation.OpState == model.StateCopy {
+	} else if c.operation.OpState == model.StateMove || c.operation.OpState == model.StateCopy || c.operation.OpState == model.StateGather {
 		percent, left, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, time.Since(c.operation.Started))
 		stats = fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 	}
@@ -256,6 +266,11 @@ func (c *Core) getTree(msg *pubsub.Message) {
 	path := msg.Payload.(string)
 
 	msg.Reply <- c.storage.GetTree(path)
+}
+
+func (c *Core) locate(msg *pubsub.Message) {
+	chosen := msg.Payload.([]string)
+	msg.Reply <- c.storage.Locate(chosen)
 }
 
 func (c *Core) setRsyncFlags(msg *pubsub.Message) {
@@ -587,7 +602,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	if !fi.IsDir() {
 		mlog.Info("getFolder-found(%s)-size(%d)", srcFolder, fi.Size())
 
-		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder}
+		item := &model.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
@@ -622,7 +637,7 @@ func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
 
-		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2]))}
+		item := &model.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src}
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
@@ -715,13 +730,13 @@ loop:
 func (c *Core) move(msg *pubsub.Message) {
 	c.operation.OpState = model.StateMove
 	c.operation.PrevState = model.StateMove
-	go c.transfer("Move", msg)
+	go c.transfer("Move", false, msg)
 }
 
 func (c *Core) copy(msg *pubsub.Message) {
 	c.operation.OpState = model.StateCopy
 	c.operation.PrevState = model.StateCopy
-	go c.transfer("Copy", msg)
+	go c.transfer("Copy", false, msg)
 }
 
 func (c *Core) validate(msg *pubsub.Message) {
@@ -730,11 +745,12 @@ func (c *Core) validate(msg *pubsub.Message) {
 	go c.checksum(msg)
 }
 
-func (c *Core) transfer(opName string, msg *pubsub.Message) {
+func (c *Core) transfer(opName string, multiSource bool, msg *pubsub.Message) {
 	defer func() {
 		c.operation.OpState = model.StateIdle
 		c.operation.Started = time.Time{}
 		c.operation.BytesTransferred = 0
+		c.operation.Target = ""
 	}()
 
 	mlog.Info("Running %s operation ...", opName)
@@ -753,6 +769,8 @@ func (c *Core) transfer(opName string, msg *pubsub.Message) {
 		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
 	}
 	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
+
+	workdir := c.operation.SourceDiskName
 
 	c.operation.Commands = make([]model.Command, 0)
 	for _, disk := range c.storage.Disks {
@@ -775,17 +793,26 @@ func (c *Core) transfer(opName string, msg *pubsub.Message) {
 				dst = filepath.Join(disk.Path, filepath.Dir(item.Path)) + string(filepath.Separator)
 			}
 
+			if multiSource {
+				workdir = item.Location
+			}
+
 			c.operation.Commands = append(c.operation.Commands, model.Command{
-				Src:  src,
-				Dst:  dst,
-				Path: item.Path,
-				Size: item.Size,
+				Src:     src,
+				Dst:     dst,
+				Path:    item.Path,
+				Size:    item.Size,
+				WorkDir: workdir,
 			})
 		}
 	}
 
+	if c.settings.NotifyMove == 2 {
+		c.notifyCommandsToRun(opName)
+	}
+
 	// execute each rsync command created in the step above
-	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags)
+	c.runOperation(opName, c.operation.RsyncFlags, c.operation.RsyncStrFlags, multiSource)
 }
 
 func (c *Core) checksum(msg *pubsub.Message) {
@@ -804,6 +831,8 @@ func (c *Core) checksum(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	multiSource := false
+
 	if !strings.HasPrefix(c.operation.RsyncStrFlags, "-a") {
 		finished := time.Now()
 		elapsed := time.Since(c.operation.Started)
@@ -816,7 +845,7 @@ func (c *Core) checksum(msg *pubsub.Message) {
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		_, _, speed := progress(c.operation.BytesToTransfer, 0, elapsed)
-		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed)
+		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed, multiSource)
 
 		return
 	}
@@ -832,10 +861,10 @@ func (c *Core) checksum(msg *pubsub.Message) {
 	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
 
 	// execute each rsync command created in the transfer phase
-	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags)
+	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags, multiSource)
 }
 
-func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags string) {
+func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags string, multiSource bool) {
 	// Initialize local variables
 	var calls int64
 	var callsPerDelta int64
@@ -854,7 +883,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 			command.Dst,
 		)
 		cmd := fmt.Sprintf(`rsync %s %s %s`, rsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
-		mlog.Info("Command Started: %s", cmd)
+		mlog.Info("Command Started: (src: %s) %s ", command.WorkDir, cmd)
 
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: cmd}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -917,7 +946,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			}
 
-		}, c.operation.SourceDiskName, "rsync", args...)
+		}, command.WorkDir, "rsync", args...)
 
 		finished = time.Now()
 		elapsed = time.Since(c.operation.Started)
@@ -931,7 +960,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 			_, _, speed := progress(c.operation.BytesToTransfer, bytesTransferred+deltaMoved, elapsed)
-			c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, bytesTransferred+deltaMoved, speed)
+			c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, bytesTransferred+deltaMoved, speed, multiSource)
 
 			return
 		}
@@ -949,8 +978,8 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 
 		commandsExecuted = append(commandsExecuted, cmd)
 
-		// if it isn't a dry-run and the operation is Move, delete the source folder
-		if !c.operation.DryRun && c.operation.OpState == model.StateMove {
+		// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+		if !c.operation.DryRun && (c.operation.OpState == model.StateMove || c.operation.OpState == model.StateGather) {
 			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Src))
 			if exists {
 				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
@@ -977,10 +1006,10 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
 	_, _, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, elapsed)
-	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed)
+	c.finishTransferOperation(subject, headline, commandsExecuted, c.operation.Started, finished, elapsed, c.operation.BytesTransferred, speed, multiSource)
 }
 
-func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64) {
+func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64, multiSource bool) {
 	fstarted := started.Format(timeFormat)
 	ffinished := finished.Format(timeFormat)
 	elapsed = lib.Round(time.Since(started), time.Millisecond)
@@ -1019,7 +1048,12 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	outbound = &dto.Packet{Topic: "transferFinished", Payload: ""}
+	finishMsg := "transferFinished"
+	if multiSource {
+		finishMsg = "gatherFinished"
+	}
+
+	outbound = &dto.Packet{Topic: finishMsg, Payload: ""}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s", fstarted, ffinished, elapsed, headline, lib.ByteSize(transferred), speed)
@@ -1037,6 +1071,240 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 	}()
 
 	mlog.Info("\n%s\n%s", subject, message)
+}
+
+func (c *Core) findTargets(msg *pubsub.Message) {
+	c.operation = model.Operation{OpState: model.StateFindTargets, PrevState: model.StateIdle}
+	go c._findTargets(msg)
+}
+
+func (c *Core) _findTargets(msg *pubsub.Message) {
+	defer func() { c.operation.OpState = model.StateIdle }()
+
+	data, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert findTargets parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert findTargets parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var chosen []string
+	err := json.Unmarshal([]byte(data), &chosen)
+	if err != nil {
+		mlog.Warning("Unable to bind findTargets parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind findTargets parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	mlog.Info("Running findTargets operation ...")
+	c.operation.Started = time.Now()
+
+	outbound := &dto.Packet{Topic: "calcStarted", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// disks := make([]*model.Disk, 0)
+	c.storage.Refresh()
+
+	owner := ""
+	lib.Shell("id -un", mlog.Warning, "owner", "", func(line string) {
+		owner = line
+	})
+
+	group := ""
+	lib.Shell("id -gn", mlog.Warning, "group", "", func(line string) {
+		group = line
+	})
+
+	c.operation.OwnerIssue = 0
+	c.operation.GroupIssue = 0
+	c.operation.FolderIssue = 0
+	c.operation.FileIssue = 0
+
+	entries := make([]*model.Item, 0)
+
+	// Check permission and look for the chosen folders on every disk
+	for _, disk := range c.storage.Disks {
+		for _, path := range chosen {
+			msg := fmt.Sprintf("Scanning %s on %s", path, disk.Path)
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+
+			c.checkOwnerAndPermissions(&c.operation, disk.Path, path, owner, group)
+
+			msg = "Checked permissions ..."
+			outbound := &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+
+			list := c.getFolders(disk.Path, path)
+			if list != nil {
+				entries = append(entries, list...)
+			}
+		}
+	}
+
+	mlog.Info("_find:elegibleFolders(%d)", len(entries))
+
+	var totalSize int64
+	for _, entry := range entries {
+		totalSize += entry.Size
+		mlog.Info("_find:elegibleFolder:Location(%s); Size(%s)", filepath.Join(entry.Location, entry.Path), lib.ByteSize(entry.Size))
+	}
+
+	mlog.Info("_find:potentialSizeToBeTransferred(%s)", lib.ByteSize(totalSize))
+
+	if len(entries) > 0 {
+		// Initialize fields
+		// c.storage.BytesToTransfer = 0
+		// c.storage.SourceDiskName = srcDisk.Path
+		c.operation.BytesToTransfer = 0
+		// c.operation.SourceDiskName = mntUser
+
+		for _, disk := range c.storage.Disks {
+			diskWithoutMnt := disk.Path[5:]
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("_find:%s", msg)
+			// time.Sleep(2 * time.Second)
+
+			var reserved int64
+			switch c.settings.ReservedUnit {
+			case "%":
+				fcalc := disk.Size * c.settings.ReservedAmount / 100
+				reserved = int64(fcalc)
+				break
+			case "Mb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000
+				break
+			case "Gb":
+				reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
+				break
+			default:
+				reserved = lib.ReservedSpace
+			}
+
+			ceil := lib.Max(lib.ReservedSpace, reserved)
+			mlog.Info("_find:FoldersLeft(%d):ReservedSpace(%d)", len(entries), ceil)
+
+			packer := algorithm.NewGreedy(disk, entries, totalSize, ceil)
+			bin := packer.FitAll()
+			if bin != nil {
+				disk.NewFree -= bin.Size
+				disk.Src = false
+				disk.Dst = false
+				c.operation.BytesToTransfer += bin.Size
+				mlog.Info("_find:BinAllocated=[Disk(%s); Items(%d)]", disk.Path, len(bin.Items))
+			} else {
+				mlog.Info("_find:NoBinAllocated=Disk(%s)", disk.Path)
+			}
+		}
+	}
+
+	c.operation.Finished = time.Now()
+	elapsed := lib.Round(time.Since(c.operation.Started), time.Millisecond)
+
+	fstarted := c.operation.Started.Format(timeFormat)
+	ffinished := c.operation.Finished.Format(timeFormat)
+
+	// Send to frontend console started/ended/elapsed times
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// send to frontend the folders that will not be transferred, if any
+	// notTransferred holds a string representation of all the folders, separated by a '\n'
+	c.operation.FoldersNotTransferred = make([]string, 0)
+
+	// send mail according to user preferences
+	subject := "unBALANCE - CALCULATE operation completed"
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
+
+	if c.operation.OwnerIssue > 0 || c.operation.GroupIssue > 0 || c.operation.FolderIssue > 0 || c.operation.FileIssue > 0 {
+		message += fmt.Sprintf(`
+			\n\nThere are some permission issues:
+			\n\n%d file(s)/folder(s) with an owner other than 'nobody'
+			\n%d file(s)/folder(s) with a group other than 'users'
+			\n%d folder(s) with a permission other than 'drwxrwxrwx'
+			\n%d files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'
+			\n\nCheck the log file (/boot/logs/unbalance.log) for additional information
+			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
+		`, c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)
+	}
+
+	if sendErr := c.sendmail(c.settings.NotifyCalc, subject, message, false); sendErr != nil {
+		mlog.Error(sendErr)
+	}
+
+	// some local logging
+	mlog.Info("_find:Listing (%d) disks ...", len(c.storage.Disks))
+	for _, disk := range c.storage.Disks {
+		// mlog.Info("the mystery of the year(%s)", disk.Path)
+		disk.Print()
+	}
+
+	c.storage.Print()
+
+	outbound = &dto.Packet{Topic: "calcProgress", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	c.storage.BytesToTransfer = c.operation.BytesToTransfer
+	c.storage.OpState = c.operation.OpState
+	c.storage.PrevState = c.operation.PrevState
+
+	// send to front end the signal of operation finished
+	outbound = &dto.Packet{Topic: "findFinished", Payload: c.storage}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
+	// and there actually perm issues
+	if c.operation.BytesToTransfer > 0 && (c.operation.OwnerIssue+c.operation.GroupIssue+c.operation.FolderIssue+c.operation.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: "calcPermIssue", Payload: fmt.Sprintf("%d|%d|%d|%d", c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+}
+
+func (c *Core) gather(msg *pubsub.Message) {
+	mlog.Info("%+v", msg.Payload)
+	data, ok := msg.Payload.(string)
+	if !ok {
+		mlog.Warning("Unable to convert gather parameters")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert gather parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	var target model.Disk
+	err := json.Unmarshal([]byte(data), &target)
+	if err != nil {
+		mlog.Warning("Unable to bind gather parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind gather parameters"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+		// mlog.Fatalf(err.Error())
+	}
+
+	// user chose a target disk, remove bin from all other disks, since only the target
+	// will have work to do
+	for _, disk := range c.storage.Disks {
+		if disk.Path != target.Path {
+			disk.Bin = nil
+		}
+	}
+
+	c.operation.OpState = model.StateGather
+	c.operation.PrevState = model.StateGather
+
+	go c.transfer("Move", true, msg)
 }
 
 func (c *Core) getLog(msg *pubsub.Message) {
@@ -1087,4 +1355,21 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 	}
 
 	return msg
+}
+
+func (c *Core) notifyCommandsToRun(opName string) {
+	message := "\n\nThe following commands will be executed:\n\n"
+
+	for _, command := range c.operation.Commands {
+		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.WorkDir, c.operation.RsyncStrFlags, strconv.Quote(command.Src), strconv.Quote(command.Dst))
+		message += cmd + "\n"
+	}
+
+	subject := fmt.Sprintf("unBALANCE - %s operation STARTING", strings.ToUpper(opName))
+
+	go func() {
+		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+			mlog.Error(sendErr)
+		}
+	}()
 }

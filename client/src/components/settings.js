@@ -23,6 +23,11 @@ export default class Settings extends PureComponent {
 		}
 	}
 
+	componentDidMount() {
+		const { actions } = this.props.store
+		actions.getConfig()
+	}
+
 	componentWillReceiveProps(next) {
 		const { reservedAmount, reservedUnit, rsyncFlags } = next.store.state.config
 		if (
@@ -88,42 +93,7 @@ export default class Settings extends PureComponent {
 	}
 
 	render() {
-		const { state, actions } = this.props.store
-
-		if (!state.config) {
-			return null
-		}
-
-		if (!state.unraid) {
-			return null
-		}
-
-		const stateOk = state.unraid && state.unraid.condition.state === 'STARTED'
-		if (!stateOk) {
-			return (
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>
-							&nbsp; The array is not started. Please start the array before perfoming any operations with
-							unBALANCE.
-						</p>
-					</div>
-				</section>
-			)
-		}
-
-		if (state.opInProgress === actions.calculate || state.opInProgress === actions.move) {
-			return (
-				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-12')}>
-						<p className={cx('bg-warning')}>
-							&nbsp; {state.opInProgress} operation is currently under way. Wait until the operation has
-							finished to make any settings changes.
-						</p>
-					</div>
-				</section>
-			)
-		}
+		const { state } = this.props.store
 
 		const flags = this.state.rsyncFlags.join(' ')
 

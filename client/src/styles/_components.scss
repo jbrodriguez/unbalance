@@ -13,7 +13,8 @@ i {
 	}
 }
 
-input:not([type=checkbox]), select {
+input:not([type=checkbox]),
+select {
 	font-size: 0.9em;
 	padding: 0.25em;
 	border: 1px solid $form-element-border;
@@ -58,8 +59,8 @@ select {
 }
 
 // FORMS
-form {
-}
+// form {
+// }
 
 fieldset {
 	margin: 0;
@@ -82,7 +83,8 @@ legend {
 	flex-direction: column;
 
 	max-width: 78em;
-	min-height: 100vh;
+	// min-height: 100vh;
+	height: 100vh;
 }
 
 // PANELS
@@ -115,7 +117,8 @@ legend {
 	background-color: $form-addon-bg;
 }
 
-.addon-field, .addon-item {
+.addon-field,
+.addon-item {
 	border: 1px solid darken($form-addon-bg, 10%);
 	padding: $form-element-padding-vertical $form-element-padding-horizontal;
 }
@@ -171,7 +174,9 @@ legend {
 	padding: $button-padding-vertical $button-padding-horizontal;
 	font-size: 0.75em;
 
-	&.disabled, &[disabled], fieldset[disabled] & {
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
 		cursor: not-allowed;
 		opacity: .65;
 		box-shadow: none;
@@ -204,6 +209,10 @@ legend {
 	@include button-variant($buttonAlertColor, $buttonAlertBg);
 }
 
+.btn-nav {
+	@include button-variant($buttonNavColor, $buttonNavBg);
+}
+
 // TABLES
 table {
 	background: white;
@@ -212,7 +221,8 @@ table {
 	width: 100%;
 }
 
-thead, tfoot {
+thead,
+tfoot {
 	color: $elegant-blue;
 	// padding: $padding-default;
 }
@@ -225,12 +235,15 @@ tfoot {
 	border-top: 1px solid $form-element-border;
 }
 
-tr, th, td {
+tr,
+th,
+td {
 	padding: $padding-default;
 	font-size: 0.9em;
 }
 
-tr, th {
+tr,
+th {
 	text-align: left;
 }
 
@@ -238,9 +251,9 @@ tr:nth-of-type(even) {
 	background-color: $white-gray;
 }
 
-th {
-	// background-color: $cement-gray;
-}
+// th {
+// 	// background-color: $cement-gray;
+// }
 
 // SPINNERS
 // SPINNERS
@@ -345,6 +358,71 @@ th {
 
 .direction-column {
 	flex-direction: column;
+}
+
+.flex_i {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	// background: blue;
+}
+
+.height100 {
+	height: calc(100vh - 250px);
+}
+
+.scroller {
+	max-height: inherit;
+	overflow-x: auto;
+	overflow-y: auto;
+}
+
+.circular {
+	background: $bodyBackground;
+	border-radius: 0.8em;
+	-moz-border-radius: 0.8em;
+	-webkit-border-radius: 0.8em;
+	color: $button-primary-bg;
+	display: inline-block;
+	font-weight: bold;
+	line-height: 1.6em;
+	margin-right: 5px;
+	text-align: center;
+	width: 1.6em;
+}
+
+.circular-disabled {
+	color: $bodyBackground;
+	background: $button-primary-bg;
+}
+
+.linkBody {
+	display: inline-block;
+	padding: $button-padding-vertical $button-padding-horizontal;
+}
+
+.linkText {
+	color: $bodyBackground;
+}
+
+.step {
+	background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
+	// border: 1px solid transparent;
+	white-space: nowrap;
+	padding: $button-padding-vertical $button-padding-horizontal;
+	font-size: 0.75em;
+	color: $button-primary-color;
+	background-color: $button-primary-bg;
+	border-color: darken($button-primary-bg, 5%);
+
+	&.disabled,
+	&[disabled],
+	fieldset[disabled] & {
+		color: $button-primary-bg;
+		background-color: $bodyBackground;
+		// border-color: darken($color, 5%);
+		box-shadow: none;
+	}
 }
 
 // .direction-row {

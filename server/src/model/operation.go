@@ -5,11 +5,13 @@ import (
 )
 
 const (
-	StateIdle     = 0
-	StateCalc     = 1
-	StateMove     = 2
-	StateCopy     = 3
-	StateValidate = 4
+	StateIdle        = 0
+	StateCalc        = 1
+	StateMove        = 2
+	StateCopy        = 3
+	StateValidate    = 4
+	StateFindTargets = 5
+	StateGather      = 6
 )
 
 type Operation struct {
@@ -29,4 +31,5 @@ type Operation struct {
 	FolderIssue           int64
 	FileIssue             int64
 	DryRun                bool
+	Target                string
 }

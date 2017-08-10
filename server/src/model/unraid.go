@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
+	"os"
 
 	"github.com/jbrodriguez/mlog"
 	"github.com/vaughan0/go-ini"
@@ -402,6 +403,29 @@ func (u *Unraid) GetTree(path string) (entry *dto.Entry) {
 	// entry.Nodes = items
 	//
 	// return
+}
+
+func (u *Unraid) Locate(chosen []string) []*Disk {
+	disks := make([]*Disk, 0)
+
+	for _, disk := range u.Disks {
+		for _, item := range chosen {
+			location := filepath.Join(disk.Path, strings.Replace(item, "/mnt/user", "", -1))
+
+			exists := true
+			if _, err := os.Stat(location); err != nil {
+				exists = !os.IsNotExist(err)
+			}
+
+			mlog.Info("location(%s)-exists(%t)", location, exists)
+
+			if exists {
+				disks = append(disks, disk)
+			}
+		}
+	}
+
+	return disks
 }
 
 // GetLog -

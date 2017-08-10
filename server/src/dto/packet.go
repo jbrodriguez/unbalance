@@ -18,3 +18,7 @@ type Packet struct {
 	Topic   string      `json:"topic"`
 	Payload interface{} `json:"payload"`
 }
+
+type Chosen struct {
+	Payload []string `json:"payload"`
+}
