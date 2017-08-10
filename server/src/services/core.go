@@ -589,7 +589,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	srcFolder := filepath.Join(src, folder)
 
-	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
+	mlog.Info("getFolders:Scanning disk(%s):folder(%s)", src, folder)
 
 	var fi os.FileInfo
 	var err error
