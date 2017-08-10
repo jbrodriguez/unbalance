@@ -88,10 +88,12 @@ function gotStorage({ state, actions }, unraid) {
 	} else {
 		// console.log(`sourceDisk-${JSON.stringify(sourceDisk)}`)
 		// scatter tree
-		actions.getTree(sourceDisk.path)
-		tree.cache = null
-		tree.items = [{ label: 'Loading ...' }]
-		tree.chosen = {}
+		if (sourceDisk) {
+			actions.getTree(sourceDisk.path)
+			tree.cache = null
+			tree.items = [{ label: 'Loading ...' }]
+			tree.chosen = {}
+		}
 	}
 
 	return {
