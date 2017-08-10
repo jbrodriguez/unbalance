@@ -56,9 +56,12 @@ p {
 }
 
 .routerSection {
+	span,
 	a {
 		font-size: 0.9em;
+	}
 
+	a {
 		&.active {
 			color: $headerMenuAnchorColor;
 			// padding-bottom: 3px;
