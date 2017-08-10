@@ -396,7 +396,6 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		msg := fmt.Sprintf("Scanning %s on %s", path, srcDiskWithoutMnt)
 		outbound = &dto.Packet{Topic: "calcProgress", Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-		mlog.Info("_calc:%s", msg)
 
 		c.checkOwnerAndPermissions(&c.operation, dtoCalc.SourceDisk, path, owner, group)
 
@@ -411,6 +410,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 		}
 	}
 
+	mlog.Info("_calc:totalIssues=owner(%d),group(%d),folder(%d),file(%d)", c.operation.OwnerIssue, c.operation.GroupIssue, c.operation.FolderIssue, c.operation.FileIssue)
 	mlog.Info("_calc:foldersToBeTransferredTotal(%d)", len(folders))
 
 	for _, v := range folders {
@@ -590,7 +590,7 @@ func (c *Core) _calc(msg *pubsub.Message) {
 func (c *Core) getFolders(src string, folder string) (items []*model.Item) {
 	srcFolder := filepath.Join(src, folder)
 
-	mlog.Info("getFolders:Scanning source-disk(%s):folder(%s)", src, folder)
+	mlog.Info("getFolders:Scanning disk(%s):folder(%s)", src, folder)
 
 	var fi os.FileInfo
 	var err error
@@ -653,6 +653,7 @@ func (c *Core) checkOwnerAndPermissions(operation *model.Operation, src, folder,
 
 	// outbound := &dto.Packet{Topic: "calcProgress", Payload: "Checking permissions ..."}
 	// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	ownerIssue, groupIssue, folderIssue, fileIssue := 0, 0, 0, 0
 
 	mlog.Info("perms:Scanning disk(%s):folder(%s)", src, folder)
 
@@ -679,33 +680,34 @@ func (c *Core) checkOwnerAndPermissions(operation *model.Operation, src, folder,
 		user := result[4]
 		group := result[5]
 		kind := result[6]
-		name := result[7]
 
 		perms := u + g + o
 
 		if user != "nobody" {
-			mlog.Info("perms:User != nobody: [%s]: %s", user, name)
 			operation.OwnerIssue++
+			ownerIssue++
 		}
 
 		if group != "users" {
-			mlog.Info("perms:Group != users: [%s]: %s", group, name)
 			operation.GroupIssue++
+			groupIssue++
 		}
 
 		if kind == "directory" {
 			if perms != "rwxrwxrwx" {
-				mlog.Info("perms:Folder perms != rwxrwxrwx: [%s]: %s", perms, name)
 				operation.FolderIssue++
+				folderIssue++
 			}
 		} else {
 			match := strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
 			if !match {
-				mlog.Info("perms:File perms != rw-rw-rw- or r--r--r--: [%s]: %s", perms, name)
 				operation.FileIssue++
+				fileIssue++
 			}
 		}
 	})
+
+	mlog.Info("perms:issues=owner(%d),group(%d),folder(%d),file(%d)", ownerIssue, groupIssue, folderIssue, fileIssue)
 
 	return
 }
