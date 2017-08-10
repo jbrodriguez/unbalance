@@ -10,6 +10,11 @@ export default class Api {
 		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
+	getStatus() {
+		// console.log('this.hostr', this.hostr)
+		return fetch(`${this.hostr}/status`).then(resp => resp.json())
+	}
+
 	setNotifyCalc(notify) {
 		return fetch(`${this.hostr}/config/notifyCalc`, {
 			method: 'PUT',

@@ -7,6 +7,7 @@ import Wizard from './wizard'
 import ConsolePanel from './consolePanel'
 import styles from '../styles/core.scss'
 import { isValid, humanBytes } from '../lib/utils'
+import * as constant from '../lib/const'
 
 const cx = classNames.bind(styles)
 
@@ -17,20 +18,20 @@ export default class GatherMove extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { actions } = this.props.store
+		const { state, actions } = this.props.store
 
-		// if (Object.keys(state.gatherTree.chosen).length === 0 || !isValid(state.gatherTree.target)) {
-		// 	return
-		// }
-
-		// actions.move()
-		actions.clearConsole()
+		if (state.opInProgress === null) {
+			actions.clearConsole()
+		}
 	}
 
 	render() {
 		const { match, store: { state, actions } } = this.props
 
-		if (Object.keys(state.gatherTree.chosen).length === 0 || !isValid(state.gatherTree.target)) {
+		const preReqNotPresent = Object.keys(state.gatherTree.chosen).length === 0 || !isValid(state.gatherTree.target)
+		const runningMove = state.status ? state.status === constant.stateGather : false
+
+		if (preReqNotPresent && !runningMove) {
 			return null
 		}
 

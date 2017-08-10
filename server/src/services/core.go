@@ -104,6 +104,7 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	c.actor.Register("/get/config", c.getConfig)
+	c.actor.Register("/get/status", c.getStatus)
 	c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
@@ -152,6 +153,12 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	}
 
 	msg.Reply <- &c.settings.Config
+}
+
+func (c *Core) getStatus(msg *pubsub.Message) {
+	mlog.Info("Sending status")
+
+	msg.Reply <- c.operation.OpState
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {
@@ -233,7 +240,7 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 
 	if c.operation.OpState == model.StateIdle {
 		c.storage.Refresh()
-	} else if c.operation.OpState == model.StateMove || c.operation.OpState == model.StateCopy {
+	} else if c.operation.OpState == model.StateMove || c.operation.OpState == model.StateCopy || c.operation.OpState == model.StateGather {
 		percent, left, speed := progress(c.operation.BytesToTransfer, c.operation.BytesTransferred, time.Since(c.operation.Started))
 		stats = fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
 	}
@@ -971,8 +978,8 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 
 		commandsExecuted = append(commandsExecuted, cmd)
 
-		// if it isn't a dry-run and the operation is Move, delete the source folder
-		if !c.operation.DryRun && c.operation.OpState == model.StateMove {
+		// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+		if !c.operation.DryRun && (c.operation.OpState == model.StateMove || c.operation.OpState == model.StateGather) {
 			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Src))
 			if exists {
 				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
@@ -1294,8 +1301,8 @@ func (c *Core) gather(msg *pubsub.Message) {
 		}
 	}
 
-	c.operation.OpState = model.StateMove
-	c.operation.PrevState = model.StateMove
+	c.operation.OpState = model.StateGather
+	c.operation.PrevState = model.StateGather
 
 	go c.transfer("Move", true, msg)
 }

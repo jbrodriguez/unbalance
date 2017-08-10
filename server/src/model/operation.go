@@ -11,6 +11,7 @@ const (
 	StateCopy        = 3
 	StateValidate    = 4
 	StateFindTargets = 5
+	StateGather      = 6
 )
 
 type Operation struct {

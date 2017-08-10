@@ -15,6 +15,7 @@ import configActions from './actions/config'
 import treeActions from './actions/tree'
 import gatherTreeActions from './actions/gather'
 import unraidActions from './actions/unraid'
+import statusActions from './actions/status'
 
 import Api from './lib/api'
 import WSApi from './lib/wsapi'
@@ -35,6 +36,7 @@ import Log from './components/log'
 // 		],
 // 		dryRun: true
 // 	}
+//	status: null,
 // 	unraid: {
 // 		condition: {
 // 			numDisks: 24,
@@ -81,6 +83,7 @@ const history = createBrowserHistory()
 
 const initialState = {
 	config: null,
+	status: null,
 	unraid: null,
 	fromDisk: null,
 	toDisk: null,
@@ -108,7 +111,15 @@ const initialState = {
 	history,
 }
 
-const actions = combineActions(startActions, uiActions, configActions, treeActions, gatherTreeActions, unraidActions)
+const actions = combineActions(
+	startActions,
+	uiActions,
+	configActions,
+	treeActions,
+	gatherTreeActions,
+	unraidActions,
+	statusActions,
+)
 
 const api = new Api()
 const ws = new WSApi()
@@ -123,8 +134,13 @@ class Layout extends PureComponent {
 	render() {
 		const store = this.props.store
 
+		// we wait for a valid config and a valid status before rendering the content
+		if (!(store.state.config && store.state.status !== -1)) {
+			return null
+		}
+
 		return (
-			<Router history={history}>
+			<Router history={store.state.history}>
 				<App store={store}>
 					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
 					<Route path="/gather" render={props => <Gather store={store} {...props} />} />

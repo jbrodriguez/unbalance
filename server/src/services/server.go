@@ -84,6 +84,7 @@ func (s *Server) Start() {
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.GET("/config", s.getConfig)
+	api.GET("/status", s.getStatus)
 	api.GET("/storage", s.getStorage)
 	api.POST("/tree", s.getTree)
 	api.POST("/locate", s.locate)
@@ -112,6 +113,18 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
 	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) getStatus(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, "/get/status")
+
+	reply := <-msg.Reply
+	resp := reply.(uint64)
+	data := fmt.Sprintf(`{"status": %d}`, resp)
+	c.JSONBlob(200, []byte(data))
 
 	return nil
 }

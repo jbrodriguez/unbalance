@@ -59,6 +59,9 @@ export default class Wizard extends PureComponent {
 				break
 		}
 
+		prevDisabled = prevDisabled || state.opInProgress !== null
+		nextDisabled = nextDisabled || state.opInProgress !== null
+
 		return (
 			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>

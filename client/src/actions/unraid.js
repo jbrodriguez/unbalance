@@ -66,6 +66,7 @@ function gotStorage({ state, actions }, unraid) {
 		case constant.stateCalc:
 			opState = 'Calculate operation in progress ...'
 			break
+		case constant.stateGather:
 		case constant.stateMove:
 			opState = 'Move operation in progress ...'
 			break
@@ -95,6 +96,8 @@ function gotStorage({ state, actions }, unraid) {
 			tree.chosen = {}
 		}
 	}
+
+	actions.setStatus(unraid.opState)
 
 	return {
 		...state,
