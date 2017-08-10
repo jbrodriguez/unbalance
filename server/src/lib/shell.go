@@ -145,7 +145,7 @@ func scanLinesEx(data []byte, atEOF bool) (advance int, token []byte, err error)
 }
 
 // ShellEx -
-func ShellEx(callback Callback, workDir, name string, args ...string) error {
+func ShellEx(callback Callback, writer StderrWriter, workDir, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 
 	if workDir != "" {
@@ -173,6 +173,7 @@ func ShellEx(callback Callback, workDir, name string, args ...string) error {
 	// Wait for the result of the command; also closes our end of the pipe
 	err = cmd.Wait()
 	if err != nil {
+		writer("rsync:exit:(%s)", cmd.ProcessState.String())
 		return err
 	}
 

@@ -948,7 +948,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			}
 
-		}, command.WorkDir, "rsync", args...)
+		}, mlog.Warning, command.WorkDir, "rsync", args...)
 
 		finished = time.Now()
 		elapsed = time.Since(c.operation.Started)
