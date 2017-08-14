@@ -68,7 +68,9 @@ Internally, it issues a slight variation of [this rsync command](https://lime-te
 Check [this post](https://lime-technology.com/forum/index.php?topic=45352.msg476018#msg476018) for additional information.
 
 **3 - Validate (optional)** <br/>
-*Coming soon ...*
+VALIDATE will only be enabled after a COPY operation. Just click the button and it will replay each rsync operation, but with a checksum comparison (instead of the shallower date/time of modification).
+
+When using default flags, VALIDATE rsync will be invoked as **-rcvPRX**.
 
 ### Quick Start
 - Click the FROM column of the disk you want to be the source of the transfer
@@ -87,7 +89,38 @@ In either case, the console will log progress messages. Also, a progress status 
 
 
 ## GATHER Instructions
-*Coming soon ...*
+GATHER will consolidate data from a user share into a single disk.
+
+Note that all transfer operations work at the disk level (not at the user share level).
+
+It involves the following steps:
+
+**1 - Select Folder** <br/>
+![Select](metadata/images/300-select.png)
+
+The 'SHARES EXPLORER' column lets you navigate your user shares, to choose a folder to consolidate. In the example, **tvshows** is the user share and **The Walking Dead** is the folder that will be consolidated.
+
+When a folder is selected, the current selection and the drives where this folder is located are displayed.
+
+Once you've chosen the folder, click NEXT.
+
+**2 - Choose Target Drive** <br/>
+![Target](metadata/images/300-target.png)
+
+This page shows which drives have enough space to hold the full contents of the folder chosen in the previous step.
+
+They are shown in descending order by the least amount of data transfer that will occurr.
+
+An asterisk next to a drive means that the folder is present there.
+
+Pick the drive you prefer, then click NEXT.
+
+**3 - Move** <br/>
+![Move](metadata/images/300-move.png)
+
+This is a confirmation step. It shows how much data will be moved to which drive.
+
+If you're ok, click PROCEED to start the transfer operation.
 
 ## Installation
 There are 2 ways to install this application
