@@ -274,8 +274,10 @@ export default class Settings extends PureComponent {
 							<h3>SET LOG VERBOSITY</h3>
 
 							<p>
-								Full verbosity will print each line generated in the transfer (rsync) phase. Normal
-								verbosity will not, thus greatly reducing the amount of logging.
+								Full verbosity will affect logging in two ways:<br />
+								- It will print each line generated in the transfer (rsync) phase.<br />
+								- It will print each line generated while checking for permission issues.<br />
+								Normal verbosity will not, thus greatly reducing the amount of logging.
 							</p>
 
 							<span> Verbosity: </span>
