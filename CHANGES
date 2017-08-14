@@ -1,3 +1,47 @@
+Version 3.3.0 - 2017-08-14
+- Add required package
+- Fix handler invocation
+- Implement react-router v4
+- Implement locate api endpoint
+- Create first working version
+- Get storage todo upon entering each route
+- Set a proper name for the dto
+- Use proper dto name
+- Use alternative implementation for humanBytes
+- Implement Find Target logic
+- Sort target disks by least amount of data transfer
+- Fix typo
+- Create separate constant module
+- Create action to get user shares
+- Remove unneeded code
+- Inject history object into the state
+- Implement Gather navigation Wizard
+- Refresh storage data before getting targets
+- Refactor nav buttons into separate components
+- Implement target selection
+- Show dry run toggle
+- Show dry-run always
+- Implement gather move operation
+- Fix copy
+- Create header for the gather choose screen
+- Fix console panel scrolling
+- Modify text
+- Show source disk first
+- Provide summary of commands to be executed
+- Improve UI for Move step
+- Get disk folders only if sourcedisk is present
+- Optimize Settings component
+- Modify some UI styling
+- Implement Multi-Op resume
+- Remove duplicated message
+- Standardize messages
+- Improve perms issue logging
+- Add rsync error logging
+- Fix text
+- Allow verbosity setting to control perms issues logging
+- Prepare for 3.3.0
+
+
 Version 3.2.0 - 2017-07-07
 - Complete VALIDATE op implementation
 - Don’t duplicate warning message
