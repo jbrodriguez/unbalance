@@ -1367,7 +1367,7 @@ func (c *Core) notifyCommandsToRun(opName string) {
 		message += cmd + "\n"
 	}
 
-	subject := fmt.Sprintf("unBALANCE - %s operation STARTING", strings.ToUpper(opName))
+	subject := fmt.Sprintf("unBALANCE - %s operation STARTED", strings.ToUpper(opName))
 
 	go func() {
 		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
