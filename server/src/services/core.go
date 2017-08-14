@@ -680,27 +680,44 @@ func (c *Core) checkOwnerAndPermissions(operation *model.Operation, src, folder,
 		user := result[4]
 		group := result[5]
 		kind := result[6]
+		name := result[7]
 
 		perms := u + g + o
 
 		if user != "nobody" {
+			if c.settings.Verbosity == 1 {
+				mlog.Info("perms:User != nobody: [%s]: %s", user, name)
+			}
+
 			operation.OwnerIssue++
 			ownerIssue++
 		}
 
 		if group != "users" {
+			if c.settings.Verbosity == 1 {
+				mlog.Info("perms:Group != users: [%s]: %s", group, name)
+			}
+
 			operation.GroupIssue++
 			groupIssue++
 		}
 
 		if kind == "directory" {
 			if perms != "rwxrwxrwx" {
+				if c.settings.Verbosity == 1 {
+					mlog.Info("perms:Folder perms != rwxrwxrwx: [%s]: %s", perms, name)
+				}
+
 				operation.FolderIssue++
 				folderIssue++
 			}
 		} else {
 			match := strings.Compare(perms, "r--r--r--") == 0 || strings.Compare(perms, "rw-rw-rw-") == 0
 			if !match {
+				if c.settings.Verbosity == 1 {
+					mlog.Info("perms:File perms != rw-rw-rw- or r--r--r--: [%s]: %s", perms, name)
+				}
+
 				operation.FileIssue++
 				fileIssue++
 			}
