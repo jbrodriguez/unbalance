@@ -786,6 +786,9 @@ func (c *Core) transfer(opName string, multiSource bool, msg *pubsub.Message) {
 	c.operation.DryRun = c.settings.DryRun
 	if c.operation.DryRun {
 		c.operation.RsyncFlags = append(c.operation.RsyncFlags, "--dry-run")
+		mlog.Info("dry-run ON")
+	} else {
+		mlog.Info("dry-run OFF")
 	}
 	c.operation.RsyncStrFlags = strings.Join(c.operation.RsyncFlags, " ")
 
@@ -1001,7 +1004,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 		if !c.operation.DryRun && (c.operation.OpState == model.StateMove || c.operation.OpState == model.StateGather) {
 			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Src))
 			if exists {
-				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(c.operation.SourceDiskName, command.Path))
+				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.WorkDir, command.Path))
 				mlog.Info("Removing: %s", rmrf)
 				err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
 					mlog.Info(line)
