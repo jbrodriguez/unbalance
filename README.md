@@ -5,6 +5,7 @@ unBALANCE
 
 ## Support Fund
 If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:
+You can also send bitcoins: 18kSr7ebjaXbnrPMKmLQWeqcezaZVUmo4T
 
 ## [Changelog](https://github.com/jbrodriguez/unbalance/releases)
 
