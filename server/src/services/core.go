@@ -1315,10 +1315,13 @@ func (c *Core) gather(msg *pubsub.Message) {
 		// mlog.Fatalf(err.Error())
 	}
 
-	// user chose a target disk, remove bin from all other disks, since only the target
-	// will have work to do
+	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
+	// that's the amount of data we need to transfer. Also remove bin from all other disks,
+	// since only the target will have work to do
 	for _, disk := range c.storage.Disks {
-		if disk.Path != target.Path {
+		if disk.Path == target.Path {
+			c.operation.BytesToTransfer = disk.Bin.Size
+		} else {
 			disk.Bin = nil
 		}
 	}
