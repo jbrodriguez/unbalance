@@ -109,6 +109,7 @@ const initialState = {
 	feedback: [],
 	timeout: null,
 	history,
+	latestVersion: '',
 }
 
 const actions = combineActions(
@@ -135,7 +136,7 @@ class Layout extends PureComponent {
 		const store = this.props.store
 
 		// we wait for a valid config and a valid status before rendering the content
-		if (!(store.state.config && store.state.status !== -1)) {
+		if (!(store.state && store.state.config && store.state.status !== -1)) {
 			return null
 		}
 

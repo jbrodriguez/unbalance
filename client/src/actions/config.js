@@ -13,6 +13,7 @@ module.exports = {
 	setRsyncFlags,
 
 	setVerbosity,
+	setUpdateCheck,
 }
 
 function getConfig({ state, actions, opts: { api } }) {
@@ -119,6 +120,14 @@ function setRsyncFlags({ state, actions, opts: { api } }, flags) {
 function setVerbosity({ state, actions, opts: { api } }, verbosity) {
 	if (state.config.verbosity !== verbosity) {
 		api.setVerbosity(verbosity).then(json => actions.gotConfig(json))
+	}
+
+	return state
+}
+
+function setUpdateCheck({ state, actions, opts: { api } }, checkForUpdate) {
+	if (state.config.checkForUpdate !== checkForUpdate) {
+		api.setUpdateCheck(checkForUpdate).then(json => actions.gotConfig(json))
 	}
 
 	return state

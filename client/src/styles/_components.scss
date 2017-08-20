@@ -96,6 +96,10 @@ legend {
 	@include bg-variant($state-feedback-bg);
 }
 
+.bg-update {
+	@include bg-variant($state-update-bg);
+}
+
 .addon {
 	display: flex;
 	// margin-bottom: 1.5em;

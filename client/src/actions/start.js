@@ -10,6 +10,7 @@ function start({ state, actions, opts: { ws } }) {
 
 	actions.getConfig()
 	actions.getStatus()
+	actions.checkForUpdate()
 
 	return state
 }

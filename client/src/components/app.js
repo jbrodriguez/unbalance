@@ -5,6 +5,7 @@ import { withRouter } from 'react-router-dom'
 import classNames from 'classnames/bind'
 
 import FeedbackPanel from './feedbackPanel'
+import UpdatePanel from './updatePanel'
 import styles from '../styles/core.scss'
 import * as constant from '../lib/const'
 import ReactiveLink from './reactiveLink'
@@ -28,6 +29,19 @@ class App extends PureComponent {
 		const { state } = store
 
 		const linksDisabled = state.status !== constant.stateIdle || state.opInProgress !== null
+
+		console.log(`latestVersion(${state.latestVersion})`)
+
+		let updateAvailable = null
+		if (state.latestVersion !== '') {
+			updateAvailable = (
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>
+						<UpdatePanel {...store} />
+					</div>
+				</section>
+			)
+		}
 
 		let alert = null
 		if (state.feedback.length !== 0) {
@@ -150,8 +164,8 @@ class App extends PureComponent {
 				</header>
 
 				<main>
+					{updateAvailable}
 					{alert}
-
 					{children}
 				</main>
 

@@ -195,6 +195,17 @@ p {
 	}
 }
 
+.update {
+	color: $consoleColor;
+	font-size: 0.8em;
+
+	.title {
+		color: $footerBackground;
+		font-size: 0.5em;
+		// border-bottom: 1px solid darken($state-feedback-bg, 10%);
+	}
+}
+
 .progress {
 	background-color: $progressBackground;
 	height: 1.5625rem;

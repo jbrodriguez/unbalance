@@ -76,11 +76,23 @@ export default class Api {
 		}).then(resp => resp.json())
 	}
 
+	setUpdateCheck(checkUpdate) {
+		return fetch(`${this.hostr}/config/checkUpdate`, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ payload: checkUpdate }),
+		}).then(resp => resp.json())
+	}
+
 	locate(path) {
 		return fetch(`${this.hostr}/locate`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: path }),
 		}).then(resp => resp.json())
+	}
+
+	checkForUpdate() {
+		return fetch(`${this.hostr}/update`).then(resp => resp.json())
 	}
 }
