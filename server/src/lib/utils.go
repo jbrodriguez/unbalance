@@ -3,7 +3,9 @@ package lib
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -135,4 +137,22 @@ func Max(x, y int64) int64 {
 		return x
 	}
 	return y
+}
+
+// Download -
+func GetLatestVersion(url string) (dst string, err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		// mlog.Info("Unable to download %s", url)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		// mlog.Info("unable to save to %s", dst)
+		return "", err
+	}
+
+	return string(body), nil
 }

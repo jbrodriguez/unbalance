@@ -83,9 +83,11 @@ func (s *Server) Start() {
 	api.PUT("/config/notifyMove", s.setNotifyMove)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
+	api.PUT("/config/checkUpdate", s.setCheckUpdate)
 	api.GET("/config", s.getConfig)
 	api.GET("/status", s.getStatus)
 	api.GET("/storage", s.getStorage)
+	api.GET("/update", s.getUpdate)
 	api.POST("/tree", s.getTree)
 	api.POST("/locate", s.locate)
 	api.PUT("/config/dryRun", s.toggleDryRun)
@@ -201,12 +203,41 @@ func (s *Server) setVerbosity(c echo.Context) (err error) {
 	return nil
 }
 
+func (s *Server) setCheckUpdate(c echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, "/config/set/checkUpdate")
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
 func (s *Server) getStorage(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/get/storage")
 
 	reply := <-msg.Reply
 	resp := reply.(*model.Unraid)
+	c.JSON(200, &resp)
+
+	return nil
+}
+
+func (s *Server) getUpdate(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, "/get/update")
+
+	reply := <-msg.Reply
+	resp := reply.(string)
 	c.JSON(200, &resp)
 
 	return nil

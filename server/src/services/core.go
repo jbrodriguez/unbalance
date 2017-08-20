@@ -21,6 +21,7 @@ import (
 	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
+	version "github.com/mcuadros/go-version"
 )
 
 const (
@@ -109,7 +110,9 @@ func (c *Core) Start() (err error) {
 	c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
 	c.actor.Register("/config/set/verbosity", c.setVerbosity)
+	c.actor.Register("/config/set/checkUpdate", c.setCheckUpdate)
 	c.actor.Register("/get/storage", c.getStorage)
+	c.actor.Register("/get/update", c.getUpdate)
 	c.actor.Register("/config/toggle/dryRun", c.toggleDryRun)
 	c.actor.Register("/get/tree", c.getTree)
 	c.actor.Register("/disks/locate", c.locate)
@@ -200,6 +203,21 @@ func (c *Core) setVerbosity(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
+func (c *Core) setCheckUpdate(msg *pubsub.Message) {
+	fupdate := msg.Payload.(float64)
+	update := int(fupdate)
+
+	mlog.Info("Setting checkForUpdate to (%d)", update)
+
+	c.settings.CheckForUpdate = update
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("not right %s", err)
+	}
+
+	msg.Reply <- &c.settings.Config
+}
+
 func (c *Core) setReservedSpace(msg *pubsub.Message) {
 	mlog.Warning("payload: %+v", msg.Payload)
 	payload, ok := msg.Payload.(string)
@@ -251,6 +269,24 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 	c.storage.BytesToTransfer = c.operation.BytesToTransfer
 
 	msg.Reply <- c.storage
+}
+
+func (c *Core) getUpdate(msg *pubsub.Message) {
+	var newest string
+
+	if c.settings.CheckForUpdate == 1 {
+		latest, err := lib.GetLatestVersion("https://raw.githubusercontent.com/jbrodriguez/unbalance/master/VERSION")
+		if err != nil {
+			return
+		}
+
+		latest = strings.TrimSuffix(latest, "\n")
+		if version.Compare(latest, c.settings.Version, ">") {
+			newest = latest
+		}
+	}
+
+	msg.Reply <- newest
 }
 
 func (c *Core) toggleDryRun(msg *pubsub.Message) {
@@ -1315,10 +1351,13 @@ func (c *Core) gather(msg *pubsub.Message) {
 		// mlog.Fatalf(err.Error())
 	}
 
-	// user chose a target disk, remove bin from all other disks, since only the target
-	// will have work to do
+	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
+	// that's the amount of data we need to transfer. Also remove bin from all other disks,
+	// since only the target will have work to do
 	for _, disk := range c.storage.Disks {
-		if disk.Path != target.Path {
+		if disk.Path == target.Path {
+			c.operation.BytesToTransfer = disk.Bin.Size
+		} else {
 			disk.Bin = nil
 		}
 	}

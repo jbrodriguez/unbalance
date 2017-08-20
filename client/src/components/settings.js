@@ -92,6 +92,11 @@ export default class Settings extends PureComponent {
 		setVerbosity(verbosity)
 	}
 
+	setUpdateCheck = updateCheck => () => {
+		const { setUpdateCheck } = this.props.store.actions
+		setUpdateCheck(updateCheck)
+	}
+
 	render() {
 		const { state } = this.props.store
 
@@ -300,6 +305,40 @@ export default class Settings extends PureComponent {
 								onChange={this.setVerbosity(1)}
 							/>
 							<label htmlFor="verb1">Full</label>
+						</div>
+					</div>
+				</section>
+
+				<section className={cx('row', 'bottom-spacer-2x')}>
+					<div className={cx('col-xs-12')}>
+						<div>
+							<h3>CHECK FOR UPDATES</h3>
+
+							<p>
+								On will check for a plugin update on start.<br />
+								Off disables the check.<br />
+							</p>
+
+							<span> Check: </span>
+							<input
+								id="check0"
+								className={cx('lspacer')}
+								type="radio"
+								name="check"
+								checked={state.config.checkForUpdate === 1}
+								onChange={this.setUpdateCheck(1)}
+							/>
+							<label htmlFor="check0">On</label>
+
+							<input
+								id="check1"
+								className={cx('lspacer')}
+								type="radio"
+								name="check"
+								checked={state.config.checkForUpdate === 0}
+								onChange={this.setUpdateCheck(0)}
+							/>
+							<label htmlFor="check1">Off</label>
 						</div>
 					</div>
 				</section>

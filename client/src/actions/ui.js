@@ -3,6 +3,9 @@ module.exports = {
 	addFeedback,
 	removeFeedback,
 	clearConsole,
+	checkForUpdate,
+	updateAvailable,
+	removeUpdateAvailable,
 }
 
 function setOpInProgress({ state }, action) {
@@ -37,5 +40,26 @@ function clearConsole({ state }) {
 	return {
 		...state,
 		lines: [],
+	}
+}
+
+function checkForUpdate({ state, actions, opts: { api } }) {
+	console.log(`checking`)
+	api.checkForUpdate().then(json => actions.updateAvailable(json))
+	return state
+}
+
+function updateAvailable({ state }, version) {
+	console.log(`version-${JSON.stringify(version)}`)
+	return {
+		...state,
+		latestVersion: version,
+	}
+}
+
+function removeUpdateAvailable({ state }) {
+	return {
+		...state,
+		latestVersion: '',
 	}
 }

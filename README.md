@@ -4,7 +4,7 @@ unBALANCE
 *tl;dr* **unBALANCE** is an [unRAID](http://lime-technology.com) plugin to transfer files/folders between disks in your array.
 
 ## Support Fund
-If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:
+If you'd like to support the developer, [please contribute](https://www.paypal.me/jbrodriguezio) towards the beer/coffee/soft drinks fund :smile: :clap: :+1:<br/>
 You can also send bitcoins: 18kSr7ebjaXbnrPMKmLQWeqcezaZVUmo4T
 
 ## [Changelog](https://github.com/jbrodriguez/unbalance/releases)

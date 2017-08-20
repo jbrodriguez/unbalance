@@ -22,6 +22,7 @@ type Config struct {
 	RsyncFlags     []string `json:"rsyncFlags"`
 	Version        string   `json:"version"`
 	Verbosity      int      `json:"verbosity"`
+	CheckForUpdate int      `json:"checkForUpdate"`
 }
 
 // NotifyCalc/NotifyMove possible values
@@ -47,7 +48,7 @@ const defaultConfLocation = "/boot/config/plugins/unbalance"
 func NewSettings(name, version string, locations []string) (*Settings, error) {
 	var port, logDir, folders, rsyncFlags, apiFolders string
 	var dryRun bool
-	var notifyCalc, notifyMove, verbosity int
+	var notifyCalc, notifyMove, verbosity, checkForUpdate int
 
 	flagset := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
@@ -60,6 +61,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
 	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 	flagset.IntVar(&verbosity, "verbosity", 0, "include rsync output in log files: 0 (default) - include; 1 - do not include")
+	flagset.IntVar(&checkForUpdate, "checkForUpdate", 1, "checkForUpdate: 0 - dont' check; 1 (default) - check")
 
 	location := SearchFile(name, locations)
 	if location != "" {
@@ -84,6 +86,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s.ReservedAmount = ReservedSpace / 1000 / 1000
 	s.ReservedUnit = "Mb"
 	s.Verbosity = verbosity
+	s.CheckForUpdate = checkForUpdate
 	s.Version = version
 
 	s.Port = port
