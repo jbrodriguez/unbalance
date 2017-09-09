@@ -44,13 +44,13 @@ function clearConsole({ state }) {
 }
 
 function checkForUpdate({ state, actions, opts: { api } }) {
-	console.log(`checking`)
+	// console.log(`checking`)
 	api.checkForUpdate().then(json => actions.updateAvailable(json))
 	return state
 }
 
 function updateAvailable({ state }, version) {
-	console.log(`version-${JSON.stringify(version)}`)
+	// console.log(`version-${JSON.stringify(version)}`)
 	return {
 		...state,
 		latestVersion: version,

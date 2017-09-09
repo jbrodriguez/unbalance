@@ -30,7 +30,7 @@ class App extends PureComponent {
 
 		const linksDisabled = state.status !== constant.stateIdle || state.opInProgress !== null
 
-		console.log(`latestVersion(${state.latestVersion})`)
+		// console.log(`latestVersion(${state.latestVersion})`)
 
 		let updateAvailable = null
 		if (state.latestVersion !== '') {
@@ -56,11 +56,7 @@ class App extends PureComponent {
 
 		let stats = null
 		if (state.stats !== '') {
-			stats = (
-				<span>
-					{state.stats}
-				</span>
-			)
+			stats = <span>{state.stats}</span>
 		}
 
 		let progress = null
@@ -179,9 +175,7 @@ class App extends PureComponent {
 						</ul>
 
 						<ul className={cx('col-xs-12', 'col-sm-4', 'flex', 'center-xs')}>
-							<span className={cx('version')}>
-								unBALANCE v{version}
-							</span>
+							<span className={cx('version')}>unBALANCE v{version}</span>
 						</ul>
 
 						<ul className={cx('col-xs-12', 'col-sm-4')}>
