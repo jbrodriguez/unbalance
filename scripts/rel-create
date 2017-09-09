@@ -27,7 +27,7 @@ mv jbrodriguez/unbalance src/jbrodriguez
 cd src/jbrodriguez/unbalance
 
 pushd client
-yarn
+npm install
 popd
 
 pushd server
