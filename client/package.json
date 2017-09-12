@@ -22,7 +22,7 @@
     "reactorx": "0.6.5"
   },
   "devDependencies": {
-    "autoprefixer": "6.5.2",
+    "autoprefixer": "^7.1.4",
     "babel-core": "6.18.2",
     "babel-eslint": "^7.2.3",
     "babel-loader": "6.2.7",
@@ -51,7 +51,8 @@
     "less": "2.7.1",
     "less-loader": "2.2.3",
     "node-sass": "^4.5.3",
-    "postcss-loader": "1.1.0",
+    "postcss-load-config": "^1.2.0",
+    "postcss-loader": "^2.0.6",
     "sass-loader": "^6.0.6",
     "style-loader": "0.13.1",
     "url-loader": "0.5.7",
