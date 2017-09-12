@@ -1,3 +1,15 @@
+Version 3.3.3 - 2017-09-12
+- Remove parent folder if empty
+- Replace yarn with npm5
+- Remove logging
+- Update client packages
+- Update server packages
+- Update postcss
+- Hide echo banner
+- Use prune exec rm form
+- Add explicit websocket dependency
+
+
 Version 3.3.2 - 2017-08-20
 - Fix BytesToTransfer amount on Gather op
 - Fix syntax
