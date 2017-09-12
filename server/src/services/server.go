@@ -69,6 +69,8 @@ func (s *Server) Start() {
 
 	s.engine = echo.New()
 
+	s.engine.HideBanner = true
+
 	s.engine.Use(mw.Logger())
 	s.engine.Use(mw.Recover())
 

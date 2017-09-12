@@ -1036,6 +1036,16 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 
 		commandsExecuted = append(commandsExecuted, cmd)
 
+		if c.operation.DryRun && c.operation.OpState == model.StateGather {
+			parent := filepath.Dir(command.Src)
+			// mlog.Info("parent(%s)-workdir(%s)-src(%s)-dst(%s)-path(%s)", parent, command.WorkDir, command.Src, command.Dst, command.Path)
+			if parent != "." {
+				mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.WorkDir, parent), filepath.Join(command.WorkDir, parent))
+			} else {
+				mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.WorkDir, parent))
+			}
+		}
+
 		// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
 		if !c.operation.DryRun && (c.operation.OpState == model.StateMove || c.operation.OpState == model.StateGather) {
 			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Src))
@@ -1047,12 +1057,33 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 				})
 
 				if err != nil {
-					msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(c.operation.SourceDiskName, command.Path), err)
+					msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.WorkDir, command.Path), err)
 
 					outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
 					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 					mlog.Warning(msg)
+				}
+
+				if c.operation.OpState == model.StateGather {
+					parent := filepath.Dir(command.Src)
+					if parent != "." {
+						rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.WorkDir, parent))
+						mlog.Info("Running %s", rmdir)
+
+						err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
+							mlog.Info(line)
+						})
+
+						if err != nil {
+							msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.WorkDir, parent), err)
+
+							outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+							c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+							mlog.Warning(msg)
+						}
+					}
 				}
 			} else {
 				mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Src))
