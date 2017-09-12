@@ -1038,11 +1038,11 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 
 		if c.operation.DryRun && c.operation.OpState == model.StateGather {
 			parent := filepath.Dir(command.Src)
-			mlog.Info("parent(%s)-workdir(%s)-src(%s)-dst(%s)-path(%s)", parent, command.WorkDir, command.Src, command.Dst, command.Path)
+			// mlog.Info("parent(%s)-workdir(%s)-src(%s)-dst(%s)-path(%s)", parent, command.WorkDir, command.Src, command.Dst, command.Path)
 			if parent != "." {
-				mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -print) `, filepath.Join(command.WorkDir, parent), filepath.Join(command.WorkDir, parent))
+				mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.WorkDir, parent), filepath.Join(command.WorkDir, parent))
 			} else {
-				mlog.Info(`WONT DELETE: find "%s" -type d -empty -print`, filepath.Join(command.WorkDir, parent))
+				mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.WorkDir, parent))
 			}
 		}
 
@@ -1068,7 +1068,7 @@ func (c *Core) runOperation(opName string, rsyncFlags []string, rsyncStrFlags st
 				if c.operation.OpState == model.StateGather {
 					parent := filepath.Dir(command.Src)
 					if parent != "." {
-						rmdir := fmt.Sprintf(`find "%s" -type d -empty -print`, filepath.Join(command.WorkDir, parent))
+						rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.WorkDir, parent))
 						mlog.Info("Running %s", rmdir)
 
 						err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
