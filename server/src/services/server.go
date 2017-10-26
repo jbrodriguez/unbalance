@@ -5,6 +5,8 @@ import (
 	// "os"
 	"path/filepath"
 
+	"jbrodriguez/unbalance/server/src/common"
+	"jbrodriguez/unbalance/server/src/domain"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
 	"jbrodriguez/unbalance/server/src/model"
@@ -81,13 +83,15 @@ func (s *Server) Start() {
 	s.engine.GET("/skt", echo.WrapHandler(websocket.Handler(s.handleWs)))
 
 	api := s.engine.Group(apiVersion)
+
+	api.GET("/config", s.getConfig)
+	api.GET("/state", s.getState)
+
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
 	api.PUT("/config/notifyMove", s.setNotifyMove)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/checkUpdate", s.setCheckUpdate)
-	api.GET("/config", s.getConfig)
-	api.GET("/status", s.getStatus)
 	api.GET("/storage", s.getStorage)
 	api.GET("/update", s.getUpdate)
 	api.POST("/tree", s.getTree)
@@ -112,7 +116,7 @@ func (s *Server) Stop() {
 
 func (s *Server) getConfig(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/config")
+	s.bus.Pub(msg, common.API_GET_CONFIG)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -121,14 +125,13 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getStatus(c echo.Context) (err error) {
+func (s *Server) getState(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/status")
+	s.bus.Pub(msg, common.API_GET_STATE)
 
 	reply := <-msg.Reply
-	resp := reply.(uint64)
-	data := fmt.Sprintf(`{"status": %d}`, resp)
-	c.JSONBlob(200, []byte(data))
+	state := reply.(*domain.State)
+	c.JSON(200, state)
 
 	return nil
 }
@@ -254,7 +257,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/tree")
+	s.bus.Pub(msg, common.API_GET_TREE)
 
 	reply := <-msg.Reply
 	resp := reply.(*dto.Entry)
