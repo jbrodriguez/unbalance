@@ -8,6 +8,8 @@ import ConsolePanel from './consolePanel'
 import { humanBytes, percentage } from '../lib/utils'
 import styles from '../styles/core.scss'
 
+import * as constant from '../lib/const'
+
 require('./tree-view.css')
 
 const cx = classNames.bind(styles)
@@ -17,47 +19,70 @@ export default class Scatter extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
-	componentDidMount() {
-		const { actions } = this.props.store
-		actions.getStorage()
+	constructor(props) {
+		super(props)
+
+		let fromDisk = []
+		let toDisk = []
+
+		props.store.state.unraid.disks.forEach(disk => {
+			fromDisk[disk.path] = props.store.state.operation.vdisks[disk.path].src
+			toDisk[disk.path] = props.store.state.operation.vdisks[disk.path].dst
+		})
+
+		this.state = {
+			fromDisk,
+			toDisk,
+		}
 	}
 
 	onCollapse = node => {
-		// console.log(`collapse-node-${JSON.stringify(node)}`)
 		const { treeCollapsed } = this.props.store.actions
 		treeCollapsed(node)
 	}
 
 	onCheck = node => {
-		// console.log(`check-node-${JSON.stringify(node)}`)
 		const { treeChecked } = this.props.store.actions
 		treeChecked(node)
 	}
 
 	checkFrom = path => () => {
-		const { checkFrom } = this.props.store.actions
-		checkFrom(path)
+		const { changeDisk } = this.props.store.actions
+		const { fromDisk, toDisk } = this.state
+
+		Object.keys(fromDisk).forEach(key => (fromDisk[key] = key === path))
+		Object.keys(toDisk).forEach(key => (toDisk[key] = !(key === path)))
+
+		this.setState({ fromDisk, toDisk })
+
+		changeDisk(path)
 	}
 
 	checkTo = path => e => {
-		const { state, actions: { checkTo } } = this.props.store
+		const { fromDisk, toDisk } = this.state
 
-		if (state.fromDisk[path]) {
+		if (fromDisk[path]) {
 			e.preventDefault()
 			return
 		}
 
-		checkTo(path)
+		this.setState({
+			toDisk: {
+				...toDisk,
+				[path]: !toDisk[path],
+			},
+		})
 	}
 
 	render() {
 		const { state, actions } = this.props.store
+		const { fromDisk, toDisk } = this.state
 
 		if (!state.unraid) {
 			return null
 		}
 
-		if (state.unraid.condition.state !== 'STARTED') {
+		if (state.unraid.state !== 'STARTED') {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -70,8 +95,9 @@ export default class Scatter extends PureComponent {
 			)
 		}
 
-		const stateOk = state.unraid && state.unraid.condition.state === 'STARTED'
-		const disabled = state.opInProgress || !stateOk || Object.keys(state.tree.chosen).length === 0
+		const stateOk = state.unraid.state === 'STARTED'
+		const opInProgress = state.operation.opState !== constant.stateIdle
+		const disabled = opInProgress || !stateOk || Object.keys(state.tree.chosen).length === 0
 
 		const buttons = (
 			<div className={cx('flexSection')}>
@@ -120,9 +146,7 @@ export default class Scatter extends PureComponent {
 				<div className={cx('col-xs-12')}>
 					<div className={cx('gridheader')}>
 						<section className={cx('row', 'between-xs', 'middle-xs')}>
-							<div className={cx('col-xs-12')}>
-								{buttons}
-							</div>
+							<div className={cx('col-xs-12')}>{buttons}</div>
 						</section>
 					</div>
 				</div>
@@ -140,12 +164,14 @@ export default class Scatter extends PureComponent {
 			)
 		}
 
-		// {percentage(disk.free/disk.size)}
-
 		const rows = state.unraid.disks.map((disk, i) => {
+			const plannedFree = state.operation.vdisks[disk.path]
+				? state.operation.vdisks[disk.path].plannedFree
+				: disk.free
+
 			const diskChanged = cx({
-				label: disk.newFree !== disk.free,
-				'label-success': disk.newFree !== disk.free && state.fromDisk[disk.path],
+				label: plannedFree !== disk.free,
+				'label-success': plannedFree !== disk.free && fromDisk[disk.path],
 			})
 
 			const percent = percentage((disk.size - disk.free) / disk.size)
@@ -156,12 +182,8 @@ export default class Scatter extends PureComponent {
 			if (disk.type === 'Cache' && disk.name.length > 5) {
 				return (
 					<tr key={disk.id}>
-						<td>
-							{disk.name}
-						</td>
-						<td>
-							{disk.fsType}
-						</td>
+						<td>{disk.name}</td>
+						<td>{disk.fsType}</td>
 						<td colSpan="7">
 							{disk.serial} ({disk.device})
 						</td>
@@ -172,51 +194,33 @@ export default class Scatter extends PureComponent {
 				// checkbox indicating it's either the from disk or a to disk
 				const lines = [
 					<tr key={disk.id}>
-						<td>
-							{disk.name}
-						</td>
-						<td>
-							{disk.fsType}
-						</td>
+						<td>{disk.name}</td>
+						<td>{disk.fsType}</td>
 						<td>
 							{disk.serial} ({disk.device})
 						</td>
 						<td>
-							<input
-								type="checkbox"
-								checked={state.fromDisk[disk.path]}
-								onChange={this.checkFrom(disk.path)}
-							/>
+							<input type="checkbox" checked={fromDisk[disk.path]} onChange={this.checkFrom(disk.path)} />
 						</td>
 						<td>
-							<input
-								type="checkbox"
-								checked={state.toDisk[disk.path]}
-								onChange={this.checkTo(disk.path)}
-							/>
+							<input type="checkbox" checked={toDisk[disk.path]} onChange={this.checkTo(disk.path)} />
 						</td>
-						<td>
-							{humanBytes(disk.size)}
-						</td>
-						<td>
-							{humanBytes(disk.free)}
-						</td>
+						<td>{humanBytes(disk.size)}</td>
+						<td>{humanBytes(disk.free)}</td>
 						<td>
 							<div className={cx('progress')}>
 								<span style={{ width: percent }} />
 							</div>
 						</td>
 						<td>
-							<span className={diskChanged}>
-								{humanBytes(disk.newFree)}
-							</span>
+							<span className={diskChanged}>{humanBytes(plannedFree)}</span>
 						</td>
 					</tr>,
 				]
 
 				// if it's the source disk, let's add a second row, with the
 				// tree-menu
-				if (state.fromDisk[disk.path]) {
+				if (fromDisk[disk.path]) {
 					const key = i + 100
 					lines.push(
 						<tr key={key}>
@@ -237,11 +241,7 @@ export default class Scatter extends PureComponent {
 								<b>Currently selected</b>
 								<br />
 								<ul>
-									{Object.keys(state.tree.chosen).map(chosen =>
-										<li key={chosen}>
-											- {chosen}
-										</li>,
-									)}
+									{Object.keys(state.tree.chosen).map(chosen => <li key={chosen}>- {chosen}</li>)}
 								</ul>
 							</td>
 						</tr>,
@@ -269,24 +269,16 @@ export default class Scatter extends PureComponent {
 								<th style={{ width: '100px' }}>PLAN</th>
 							</tr>
 						</thead>
-						<tbody>
-							{rows}
-						</tbody>
+						<tbody>{rows}</tbody>
 						<tfoot>
 							<tr>
 								<th colSpan="5">TOTAL</th>
-								<th>
-									{humanBytes(state.unraid.condition.size)}
-								</th>
-								<th>
-									{humanBytes(state.unraid.condition.free)}
-								</th>
+								<th>{humanBytes(state.unraid.size)}</th>
+								<th>{humanBytes(state.unraid.free)}</th>
 								<th>
 									<div className={cx('progress')} />
 								</th>
-								<th>
-									{humanBytes(state.unraid.condition.free)}
-								</th>
+								<th>{humanBytes(state.unraid.free)}</th>
 							</tr>
 						</tfoot>
 					</table>

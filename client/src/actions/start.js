@@ -9,8 +9,8 @@ function start({ state, actions, opts: { ws } }) {
 	})
 
 	actions.getConfig()
-	actions.getStatus()
-	actions.checkForUpdate()
+	actions.getState()
+	// actions.checkForUpdate()
 
 	return state
 }

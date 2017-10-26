@@ -1,11 +1,11 @@
-import path 				from 'path'
-import express 				from 'express'
-import webpack 				from 'webpack'
-import webpackMiddleware 	from 'webpack-dev-middleware'
+import path from 'path'
+import express from 'express'
+import webpack from 'webpack'
+import webpackMiddleware from 'webpack-dev-middleware'
 import webpackHotMiddleware from 'webpack-hot-middleware'
-import httpProxy 			from 'http-proxy'
+import httpProxy from 'http-proxy'
 
-import config 				from './webpack.config'
+import config from './webpack.config'
 
 // var path = require('path');
 // var express = require('express');
@@ -14,7 +14,6 @@ import config 				from './webpack.config'
 // var webpackHotMiddleware = require('webpack-hot-middleware');
 // var config = require('./webpack.config.js');
 // var httpProxy = require('http-proxy');
-
 
 // We need to add a configuration to our proxy server,
 // as we are now proxying outside localhost
@@ -48,11 +47,11 @@ if (isDeveloping) {
 	app.use(webpackHotMiddleware(compiler))
 
 	app.all('/api/*', (req, res) => {
-		proxy.web(req, res, { target: 'http://wopr.apertoire.org:6237' })
+		proxy.web(req, res, { target: 'http://lucy.apertoire.org:6237' })
 	})
 
 	server.on('upgrade', (req, socket, head) => {
-		proxy.ws(req, socket, head, { target: 'http://wopr.apertoire.org:6237' })
+		proxy.ws(req, socket, head, { target: 'http://lucy.apertoire.org:6237' })
 	})
 
 	app.get('*', (req, res) => {

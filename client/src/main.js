@@ -15,7 +15,7 @@ import configActions from './actions/config'
 import treeActions from './actions/tree'
 import gatherTreeActions from './actions/gather'
 import unraidActions from './actions/unraid'
-import statusActions from './actions/status'
+import stateActions from './actions/state'
 
 import Api from './lib/api'
 import WSApi from './lib/wsapi'
@@ -83,7 +83,7 @@ const history = createBrowserHistory()
 
 const initialState = {
 	config: null,
-	status: null,
+	operation: null,
 	unraid: null,
 	fromDisk: null,
 	toDisk: null,
@@ -112,6 +112,13 @@ const initialState = {
 	latestVersion: '',
 }
 
+// const initialState = {
+// 	config: null,
+// 	unraid: null,
+// 	operation: null,
+// 	history,
+// }
+
 const actions = combineActions(
 	startActions,
 	uiActions,
@@ -119,7 +126,7 @@ const actions = combineActions(
 	treeActions,
 	gatherTreeActions,
 	unraidActions,
-	statusActions,
+	stateActions,
 )
 
 const api = new Api()
@@ -136,7 +143,7 @@ class Layout extends PureComponent {
 		const store = this.props.store
 
 		// we wait for a valid config and a valid status before rendering the content
-		if (!(store.state && store.state.config && store.state.status !== -1)) {
+		if (!(store.state && store.state.config && store.state.unraid && store.state.operation)) {
 			return null
 		}
 

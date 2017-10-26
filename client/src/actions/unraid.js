@@ -4,8 +4,8 @@ module.exports = {
 	getStorage,
 	gotStorage,
 
-	checkFrom,
-	checkTo,
+	// checkFrom,
+	// checkTo,
 
 	calculate,
 	calcStarted,
@@ -113,33 +113,33 @@ function gotStorage({ state, actions }, unraid) {
 	}
 }
 
-function checkFrom({ state, actions }, path) {
-	const fromDisk = Object.assign({}, state.fromDisk)
-	const toDisk = Object.assign({}, state.toDisk)
+// function checkFrom({ state, actions }, path) {
+// 	const fromDisk = Object.assign({}, state.fromDisk)
+// 	const toDisk = Object.assign({}, state.toDisk)
 
-	Object.keys(fromDisk).forEach(key => (fromDisk[key] = key === path))
-	Object.keys(toDisk).forEach(key => (toDisk[key] = !(key === path)))
+// 	Object.keys(fromDisk).forEach(key => (fromDisk[key] = key === path))
+// 	Object.keys(toDisk).forEach(key => (toDisk[key] = !(key === path)))
 
-	actions.changeDisk(path)
+// 	actions.changeDisk(path)
 
-	return {
-		...state,
-		fromDisk,
-		toDisk,
-		validateDisabled: true,
-	}
-}
+// 	return {
+// 		...state,
+// 		fromDisk,
+// 		toDisk,
+// 		validateDisabled: true,
+// 	}
+// }
 
-function checkTo({ state }, path) {
-	return {
-		...state,
-		toDisk: {
-			...state.toDisk,
-			[path]: !state.toDisk[path],
-		},
-		validateDisabled: true,
-	}
-}
+// function checkTo({ state }, path) {
+// 	return {
+// 		...state,
+// 		toDisk: {
+// 			...state.toDisk,
+// 			[path]: !state.toDisk[path],
+// 		},
+// 		validateDisabled: true,
+// 	}
+// }
 
 function calculate({ state, actions, opts: { ws } }) {
 	actions.setOpInProgress('Calculating')
