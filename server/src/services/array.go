@@ -1,0 +1,228 @@
+package services
+
+import (
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"jbrodriguez/unbalance/server/src/common"
+	"jbrodriguez/unbalance/server/src/domain"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
+
+	"github.com/jbrodriguez/actor"
+	"github.com/jbrodriguez/mlog"
+	"github.com/jbrodriguez/pubsub"
+	ini "github.com/vaughan0/go-ini"
+)
+
+type Array struct {
+	bus      *pubsub.PubSub
+	settings *lib.Settings
+	actor    *actor.Actor
+}
+
+// NewArray -
+func NewArray(bus *pubsub.PubSub, settings *lib.Settings) *Array {
+	array := &Array{
+		bus:      bus,
+		settings: settings,
+		actor:    actor.NewActor(bus),
+	}
+
+	return array
+}
+
+// Start -
+func (a *Array) Start() (err error) {
+	mlog.Info("starting service Array ...")
+
+	err = a.SanityCheck(a.settings.APIFolders)
+	if err != nil {
+		return err
+	}
+
+	a.actor.Register(common.GET_ARRAY_STATUS, a.getStatus)
+	a.actor.Register(common.API_GET_TREE, a.getTree)
+
+	go a.actor.React()
+
+	return nil
+}
+
+// Stop -
+func (a *Array) Stop() {
+	mlog.Info("stopped service Array ...")
+}
+
+func (a *Array) SanityCheck(locations []string) error {
+	location := lib.SearchFile("var.ini", locations)
+	if location == "" {
+		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
+	}
+
+	location = lib.SearchFile("disks.ini", locations)
+	if location == "" {
+		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
+	}
+
+	return nil
+}
+
+func (a *Array) getStatus(msg *pubsub.Message) {
+	unraid, err := getArrayData()
+	if err != nil {
+		msg.Reply <- dto.Message{Data: nil, Error: err}
+	}
+
+	msg.Reply <- dto.Message{Data: unraid, Error: nil}
+}
+
+func getArrayData() (*domain.Unraid, error) {
+	unraid := &domain.Unraid{}
+
+	// get array status
+	file, err := ini.LoadFile("/var/local/emhttp/var.ini")
+	if err != nil {
+		return nil, err
+	}
+
+	tmp, _ := file.Get("", "mdNumDisks")
+	numDisks := strings.Replace(tmp, "\"", "", -1)
+	unraid.NumDisks, err = strconv.ParseInt(numDisks, 10, 64)
+
+	tmp, _ = file.Get("", "mdNumProtected")
+	numProtected := strings.Replace(tmp, "\"", "", -1)
+	unraid.NumProtected, _ = strconv.ParseInt(numProtected, 10, 64)
+
+	tmp, _ = file.Get("", "sbSynced")
+	synced := strings.Replace(tmp, "\"", "", -1)
+	ut, _ := strconv.ParseInt(synced, 10, 64)
+	unraid.Synced = time.Unix(ut, 0)
+
+	tmp, _ = file.Get("", "sbSyncErrs")
+	syncErrs := strings.Replace(tmp, "\"", "", -1)
+	unraid.SyncErrs, _ = strconv.ParseInt(syncErrs, 10, 64)
+
+	tmp, _ = file.Get("", "mdResync")
+	resync := strings.Replace(tmp, "\"", "", -1)
+	unraid.Resync, _ = strconv.ParseInt(resync, 10, 64)
+
+	tmp, _ = file.Get("", "mdResyncPos")
+	resyncPos := strings.Replace(tmp, "\"", "", -1)
+	unraid.ResyncPos, _ = strconv.ParseInt(resyncPos, 10, 64)
+
+	tmp, _ = file.Get("", "mdState")
+	unraid.State = strings.Replace(tmp, "\"", "", -1)
+
+	// get disks
+	file, err = ini.LoadFile("/var/local/emhttp/disks.ini")
+	if err != nil {
+		return nil, err
+	}
+
+	// get free/size data
+	free := make(map[string]int64)
+	size := make(map[string]int64)
+
+	err = lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
+		data := strings.Fields(line)
+		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
+		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var totalSize, totalFree int64
+	disks := make([]*domain.Disk, 0)
+
+	for _, section := range file {
+		diskType := strings.Replace(section["type"], "\"", "", -1)
+		diskName := strings.Replace(section["name"], "\"", "", -1)
+		diskStatus := strings.Replace(section["status"], "\"", "", -1)
+
+		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && len(diskName) > 5 || diskStatus == "DISK_NP") {
+			continue
+		}
+
+		disk := &domain.Disk{}
+
+		disk.ID, _ = strconv.ParseInt(strings.Replace(section["idx"], "\"", "", -1), 10, 64) // 1
+		disk.Name = diskName                                                                 // disk1, cache
+		disk.Path = "/mnt/" + disk.Name                                                      // /mnt/disk1, /mnt/cache
+		disk.Device = strings.Replace(section["device"], "\"", "", -1)                       // sdp
+		disk.Type = diskType                                                                 // Flash, Parity, Data, Cache
+		disk.FsType = strings.Replace(section["fsType"], "\"", "", -1)                       // xfs, reiserfs, btrfs
+		disk.Free = free[disk.Path]
+		disk.Size = size[disk.Path]
+		disk.Serial = strings.Replace(section["id"], "\"", "", -1) // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
+		disk.Status = diskStatus                                   // DISK_OK
+
+		totalSize += disk.Size
+		totalFree += disk.Free
+
+		disks = append(disks, disk)
+	}
+
+	unraid.Size = totalSize
+	unraid.Free = totalFree
+
+	sort.Slice(disks, func(i, j int) bool { return disks[i].ID < disks[j].ID })
+
+	unraid.Disks = disks
+
+	return unraid, nil
+}
+
+// GetTree -
+func (a *Array) getTree(msg *pubsub.Message) {
+	path := msg.Payload.(string)
+
+	entry := &dto.Entry{Path: path}
+
+	items := make([]dto.Node, 0)
+
+	elements, _ := ioutil.ReadDir(path)
+	for _, element := range elements {
+		var node dto.Node
+
+		// default values
+		node.Label = element.Name()
+		node.Collapsed = true
+		node.Checkbox = true
+		node.Path = filepath.Join(path, element.Name())
+
+		if element.IsDir() {
+			// let's check if the folder is empty
+			// we can still get an i/o error, if that's the case
+			// we assume the folder's empty
+			// otherwise we act accordingly
+			folder := filepath.Join(path, element.Name())
+			empty, err := lib.IsEmpty(folder)
+			if err != nil {
+				mlog.Warning("GetTree - Unable to determine if folder is empty: %s", folder)
+				node.Children = nil
+			} else {
+				if empty {
+					node.Children = nil
+				} else {
+					node.Children = []dto.Node{dto.Node{Label: "Loading ...", Collapsed: true, Checkbox: false, Children: nil}}
+				}
+			}
+		} else {
+			node.Children = nil
+		}
+
+		items = append(items, node)
+	}
+
+	entry.Nodes = items
+
+	msg.Reply <- entry
+}
