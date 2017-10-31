@@ -28,12 +28,12 @@ class App extends PureComponent {
 		const { children, store } = this.props
 		const { state } = store
 
-		const linksDisabled = state.status !== constant.stateIdle || state.opInProgress !== null
+		const linksDisabled = state.env.isBusy || !state.core || state.core.status !== constant.stateIdle
 
 		// console.log(`latestVersion(${state.latestVersion})`)
 
 		let updateAvailable = null
-		if (state.latestVersion !== '') {
+		if (state.env.latestVersion !== '') {
 			updateAvailable = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -44,7 +44,7 @@ class App extends PureComponent {
 		}
 
 		let alert = null
-		if (state.feedback.length !== 0) {
+		if (state.env.feedback.length !== 0) {
 			alert = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -55,12 +55,12 @@ class App extends PureComponent {
 		}
 
 		let stats = null
-		if (state.stats !== '') {
+		if (state.env.stats !== '') {
 			stats = <span>{state.stats}</span>
 		}
 
 		let progress = null
-		if (state.opInProgress) {
+		if (state.env.isBusy) {
 			progress = (
 				<div className={cx('loading')}>
 					<div className={cx('loading-bar')} />
@@ -170,7 +170,7 @@ class App extends PureComponent {
 						<ul className={cx('col-xs-12', 'col-sm-4')}>
 							<div className={cx('flexSection')}>
 								<span className={cx('copyright', 'lspacer')}>Copyright &copy; &nbsp;</span>
-								<a href="http://jbrodriguez.io/">Juan B. Rodriguez</a>
+								<a href="https://jbrio.net/posts/">Juan B. Rodriguez</a>
 							</div>
 						</ul>
 
@@ -227,7 +227,7 @@ class App extends PureComponent {
 								</a>
 								<a
 									className={cx('spacer')}
-									href="http://jbrodriguez.io/"
+									href="https://jbrio.net/posts/"
 									title="jbrodriguez.io"
 									rel="noreferrer noopener"
 									target="_blank"
