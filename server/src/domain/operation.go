@@ -4,14 +4,15 @@ import (
 	"time"
 )
 
+// Operation - represents the different types of operationns in the app
+// OpKind can be
+// ??? scatterCalc
+// ??? gatherFindTarget
+// ??? - move
+// ??? - copy
+// ??? - validate
 type Operation struct {
-	PrevState             uint64            `json:"prevState"`
-	OpState               uint64            `json:"opState"`
-	RsyncFlags            []string          `json:"-"`
-	RsyncStrFlags         string            `json:"-"`
-	Commands              []Command         `json:"commands"`
-	BytesToTransfer       int64             `json:"bytesToTransfer"`
-	BytesTransferred      int64             `json:"bytesTransferred"`
+	OpKind                uint64            `json:"opKind"`
 	Started               time.Time         `json:"started"`
 	Finished              time.Time         `json:"finished"`
 	FoldersNotTransferred []string          `json:"-"`
@@ -19,6 +20,11 @@ type Operation struct {
 	GroupIssue            int64             `json:"groupIssue"`
 	FolderIssue           int64             `json:"folderIssue"`
 	FileIssue             int64             `json:"fileIssue"`
+	BytesToTransfer       int64             `json:"bytesToTransfer"`
 	DryRun                bool              `json:"-"`
+	RsyncFlags            []string          `json:"-"`
+	RsyncStrFlags         string            `json:"-"`
+	Commands              []Command         `json:"commands"`
+	BytesTransferred      int64             `json:"bytesTransferred"`
 	VDisks                map[string]*VDisk `json:"vdisks"`
 }
