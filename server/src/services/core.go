@@ -91,20 +91,16 @@ func (c *Core) Start() (err error) {
 		return message.Error
 	}
 
+	c.state.Status = common.StateIdle
 	c.state.Unraid = message.Data.(*domain.Unraid)
-	c.state.Operation = &domain.Operation{
-		OpState:   common.StateIdle,
-		PrevState: common.StateIdle,
-		VDisks:    make(map[string]*domain.VDisk),
-	}
-
-	for _, disk := range c.state.Unraid.Disks {
-		vdisk := &domain.VDisk{Path: disk.Path, PlannedFree: disk.Free}
-		c.state.Operation.VDisks[disk.Path] = vdisk
-	}
+	c.state.Operations = make([]*domain.Operation, 0)
+	c.state.Operation = resetOp(c.state.Unraid.Disks)
 
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
+	c.actor.Register(common.API_GET_STATUS, c.getStatus)
 	c.actor.Register(common.API_GET_STATE, c.getState)
+	c.actor.Register(common.API_RESET_OP, c.resetOp)
+
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	// c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
@@ -147,10 +143,24 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-func (c *Core) getState(msg *pubsub.Message) {
+func (c *Core) getStatus(msg *pubsub.Message) {
 	mlog.Info("Sending status")
 
+	msg.Reply <- c.state.Status
+}
+
+func (c *Core) getState(msg *pubsub.Message) {
+	mlog.Info("Sending state")
+
 	msg.Reply <- c.state
+}
+
+func (c *Core) resetOp(msg *pubsub.Message) {
+	mlog.Info("resetting op")
+
+	c.state.Operation = resetOp(c.state.Unraid.Disks)
+
+	msg.Reply <- c.state.Operation
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {
@@ -240,6 +250,20 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
+}
+
+func resetOp(disks []*domain.Disk) *domain.Operation {
+	op := &domain.Operation{
+		OpKind: common.OP_NEUTRAL,
+		VDisks: make(map[string]*domain.VDisk, 0),
+	}
+
+	for _, disk := range disks {
+		vdisk := &domain.VDisk{Path: disk.Path, PlannedFree: disk.Free, Src: false, Dst: false}
+		op.VDisks[disk.Path] = vdisk
+	}
+
+	return op
 }
 
 // func (c *Core) getStorage(msg *pubsub.Message) {

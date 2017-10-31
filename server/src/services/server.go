@@ -85,7 +85,9 @@ func (s *Server) Start() {
 	api := s.engine.Group(apiVersion)
 
 	api.GET("/config", s.getConfig)
-	api.GET("/state", s.getState)
+	api.GET("/status", s.getStatus)
+	api.GET("/state/:op", s.getState)
+	api.GET("/resetOp", s.resetOp)
 
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
 	api.PUT("/config/notifyMove", s.setNotifyMove)
@@ -125,13 +127,37 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getState(c echo.Context) (err error) {
+func (s *Server) getStatus(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_STATUS)
+
+	reply := <-msg.Reply
+	status := reply.(int64)
+	c.JSON(200, status)
+
+	return nil
+}
+
+func (s *Server) getState(c echo.Context) (err error) {
+	op := c.Param("op")
+
+	msg := &pubsub.Message{Payload: op, Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, common.API_GET_STATE)
 
 	reply := <-msg.Reply
 	state := reply.(*domain.State)
 	c.JSON(200, state)
+
+	return nil
+}
+
+func (s *Server) resetOp(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_RESET_OP)
+
+	reply := <-msg.Reply
+	op := reply.(*domain.Operation)
+	c.JSON(200, op)
 
 	return nil
 }
