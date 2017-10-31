@@ -10,9 +10,18 @@ export default class Api {
 		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
-	getState() {
+	getStatus() {
 		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/state`).then(resp => resp.json())
+		return fetch(`${this.hostr}/status`).then(resp => resp.json())
+	}
+
+	getState(mode) {
+		// console.log('this.hostr', this.hostr)
+		return fetch(`${this.hostr}/state/${mode}`).then(resp => resp.json())
+	}
+
+	resetOperation() {
+		return fetch(`${this.hostr}/resetOp`).then(resp => resp.json())
 	}
 
 	setNotifyCalc(notify) {
