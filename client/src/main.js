@@ -9,13 +9,14 @@ import createBrowserHistory from 'history/createBrowserHistory'
 
 import { createStore, combineActions } from 'reactorx'
 
-import startActions from './actions/start'
-import uiActions from './actions/ui'
-import configActions from './actions/config'
-import treeActions from './actions/tree'
-import gatherTreeActions from './actions/gather'
-import unraidActions from './actions/unraid'
-import stateActions from './actions/state'
+import start from './actions/start'
+import config from './actions/config'
+import env from './actions/env'
+import core from './actions/core'
+import scatter from './actions/scatter'
+// import treeActions from './actions/tree'
+// import gatherTreeActions from './actions/gather'
+// import unraidActions from './actions/unraid'
 
 import Api from './lib/api'
 import WSApi from './lib/wsapi'
@@ -23,9 +24,11 @@ import WSApi from './lib/wsapi'
 import App from './components/app'
 // import Home from './components/home'
 import Scatter from './components/scatter'
-import Gather from './components/gather'
+// import Gather from './components/gather'
 import Settings from './components/settings'
 import Log from './components/log'
+
+import * as constant from './lib/const'
 
 // SAMPLE STATE
 // state = {
@@ -83,33 +86,36 @@ const history = createBrowserHistory()
 
 const initialState = {
 	config: null,
-	operation: null,
-	unraid: null,
-	fromDisk: null,
-	toDisk: null,
-	opInProgress: null,
-	transferDisabled: true,
-	validateDisabled: true,
-	stats: '',
-	lines: [],
-	log: [],
-	tree: {
-		cache: null,
-		chosen: {},
-		items: [],
+	core: null,
+	env: {
+		isBusy: false,
+		transferDisabled: true,
+		validateDisabled: true,
+		stats: '',
+		lines: [],
+		log: [],
+		feedback: [],
+		timeout: null,
+		latestVersion: '',
 	},
-	gatherTree: {
-		cache: null,
-		chosen: {},
-		items: [],
-		present: [],
-		elegible: [],
-		target: null,
+	scatter: {
+		tree: {
+			cache: null,
+			chosen: {},
+			items: [],
+		},
 	},
-	feedback: [],
-	timeout: null,
+	gather: {
+		tree: {
+			cache: null,
+			chosen: {},
+			items: [],
+			present: [],
+			elegible: [],
+			target: null,
+		},
+	},
 	history,
-	latestVersion: '',
 }
 
 // const initialState = {
@@ -120,13 +126,14 @@ const initialState = {
 // }
 
 const actions = combineActions(
-	startActions,
-	uiActions,
-	configActions,
-	treeActions,
-	gatherTreeActions,
-	unraidActions,
-	stateActions,
+	start,
+	config,
+	env,
+	core,
+	scatter,
+	// treeActions,
+	// gatherTreeActions,
+	// unraidActions,
 )
 
 const api = new Api()
@@ -143,7 +150,7 @@ class Layout extends PureComponent {
 		const store = this.props.store
 
 		// we wait for a valid config and a valid status before rendering the content
-		if (!(store.state && store.state.config && store.state.unraid && store.state.operation)) {
+		if (!(store.state && store.state.config)) {
 			return null
 		}
 
@@ -151,7 +158,7 @@ class Layout extends PureComponent {
 			<Router history={store.state.history}>
 				<App store={store}>
 					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
-					<Route path="/gather" render={props => <Gather store={store} {...props} />} />
+					{/* <Route path="/gather" render={props => <Gather store={store} {...props} />} /> */}
 					<Route exact path="/settings" render={props => <Settings store={store} {...props} />} />
 					<Route exact path="/log" render={props => <Log store={store} {...props} />} />
 				</App>
