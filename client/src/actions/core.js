@@ -18,23 +18,23 @@ const gotStatus = ({ state }, status) => {
 	let line = ''
 
 	switch (status) {
-		case constant.stateCalc:
+		case constant.OP_SCATTER_CALC:
 			line = 'CALCULATE: in progress ...'
 			break
-		case constant.stateMove:
+		case constant.OP_SCATTER_MOVE:
 			line = 'MOVE: in progress ...'
 			break
-		case constant.stateCopy:
+		case constant.OP_SCATTER_COPY:
 			line = 'COPY: in progress ...'
 			break
-		case constant.stateValidate:
+		case constant.OP_SCATTER_VALIDATE:
 			line = 'VALIDATE: in progress ...'
 			break
-		case constant.stateFindTargets:
+		case constant.OP_GATHER_CALC:
 			line = 'FIND TARGET: in progress ...'
 			pathname = '/gather/target'
 			break
-		case constant.stateGather:
+		case constant.OP_GATHER_MOVE:
 			line = 'MOVE: in progress ...'
 			pathname = '/gather/move'
 			break

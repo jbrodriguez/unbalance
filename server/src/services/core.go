@@ -91,7 +91,7 @@ func (c *Core) Start() (err error) {
 		return message.Error
 	}
 
-	c.state.Status = common.StateIdle
+	c.state.Status = common.OP_NEUTRAL
 	c.state.Unraid = message.Data.(*domain.Unraid)
 	c.state.Operations = make([]*domain.Operation, 0)
 	c.state.Operation = resetOp(c.state.Unraid.Disks)
@@ -208,7 +208,7 @@ func getScatterParams(msg *pubsub.Message) (*domain.Operation, error) {
 }
 
 func (c *Core) calculateScatter(msg *pubsub.Message) {
-	c.state.Status = common.StateCalc
+	c.state.Status = common.OP_SCATTER_CALC
 
 	params, err := getScatterParams(msg)
 	if err != nil {
@@ -245,7 +245,7 @@ func (c *Core) calculateScatter(msg *pubsub.Message) {
 func (c *Core) calculateScatterFinished(msg *pubsub.Message) {
 	operation := msg.Payload.(*domain.Operation)
 
-	c.state.Status = common.StateIdle
+	c.state.Status = common.OP_NEUTRAL
 	c.state.Operation = operation
 
 	// send to front end the signal of operation finished

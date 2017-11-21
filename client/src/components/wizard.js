@@ -61,7 +61,7 @@ export default class Wizard extends PureComponent {
 				break
 		}
 
-		const opInProgress = state.env.isBusy || state.core.status !== constant.stateIdle
+		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
 		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
 
 		prevDisabled = prevDisabled || opInProgress

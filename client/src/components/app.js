@@ -28,7 +28,7 @@ class App extends PureComponent {
 		const { children, store } = this.props
 		const { state } = store
 
-		const linksDisabled = state.env.isBusy || !state.core || state.core.status !== constant.stateIdle
+		const linksDisabled = state.env.isBusy || !state.core || state.core.status !== constant.OP_NEUTRAL
 
 		// console.log(`latestVersion(${state.latestVersion})`)
 

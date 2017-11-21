@@ -107,7 +107,7 @@ export default class Scatter extends PureComponent {
 			)
 		}
 
-		const opInProgress = state.env.isBusy || state.core.status !== constant.stateIdle
+		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
 		const calcDisabled =
 			opInProgress ||
 			Object.keys(state.scatter.chosen).length === 0 ||

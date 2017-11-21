@@ -5,20 +5,21 @@ const (
 
 	CHAN_CAPACITY = 3
 
-	OP_NEUTRAL      = 0
-	OP_SCATTER_CALC = 1
-	OP_GATHER_CALC  = 2
-	OP_MOVE         = 3
-	OP_COPY         = 4
-	OP_VALIDATE     = 5
+	OP_NEUTRAL          = 0
+	OP_SCATTER_CALC     = 1
+	OP_SCATTER_MOVE     = 2
+	OP_SCATTER_COPY     = 3
+	OP_SCATTER_VALIDATE = 4
+	OP_GATHER_CALC      = 5
+	OP_GATHER_MOVE      = 6
 
-	StateIdle        = 0
-	StateCalc        = 1
-	StateMove        = 2
-	StateCopy        = 3
-	StateValidate    = 4
-	StateFindTargets = 5
-	StateGather      = 6
+	// StateIdle        = 0
+	// StateCalc        = 1
+	// StateMove        = 2
+	// StateCopy        = 3
+	// StateValidate    = 4
+	// StateFindTargets = 5
+	// StateGather      = 6
 
 	API_GET_CONFIG       = "core/get/config"
 	API_GET_STATUS       = "core/get/status"

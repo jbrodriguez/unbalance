@@ -20,7 +20,7 @@ export default class GatherMove extends PureComponent {
 	componentDidMount() {
 		const { state, actions } = this.props.store
 
-		if (state.core.status === constant.stateIdle) {
+		if (state.core.status === constant.OP_NEUTRAL) {
 			actions.clearConsole()
 		}
 	}
@@ -30,7 +30,7 @@ export default class GatherMove extends PureComponent {
 
 		const preReqNotPresent =
 			Object.keys(state.gather.tree.chosen).length === 0 || !isValid(state.gather.tree.target)
-		const runningMove = state.core.status ? state.core.status === constant.stateGather : false
+		const runningMove = state.core.status ? state.core.status === constant.OP_GATHER_MOVE : false
 
 		if (preReqNotPresent && !runningMove) {
 			return null
@@ -47,7 +47,7 @@ export default class GatherMove extends PureComponent {
 			)
 		}
 
-		const opInProgress = state.env.isBusy || state.core.status !== constant.stateIdle
+		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
 		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
 
 		let summary = null
