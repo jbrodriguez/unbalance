@@ -20,7 +20,7 @@ export default class GatherTarget extends PureComponent {
 
 	componentDidMount() {
 		const { actions, state } = this.props.store
-		actions.findTargets(state.gatherTree.chosen)
+		actions.findTargets(state.gather.tree.chosen)
 	}
 
 	checkTarget = disk => e => {
@@ -32,23 +32,25 @@ export default class GatherTarget extends PureComponent {
 		const { match, store: { state } } = this.props
 
 		let consolePanel = null
-		if (state.lines.length !== 0) {
+		if (state.env.lines.length !== 0) {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.lines} styleClass={'console-feedback'} />
+						<ConsolePanel lines={state.env.lines} styleClass={'console-feedback'} />
 					</div>
 				</section>
 			)
 		}
 
 		// if free === newFree then this disk isn't elegible as a target
-		const elegible = state.unraid.disks.filter(disk => disk.free !== disk.newFree)
+		const elegible = state.core.unraid.disks.filter(
+			disk => disk.free !== state.core.operation.vdisks[disk.path].plannedFree,
+		)
 
 		// sort elegible disks by least amount of data transfer
 		const targets = elegible.sort((a, b) => {
-			const xferA = a.free - a.newFree
-			const xferB = b.free - b.newFree
+			const xferA = a.free - state.core.operation.vdisks[a.path].plannedFree
+			const xferB = b.free - state.core.operation.vdisks[a.path].plannedFree
 			if (xferA < xferB) return -1
 			if (xferA > xferB) return 1
 			if (a.id < b.id) return -1
@@ -58,34 +60,22 @@ export default class GatherTarget extends PureComponent {
 
 		const rows = targets.map(disk => {
 			const percent = percentage((disk.size - disk.free) / disk.size)
-			const present = state.gatherTree.present.some(presence => presence.id === disk.id)
+			const present = state.gather.tree.present.some(presence => presence.id === disk.id)
 
 			return (
 				<tr key={disk.id}>
 					<td>
 						<input type="checkbox" checked={disk.dst} onChange={this.checkTarget(disk)} />
 					</td>
-					<td>
-						{present && <span>*</span>}
-					</td>
-					<td>
-						{disk.name}
-					</td>
-					<td>
-						{disk.fsType}
-					</td>
+					<td>{present && <span>*</span>}</td>
+					<td>{disk.name}</td>
+					<td>{disk.fsType}</td>
 					<td>
 						{disk.serial} ({disk.device})
 					</td>
-					<td>
-						{humanBytes(disk.free - disk.newFree)}
-					</td>
-					<td>
-						{humanBytes(disk.size)}
-					</td>
-					<td>
-						{humanBytes(disk.free)}
-					</td>
+					<td>{humanBytes(disk.free - state.core.operation.vdisks[disk.path].plannedFree)}</td>
+					<td>{humanBytes(disk.size)}</td>
+					<td>{humanBytes(disk.free)}</td>
 					<td>
 						<div className={cx('progress')}>
 							<span style={{ width: percent }} />
@@ -93,7 +83,7 @@ export default class GatherTarget extends PureComponent {
 					</td>
 					<td>
 						<span className={cx('label', 'label-success')}>
-							{humanBytes(disk.newFree)}
+							{humanBytes(state.core.operation.vdisks[disk.path].plannedFree)}
 						</span>
 					</td>
 				</tr>
@@ -102,7 +92,7 @@ export default class GatherTarget extends PureComponent {
 
 		let noun = ''
 		let verb = 'is'
-		const keys = Object.keys(state.gatherTree.chosen)
+		const keys = Object.keys(state.gather.tree.chosen)
 		if (keys.length > 1) {
 			noun = 's'
 			verb = 'are'
@@ -136,9 +126,7 @@ export default class GatherTarget extends PureComponent {
 								<th style={{ width: '100px' }}>PLAN</th>
 							</tr>
 						</thead>
-						<tbody>
-							{rows}
-						</tbody>
+						<tbody>{rows}</tbody>
 					</table>
 				</div>
 			</section>

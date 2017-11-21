@@ -142,6 +142,106 @@ const gotOperation = ({ state }, operation) => {
 	}
 }
 
+const calculateScatter = ({ state, actions, opts: { ws } }, fromDisk, toDisk) => {
+	actions.setBusy(true)
+
+	const operation = { ...state.core.operation }
+
+	let srcDisk = ''
+
+	state.core.unraid.disks.forEach(disk => {
+		operation.vdisks[disk.path].src = fromDisk[disk.path]
+		operation.vdisks[disk.path].dst = toDisk[disk.path]
+
+		if (operation.vdisks[disk.path].src) {
+			srcDisk = disk.path
+		}
+	})
+
+	console.log(`chosen(${JSON.stringify(state.scatter.chosen)})`)
+
+	const folders = Object.keys(state.scatter.chosen).map(folder => folder.slice(srcDisk.length + 1))
+
+	operation.chosenFolders = folders
+
+	ws.send({ topic: 'api/calculate/scatter', payload: operation })
+
+	return state
+}
+
+const calcStarted = ({ state }, line) => {
+	return {
+		...state,
+		lines: [].concat(`CALCULATE: ${line}`),
+	}
+}
+
+const calcProgress = ({ state }, line) => {
+	const lines = state.lines.length > 1000 ? [] : state.lines
+
+	return {
+		...state,
+		lines: lines.concat(`CALCULATE: ${line}`),
+	}
+}
+
+const calcFinished = ({ state, actions }, operation) => {
+	if (operation.bytesToTransfer === 0) {
+		const feedback = []
+
+		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
+		feedback.push('')
+		feedback.push('This might be due to one of the following reasons:')
+		feedback.push(
+			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
+		)
+		feedback.push(
+			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
+		)
+		feedback.push('')
+		feedback.push(
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving/copying or to change the amount of reserved space.',
+		)
+
+		actions.addFeedback(feedback)
+	}
+
+	actions.setBusy(false)
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+		},
+	}
+}
+
+function calcPermIssue({ state, actions }, permStats) {
+	const permIssues = permStats.split('|')
+
+	const feedback = []
+
+	feedback.push('There are some permission issues with the folders/files you want to move')
+	feedback.push(`${permIssues[0]} file(s)/folder(s) with an owner other than 'nobody'`)
+	feedback.push(`${permIssues[1]} file(s)/folder(s) with a group other than 'users'`)
+	feedback.push(`${permIssues[2]} folder(s) with a permission other than 'drwxrwxrwx'`)
+	feedback.push(`${permIssues[3]} files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'`)
+	feedback.push('You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)')
+	feedback.push('')
+	feedback.push(
+		'At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation',
+	)
+	feedback.push('')
+	feedback.push(
+		'You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command',
+	)
+
+	actions.addFeedback(feedback)
+
+	return state
+}
+
 // function setState({ state, actions }, backendState) {
 // 	return {
 // 		...state,
@@ -160,5 +260,10 @@ export default {
 	resetOperation,
 	gotOperation,
 
+	calculateScatter,
+	calcStarted,
+	calcProgress,
+	calcFinished,
+	calcPermIssue,
 	// setState,
 }

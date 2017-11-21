@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react'
 import { PropTypes } from 'prop-types'
-import { findDOMNode } from 'react-dom'
 
 import classNames from 'classnames/bind'
 
@@ -19,17 +18,20 @@ export default class Console extends PureComponent {
 			return
 		}
 
-		const node = findDOMNode(this)
-		node.scrollTop = node.scrollHeight
+		this.node.scrollTop = this.node.scrollHeight
 	}
 
 	render() {
 		const { lines, styleClass } = this.props
 
-		const items = lines.map((line, i) => <p key={i} className={cx('consoleLine')}>{line}</p>)
+		const items = lines.map((line, i) => (
+			<p key={i} className={cx('consoleLine')}>
+				{line}
+			</p>
+		))
 
 		return (
-			<div className={cx('console', styleClass)}>
+			<div className={cx('console', styleClass)} ref={node => (this.node = node)}>
 				{items}
 			</div>
 		)

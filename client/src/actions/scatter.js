@@ -12,10 +12,10 @@ const scatterGetTree = ({ state, actions, opts: { api } }, path) => {
 }
 
 const scatterGotTree = ({ state }, newTree) => {
-	let items = [].concat(state.scatter.tree.items)
+	let items = [].concat(state.scatter.items)
 
-	if (state.scatter.tree.cache) {
-		const node = state.scatter.tree.cache
+	if (state.scatter.cache) {
+		const node = state.scatter.cache
 		node.children = newTree.nodes
 
 		// console.log(`node-${JSON.stringify(state.tree.cache)}`)
@@ -30,10 +30,7 @@ const scatterGotTree = ({ state }, newTree) => {
 		...state,
 		scatter: {
 			...state.scatter,
-			tree: {
-				...state.scatter.tree,
-				items,
-			},
+			items,
 		},
 	}
 }
@@ -45,17 +42,15 @@ const checkFrom = ({ state, actions }, path) => {
 		...state,
 		scatter: {
 			...state.scatter,
-			tree: {
-				cache: null,
-				chosen: {},
-				items: [{ label: 'Loading ...' }],
-			},
+			cache: null,
+			chosen: {},
+			items: [{ label: 'Loading ...' }],
 		},
 	}
 }
 
 const scatterTreeCollapsed = ({ state, actions }, lineage) => {
-	const tree = [].concat(state.scatter.tree.items)
+	const tree = [].concat(state.scatter.items)
 	const node = getNode(tree, lineage)
 	// console.log(`node-${JSON.stringify(node)}`)
 
@@ -71,30 +66,26 @@ const scatterTreeCollapsed = ({ state, actions }, lineage) => {
 		...state,
 		scatter: {
 			...state.scatter,
-			tree: {
-				...state.scatter.tree,
-				cache: node,
-				items: tree,
-			},
+			cache: node,
+			items: tree,
 		},
 	}
 }
 
 const scatterTreeChecked = ({ state, actions }, lineage) => {
-	const items = [].concat(state.scatter.tree.items)
-	const chosen = Object.assign({}, state.scatter.tree.chosen)
+	const items = [].concat(state.scatter.items)
+	const chosen = Object.assign({}, state.scatter.chosen)
 
 	markChosen(items, lineage, chosen)
+
+	console.log(`chosenActions(${JSON.stringify(chosen)})`)
 
 	return {
 		...state,
 		scatter: {
-			...state.scatter.tree,
-			tree: {
-				...state.scatter.tree,
-				chosen,
-				items,
-			},
+			...state.scatter,
+			chosen,
+			items,
 		},
 	}
 }

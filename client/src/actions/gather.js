@@ -1,73 +1,12 @@
-module.exports = {
-	getShares,
+import { markChosen, getNode } from '../lib/utils'
 
-	getGatherTree,
-	gotGatherTree,
-
-	gatherTreeCollapsed,
-	gatherTreeChecked,
-
-	gatherTreeLocate,
-	gatherTreeLocated,
-}
-
-// utilities
-const getNode = (tree, lineage) => {
-	if (lineage.length === 0) {
-		return null
-	} else if (lineage.length === 1) {
-		return tree[lineage[0]]
-	}
-
-	const node = lineage.shift()
-	return getNode(tree[node].children, lineage)
-}
-
-const markChosen = (tree, lineage, chosen) => {
-	if (lineage.length === 0) {
-		// no-op
-	} else if (lineage.length === 1) {
-		const node = tree[lineage[0]]
-
-		if (node.checked) {
-			delete chosen[node.path]
-		} else {
-			uncheckChildren(node.children, chosen)
-			chosen[node.path] = true
-		}
-
-		node.checked = !node.checked
-	} else {
-		const index = lineage.shift() // this mutates lineage
-		const node = tree[index]
-
-		if (node.checked) {
-			delete chosen[node.path]
-			node.checked = false
-		}
-
-		markChosen(node.children, lineage, chosen)
-	}
-}
-
-const uncheckChildren = (tree, chosen) => {
-	if (!tree) return
-
-	tree.forEach(node => {
-		delete chosen[node.path]
-		node.checked = false
-
-		uncheckChildren(node.children, chosen)
-	})
-}
-
-// actions
-function getShares({ state, actions }) {
+const getShares = ({ state, actions }) => {
 	actions.getGatherTree('/mnt/user')
 
 	return {
 		...state,
-		gatherTree: {
+		gather: {
+			...state.gather,
 			cache: null,
 			items: [{ label: 'Loading ...' }],
 			chosen: {},
@@ -77,17 +16,22 @@ function getShares({ state, actions }) {
 	}
 }
 
-function getGatherTree({ state, actions, opts: { api } }, path) {
-	api.getTree(path).then(json => actions.gotGatherTree(json))
+const getGatherTree = ({ state, actions, opts: { api } }, path) => {
+	actions.setBusy(true)
+
+	api.getTree(path).then(json => {
+		actions.setBusy(false)
+		actions.gotGatherTree(json)
+	})
 
 	return state
 }
 
-function gotGatherTree({ state }, newTree) {
-	let items = [].concat(state.gatherTree.items)
+const gotGatherTree = ({ state }, newTree) => {
+	let items = [].concat(state.gather.tree.items)
 
-	if (state.gatherTree.cache) {
-		const node = state.gatherTree.cache
+	if (state.gather.tree.cache) {
+		const node = state.gather.tree.cache
 		node.children = newTree.nodes
 
 		// console.log(`node-${JSON.stringify(state.tree.cache)}`)
@@ -100,15 +44,15 @@ function gotGatherTree({ state }, newTree) {
 
 	return {
 		...state,
-		gatherTree: {
-			...state.gatherTree,
+		gather: {
+			...state.gather,
 			items,
 		},
 	}
 }
 
-function gatherTreeCollapsed({ state, actions }, lineage) {
-	const tree = [].concat(state.gatherTree.items)
+const gatherTreeCollapsed = ({ state, actions }, lineage) => {
+	const tree = [].concat(state.gather.tree.items)
 	const node = getNode(tree, lineage)
 	// console.log(`node-${JSON.stringify(node)}`)
 
@@ -122,17 +66,17 @@ function gatherTreeCollapsed({ state, actions }, lineage) {
 
 	return {
 		...state,
-		gatherTree: {
-			...state.gatherTree,
+		gather: {
+			...state.gather,
 			cache: node,
 			items: tree,
 		},
 	}
 }
 
-function gatherTreeChecked({ state, actions }, lineage) {
-	const items = [].concat(state.gatherTree.items)
-	const chosen = Object.assign({}, state.gatherTree.chosen)
+const gatherTreeChecked = ({ state, actions }, lineage) => {
+	const items = [].concat(state.gather.items)
+	const chosen = Object.assign({}, state.gather.chosen)
 	// const lineage2 = [].concat(lineage)
 
 	markChosen(items, lineage, chosen)
@@ -143,8 +87,8 @@ function gatherTreeChecked({ state, actions }, lineage) {
 
 	return {
 		...state,
-		gatherTree: {
-			...state.gatherTree,
+		gather: {
+			...state.gather,
 			chosen,
 			items,
 			present: [],
@@ -152,7 +96,7 @@ function gatherTreeChecked({ state, actions }, lineage) {
 	}
 }
 
-function gatherTreeLocate({ state, actions, opts: { api } }, chosen) {
+const gatherTreeLocate = ({ state, actions, opts: { api } }, chosen) => {
 	// const tree = [].concat(state.gatherTree.items)
 	// const node = getNode(tree, lineage)
 
@@ -165,13 +109,71 @@ function gatherTreeLocate({ state, actions, opts: { api } }, chosen) {
 	return state
 }
 
-function gatherTreeLocated({ state }, disks) {
+const gatherTreeLocated = ({ state }, disks) => {
 	// console.log(`disks-(${JSON.stringify(disks)})`)
 	return {
 		...state,
-		gatherTree: {
-			...state.gatherTree,
+		gather: {
+			...state.gather,
 			present: disks,
 		},
 	}
+}
+
+const findTargets = ({ state, actions, opts: { ws } }) => {
+	actions.setBusy(true)
+
+	const folders = Object.keys(state.gather.tree.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
+	ws.send({ topic: 'findTargets', payload: folders })
+
+	return {
+		...state,
+		gather: {
+			...state.gather,
+			target: null,
+		},
+	}
+}
+
+const findFinished = ({ state, actions }, operation) => {
+	if (operation.bytesToTransfer === 0) {
+		const feedback = []
+
+		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
+		feedback.push('')
+		feedback.push('This might be due to one of the following reasons:')
+		feedback.push(
+			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
+		)
+		feedback.push(
+			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
+		)
+		feedback.push('')
+		feedback.push(
+			'Check more disks in the TO column or go to the Settings page, to review the share(s)/folder(s) selected for moving/copying or to change the amount of reserved space.',
+		)
+
+		actions.addFeedback(feedback)
+	}
+
+	actions.gotOperation(operation)
+	actions.setBusy(false)
+
+	return state
+}
+
+export default {
+	getShares,
+
+	getGatherTree,
+	gotGatherTree,
+
+	gatherTreeCollapsed,
+	gatherTreeChecked,
+
+	gatherTreeLocate,
+	gatherTreeLocated,
+
+	findTargets,
+	findFinished,
 }

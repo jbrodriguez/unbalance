@@ -14,8 +14,8 @@ import config from './actions/config'
 import env from './actions/env'
 import core from './actions/core'
 import scatter from './actions/scatter'
+import gather from './actions/gather'
 // import treeActions from './actions/tree'
-// import gatherTreeActions from './actions/gather'
 // import unraidActions from './actions/unraid'
 
 import Api from './lib/api'
@@ -24,11 +24,11 @@ import WSApi from './lib/wsapi'
 import App from './components/app'
 // import Home from './components/home'
 import Scatter from './components/scatter'
-// import Gather from './components/gather'
+import Gather from './components/gather'
 import Settings from './components/settings'
 import Log from './components/log'
 
-import * as constant from './lib/const'
+// import * as constant from './lib/const'
 
 // SAMPLE STATE
 // state = {
@@ -99,21 +99,17 @@ const initialState = {
 		latestVersion: '',
 	},
 	scatter: {
-		tree: {
-			cache: null,
-			chosen: {},
-			items: [],
-		},
+		cache: null,
+		chosen: {},
+		items: [],
 	},
 	gather: {
-		tree: {
-			cache: null,
-			chosen: {},
-			items: [],
-			present: [],
-			elegible: [],
-			target: null,
-		},
+		cache: null,
+		chosen: {},
+		items: [],
+		present: [],
+		elegible: [],
+		target: null,
 	},
 	history,
 }
@@ -131,8 +127,8 @@ const actions = combineActions(
 	env,
 	core,
 	scatter,
+	gather,
 	// treeActions,
-	// gatherTreeActions,
 	// unraidActions,
 )
 
@@ -158,7 +154,7 @@ class Layout extends PureComponent {
 			<Router history={store.state.history}>
 				<App store={store}>
 					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
-					{/* <Route path="/gather" render={props => <Gather store={store} {...props} />} /> */}
+					<Route path="/gather" render={props => <Gather store={store} {...props} />} />
 					<Route exact path="/settings" render={props => <Settings store={store} {...props} />} />
 					<Route exact path="/log" render={props => <Log store={store} {...props} />} />
 				</App>

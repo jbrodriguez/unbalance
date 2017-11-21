@@ -20,7 +20,7 @@ export default class GatherMove extends PureComponent {
 	componentDidMount() {
 		const { state, actions } = this.props.store
 
-		if (state.opInProgress === null) {
+		if (state.core.status === constant.stateIdle) {
 			actions.clearConsole()
 		}
 	}
@@ -28,15 +28,16 @@ export default class GatherMove extends PureComponent {
 	render() {
 		const { match, store: { state, actions } } = this.props
 
-		const preReqNotPresent = Object.keys(state.gatherTree.chosen).length === 0 || !isValid(state.gatherTree.target)
-		const runningMove = state.status ? state.status === constant.stateGather : false
+		const preReqNotPresent =
+			Object.keys(state.gather.tree.chosen).length === 0 || !isValid(state.gather.tree.target)
+		const runningMove = state.core.status ? state.core.status === constant.stateGather : false
 
 		if (preReqNotPresent && !runningMove) {
 			return null
 		}
 
 		let consolePanel = null
-		if (state.lines.length !== 0) {
+		if (state.env.lines.length !== 0) {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -46,16 +47,19 @@ export default class GatherMove extends PureComponent {
 			)
 		}
 
+		const opInProgress = state.env.isBusy || state.core.status !== constant.stateIdle
+		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
+
 		let summary = null
 		let proceed = null
-		if (!(state.transferDisabled || state.opInProgress)) {
+		if (!(transferDisabled || opInProgress)) {
 			let dst = null
 			let size = 0
 
-			state.unraid.disks.forEach(disk => {
+			state.core.unraid.disks.forEach(disk => {
 				if (disk.dst) {
 					dst = disk
-					size = dst.free - dst.newFree
+					size = dst.free - state.core.operation.vdisks[dst.path].plannedFree
 				}
 			})
 
@@ -74,8 +78,8 @@ export default class GatherMove extends PureComponent {
 					<div className={cx('col-xs-12')}>
 						<button
 							className={cx('btn', 'btn-primary')}
-							onClick={() => actions.gather(state.gatherTree.target)}
-							disabled={state.transferDisabled || state.opInProgress}
+							onClick={() => actions.gather(state.gather.tree.target)}
+							disabled={transferDisabled || opInProgress}
 						>
 							PROCEED
 						</button>

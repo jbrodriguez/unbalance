@@ -8,33 +8,39 @@ const setBusy = ({ state }, isBusy) => {
 	}
 }
 
-// function addFeedback({ state, actions }, feedback) {
-// 	if (state.timeout) {
-// 		window.clearTimeout(state.timeout)
-// 	}
-// 	const timeout = window.setTimeout(() => actions.removeFeedback(), 15000)
+const clearConsole = ({ state }) => {
+	return {
+		...state,
+		lines: [],
+	}
+}
 
-// 	return {
-// 		...state,
-// 		timeout,
-// 		feedback: [].concat(feedback),
-// 	}
-// }
+const addFeedback = ({ state, actions }, feedback) => {
+	if (state.env.timeout) {
+		window.clearTimeout(state.env.timeout)
+	}
+	const timeout = window.setTimeout(() => actions.removeFeedback(), 15000)
 
-// function removeFeedback({ state }) {
-// 	return {
-// 		...state,
-// 		feedback: [],
-// 		timeout: null,
-// 	}
-// }
+	return {
+		...state,
+		env: {
+			...state.env,
+			timeout,
+			feedback: [].concat(feedback),
+		},
+	}
+}
 
-// function clearConsole({ state }) {
-// 	return {
-// 		...state,
-// 		lines: [],
-// 	}
-// }
+const removeFeedback = ({ state }) => {
+	return {
+		...state,
+		env: {
+			...state.env,
+			feedback: [],
+			timeout: null,
+		},
+	}
+}
 
 // function checkForUpdate({ state, actions, opts: { api } }) {
 // 	// console.log(`checking`)
@@ -59,9 +65,9 @@ const setBusy = ({ state }, isBusy) => {
 
 export default {
 	setBusy,
-	// addFeedback,
-	// removeFeedback,
-	// clearConsole,
+	clearConsole,
+	addFeedback,
+	removeFeedback,
 	// checkForUpdate,
 	// updateAvailable,
 	// removeUpdateAvailable,

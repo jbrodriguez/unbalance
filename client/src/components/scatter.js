@@ -110,7 +110,7 @@ export default class Scatter extends PureComponent {
 		const opInProgress = state.env.isBusy || state.core.status !== constant.stateIdle
 		const calcDisabled =
 			opInProgress ||
-			Object.keys(state.scatter.tree.chosen).length === 0 ||
+			Object.keys(state.scatter.chosen).length === 0 ||
 			!(Object.keys(fromDisk).some(from => fromDisk[from]) && Object.keys(toDisk).some(to => toDisk[to]))
 		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
 
@@ -118,7 +118,7 @@ export default class Scatter extends PureComponent {
 			<div className={cx('flexSection')}>
 				<button
 					className={cx('btn', 'btn-primary')}
-					onClick={() => actions.calculate()}
+					onClick={() => actions.calculateScatter(fromDisk, toDisk)}
 					disabled={calcDisabled}
 				>
 					CALCULATE
@@ -255,16 +255,14 @@ export default class Scatter extends PureComponent {
 									onTreeNodeCheckChange={this.onCheck}
 									collapsible
 									collapsed={false}
-									data={state.scatter.tree.items}
+									data={state.scatter.items}
 								/>
 							</td>
 							<td colSpan="6" className={cx('topAlign')}>
 								<b>Currently selected</b>
 								<br />
 								<ul>
-									{Object.keys(state.scatter.tree.chosen).map(chosen => (
-										<li key={chosen}>- {chosen}</li>
-									))}
+									{Object.keys(state.scatter.chosen).map(chosen => <li key={chosen}>- {chosen}</li>)}
 								</ul>
 							</td>
 						</tr>,
