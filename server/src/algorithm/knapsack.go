@@ -1,25 +1,23 @@
 package algorithm
 
 import (
-	"fmt"
-	"github.com/jbrodriguez/mlog"
-	"jbrodriguez/unbalance/server/src/model"
+	"jbrodriguez/unbalance/server/src/domain"
 	"sort"
 )
 
 // Knapsack -
 type Knapsack struct {
-	disk *model.Disk
+	disk *domain.Disk
 
-	Bins []*model.Bin
-	list []*model.Item
-	over []*model.Item
+	Bins []*domain.Bin
+	list []*domain.Item
+	over []*domain.Item
 
 	buffer int64
 }
 
 // NewKnapsack -
-func NewKnapsack(disk *model.Disk, items []*model.Item, reserved int64) *Knapsack {
+func NewKnapsack(disk *domain.Disk, items []*domain.Item, reserved int64) *Knapsack {
 	p := new(Knapsack)
 	p.disk = disk
 	p.list = items
@@ -28,8 +26,8 @@ func NewKnapsack(disk *model.Disk, items []*model.Item, reserved int64) *Knapsac
 }
 
 // BestFit -
-func (k *Knapsack) BestFit() (bin *model.Bin) {
-	sort.Sort(model.BySize(k.list))
+func (k *Knapsack) BestFit() (bin *domain.Bin) {
+	sort.Slice(k.list, func(i, j int) bool { return k.list[i].Size > k.list[j].Size })
 
 	// for _, itm := range k.list {
 	// 	mlog.Info("disk (%s) > item: %s", k.disk.Path, itm.Path)
@@ -67,7 +65,7 @@ func (k *Knapsack) BestFit() (bin *model.Bin) {
 			if targetBin >= 0 {
 				k.Bins[targetBin].Add(item)
 			} else {
-				newbin := &model.Bin{}
+				newbin := &domain.Bin{}
 				newbin.Add(item)
 				k.Bins = append(k.Bins, newbin)
 			}
@@ -75,9 +73,8 @@ func (k *Knapsack) BestFit() (bin *model.Bin) {
 	}
 
 	if len(k.Bins) > 0 {
-		sort.Sort(model.ByFilled(k.Bins))
-		k.disk.Bin = k.Bins[0]
-		bin = k.disk.Bin
+		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].Size > k.Bins[j].Size })
+		bin = k.Bins[0]
 	}
 
 	return bin
@@ -91,24 +88,24 @@ func (k *Knapsack) BestFit() (bin *model.Bin) {
 // 	}
 // }
 
-func (k *Knapsack) printList() {
-	for _, item := range k.list {
-		mlog.Info(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
-	}
-}
+// func (k *Knapsack) printList() {
+// 	for _, item := range k.list {
+// 		mlog.Info(fmt.Sprintf("Item (%s): %d", item.Name, item.Size))
+// 	}
+// }
 
-func (k *Knapsack) sortBins() {
-	sort.Sort(model.ByFilled(k.Bins))
-}
+// func (k *Knapsack) sortBins() {
+// 	sort.Sort(model.ByFilled(k.Bins))
+// }
 
-// Print -
-func (k *Knapsack) Print() {
-	for i, bin := range k.Bins {
-		mlog.Info("=========================================================")
-		mlog.Info(fmt.Sprintf("%0d [%d/%d] %2.2f%% (%s)", i, bin.Size, k.disk.Free, (float64(bin.Size)/float64(k.disk.Free))*100, k.disk.Path))
-		mlog.Info("---------------------------------------------------------")
-		bin.Print()
-		mlog.Info("---------------------------------------------------------")
-		mlog.Info("")
-	}
-}
+// // Print -
+// func (k *Knapsack) Print() {
+// 	for i, bin := range k.Bins {
+// 		mlog.Info("=========================================================")
+// 		mlog.Info(fmt.Sprintf("%0d [%d/%d] %2.2f%% (%s)", i, bin.Size, k.disk.Free, (float64(bin.Size)/float64(k.disk.Free))*100, k.disk.Path))
+// 		mlog.Info("---------------------------------------------------------")
+// 		bin.Print()
+// 		mlog.Info("---------------------------------------------------------")
+// 		mlog.Info("")
+// 	}
+// }

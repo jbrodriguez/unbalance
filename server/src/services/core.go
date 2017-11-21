@@ -2,6 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -30,9 +34,7 @@ type Core struct {
 	state *domain.State
 
 	reFreeSpace *regexp.Regexp
-	reItems     *regexp.Regexp
 	reRsync     *regexp.Regexp
-	reStat      *regexp.Regexp
 	reProgress  *regexp.Regexp
 
 	rsyncErrors map[int]string
@@ -48,10 +50,8 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	}
 
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
-	core.reItems = regexp.MustCompile(`(\d+)\s+(.*?)$`)
 	core.reRsync = regexp.MustCompile(`exit status (\d+)`)
 	core.reProgress = regexp.MustCompile(`(?s)^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
-	core.reStat = regexp.MustCompile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 
 	core.rsyncErrors = map[int]string{
 		0:  "Success",
@@ -84,7 +84,7 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	c.bus.Pub(msg, common.GET_ARRAY_STATUS)
+	c.bus.Pub(msg, common.INT_GET_ARRAY_STATUS)
 	reply := <-msg.Reply
 	message := reply.(dto.Message)
 	if message.Error != nil {
@@ -100,6 +100,10 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.API_GET_STATUS, c.getStatus)
 	c.actor.Register(common.API_GET_STATE, c.getState)
 	c.actor.Register(common.API_RESET_OP, c.resetOp)
+	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
+
+	c.actor.Register(common.API_CALCULATE_SCATTER, c.calculateScatter)
+	c.actor.Register(common.INT_CALCULATE_SCATTER_FINISHED, c.calculateScatterFinished)
 
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
@@ -161,6 +165,99 @@ func (c *Core) resetOp(msg *pubsub.Message) {
 	c.state.Operation = resetOp(c.state.Unraid.Disks)
 
 	msg.Reply <- c.state.Operation
+}
+
+func (c *Core) locate(msg *pubsub.Message) {
+	chosen := msg.Payload.([]string)
+
+	disks := make([]*domain.Disk, 0)
+
+	for _, disk := range c.state.Unraid.Disks {
+		for _, item := range chosen {
+			location := filepath.Join(disk.Path, strings.Replace(item, "/mnt/user", "", -1))
+
+			exists := true
+			if _, err := os.Stat(location); err != nil {
+				exists = !os.IsNotExist(err)
+			}
+
+			mlog.Info("location(%s)-exists(%t)", location, exists)
+
+			if exists {
+				disks = append(disks, disk)
+			}
+		}
+	}
+
+	msg.Reply <- disks
+}
+
+func getScatterParams(msg *pubsub.Message) (*domain.Operation, error) {
+	payload, ok := msg.Payload.(string)
+	if !ok {
+		return nil, errors.New("Unable to convert scatter calculate parameters")
+	}
+
+	var param domain.Operation
+	err := json.Unmarshal([]byte(payload), &param)
+	if err != nil {
+		return nil, err
+	}
+
+	return &param, nil
+}
+
+func (c *Core) calculateScatter(msg *pubsub.Message) {
+	c.state.Status = common.StateCalc
+
+	params, err := getScatterParams(msg)
+	if err != nil {
+		// send to front end the signal of operation finished
+		outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: resetOp(c.state.Unraid.Disks)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	// get a fresh operation
+	operation := resetOp(c.state.Unraid.Disks)
+
+	operation.OpKind = common.OP_SCATTER_CALC
+	operation.ChosenFolders = params.ChosenFolders
+
+	for _, disk := range c.state.Unraid.Disks {
+		operation.VDisks[disk.Path].Src = params.VDisks[disk.Path].Src
+		operation.VDisks[disk.Path].Dst = params.VDisks[disk.Path].Dst
+	}
+
+	calc := &pubsub.Message{Payload: &domain.State{
+		Status:    c.state.Status,
+		Unraid:    c.state.Unraid,
+		Operation: operation,
+	}}
+
+	c.bus.Pub(calc, common.INT_CALCULATE_SCATTER)
+}
+
+func (c *Core) calculateScatterFinished(msg *pubsub.Message) {
+	operation := msg.Payload.(*domain.Operation)
+
+	c.state.Status = common.StateIdle
+	c.state.Operation = operation
+
+	// send to front end the signal of operation finished
+	outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: operation}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
+	// and there actually perm issues
+	if c.state.Operation.BytesToTransfer > 0 && (c.state.Operation.OwnerIssue+c.state.Operation.GroupIssue+c.state.Operation.FolderIssue+c.state.Operation.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", c.state.Operation.OwnerIssue, c.state.Operation.GroupIssue, c.state.Operation.FolderIssue, c.state.Operation.FileIssue)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {

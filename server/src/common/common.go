@@ -1,6 +1,8 @@
 package common
 
 const (
+	MailCmd = "/usr/local/emhttp/webGui/scripts/notify"
+
 	CHAN_CAPACITY = 3
 
 	OP_NEUTRAL      = 0
@@ -18,10 +20,21 @@ const (
 	StateFindTargets = 5
 	StateGather      = 6
 
-	API_GET_CONFIG   = "core/getConfig"
-	API_GET_STATUS   = "core/getStatus"
-	API_GET_STATE    = "core/getState"
-	API_RESET_OP     = "core/resetOp"
-	GET_ARRAY_STATUS = "array/getStatus"
-	API_GET_TREE     = "array/getTree"
+	API_GET_CONFIG       = "core/get/config"
+	API_GET_STATUS       = "core/get/status"
+	API_GET_STATE        = "core/get/state"
+	API_RESET_OP         = "core/reset/op"
+	INT_GET_ARRAY_STATUS = "int/array/get/status"
+	API_GET_TREE         = "array/get/tree"
+	API_LOCATE_FOLDER    = "core/locate/folder"
+
+	API_CALCULATE_SCATTER          = "api/calculate/scatter"
+	INT_CALCULATE_SCATTER          = "int/calc/scatter"
+	INT_CALCULATE_SCATTER_FINISHED = "int/calc/scatter/finished"
+	INT_CALCULATE_SCATTER_ERROR    = "int/calc/scatter/error"
+
+	WS_CALC_STARTED  = "calcStarted"
+	WS_CALC_PROGRESS = "calcProgress"
+	WS_CALC_FINISHED = "calcFinished"
+	WS_CALC_ISSUES   = "calcPermIssue"
 )

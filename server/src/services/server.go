@@ -9,7 +9,6 @@ import (
 	"jbrodriguez/unbalance/server/src/domain"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/model"
 	"jbrodriguez/unbalance/server/src/net"
 
 	"github.com/jbrodriguez/actor"
@@ -94,7 +93,6 @@ func (s *Server) Start() {
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/checkUpdate", s.setCheckUpdate)
-	api.GET("/storage", s.getStorage)
 	api.GET("/update", s.getUpdate)
 	api.POST("/tree", s.getTree)
 	api.POST("/locate", s.locate)
@@ -252,17 +250,6 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getStorage(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/storage")
-
-	reply := <-msg.Reply
-	resp := reply.(*model.Unraid)
-	c.JSON(200, &resp)
-
-	return nil
-}
-
 func (s *Server) getUpdate(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, "/get/update")
@@ -301,10 +288,10 @@ func (s *Server) locate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/disks/locate")
+	s.bus.Pub(msg, common.API_LOCATE_FOLDER)
 
 	reply := <-msg.Reply
-	resp := reply.([]*model.Disk)
+	resp := reply.([]*domain.Disk)
 	c.JSON(200, &resp)
 
 	return nil

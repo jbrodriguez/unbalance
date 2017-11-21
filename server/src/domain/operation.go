@@ -15,6 +15,7 @@ type Operation struct {
 	OpKind                uint64            `json:"opKind"`
 	Started               time.Time         `json:"started"`
 	Finished              time.Time         `json:"finished"`
+	ChosenFolders         []string          `json:"chosenFolders"`
 	FoldersNotTransferred []string          `json:"-"`
 	OwnerIssue            int64             `json:"ownerIssue"`
 	GroupIssue            int64             `json:"groupIssue"`

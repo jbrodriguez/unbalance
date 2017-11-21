@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 )
@@ -155,4 +156,22 @@ func GetLatestVersion(url string) (dst string, err error) {
 	}
 
 	return string(body), nil
+}
+
+func Sendmail(cmd string, notify int, subject, message string, dryRun bool) (err error) {
+	if notify == 0 {
+		return nil
+	}
+
+	dry := ""
+	if dryRun {
+		dry = "-------\nDRY RUN\n-------\n"
+	}
+
+	msg := dry + message
+
+	send := exec.Command(cmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	err = send.Run()
+
+	return
 }

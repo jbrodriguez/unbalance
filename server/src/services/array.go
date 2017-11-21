@@ -46,7 +46,7 @@ func (a *Array) Start() (err error) {
 		return err
 	}
 
-	a.actor.Register(common.GET_ARRAY_STATUS, a.getStatus)
+	a.actor.Register(common.INT_GET_ARRAY_STATUS, a.getStatus)
 	a.actor.Register(common.API_GET_TREE, a.getTree)
 
 	go a.actor.React()

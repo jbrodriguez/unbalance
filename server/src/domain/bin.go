@@ -11,11 +11,11 @@ type Bin struct {
 	Items []*Item
 }
 
-// // Add -
-// func (b *Bin) Add(item *Item) {
-// 	b.Items = append(b.Items, item)
-// 	b.Size += item.Size
-// }
+// Add -
+func (b *Bin) Add(item *Item) {
+	b.Items = append(b.Items, item)
+	b.Size += item.Size
+}
 
 // // Print -
 // func (b *Bin) Print() {

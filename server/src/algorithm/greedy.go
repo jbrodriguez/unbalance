@@ -1,23 +1,23 @@
 package algorithm
 
 import (
-	"jbrodriguez/unbalance/server/src/model"
+	"jbrodriguez/unbalance/server/src/domain"
 
 	"github.com/jbrodriguez/mlog"
 )
 
 // Greedy -
 type Greedy struct {
-	disk    *model.Disk
-	entries []*model.Item
+	disk    *domain.Disk
+	entries []*domain.Item
 	toFit   int64
 	buffer  int64
 
-	Bins []*model.Bin
+	Bins []*domain.Bin
 }
 
 // NewGreedy -
-func NewGreedy(disk *model.Disk, entries []*model.Item, total, reserved int64) *Greedy {
+func NewGreedy(disk *domain.Disk, entries []*domain.Item, total, reserved int64) *Greedy {
 	g := &Greedy{}
 	g.disk = disk
 	g.entries = entries
@@ -26,9 +26,9 @@ func NewGreedy(disk *model.Disk, entries []*model.Item, total, reserved int64) *
 	return g
 }
 
-func (g *Greedy) FitAll() *model.Bin {
+func (g *Greedy) FitAll() *domain.Bin {
 	sizeToFit := g.toFit
-	bin := &model.Bin{}
+	bin := &domain.Bin{}
 
 	for _, entry := range g.entries {
 		if entry.Location == g.disk.Path {
@@ -43,11 +43,11 @@ func (g *Greedy) FitAll() *model.Bin {
 	mlog.Info("disk(%s)-sizeToFit+buffer(%d)-diskFree(%d)", g.disk.Path, sizeToFit+g.buffer, g.disk.Free)
 
 	if sizeToFit+g.buffer > g.disk.Free {
-		g.disk.Bin = nil
+		// g.disk.Bin = nil
 		return nil
 	}
 
-	g.disk.Bin = bin
+	// g.disk.Bin = bin
 
 	return bin
 	// if g.disk.Free >= g.toFit + reserved
