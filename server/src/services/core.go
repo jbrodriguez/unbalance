@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"jbrodriguez/unbalance/server/src/common"
 	"jbrodriguez/unbalance/server/src/domain"
@@ -104,6 +107,9 @@ func (c *Core) Start() (err error) {
 
 	c.actor.Register(common.API_SCATTER_CALCULATE, c.scatterCalculate)
 	c.actor.Register(common.INT_SCATTER_CALCULATE_FINISHED, c.scatterCalculateFinished)
+
+	c.actor.Register(common.API_SCATTER_MOVE, c.scatterMove)
+	c.actor.Register(common.API_SCATTER_COPY, c.scatterCopy)
 
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
@@ -258,6 +264,387 @@ func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", c.state.Operation.OwnerIssue, c.state.Operation.GroupIssue, c.state.Operation.FolderIssue, c.state.Operation.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
+
+	mlog.Info(`Operation
+		OpKind: %d
+		Started: %s
+		Finished: %s
+		ChosenFolders: %v
+		FolderNotTransferred: %v
+		OwnerIssue: %d
+		GroupIssue: %d
+		FolderIssue: %d
+		FileIssue: %d
+		BytesToTransfer: %d
+		DryRun: %t
+		RsyncFlags: %v
+		RsyncStrFlags: %s
+		Commands: %v
+		BytesTransferred: %d
+	`, operation.OpKind, operation.Started, operation.Finished, operation.ChosenFolders,
+		operation.FoldersNotTransferred, operation.OwnerIssue, operation.GroupIssue,
+		operation.FolderIssue, operation.FileIssue, operation.BytesToTransfer, operation.DryRun,
+		operation.RsyncFlags, operation.RsyncStrFlags, operation.Commands, operation.BytesTransferred,
+	)
+
+	for _, disk := range c.state.Unraid.Disks {
+		vdisk := operation.VDisks[disk.Path]
+
+		if vdisk.Bin != nil {
+			mlog.Info(`VDisk
+			Path: %s
+			PlannedFree: %d
+			Src: %t,
+			Dst: %t
+		`, vdisk.Path, vdisk.PlannedFree, vdisk.Src, vdisk.Dst)
+
+			mlog.Info(`Bin
+				Size: %d
+			`, vdisk.Bin.Size)
+
+			for _, item := range vdisk.Bin.Items {
+				mlog.Info(`Item
+					Name: %s
+					Size: %d
+					Path: %s
+					Location: %s
+				`, item.Name, item.Size, item.Path, item.Location)
+			}
+		} else {
+			mlog.Info(`VDisk
+				Path: %s
+				PlannedFree: %d
+				Src: %t,
+				Dst: %t
+			`, vdisk.Path, vdisk.PlannedFree, vdisk.Src, vdisk.Dst)
+		}
+	}
+
+	op2 := c.setupOperation(common.OP_SCATTER_COPY, operation)
+	mlog.Info(`Operation
+		RSyncFlags: %v
+		RSyncStrFlags: %s
+		`, op2.RsyncFlags, op2.RsyncStrFlags)
+	for _, command := range op2.Commands {
+		mlog.Info(`Command
+		Src: %s
+		Dst: %s
+		Entry: %s
+		Size: %d
+		Transferred: %d
+		`, command.Src, command.Dst, command.Entry, command.Size, command.Transferred)
+	}
+}
+
+func (c *Core) scatterMove(msg *pubsub.Message) {
+	c.state.Status = common.OP_SCATTER_MOVE
+	c.state.Operation = c.setupOperation(c.state.Status, c.state.Operation)
+	go c.runOperation("Move")
+}
+
+func (c *Core) scatterCopy(msg *pubsub.Message) {
+	c.state.Status = common.OP_SCATTER_COPY
+	c.state.Operation = c.setupOperation(c.state.Status, c.state.Operation)
+	go c.runOperation("Copy")
+}
+
+func (c *Core) setupOperation(status int64, copyOperation *domain.Operation) *domain.Operation {
+	operation := &domain.Operation{
+		OpKind:          status,
+		BytesToTransfer: copyOperation.BytesToTransfer,
+		DryRun:          c.settings.DryRun,
+		RsyncFlags:      c.settings.RsyncFlags,
+		VDisks:          copyOperation.VDisks,
+	}
+
+	// user may have changed rsync flags or dry-run setting, adjust for it
+	if operation.DryRun {
+		operation.RsyncFlags = append(operation.RsyncFlags, "--dry-run")
+	}
+	operation.RsyncStrFlags = strings.Join(operation.RsyncFlags, " ")
+
+	operation.Commands = make([]domain.Command, 0)
+
+	for _, disk := range c.state.Unraid.Disks {
+		vdisk := operation.VDisks[disk.Path]
+		if vdisk.Bin == nil || vdisk.Src {
+			continue
+		}
+
+		for _, item := range vdisk.Bin.Items {
+			var entry string
+
+			// this a double check. item.Path should be in the form of films/bluray or tvshows/Billions
+			// if for some reason it starts with a "/", we strip it
+			if item.Path[0] == filepath.Separator {
+				entry = item.Path[1:]
+			} else {
+				entry = item.Path
+			}
+
+			operation.Commands = append(operation.Commands, domain.Command{
+				Src:   item.Location,
+				Dst:   vdisk.Path + string(filepath.Separator),
+				Entry: entry,
+				Size:  item.Size,
+			})
+		}
+	}
+
+	return operation
+}
+
+func (c *Core) runOperation(opName string) {
+	mlog.Info("Running %s operation ...", opName)
+
+	operation := c.state.Operation
+
+	operation.Started = time.Now()
+
+	// notifyMove should be renamed to notifyTransfer
+	if c.settings.NotifyMove == 2 {
+		c.notifyCommandsToRun(opName, operation)
+	}
+
+	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "progressStats", Payload: "Waiting to collect stats ..."}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// Initialize local variables
+	var calls int64
+	var callsPerDelta int64
+
+	var finished time.Time
+	var elapsed time.Duration
+
+	commandsExecuted := make([]string, 0)
+
+	// operation.BytesTransferred = 0
+
+	for _, command := range operation.Commands {
+		args := append(
+			operation.RsyncFlags,
+			command.Entry,
+			command.Dst,
+		)
+		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrFlags, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+		mlog.Info("Command Started: (src: %s) %s ", command.Src, cmd)
+
+		outbound := &dto.Packet{Topic: "transferProgress", Payload: cmd}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		bytesTransferred := operation.BytesTransferred
+
+		var deltaMoved int64
+
+		// actual shell execution
+		err := lib.ShellEx(func(text string) {
+			line := strings.TrimSpace(text)
+
+			if len(line) <= 0 {
+				return
+			}
+
+			if callsPerDelta <= 50 {
+				calls++
+			}
+
+			delta := int64(time.Since(operation.Started) / time.Second)
+			if delta == 0 {
+				delta = 1
+			}
+			callsPerDelta = calls / delta
+
+			match := c.reProgress.FindStringSubmatch(line)
+			if match == nil {
+				// this is a regular output line from rsync, print it
+				// according to verbosity settings
+				if c.settings.Verbosity == 1 {
+					mlog.Info("%s", line)
+				}
+
+				if callsPerDelta <= 50 {
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: line}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+				}
+
+				return
+			}
+
+			// this is a file transfer progress output line
+			if match[1] == "" {
+				// this happens when the file hasn't finished transferring
+				moved := strings.Replace(match[2], ",", "", -1)
+				deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
+			} else {
+				// the file has finished transferring
+				moved := strings.Replace(match[1], ",", "", -1)
+				deltaMoved, _ = strconv.ParseInt(moved, 10, 64)
+				bytesTransferred += deltaMoved
+			}
+
+			percent, left, speed := progress(operation.BytesToTransfer, bytesTransferred+deltaMoved, time.Since(operation.Started))
+			msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
+
+			if callsPerDelta <= 50 {
+				outbound := &dto.Packet{Topic: "progressStats", Payload: msg}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			}
+
+		}, mlog.Warning, command.Src, "rsync", args...)
+
+		finished = time.Now()
+		elapsed = time.Since(operation.Started)
+
+		if err != nil {
+			subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
+			headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
+
+			mlog.Warning(headline)
+			outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+			_, _, speed := progress(operation.BytesToTransfer, bytesTransferred+deltaMoved, elapsed)
+			c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, finished, elapsed, bytesTransferred+deltaMoved, speed)
+
+			return
+		}
+
+		mlog.Info("Command Finished")
+
+		operation.BytesTransferred = operation.BytesTransferred + command.Size
+		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+
+		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, left, speed)
+		mlog.Info("Current progress: %s", msg)
+
+		outbound = &dto.Packet{Topic: "progressStats", Payload: msg}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		commandsExecuted = append(commandsExecuted, cmd)
+
+		// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
+		if operation.DryRun && operation.OpKind == common.OP_GATHER_MOVE {
+			parent := filepath.Dir(command.Entry)
+			mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
+			if parent != "." {
+				mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
+			} else {
+				mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+			}
+		}
+
+		// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+		if !operation.DryRun && (operation.OpKind == common.OP_SCATTER_MOVE || operation.OpKind == common.OP_GATHER_MOVE) {
+			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
+			if exists {
+				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
+				mlog.Info("Removing: %s", rmrf)
+				err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
+					mlog.Info(line)
+				})
+
+				if err != nil {
+					msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+					mlog.Warning(msg)
+				}
+
+				if operation.OpKind == common.OP_GATHER_MOVE {
+					parent := filepath.Dir(command.Entry)
+					if parent != "." {
+						rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+						mlog.Info("Running %s", rmdir)
+
+						err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
+							mlog.Info(line)
+						})
+
+						if err != nil {
+							msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+
+							outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+							c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+							mlog.Warning(msg)
+						}
+					}
+				}
+			} else {
+				mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
+			}
+		}
+	}
+
+	subject := fmt.Sprintf("unBALANCE - %s operation completed", strings.ToUpper(opName))
+	headline := fmt.Sprintf("%s operation has finished", opName)
+
+	_, _, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, finished, elapsed, operation.BytesTransferred, speed)
+}
+
+func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64) {
+	fstarted := started.Format(timeFormat)
+	ffinished := finished.Format(timeFormat)
+	elapsed = lib.Round(time.Since(started), time.Millisecond)
+
+	outbound := &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Transferred %s at ~ %.2f MB/s", lib.ByteSize(transferred), speed)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: headline}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: "These are the commands that were executed:"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	printedCommands := ""
+	for _, command := range commands {
+		printedCommands += command + "\n"
+		outbound = &dto.Packet{Topic: "transferProgress", Payload: command}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+
+	outbound = &dto.Packet{Topic: "transferProgress", Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// send to front end the signal of operation finished
+	if c.settings.DryRun {
+		outbound = &dto.Packet{Topic: "transferProgress", Payload: "--- IT WAS A DRY RUN ---"}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+
+	outbound = &dto.Packet{Topic: "transferFinished", Payload: ""}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s", fstarted, ffinished, elapsed, headline, lib.ByteSize(transferred), speed)
+	switch c.settings.NotifyMove {
+	case 1:
+		message += fmt.Sprintf("\n\n%d commands were executed.", len(commands))
+	case 2:
+		message += "\n\nThese are the commands that were executed:\n\n" + printedCommands
+	}
+
+	// go func() {
+	// 	if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+	// 		mlog.Error(sendErr)
+	// 	}
+	// }()
+
+	mlog.Info("\n%s\n%s", subject, message)
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {
@@ -361,6 +748,64 @@ func resetOp(disks []*domain.Disk) *domain.Operation {
 	}
 
 	return op
+}
+
+func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err error) {
+	if notify == 0 {
+		return nil
+	}
+
+	dry := ""
+	if dryRun {
+		dry = "-------\nDRY RUN\n-------\n"
+	}
+
+	msg := dry + message
+
+	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", mailCmd, subject, msg)
+	cmd := exec.Command(mailCmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	err = cmd.Run()
+
+	return
+}
+
+func progress(bytesToTransfer, bytesTransferred int64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
+	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
+	speed = bytesPerSec / 1024 / 1024 // MB/s
+
+	percent = (float64(bytesTransferred) / float64(bytesToTransfer)) * 100 // %
+
+	left = time.Duration(float64(bytesToTransfer-bytesTransferred)/bytesPerSec) * time.Second
+
+	return
+}
+
+func getError(line string, re *regexp.Regexp, errors map[int]string) string {
+	result := re.FindStringSubmatch(line)
+	status, _ := strconv.Atoi(result[1])
+	msg, ok := errors[status]
+	if !ok {
+		msg = "unknown error"
+	}
+
+	return msg
+}
+
+func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
+	message := "\n\nThe following commands will be executed:\n\n"
+
+	for _, command := range operation.Commands {
+		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.Src, operation.RsyncStrFlags, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+		message += cmd + "\n"
+	}
+
+	subject := fmt.Sprintf("unBALANCE - %s operation STARTED", strings.ToUpper(opName))
+
+	go func() {
+		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+			mlog.Error(sendErr)
+		}
+	}()
 }
 
 // func (c *Core) getStorage(msg *pubsub.Message) {
