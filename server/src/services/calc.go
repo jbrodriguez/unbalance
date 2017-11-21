@@ -78,16 +78,6 @@ func getSourceAndDestinationDisks(state *domain.State) ([]*domain.Disk, []*domai
 }
 
 func (c *Calc) getIssues(disk *domain.Disk, path string) (int64, int64, int64, int64) {
-	owner := ""
-	lib.Shell("id -un", mlog.Warning, "owner", "", func(line string) {
-		owner = line
-	})
-
-	group := ""
-	lib.Shell("id -gn", mlog.Warning, "group", "", func(line string) {
-		group = line
-	})
-
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 
 	// Check owner and permission issues
