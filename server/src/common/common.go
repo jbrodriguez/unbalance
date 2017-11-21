@@ -29,13 +29,17 @@ const (
 	API_GET_TREE         = "array/get/tree"
 	API_LOCATE_FOLDER    = "core/locate/folder"
 
-	API_CALCULATE_SCATTER          = "api/calculate/scatter"
-	INT_CALCULATE_SCATTER          = "int/calc/scatter"
-	INT_CALCULATE_SCATTER_FINISHED = "int/calc/scatter/finished"
-	INT_CALCULATE_SCATTER_ERROR    = "int/calc/scatter/error"
+	API_SCATTER_CALCULATE          = "api/scatter/calculate"
+	INT_SCATTER_CALCULATE          = "int/scatter/calc"
+	INT_SCATTER_CALCULATE_FINISHED = "int/scatter/calc/finished"
+	INT_SCATTER_CALCULATE_ERROR    = "int/scatter/calc/error"
 
 	WS_CALC_STARTED  = "calcStarted"
 	WS_CALC_PROGRESS = "calcProgress"
 	WS_CALC_FINISHED = "calcFinished"
 	WS_CALC_ISSUES   = "calcPermIssue"
+
+	API_SCATTER_MOVE     = "api/scatter/move"
+	API_SCATTER_COPY     = "api/scatter/copy"
+	API_SCATTER_VALIDATE = "api/scatter/validate"
 )

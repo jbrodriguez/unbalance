@@ -48,7 +48,7 @@ func NewCalc(bus *pubsub.PubSub, settings *lib.Settings) *Calc {
 func (c *Calc) Start() (err error) {
 	mlog.Info("starting service Calc ...")
 
-	c.actor.Register(common.INT_CALCULATE_SCATTER, c.scatter)
+	c.actor.Register(common.INT_SCATTER_CALCULATE, c.scatter)
 
 	go c.actor.React()
 
@@ -481,5 +481,5 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 	outbound = &dto.Packet{Topic: common.WS_CALC_PROGRESS, Payload: "Operation Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	c.bus.Pub(&pubsub.Message{Payload: state.Operation}, common.INT_CALCULATE_SCATTER_FINISHED)
+	c.bus.Pub(&pubsub.Message{Payload: state.Operation}, common.INT_SCATTER_CALCULATE_FINISHED)
 }

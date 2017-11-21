@@ -102,8 +102,8 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.API_RESET_OP, c.resetOp)
 	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
 
-	c.actor.Register(common.API_CALCULATE_SCATTER, c.calculateScatter)
-	c.actor.Register(common.INT_CALCULATE_SCATTER_FINISHED, c.calculateScatterFinished)
+	c.actor.Register(common.API_SCATTER_CALCULATE, c.scatterCalculate)
+	c.actor.Register(common.INT_SCATTER_CALCULATE_FINISHED, c.scatterCalculateFinished)
 
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
@@ -207,7 +207,7 @@ func getScatterParams(msg *pubsub.Message) (*domain.Operation, error) {
 	return &param, nil
 }
 
-func (c *Core) calculateScatter(msg *pubsub.Message) {
+func (c *Core) scatterCalculate(msg *pubsub.Message) {
 	c.state.Status = common.OP_SCATTER_CALC
 
 	params, err := getScatterParams(msg)
@@ -239,10 +239,10 @@ func (c *Core) calculateScatter(msg *pubsub.Message) {
 		Operation: operation,
 	}}
 
-	c.bus.Pub(calc, common.INT_CALCULATE_SCATTER)
+	c.bus.Pub(calc, common.INT_SCATTER_CALCULATE)
 }
 
-func (c *Core) calculateScatterFinished(msg *pubsub.Message) {
+func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 	operation := msg.Payload.(*domain.Operation)
 
 	c.state.Status = common.OP_NEUTRAL

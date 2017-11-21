@@ -118,18 +118,22 @@ export default class Scatter extends PureComponent {
 			<div className={cx('flexSection')}>
 				<button
 					className={cx('btn', 'btn-primary')}
-					onClick={() => actions.calculateScatter(fromDisk, toDisk)}
+					onClick={() => actions.scatterCalculate(fromDisk, toDisk)}
 					disabled={calcDisabled}
 				>
 					CALCULATE
 				</button>
 				<span>&nbsp; | &nbsp;</span>
-				<button className={cx('btn', 'btn-primary')} onClick={() => actions.move()} disabled={transferDisabled}>
+				<button
+					className={cx('btn', 'btn-primary')}
+					onClick={() => actions.scatterMove()}
+					disabled={transferDisabled}
+				>
 					MOVE
 				</button>
 				<button
 					className={cx('btn', 'btn-primary', 'lspacer')}
-					onClick={() => actions.copy()}
+					onClick={() => actions.scatterCopy()}
 					disabled={transferDisabled}
 				>
 					COPY

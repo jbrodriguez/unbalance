@@ -142,7 +142,7 @@ const gotOperation = ({ state }, operation) => {
 	}
 }
 
-const calculateScatter = ({ state, actions, opts: { ws } }, fromDisk, toDisk) => {
+const scatterCalculate = ({ state, actions, opts: { ws } }, fromDisk, toDisk) => {
 	actions.setBusy(true)
 
 	const operation = { ...state.core.operation }
@@ -164,7 +164,7 @@ const calculateScatter = ({ state, actions, opts: { ws } }, fromDisk, toDisk) =>
 
 	operation.chosenFolders = folders
 
-	ws.send({ topic: 'api/calculate/scatter', payload: operation })
+	ws.send({ topic: 'api/scatter/calculate', payload: operation })
 
 	return state
 }
@@ -172,16 +172,22 @@ const calculateScatter = ({ state, actions, opts: { ws } }, fromDisk, toDisk) =>
 const calcStarted = ({ state }, line) => {
 	return {
 		...state,
-		lines: [].concat(`CALCULATE: ${line}`),
+		env: {
+			...state.env,
+			lines: [].concat(`CALCULATE: ${line}`),
+		},
 	}
 }
 
 const calcProgress = ({ state }, line) => {
-	const lines = state.lines.length > 1000 ? [] : state.lines
+	const lines = state.env.lines.length > 1000 ? [] : state.env.lines
 
 	return {
 		...state,
-		lines: lines.concat(`CALCULATE: ${line}`),
+		env: {
+			...state.env,
+			lines: lines.concat(`CALCULATE: ${line}`),
+		},
 	}
 }
 
@@ -242,6 +248,18 @@ function calcPermIssue({ state, actions }, permStats) {
 	return state
 }
 
+function scatterMove({ state, actions, opts: { ws } }) {
+	actions.setBusy(true)
+	ws.send({ topic: 'api/scatter/move' })
+	return state
+}
+
+function scatterCopy({ state, actions, opts: { ws } }) {
+	actions.setBusy(true)
+	ws.send({ topic: 'api/scatter/copy' })
+	return state
+}
+
 // function setState({ state, actions }, backendState) {
 // 	return {
 // 		...state,
@@ -260,10 +278,13 @@ export default {
 	resetOperation,
 	gotOperation,
 
-	calculateScatter,
+	scatterCalculate,
 	calcStarted,
 	calcProgress,
 	calcFinished,
 	calcPermIssue,
 	// setState,
+
+	scatterMove,
+	scatterCopy,
 }
