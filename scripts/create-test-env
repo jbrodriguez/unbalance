@@ -1,0 +1,40 @@
+#!/bin/bash
+
+rm -rf /mnt/disk1/films/bluray
+rm -rf /mnt/disk1/films/blurip
+rm -rf /mnt/disk1/tvshows/*
+
+pushd /mnt/disk1/films
+
+mkdir -p "bluray/Avatar (2009)"
+pushd "bluray/Avatar (2009)"
+dd if=/dev/urandom of=Avatar.mkv bs=1M count=850
+echo "avatar.jpg" > avatar.jpg
+popd
+
+mkdir -p "bluray/True Grit (2010)"
+pushd "bluray/True Grit (2010)"
+dd if=/dev/urandom of=TrueGrit.mkv bs=1M count=750
+echo "truegrit.jpg" > truegrit.jpg
+popd
+
+mkdir -p "blurip/April Fool's Day (1986)"
+pushd "blurip/April Fool's Day (1986)"
+dd if=/dev/urandom of=AprilFoolsDay.mkv bs=1M count=250
+echo "aprilfoolsday.jpg" > aprilfoolsday.jpg
+popd
+
+popd # out of /mnt/disk/films
+
+pushd /mnt/disk1/tvshows
+
+mkdir -p "Billions/Season 01"
+pushd "Billions/Season 01"
+dd if=/dev/urandom of=billions.s01e01.1080p bs=1M count=171
+dd if=/dev/urandom of=billions.s01e02.1080p bs=1M count=172
+dd if=/dev/urandom of=billions.s01e03.1080p bs=1M count=173
+dd if=/dev/urandom of=billions.s01e04.1080p bs=1M count=174
+echo "banner.season01.jpg" > banner.s01.jpg
+popd
+
+popd # out of /mnt/disk1/tvshows
