@@ -254,10 +254,66 @@ const scatterMove = ({ state, actions, opts: { ws } }) => {
 	return state
 }
 
-function scatterCopy({ state, actions, opts: { ws } }) {
+const scatterCopy = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
+
 	ws.send({ topic: 'api/scatter/copy' })
+
+	state.history.replace({ pathname: '/transfer' })
+
 	return state
+}
+
+const transferStarted = ({ state }, transfer) => {
+	const operation = transfer.operation
+	const progress = transfer.progress
+
+	// console.log(`transfer(${JSON.stringify(transfer)})`)
+	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+			progress,
+		},
+	}
+}
+
+const transferProgress = ({ state }, transfer) => {
+	const operation = transfer.operation
+	const progress = transfer.progress
+
+	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+			progress,
+		},
+	}
+}
+
+const transferFinished = ({ state, actions }, transfer) => {
+	const operation = transfer.operation
+	const progress = transfer.progress
+
+	actions.setBusy(false)
+
+	// console.log(`transfer(${JSON.stringify(transfer)})`)
+	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+			progress,
+		},
+	}
 }
 
 // function setState({ state, actions }, backendState) {
@@ -287,4 +343,8 @@ export default {
 
 	scatterMove,
 	scatterCopy,
+
+	transferStarted,
+	transferProgress,
+	transferFinished,
 }

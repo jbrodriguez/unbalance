@@ -24,8 +24,8 @@ type Operation struct {
 	BytesToTransfer       int64             `json:"bytesToTransfer"`
 	DryRun                bool              `json:"-"`
 	RsyncFlags            []string          `json:"-"`
-	RsyncStrFlags         string            `json:"-"`
-	Commands              []Command         `json:"commands"`
+	RsyncStrFlags         string            `json:"rsyncStrFlags"`
+	Commands              []*Command        `json:"commands"`
 	BytesTransferred      int64             `json:"bytesTransferred"`
 	VDisks                map[string]*VDisk `json:"vdisks"`
 }
