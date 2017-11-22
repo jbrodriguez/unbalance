@@ -523,9 +523,9 @@ func (c *Core) runOperation(opName string) {
 				accumTransferred += perFileTransferred
 			}
 
-			percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
-
 			if callsPerDelta <= 50 {
+				percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+
 				operation.Completed = percent
 				operation.Speed = speed
 				operation.Remaining = fmt.Sprintf("%s", left)
@@ -538,107 +538,121 @@ func (c *Core) runOperation(opName string) {
 
 		}, mlog.Warning, command.Src, "rsync", args...)
 
-		operation.Finished = time.Now()
-		elapsed = time.Since(operation.Started)
-
 		if err != nil {
-			subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
-			headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
-
-			mlog.Warning(headline)
-			outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
-			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-			operation.BytesTransferred += cmdTransferred
-			percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
-
-			operation.Completed = percent
-			operation.Speed = speed
-			operation.Remaining = fmt.Sprintf("%s", left)
-			operation.DeltaTransfer = cmdTransferred
-			command.Transferred = cmdTransferred
-
-			// c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, operation.Finished, elapsed, bytesTransferred+deltaMoved, speed)
-			c.finishTransferOperation(subject, headline, commandsExecuted, operation)
-
+			c.transferInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
 		}
 
-		mlog.Info("Command Finished")
-
-		operation.BytesTransferred += command.Size
-		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
-
-		operation.Completed = percent
-		operation.Speed = speed
-		operation.Remaining = fmt.Sprintf("%s", left)
-		operation.DeltaTransfer = 0
-		operation.Line = "Command Finished"
-		command.Transferred = command.Size
-
-		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, operation.Remaining, speed)
-		mlog.Info("Current progress: %s", msg)
-
-		outbound = &dto.Packet{Topic: "transferProgress", Payload: operation}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		c.commandCompleted(operation, command, elapsed)
 
 		commandsExecuted = append(commandsExecuted, cmd)
+	}
 
-		// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
-		if operation.DryRun && operation.OpKind == common.OP_GATHER_MOVE {
-			parent := filepath.Dir(command.Entry)
-			mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
-			if parent != "." {
-				mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
-			} else {
-				mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-			}
-		}
+	c.operationCompleted(opName, operation, commandsExecuted)
+}
 
-		// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
-		if !operation.DryRun && (operation.OpKind == common.OP_SCATTER_MOVE || operation.OpKind == common.OP_GATHER_MOVE) {
-			exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
-			if exists {
-				rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
-				mlog.Info("Removing: %s", rmrf)
-				err = lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
-					mlog.Info(line)
-				})
+func (c *Core) transferInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
+	operation.Finished = time.Now()
+	elapsed := time.Since(operation.Started)
 
-				if err != nil {
-					msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+	subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
+	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), c.reRsync, c.rsyncErrors))
 
-					outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	mlog.Warning(headline)
+	outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-					mlog.Warning(msg)
-				}
+	operation.BytesTransferred += cmdTransferred
+	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-				if operation.OpKind == common.OP_GATHER_MOVE {
-					parent := filepath.Dir(command.Entry)
-					if parent != "." {
-						rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-						mlog.Info("Running %s", rmdir)
+	operation.Completed = percent
+	operation.Speed = speed
+	operation.Remaining = fmt.Sprintf("%s", left)
+	operation.DeltaTransfer = cmdTransferred
+	command.Transferred = cmdTransferred
 
-						err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
-							mlog.Info(line)
-						})
+	c.endOperation(subject, headline, commandsExecuted, operation)
+}
 
-						if err != nil {
-							msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command, elapsed time.Duration) {
+	text := "Command Finished"
+	mlog.Info(text)
 
-							outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-							c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	operation.BytesTransferred += command.Size
+	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-							mlog.Warning(msg)
-						}
-					}
-				}
-			} else {
-				mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
-			}
+	operation.Completed = percent
+	operation.Speed = speed
+	operation.Remaining = fmt.Sprintf("%s", left)
+	operation.DeltaTransfer = 0
+	operation.Line = text
+	command.Transferred = command.Size
+
+	msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, operation.Remaining, speed)
+	mlog.Info("Current progress: %s", msg)
+
+	outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
+	if operation.DryRun && operation.OpKind == common.OP_GATHER_MOVE {
+		parent := filepath.Dir(command.Entry)
+		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
+		if parent != "." {
+			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
+		} else {
+			mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
 		}
 	}
+
+	// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+	if !operation.DryRun && (operation.OpKind == common.OP_SCATTER_MOVE || operation.OpKind == common.OP_GATHER_MOVE) {
+		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
+		if exists {
+			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
+			mlog.Info("Removing: %s", rmrf)
+			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
+				mlog.Info(line)
+			})
+
+			if err != nil {
+				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+				mlog.Warning(msg)
+			}
+
+			if operation.OpKind == common.OP_GATHER_MOVE {
+				parent := filepath.Dir(command.Entry)
+				if parent != "." {
+					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+					mlog.Info("Running %s", rmdir)
+
+					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
+						mlog.Info(line)
+					})
+
+					if err != nil {
+						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+
+						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+						c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+						mlog.Warning(msg)
+					}
+				}
+			}
+		} else {
+			mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
+		}
+	}
+}
+
+func (c *Core) operationCompleted(opName string, operation *domain.Operation, commandsExecuted []string) {
+	operation.Finished = time.Now()
+	elapsed := time.Since(operation.Started)
 
 	subject := fmt.Sprintf("unBALANCE - %s operation completed", strings.ToUpper(opName))
 	headline := fmt.Sprintf("%s operation has finished", opName)
@@ -647,49 +661,14 @@ func (c *Core) runOperation(opName string) {
 	operation.Completed = percent
 	operation.Speed = speed
 	operation.Remaining = fmt.Sprintf("%s", left)
-	// c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, finished, elapsed, operation.BytesTransferred, speed)
-	c.finishTransferOperation(subject, headline, commandsExecuted, operation)
+
+	c.endOperation(subject, headline, commandsExecuted, operation)
 }
 
-// func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64) {
-func (c *Core) finishTransferOperation(subject, headline string, commands []string, operation *domain.Operation) {
+func (c *Core) endOperation(subject, headline string, commands []string, operation *domain.Operation) {
 	fstarted := operation.Started.Format(timeFormat)
 	ffinished := operation.Finished.Format(timeFormat)
 	elapsed := lib.Round(time.Since(operation.Started), time.Millisecond)
-
-	// // outbound := &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Ended: %s", ffinished)}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Elapsed: %s", elapsed)}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // outbound = &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Transferred %s at ~ %.2f MB/s", lib.ByteSize(transferred), speed)}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // outbound = &dto.Packet{Topic: "transferProgress", Payload: headline}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // outbound = &dto.Packet{Topic: "transferProgress", Payload: "These are the commands that were executed:"}
-	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // printedCommands := ""
-	// // for _, command := range commands {
-	// // 	printedCommands += command + "\n"
-	// // 	outbound = &dto.Packet{Topic: "transferProgress", Payload: command}
-	// // 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-	// // }
-
-	// outbound = &dto.Packet{Topic: "transferProgress", Payload: "Operation Finished"}
-	// c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// // send to front end the signal of operation finished
-	// if c.settings.DryRun {
-	// 	outbound = &dto.Packet{Topic: "transferProgress", Payload: "--- IT WAS A DRY RUN ---"}
-	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-	// }
 
 	outbound := &dto.Packet{Topic: "transferFinished", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
