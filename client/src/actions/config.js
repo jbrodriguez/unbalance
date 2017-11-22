@@ -79,21 +79,23 @@ const gotConfig = ({ state }, config) => {
 // 	return state
 // }
 
-// function toggleDryRun({ state, actions, opts: { api } }) {
-// 	actions.setOpInProgress('Toggling dry run')
+const toggleDryRun = ({ state, actions, opts: { api } }) => {
+	actions.setBusy(true)
 
-// 	api.toggleDryRun().then(json => actions.dryRunToggled(json))
+	api.toggleDryRun().then(json => {
+		actions.dryRunToggled(json)
+		actions.setBusy(false)
+	})
 
-// 	return state
-// }
+	return state
+}
 
-// function dryRunToggled({ state }, config) {
-// 	return {
-// 		...state,
-// 		config,
-// 		opInProgress: null,
-// 	}
-// }
+const dryRunToggled = ({ state, actions }, config) => {
+	return {
+		...state,
+		config,
+	}
+}
 
 // function setRsyncFlags({ state, actions, opts: { api } }, flags) {
 // 	api.setRsyncFlags(flags).then(json => actions.gotConfig(json))
@@ -126,8 +128,8 @@ export default {
 
 	// setReservedSpace,
 
-	// toggleDryRun,
-	// dryRunToggled,
+	toggleDryRun,
+	dryRunToggled,
 
 	// setRsyncFlags,
 

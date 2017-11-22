@@ -844,14 +844,14 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 // 	msg.Reply <- newest
 // }
 
-// func (c *Core) toggleDryRun(msg *pubsub.Message) {
-// 	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
+func (c *Core) toggleDryRun(msg *pubsub.Message) {
+	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
 
-// 	c.settings.ToggleDryRun()
-// 	c.settings.Save()
+	c.settings.ToggleDryRun()
+	c.settings.Save()
 
-// 	msg.Reply <- &c.settings.Config
-// }
+	msg.Reply <- &c.settings.Config
+}
 
 // func (c *Core) getTree(msg *pubsub.Message) {
 // 	path := msg.Payload.(string)
