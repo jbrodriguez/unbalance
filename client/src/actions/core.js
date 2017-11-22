@@ -264,54 +264,34 @@ const scatterCopy = ({ state, actions, opts: { ws } }) => {
 	return state
 }
 
-const transferStarted = ({ state }, transfer) => {
-	const operation = transfer.operation
-	const progress = transfer.progress
-
-	// console.log(`transfer(${JSON.stringify(transfer)})`)
-	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
-
+const transferStarted = ({ state }, operation) => {
 	return {
 		...state,
 		core: {
 			...state.core,
 			operation,
-			progress,
 		},
 	}
 }
 
-const transferProgress = ({ state }, transfer) => {
-	const operation = transfer.operation
-	const progress = transfer.progress
-
-	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
-
+const transferProgress = ({ state }, operation) => {
 	return {
 		...state,
 		core: {
 			...state.core,
 			operation,
-			progress,
 		},
 	}
 }
 
-const transferFinished = ({ state, actions }, transfer) => {
-	const operation = transfer.operation
-	const progress = transfer.progress
-
+const transferFinished = ({ state, actions }, operation) => {
 	actions.setBusy(false)
 
-	// console.log(`transfer(${JSON.stringify(transfer)})`)
-	// console.log(`transferred(${JSON.stringify(operation.bytesTransferred)})-progress(${JSON.stringify(progress)})`)
-
 	return {
 		...state,
 		core: {
 			...state.core,
 			operation,
-			progress,
 		},
 	}
 }

@@ -34,21 +34,20 @@ export default class Transfers extends PureComponent {
 		}
 
 		const operation = state.core.operation
-		const progress = state.core.progress
 
-		const completed = parseFloat(Math.round(progress.completed * 100) / 100).toFixed(2)
-		const speed = parseFloat(Math.round(progress.speed * 100) / 100).toFixed(2)
-		const transferred = `${humanBytes(operation.bytesTransferred + progress.deltaTransfer)} / ${humanBytes(
+		const completed = parseFloat(Math.round(operation.completed * 100) / 100).toFixed(2)
+		const speed = parseFloat(Math.round(operation.speed * 100) / 100).toFixed(2)
+		const transferred = `${humanBytes(operation.bytesTransferred + operation.deltaTransfer)} / ${humanBytes(
 			operation.bytesToTransfer,
 		)}`
-		const remaining = progress.remaining
+		const remaining = operation.remaining
 
-		console.log(`line(${progress.line})`)
+		console.log(`line(${operation.line})`)
 
 		const rows = operation.commands.map(command => {
 			let status
 
-			// console.log(`line(${progress.line})-commandxfer(${command.transferred})-commandxfer(${command.size})`)
+			// console.log(`line(${operation.line})-commandxfer(${command.transferred})-commandxfer(${command.size})`)
 
 			if (command.transferred === 0) {
 				status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
@@ -113,7 +112,7 @@ export default class Transfers extends PureComponent {
 
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<span>{progress.line}</span>
+						<span>{operation.line}</span>
 					</div>
 				</section>
 

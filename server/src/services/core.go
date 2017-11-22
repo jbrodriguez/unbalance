@@ -398,8 +398,6 @@ func (c *Core) runOperation(opName string) {
 	mlog.Info("Running %s operation ...", opName)
 
 	operation := c.state.Operation
-	progressStats := &dto.Progress{}
-
 	operation.Started = time.Now()
 
 	// notifyMove should be renamed to notifyTransfer
@@ -407,22 +405,16 @@ func (c *Core) runOperation(opName string) {
 		c.notifyCommandsToRun(opName, operation)
 	}
 
-	transfer := dto.Transfer{Operation: operation, Progress: progressStats}
-	transfer.Progress.Line = "Waiting to collect stats ..."
-
-	outbound := &dto.Packet{Topic: "transferStarted", Payload: transfer}
+	operation.Line = "Waiting to collect stats ..."
+	outbound := &dto.Packet{Topic: "transferStarted", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// Initialize local variables
 	var calls int64
 	var callsPerDelta int64
-
-	// var finished time.Time
 	var elapsed time.Duration
 
 	commandsExecuted := make([]string, 0)
-
-	// operation.BytesTransferred = 0
 
 	for _, command := range operation.Commands {
 		args := append(
@@ -433,8 +425,8 @@ func (c *Core) runOperation(opName string) {
 		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrFlags, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 		mlog.Info("Command Started: (src: %s) %s ", command.Src, cmd)
 
-		transfer.Progress.Line = cmd
-		outbound := &dto.Packet{Topic: "transferProgress", Payload: transfer}
+		operation.Line = cmd
+		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		// tvshows/Billions/Season 01/banner.s01.jpg
@@ -502,7 +494,7 @@ func (c *Core) runOperation(opName string) {
 			// this is a regular output line from rsync
 			if match == nil {
 				// make sure it's available for the front end
-				transfer.Progress.Line = line
+				operation.Line = line
 
 				// log it according to verbosity settings
 				if c.settings.Verbosity == 1 {
@@ -510,7 +502,7 @@ func (c *Core) runOperation(opName string) {
 				}
 
 				if callsPerDelta <= 50 {
-					outbound := &dto.Packet{Topic: "transferProgress", Payload: transfer}
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 				}
 
@@ -534,13 +526,13 @@ func (c *Core) runOperation(opName string) {
 			percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
 
 			if callsPerDelta <= 50 {
-				transfer.Progress.Completed = percent
-				transfer.Progress.Speed = speed
-				transfer.Progress.Remaining = fmt.Sprintf("%s", left)
-				transfer.Progress.DeltaTransfer = cmdTransferred
+				operation.Completed = percent
+				operation.Speed = speed
+				operation.Remaining = fmt.Sprintf("%s", left)
+				operation.DeltaTransfer = cmdTransferred
 				command.Transferred = cmdTransferred
 
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: transfer}
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			}
 
@@ -560,14 +552,14 @@ func (c *Core) runOperation(opName string) {
 			operation.BytesTransferred += cmdTransferred
 			percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-			transfer.Progress.Completed = percent
-			transfer.Progress.Speed = speed
-			transfer.Progress.Remaining = fmt.Sprintf("%s", left)
-			transfer.Progress.DeltaTransfer = cmdTransferred
+			operation.Completed = percent
+			operation.Speed = speed
+			operation.Remaining = fmt.Sprintf("%s", left)
+			operation.DeltaTransfer = cmdTransferred
 			command.Transferred = cmdTransferred
 
 			// c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, operation.Finished, elapsed, bytesTransferred+deltaMoved, speed)
-			c.finishTransferOperation(subject, headline, commandsExecuted, transfer)
+			c.finishTransferOperation(subject, headline, commandsExecuted, operation)
 
 			return
 		}
@@ -577,17 +569,17 @@ func (c *Core) runOperation(opName string) {
 		operation.BytesTransferred += command.Size
 		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-		transfer.Progress.Completed = percent
-		transfer.Progress.Speed = speed
-		transfer.Progress.Remaining = fmt.Sprintf("%s", left)
-		transfer.Progress.DeltaTransfer = 0
-		transfer.Progress.Line = "Command Finished"
+		operation.Completed = percent
+		operation.Speed = speed
+		operation.Remaining = fmt.Sprintf("%s", left)
+		operation.DeltaTransfer = 0
+		operation.Line = "Command Finished"
 		command.Transferred = command.Size
 
-		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, transfer.Progress.Remaining, speed)
+		msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, operation.Remaining, speed)
 		mlog.Info("Current progress: %s", msg)
 
-		outbound = &dto.Packet{Topic: "transferProgress", Payload: transfer}
+		outbound = &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		commandsExecuted = append(commandsExecuted, cmd)
@@ -652,18 +644,18 @@ func (c *Core) runOperation(opName string) {
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
 	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
-	transfer.Progress.Completed = percent
-	transfer.Progress.Speed = speed
-	transfer.Progress.Remaining = fmt.Sprintf("%s", left)
+	operation.Completed = percent
+	operation.Speed = speed
+	operation.Remaining = fmt.Sprintf("%s", left)
 	// c.finishTransferOperation(subject, headline, commandsExecuted, operation.Started, finished, elapsed, operation.BytesTransferred, speed)
-	c.finishTransferOperation(subject, headline, commandsExecuted, transfer)
+	c.finishTransferOperation(subject, headline, commandsExecuted, operation)
 }
 
 // func (c *Core) finishTransferOperation(subject, headline string, commands []string, started, finished time.Time, elapsed time.Duration, transferred int64, speed float64) {
-func (c *Core) finishTransferOperation(subject, headline string, commands []string, transfer dto.Transfer) {
-	fstarted := transfer.Operation.Started.Format(timeFormat)
-	ffinished := transfer.Operation.Finished.Format(timeFormat)
-	elapsed := lib.Round(time.Since(transfer.Operation.Started), time.Millisecond)
+func (c *Core) finishTransferOperation(subject, headline string, commands []string, operation *domain.Operation) {
+	fstarted := operation.Started.Format(timeFormat)
+	ffinished := operation.Finished.Format(timeFormat)
+	elapsed := lib.Round(time.Since(operation.Started), time.Millisecond)
 
 	// // outbound := &dto.Packet{Topic: "transferProgress", Payload: fmt.Sprintf("Started: %s", fstarted)}
 	// // c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -699,11 +691,11 @@ func (c *Core) finishTransferOperation(subject, headline string, commands []stri
 	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	// }
 
-	outbound := &dto.Packet{Topic: "transferFinished", Payload: transfer}
+	outbound := &dto.Packet{Topic: "transferFinished", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s",
-		fstarted, ffinished, elapsed, headline, lib.ByteSize(transfer.Operation.BytesTransferred), transfer.Progress.Speed,
+		fstarted, ffinished, elapsed, headline, lib.ByteSize(operation.BytesTransferred), operation.Speed,
 	)
 
 	switch c.settings.NotifyMove {
