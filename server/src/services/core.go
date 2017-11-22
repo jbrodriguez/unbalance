@@ -457,15 +457,15 @@ func (c *Core) runOperation(opName string) {
 		//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
 		//
 		// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
-		// particular file, then starts over for the next file
+		// particular file, then starts over with the next file
 		// makes sense for them I guess, but it's a pita to track and get an overall total
 		//
 		// so this is what the following represent:
 		//
 		// - cmdTransferred holds the running total for the current command
 		//
-		// - accumTransferred holds the running total for all the files of the current command that have been
-		// transferred up to the previous file (doesn't include bytes transferred for the current file)
+		// - accumTransferred holds the running total for all the files that have been transferred, not including the
+		// current file, for the current command
 		//
 		// - perFileTransferred holds the running total for the file that is currently being transferred
 
