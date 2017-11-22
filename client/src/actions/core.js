@@ -223,7 +223,7 @@ const calcFinished = ({ state, actions }, operation) => {
 	}
 }
 
-function calcPermIssue({ state, actions }, permStats) {
+const calcPermIssue = ({ state, actions }, permStats) => {
 	const permIssues = permStats.split('|')
 
 	const feedback = []
@@ -248,7 +248,7 @@ function calcPermIssue({ state, actions }, permStats) {
 	return state
 }
 
-function scatterMove({ state, actions, opts: { ws } }) {
+const scatterMove = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 	ws.send({ topic: 'api/scatter/move' })
 	return state
