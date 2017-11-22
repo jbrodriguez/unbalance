@@ -54,11 +54,6 @@ class App extends PureComponent {
 			)
 		}
 
-		let stats = null
-		if (state.env.stats !== '') {
-			stats = <span>{state.stats}</span>
-		}
-
 		let progress = null
 		if (state.env.isBusy) {
 			progress = (
@@ -90,7 +85,7 @@ class App extends PureComponent {
 						<ul className={cx('col-xs-12', 'col-sm-10')}>
 							<li className={cx('headerMenuBg')}>
 								<section className={cx('row', 'middle-xs')}>
-									<div className={cx('col-xs-12', 'col-sm-4', 'flexSection', 'routerSection')}>
+									<div className={cx('col-xs-12', 'col-sm-11', 'flexSection', 'routerSection')}>
 										<div className={cx('lspacer')} />
 
 										<ReactiveLink
@@ -107,6 +102,16 @@ class App extends PureComponent {
 											to="/gather"
 											activeClassName={active}
 											text="GATHER"
+											disabled={linksDisabled}
+										/>
+
+										<div className={cx('lspacer')} />
+
+										<ReactiveLink
+											exact
+											to="/transfer"
+											activeClassName={active}
+											text="TRANSFER"
 											disabled={linksDisabled}
 										/>
 
@@ -131,25 +136,15 @@ class App extends PureComponent {
 										/>
 									</div>
 
-									<div className={cx('col-xs-12', 'col-sm-8')}>
+									<div className={cx('col-xs-12', 'col-sm-1')}>
 										<div className={cx('gridHeader')}>
-											<section className={cx('row', 'between-xs', 'middle-xs')}>
+											<section className={cx('row', 'between-xs', 'center-xs', 'middle-xs')}>
 												<div
-													className={cx(
-														'col-xs-12',
-														'col-sm-1',
-														'flexSection',
-														'center-xs',
-														'middle-xs',
-													)}
+													className={cx('col-xs-12', 'flexSection', 'center-xs', 'middle-xs')}
 												>
 													<img alt="Marker" src={vm} />
 													{progress}
-												</div>
-
-												<div className={cx('col-xs-12', 'col-sm-11', 'statsSection')}>
-													{stats}
-												</div>
+												</div>{' '}
 											</section>
 										</div>
 									</div>

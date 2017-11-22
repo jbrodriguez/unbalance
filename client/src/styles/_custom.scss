@@ -230,6 +230,18 @@ p {
 	font-size: 0.9em;
 }
 
+.statusDone {
+	color: $unbalance-green;
+}
+
+.statusInProgress {
+	color: $unbalance-footer;
+}
+
+.statusPending {
+	color: $cement-gray;
+}
+
 // .title {
 // 	padding: 1em;
 // }
