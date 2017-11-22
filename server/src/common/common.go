@@ -42,4 +42,6 @@ const (
 	API_SCATTER_MOVE     = "api/scatter/move"
 	API_SCATTER_COPY     = "api/scatter/copy"
 	API_SCATTER_VALIDATE = "api/scatter/validate"
+
+	INT_OPERATION_FINISHED = "core/operation/finished"
 )

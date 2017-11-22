@@ -96,8 +96,8 @@ func (c *Core) Start() (err error) {
 
 	c.state.Status = common.OP_NEUTRAL
 	c.state.Unraid = message.Data.(*domain.Unraid)
-	c.state.Operations = make([]*domain.Operation, 0)
 	c.state.Operation = resetOp(c.state.Unraid.Disks)
+	c.state.History = make([]*domain.Operation, 0)
 
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
 	c.actor.Register(common.API_GET_STATUS, c.getStatus)
@@ -110,6 +110,8 @@ func (c *Core) Start() (err error) {
 
 	c.actor.Register(common.API_SCATTER_MOVE, c.scatterMove)
 	c.actor.Register(common.API_SCATTER_COPY, c.scatterCopy)
+
+	c.actor.Register(common.INT_OPERATION_FINISHED, c.operationFinished)
 
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
@@ -695,6 +697,24 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	}()
 
 	mlog.Info("\n%s\n%s", subject, message)
+
+	c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
+}
+
+func (c *Core) operationFinished(msg *pubsub.Message) {
+	c.state.History = append(c.state.History, c.state.Operation)
+
+	b, err := json.Marshal(c.state.Operation)
+	if err != nil {
+		mlog.Warning("Unable to serialize op: %s", err)
+	}
+
+	mlog.Info(`Serialized
+	%s
+	`, string(b))
+
+	c.state.Status = common.OP_NEUTRAL
+	c.state.Operation = resetOp(c.state.Unraid.Disks)
 }
 
 func (c *Core) setNotifyCalc(msg *pubsub.Message) {

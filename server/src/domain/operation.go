@@ -26,8 +26,8 @@ type Operation struct {
 
 	// transfer section
 	BytesToTransfer  int64             `json:"bytesToTransfer"`
-	DryRun           bool              `json:"-"`
-	RsyncFlags       []string          `json:"-"`
+	DryRun           bool              `json:"dryRun"`
+	RsyncFlags       []string          `json:"rsyncFlags"`
 	RsyncStrFlags    string            `json:"rsyncStrFlags"`
 	Commands         []*Command        `json:"commands"`
 	BytesTransferred int64             `json:"bytesTransferred"`
