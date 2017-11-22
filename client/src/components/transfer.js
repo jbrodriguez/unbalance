@@ -18,6 +18,13 @@ export default class Transfers extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
+	// this is a dirty trick to play around the fact that react-router is kind of dumb when it comes to
+	// redux like scenarios: https://reacttraining.com/react-router/web/guides/redux-integration
+	componentDidMount() {
+		const { actions } = this.props.store
+		actions.getConfig()
+	}
+
 	render() {
 		const { state } = this.props.store
 
@@ -30,7 +37,13 @@ export default class Transfers extends PureComponent {
 					state.core.operation.opKind === constant.OP_GATHER_MOVE)
 			)
 		) {
-			return null
+			return (
+				<section className={cx('row', 'bottom-spacer-half')}>
+					<div className={cx('col-xs-12')}>
+						<span>No transfer operation is currently on going.</span>
+					</div>
+				</section>
+			)
 		}
 
 		const operation = state.core.operation
