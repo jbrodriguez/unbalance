@@ -67,7 +67,7 @@ export default class Transfers extends PureComponent {
 			} else if (command.transferred === command.size) {
 				status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
 			} else {
-				status = <i className={cx('fa fa-bullseye', 'statusInProgress', 'rspacer')} />
+				status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
 			}
 
 			const percent = percentage(command.transferred / command.size)
