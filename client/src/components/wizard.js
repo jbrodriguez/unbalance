@@ -34,7 +34,7 @@ export default class Wizard extends PureComponent {
 		let targetDisabled = true
 		let moveDisabled = true
 
-		const targetPresent = isValid(state.gather.tree.target)
+		const targetPresent = isValid(state.gather.target)
 
 		switch (match.url) {
 			case '/gather/target':
@@ -54,7 +54,7 @@ export default class Wizard extends PureComponent {
 			case '/gather':
 			default:
 				next = '/gather/target'
-				nextDisabled = Object.keys(state.gather.tree.chosen).length === 0
+				nextDisabled = Object.keys(state.gather.chosen).length === 0
 				targetStyle = cx('circular', 'circular-disabled')
 				moveStyle = cx('circular', 'circular-disabled')
 				chooseDisabled = false

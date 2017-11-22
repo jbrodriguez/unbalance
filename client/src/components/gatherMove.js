@@ -28,8 +28,7 @@ export default class GatherMove extends PureComponent {
 	render() {
 		const { match, store: { state, actions } } = this.props
 
-		const preReqNotPresent =
-			Object.keys(state.gather.tree.chosen).length === 0 || !isValid(state.gather.tree.target)
+		const preReqNotPresent = Object.keys(state.gather.chosen).length === 0 || !isValid(state.gather.target)
 		const runningMove = state.core.status ? state.core.status === constant.OP_GATHER_MOVE : false
 
 		if (preReqNotPresent && !runningMove) {
@@ -78,7 +77,7 @@ export default class GatherMove extends PureComponent {
 					<div className={cx('col-xs-12')}>
 						<button
 							className={cx('btn', 'btn-primary')}
-							onClick={() => actions.gather(state.gather.tree.target)}
+							onClick={() => actions.gather(state.gather.target)}
 							disabled={transferDisabled || opInProgress}
 						>
 							PROCEED

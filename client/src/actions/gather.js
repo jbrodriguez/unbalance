@@ -28,13 +28,13 @@ const getGatherTree = ({ state, actions, opts: { api } }, path) => {
 }
 
 const gotGatherTree = ({ state }, newTree) => {
-	let items = [].concat(state.gather.tree.items)
+	let items = [].concat(state.gather.items)
 
-	if (state.gather.tree.cache) {
-		const node = state.gather.tree.cache
+	if (state.gather.cache) {
+		const node = state.gather.cache
 		node.children = newTree.nodes
 
-		// console.log(`node-${JSON.stringify(state.tree.cache)}`)
+		// console.log(`node-${JSON.stringify(state.cache)}`)
 		// console.log(`gotTree-${JSON.stringify(newTree.nodes)}`)
 	} else {
 		items = [].concat(newTree.nodes)
@@ -52,7 +52,7 @@ const gotGatherTree = ({ state }, newTree) => {
 }
 
 const gatherTreeCollapsed = ({ state, actions }, lineage) => {
-	const tree = [].concat(state.gather.tree.items)
+	const tree = [].concat(state.gather.items)
 	const node = getNode(tree, lineage)
 	// console.log(`node-${JSON.stringify(node)}`)
 
@@ -123,7 +123,7 @@ const gatherTreeLocated = ({ state }, disks) => {
 const findTargets = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 
-	const folders = Object.keys(state.gather.tree.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
+	const folders = Object.keys(state.gather.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
 	ws.send({ topic: 'findTargets', payload: folders })
 
 	return {

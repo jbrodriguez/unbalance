@@ -20,7 +20,7 @@ export default class GatherTarget extends PureComponent {
 
 	componentDidMount() {
 		const { actions, state } = this.props.store
-		actions.findTargets(state.gather.tree.chosen)
+		actions.findTargets(state.gather.chosen)
 	}
 
 	checkTarget = disk => e => {
@@ -60,7 +60,7 @@ export default class GatherTarget extends PureComponent {
 
 		const rows = targets.map(disk => {
 			const percent = percentage((disk.size - disk.free) / disk.size)
-			const present = state.gather.tree.present.some(presence => presence.id === disk.id)
+			const present = state.gather.present.some(presence => presence.id === disk.id)
 
 			return (
 				<tr key={disk.id}>
@@ -92,7 +92,7 @@ export default class GatherTarget extends PureComponent {
 
 		let noun = ''
 		let verb = 'is'
-		const keys = Object.keys(state.gather.tree.chosen)
+		const keys = Object.keys(state.gather.chosen)
 		if (keys.length > 1) {
 			noun = 's'
 			verb = 'are'
