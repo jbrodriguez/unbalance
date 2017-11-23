@@ -49,6 +49,7 @@ func (c *Calc) Start() (err error) {
 	mlog.Info("starting service Calc ...")
 
 	c.actor.Register(common.INT_SCATTER_CALCULATE, c.scatter)
+	c.actor.Register(common.INT_GATHER_CALCULATE, c.gather)
 
 	go c.actor.React()
 
@@ -174,7 +175,7 @@ func (c *Calc) getEntries(src string, folder string) []*domain.Item {
 	}
 
 	if !fi.IsDir() {
-		mlog.Info("getFolder-found(%s)-size(%d)", srcFolder, fi.Size())
+		mlog.Info("getEntries:found(%s):size(%d)", srcFolder, fi.Size())
 
 		item := &domain.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}
 		items = append(items, item)
@@ -356,7 +357,7 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 	mlog.Info("scatterCalc:totalItemsToBeTransferred(%d)", len(items))
 
 	for _, item := range items {
-		mlog.Info("scatterCalc:toBeTransferred:Path(%s); Size(%s)", item.Path, lib.ByteSize(item.Size))
+		mlog.Info("scatterCalc:toBeTransferred:Path(%s):Size(%s)", item.Path, lib.ByteSize(item.Size))
 	}
 
 	willBeTransferred := make([]*domain.Item, 0)
@@ -472,4 +473,132 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	c.bus.Pub(&pubsub.Message{Payload: state.Operation}, common.INT_SCATTER_CALCULATE_FINISHED)
+}
+
+func (c *Calc) gather(msg *pubsub.Message) {
+	state := msg.Payload.(*domain.State)
+
+	mlog.Info("Running calculate for gather operation ...")
+	state.Operation.Started = time.Now()
+
+	outbound := &dto.Packet{Topic: common.WS_CALC_STARTED, Payload: "Operation started"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	var ownerIssue, groupIssue, folderIssue, fileIssue int64
+	items := make([]*domain.Item, 0)
+
+	// Get owner/permission issues
+	// Get items to be transferred
+	for _, disk := range state.Unraid.Disks {
+		for _, path := range state.Operation.ChosenFolders {
+			// check owner and permissions issues for this folder/disk combination
+			ownIssue, grpIssue, fldIssue, filIssue := c.getIssues(disk, path)
+			ownerIssue += ownIssue
+			groupIssue += grpIssue
+			folderIssue += fldIssue
+			fileIssue += filIssue
+
+			// get children files/folders to be transferred
+			entries := c.getEntries(disk.Path, path)
+			if entries != nil {
+				items = append(items, entries...)
+			}
+		}
+	}
+
+	state.Operation.OwnerIssue = ownerIssue
+	state.Operation.GroupIssue = groupIssue
+	state.Operation.FolderIssue = folderIssue
+	state.Operation.FileIssue = fileIssue
+
+	mlog.Info("gatherCalc:issues:owner(%d),group(%d),folder(%d),file(%d)", state.Operation.OwnerIssue, state.Operation.GroupIssue, state.Operation.FolderIssue, state.Operation.FileIssue)
+	mlog.Info("gatherCalc:totalItemsToBeTransferred(%d)", len(items))
+
+	var totalSize int64
+	for _, item := range items {
+		totalSize += item.Size
+		mlog.Info("gatherCalc:toBeTransferred:Path(%s):Size(%s)", item.Path, lib.ByteSize(item.Size))
+	}
+
+	if len(items) > 0 {
+		// Initialize fields
+		state.Operation.BytesToTransfer = 0
+
+		for _, disk := range state.Unraid.Disks {
+			diskWithoutMnt := disk.Path[5:]
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			outbound = &dto.Packet{Topic: common.WS_CALC_PROGRESS, Payload: msg}
+			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Info("gatherCalc:%s", msg)
+			// time.Sleep(2 * time.Second)
+
+			reserved := c.getReservedAmount(disk.Size)
+
+			ceil := lib.Max(lib.ReservedSpace, reserved)
+			mlog.Info("gatherCalc:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
+
+			packer := algorithm.NewGreedy(disk, items, totalSize, ceil)
+			bin := packer.FitAll()
+			if bin != nil {
+				state.Operation.VDisks[disk.Path].Bin = bin
+				state.Operation.VDisks[disk.Path].PlannedFree -= bin.Size
+
+				state.Operation.BytesToTransfer += bin.Size
+
+				mlog.Info("gatherCalc:BinAllocated=[Disk(%s); Items(%d)]", disk.Path, len(bin.Items))
+			} else {
+				mlog.Info("gatherCalc:NoBinAllocated=Disk(%s)", disk.Path)
+			}
+		}
+	}
+
+	state.Operation.Finished = time.Now()
+	elapsed := lib.Round(time.Since(state.Operation.Started), time.Millisecond)
+
+	fstarted := state.Operation.Started.Format(timeFormat)
+	ffinished := state.Operation.Finished.Format(timeFormat)
+
+	// Send to frontend console started/ended/elapsed times
+	c.sendTimeFeedbackToFrontend(fstarted, ffinished, elapsed)
+
+	// send to frontend the items that will not be transferred, if any
+	// notTransferred holds a string representation of all the items, separated by a '\n'
+	state.Operation.FoldersNotTransferred = make([]string, 0)
+	notTransferred := ""
+
+	// send mail according to user preferences
+	c.sendMailFeeback(fstarted, ffinished, elapsed, state.Operation, notTransferred)
+
+	// some local logging
+	mlog.Info("gatherCalc:ItemsLeft(%d)", len(items))
+	mlog.Info("gatherCalc:Listing (%d) disks ...", len(state.Unraid.Disks))
+	for _, disk := range state.Unraid.Disks {
+		if state.Operation.VDisks[disk.Path].Bin != nil {
+			mlog.Info("=========================================================")
+			mlog.Info("Disk(%s):ALLOCATED %d items (%s): %s planned free space remaining", disk.Path, len(state.Operation.VDisks[disk.Path].Bin.Items), lib.ByteSize(state.Operation.VDisks[disk.Path].Bin.Size), lib.ByteSize(state.Operation.VDisks[disk.Path].PlannedFree))
+			mlog.Info("---------------------------------------------------------")
+
+			for _, item := range state.Operation.VDisks[disk.Path].Bin.Items {
+				mlog.Info("[%s] %s", lib.ByteSize(item.Size), item.Name)
+			}
+
+			mlog.Info("---------------------------------------------------------")
+			mlog.Info("")
+		} else {
+			mlog.Info("=========================================================")
+			mlog.Info("Disk(%s):NO ALLOCATION: %s free", disk.Path, lib.ByteSize(disk.Free))
+			mlog.Info("---------------------------------------------------------")
+			mlog.Info("---------------------------------------------------------")
+			mlog.Info("")
+		}
+	}
+
+	mlog.Info("=========================================================")
+	mlog.Info("Bytes To Transfer: %s", lib.ByteSize(state.Operation.BytesToTransfer))
+	mlog.Info("---------------------------------------------------------")
+
+	outbound = &dto.Packet{Topic: common.WS_CALC_PROGRESS, Payload: "Operation Finished"}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	c.bus.Pub(&pubsub.Message{Payload: state.Operation}, common.INT_GATHER_CALCULATE_FINISHED)
 }

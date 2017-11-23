@@ -124,7 +124,7 @@ const findTargets = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 
 	const folders = Object.keys(state.gather.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
-	ws.send({ topic: 'findTargets', payload: folders })
+	ws.send({ topic: 'api/gather/calculate', payload: folders })
 
 	return {
 		...state,
@@ -162,6 +162,31 @@ const findFinished = ({ state, actions }, operation) => {
 	return state
 }
 
+const checkTarget = ({ state }, drive, checked) => {
+	// actions.setBusy(true)
+
+	const operation = { ...state.core.operation }
+
+	state.core.unraid.disks.forEach(disk => {
+		operation.vdisks[disk.path].src = false
+		operation.vdisks[disk.path].dst = disk.path === drive.path && checked
+	})
+
+	const target = checked ? drive : null
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+		},
+		gather: {
+			...state.gather,
+			target,
+		},
+	}
+}
+
 export default {
 	getShares,
 
@@ -176,4 +201,6 @@ export default {
 
 	findTargets,
 	findFinished,
+
+	checkTarget,
 }

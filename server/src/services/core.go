@@ -113,6 +113,9 @@ func (c *Core) Start() (err error) {
 
 	c.actor.Register(common.INT_OPERATION_FINISHED, c.operationFinished)
 
+	c.actor.Register(common.API_GATHER_CALCULATE, c.gatherCalculate)
+	c.actor.Register(common.INT_GATHER_CALCULATE_FINISHED, c.gatherCalculateFinished)
+
 	// c.actor.Register("/config/set/notifyCalc", c.setNotifyCalc)
 	// c.actor.Register("/config/set/notifyMove", c.setNotifyMove)
 	// c.actor.Register("/config/set/reservedSpace", c.setReservedSpace)
@@ -130,7 +133,6 @@ func (c *Core) Start() (err error) {
 	// c.actor.Register("copy", c.copy)
 	// c.actor.Register("validate", c.validate)
 	// c.actor.Register("getLog", c.getLog)
-	// c.actor.Register("findTargets", c.findTargets)
 	// c.actor.Register("gather", c.gather)
 
 	go c.actor.React()
@@ -322,7 +324,7 @@ func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 		}
 	}
 
-	op2 := c.setupOperation(common.OP_SCATTER_COPY, operation)
+	op2 := c.setupOperation(operation)
 	mlog.Info(`Operation
 		RSyncFlags: %v
 		RSyncStrFlags: %s
@@ -340,19 +342,19 @@ func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 
 func (c *Core) scatterMove(msg *pubsub.Message) {
 	c.state.Status = common.OP_SCATTER_MOVE
-	c.state.Operation = c.setupOperation(c.state.Status, c.state.Operation)
+	c.state.Operation = c.setupOperation(c.state.Operation)
 	go c.runOperation("Move")
 }
 
 func (c *Core) scatterCopy(msg *pubsub.Message) {
 	c.state.Status = common.OP_SCATTER_COPY
-	c.state.Operation = c.setupOperation(c.state.Status, c.state.Operation)
+	c.state.Operation = c.setupOperation(c.state.Operation)
 	go c.runOperation("Copy")
 }
 
-func (c *Core) setupOperation(status int64, copyOperation *domain.Operation) *domain.Operation {
+func (c *Core) setupOperation(copyOperation *domain.Operation) *domain.Operation {
 	operation := &domain.Operation{
-		OpKind:          status,
+		OpKind:          c.state.Status,
 		BytesToTransfer: copyOperation.BytesToTransfer,
 		DryRun:          c.settings.DryRun,
 		RsyncFlags:      c.settings.RsyncFlags,
@@ -1787,31 +1789,70 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 // 	mlog.Info("\n%s\n%s", subject, message)
 // }
 
-// func (c *Core) findTargets(msg *pubsub.Message) {
-// 	c.operation = model.Operation{OpState: model.StateFindTargets, PrevState: model.StateIdle}
-// 	go c._findTargets(msg)
-// }
+func (c *Core) setupGatherCalculateOperation(msg *pubsub.Message) (*domain.Operation, error) {
+	data, ok := msg.Payload.(string)
+	if !ok {
+		msg := "Unable to convert findTargets parameters"
+		mlog.Warning(msg)
+		return nil, errors.New(msg)
+	}
 
-// func (c *Core) _findTargets(msg *pubsub.Message) {
+	var chosen []string
+	err := json.Unmarshal([]byte(data), &chosen)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to bind findTargets parameters: %s", err)
+		mlog.Warning(msg)
+		return nil, errors.New(msg)
+	}
+
+	operation := resetOp(c.state.Unraid.Disks)
+
+	operation.OpKind = c.state.Status
+	operation.ChosenFolders = chosen
+
+	return operation, nil
+}
+
+func (c *Core) gatherCalculate(msg *pubsub.Message) {
+	c.state.Status = common.OP_GATHER_CALC
+
+	operation, err := c.setupGatherCalculateOperation(msg)
+	if err != nil {
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		return
+	}
+
+	// TODO: we should probably refresh unraid here (applies to scatterCalculate too)
+	calc := &pubsub.Message{Payload: &domain.State{
+		Status:    c.state.Status,
+		Unraid:    c.state.Unraid,
+		Operation: operation,
+	}}
+
+	c.bus.Pub(calc, common.INT_GATHER_CALCULATE)
+}
+
+func (c *Core) gatherCalculateFinished(msg *pubsub.Message) {
+	operation := msg.Payload.(*domain.Operation)
+
+	c.state.Status = common.OP_NEUTRAL
+	c.state.Operation = operation
+
+	// send to front end the signal of operation finished
+	outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: operation}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
+	// and there actually perm issues
+	if c.state.Operation.BytesToTransfer > 0 && (c.state.Operation.OwnerIssue+c.state.Operation.GroupIssue+c.state.Operation.FolderIssue+c.state.Operation.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", c.state.Operation.OwnerIssue, c.state.Operation.GroupIssue, c.state.Operation.FolderIssue, c.state.Operation.FileIssue)}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+}
+
+// func (c *Core) gatherCalculation(msg *pubsub.Message) {
 // 	defer func() { c.operation.OpState = model.StateIdle }()
-
-// 	data, ok := msg.Payload.(string)
-// 	if !ok {
-// 		mlog.Warning("Unable to convert findTargets parameters")
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert findTargets parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 	}
-
-// 	var chosen []string
-// 	err := json.Unmarshal([]byte(data), &chosen)
-// 	if err != nil {
-// 		mlog.Warning("Unable to bind findTargets parameters: %s", err)
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind findTargets parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 		// mlog.Fatalf(err.Error())
-// 	}
 
 // 	mlog.Info("Running findTargets operation ...")
 // 	c.operation.Started = time.Now()

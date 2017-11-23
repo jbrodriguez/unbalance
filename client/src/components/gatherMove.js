@@ -40,7 +40,7 @@ export default class GatherMove extends PureComponent {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.lines} styleClass={'console-feedback'} />
+						<ConsolePanel lines={state.env.lines} styleClass={'console-feedback'} />
 					</div>
 				</section>
 			)
@@ -56,7 +56,7 @@ export default class GatherMove extends PureComponent {
 			let size = 0
 
 			state.core.unraid.disks.forEach(disk => {
-				if (disk.dst) {
+				if (state.core.operation.vdisks[disk.path].dst) {
 					dst = disk
 					size = dst.free - state.core.operation.vdisks[dst.path].plannedFree
 				}
