@@ -291,7 +291,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 	s.bus.Pub(msg, common.API_LOCATE_FOLDER)
 
 	reply := <-msg.Reply
-	resp := reply.([]*domain.Disk)
+	resp := reply.(*dto.Location)
 	c.JSON(200, &resp)
 
 	return nil

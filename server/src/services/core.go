@@ -180,26 +180,37 @@ func (c *Core) resetOp(msg *pubsub.Message) {
 func (c *Core) locate(msg *pubsub.Message) {
 	chosen := msg.Payload.([]string)
 
-	disks := make([]*domain.Disk, 0)
+	location := &dto.Location{
+		Disks:    make(map[string]*domain.Disk, 0),
+		Presence: make(map[string]string, 0),
+	}
 
 	for _, disk := range c.state.Unraid.Disks {
 		for _, item := range chosen {
-			location := filepath.Join(disk.Path, strings.Replace(item, "/mnt/user", "", -1))
+			name := strings.Replace(item, "/mnt/user/", "", -1)
+			entry := filepath.Join(disk.Path, name)
 
 			exists := true
-			if _, err := os.Stat(location); err != nil {
+			if _, err := os.Stat(entry); err != nil {
 				exists = !os.IsNotExist(err)
 			}
 
-			mlog.Info("location(%s)-exists(%t)", location, exists)
+			mlog.Info("entry(%s)-exists(%t)", entry, exists)
 
 			if exists {
-				disks = append(disks, disk)
+				location.Disks[disk.Name] = disk
+
+				presence := disk.Name
+				if val, ok := location.Presence[name]; ok {
+					presence += ", " + val
+				}
+
+				location.Presence[name] = presence
 			}
 		}
 	}
 
-	msg.Reply <- disks
+	msg.Reply <- location
 }
 
 func getScatterParams(msg *pubsub.Message) (*domain.Operation, error) {

@@ -50,11 +50,8 @@ export default class GatherSource extends PureComponent {
 								<div className={cx('col-xs-6')}>
 									<span>SHARES EXPLORER</span>
 								</div>
-								<div className={cx('col-xs-5')}>
+								<div className={cx('col-xs-6')}>
 									<span>SELECTED</span>
-								</div>
-								<div className={cx('col-xs-1')}>
-									<span>LOCATION</span>
 								</div>
 							</div>
 						</div>
@@ -79,16 +76,15 @@ export default class GatherSource extends PureComponent {
 							/>
 						</div>
 
-						<div className={cx('col-xs-5', 'scroller')}>
+						<div className={cx('col-xs-6', 'scroller')}>
 							<ul>
 								{Object.keys(state.gather.chosen).map(chosen => (
-									<li key={chosen}>- {chosen.slice(10)}</li>
+									<li key={chosen}>
+										- {chosen.slice(10)} &nbsp;({state.gather.location &&
+											state.gather.location.presence[chosen.slice(10)]})
+									</li>
 								))}
 							</ul>
-						</div>
-
-						<div className={cx('col-xs-1', 'scroller')}>
-							<ul>{state.gather.present.map(disk => <li key={disk.id}>- {disk.name}</li>)}</ul>
 						</div>
 					</div>
 				</div>

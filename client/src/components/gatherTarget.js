@@ -60,7 +60,7 @@ export default class GatherTarget extends PureComponent {
 
 		const rows = targets.map(disk => {
 			const percent = percentage((disk.size - disk.free) / disk.size)
-			const present = state.gather.present.some(presence => presence.id === disk.id)
+			const present = state.gather.location && state.gather.location.disks[disk.name]
 
 			return (
 				<tr key={disk.id}>

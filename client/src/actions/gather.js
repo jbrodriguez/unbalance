@@ -10,7 +10,7 @@ const getShares = ({ state, actions }) => {
 			cache: null,
 			items: [{ label: 'Loading ...' }],
 			chosen: {},
-			present: [],
+			location: null,
 			target: null,
 		},
 	}
@@ -91,7 +91,7 @@ const gatherTreeChecked = ({ state, actions }, lineage) => {
 			...state.gather,
 			chosen,
 			items,
-			present: [],
+			location: null,
 		},
 	}
 }
@@ -109,13 +109,13 @@ const gatherTreeLocate = ({ state, actions, opts: { api } }, chosen) => {
 	return state
 }
 
-const gatherTreeLocated = ({ state }, disks) => {
-	// console.log(`disks-(${JSON.stringify(disks)})`)
+const gatherTreeLocated = ({ state }, location) => {
+	console.log(`location-(${JSON.stringify(location)})`)
 	return {
 		...state,
 		gather: {
 			...state.gather,
-			present: disks,
+			location,
 		},
 	}
 }
