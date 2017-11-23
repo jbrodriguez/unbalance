@@ -54,7 +54,7 @@ const getLog = ({ state, actions, opts: { ws } }) => {
 }
 
 const gotLog = ({ state, actions }, log) => {
-	actions.setBusy(true)
+	actions.setBusy(false)
 
 	return {
 		...state,
