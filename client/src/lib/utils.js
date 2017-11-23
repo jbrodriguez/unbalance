@@ -38,7 +38,12 @@ const k = 1000
 const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
 const humanBytes = bytes => {
-	if (bytes === 0) return '0 Byte'
+	const { value, unit } = formatBytes(bytes)
+	return `${value} ${unit}`
+}
+
+const formatBytes = bytes => {
+	if (bytes === 0) return { value: '0', unit: 'Byte' }
 
 	let base = bytes ? Math.floor(Math.log(bytes) / Math.log(k)) : 0
 	bytes = bytes / Math.pow(k, base)
@@ -51,9 +56,7 @@ const humanBytes = bytes => {
 		base += 1
 	}
 
-	// return `${(bytes / Math.pow(k, i)).toPrecision(3)} ${sizes[i]}` // eslint-disable-line
-
-	return `${numberFormat(bytes, precision, '.', bytes >= 10000 ? ',' : '')} ${sizes[base]}`
+	return { value: `${numberFormat(bytes, precision, '.', bytes >= 10000 ? ',' : '')}`, unit: `${sizes[base]}` }
 }
 
 // function humanBytes(bytes) {
@@ -159,4 +162,4 @@ const uncheckChildren = (tree, chosen) => {
 	})
 }
 
-export { humanBytes, percentage, scramble, isValid, getNode, markChosen, uncheckChildren }
+export { humanBytes, formatBytes, percentage, scramble, isValid, getNode, markChosen, uncheckChildren }

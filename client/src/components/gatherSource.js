@@ -80,8 +80,8 @@ export default class GatherSource extends PureComponent {
 							<ul>
 								{Object.keys(state.gather.chosen).map(chosen => (
 									<li key={chosen}>
-										- {chosen.slice(10)} &nbsp;({state.gather.location &&
-											state.gather.location.presence[chosen.slice(10)]})
+										- {chosen.slice(10)}:{' '}
+										{state.gather.location && state.gather.location.presence[chosen.slice(10)]}
 									</li>
 								))}
 							</ul>

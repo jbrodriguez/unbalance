@@ -239,7 +239,46 @@ p {
 }
 
 .statusPending {
+	color: $gray-blue;
+}
+
+.transferHeader {
 	color: $cement-gray;
+	background-color: $gray-blue;
+	font-size: 1.5em;
+	padding: 0.5em;
+}
+
+.indicator {
+	border: 1px solid $unbalance-footer;
+}
+
+.indicatorHeader {
+	padding-bottom: 0.5em;
+	padding-top: 0.5em;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+}
+
+.indicatorBorder {
+	border-bottom: 1px solid $unbalance-footer;
+	padding-bottom: 0.5em;
+}
+
+.indicatorContent {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.indicatorLabel {
+	font-size: 1.25em;
+	// border-bottom: 1px solid $unbalance-footer;
+	// padding: 0.5em 0;
+}
+
+.indicatorValue {
+	font-size: 2em;
+	color: $unbalance-footer;
 }
 
 // .title {

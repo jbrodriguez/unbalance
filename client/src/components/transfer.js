@@ -8,10 +8,16 @@ import Indicator from './indicator'
 
 import styles from '../styles/core.scss'
 
-import { humanBytes, percentage } from '../lib/utils'
+import { formatBytes, percentage } from '../lib/utils'
 import * as constant from '../lib/const'
 
 const cx = classNames.bind(styles)
+
+const opMap = {
+	[constant.OP_SCATTER_MOVE]: 'SCATTER / MOVE',
+	[constant.OP_SCATTER_COPY]: 'SCATTER / COPY',
+	[constant.OP_GATHER_MOVE]: 'GATHER / MOVE',
+}
 
 export default class Transfers extends PureComponent {
 	static propTypes = {
@@ -50,12 +56,18 @@ export default class Transfers extends PureComponent {
 
 		const completed = parseFloat(Math.round(operation.completed * 100) / 100).toFixed(2)
 		const speed = parseFloat(Math.round(operation.speed * 100) / 100).toFixed(2)
-		const transferred = `${humanBytes(operation.bytesTransferred + operation.deltaTransfer)} / ${humanBytes(
-			operation.bytesToTransfer,
-		)}`
+
+		let bytes = formatBytes(operation.bytesTransferred + operation.deltaTransfer)
+		const transferredValue = bytes.value
+		const transferredUnit = ' ' + bytes.unit
+
+		bytes = formatBytes(operation.bytesToTransfer)
+		const totalValue = bytes.value
+		const totalUnit = ' ' + bytes.unit
+
 		const remaining = operation.remaining
 
-		console.log(`line(${operation.line})`)
+		// console.log(`line(${operation.line})`)
 
 		const rows = operation.commands.map(command => {
 			let status
@@ -97,7 +109,7 @@ export default class Transfers extends PureComponent {
 								<th style={{ width: '50px' }} />
 								<th style={{ width: '95px' }}>SOURCE</th>
 								<th>COMMAND</th>
-								<th>PROGRESS</th>
+								<th style={{ width: '350px' }}>PROGRESS</th>
 							</tr>
 						</thead>
 						<tbody>{rows}</tbody>
@@ -108,18 +120,32 @@ export default class Transfers extends PureComponent {
 
 		return (
 			<div>
+				<div className={cx('transferHeader', 'bottom-spacer-half')}>
+					<section className={cx('row')}>
+						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'start-sm')}>
+							<span>{opMap[operation.opKind]}</span>
+						</div>
+						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'end-sm')}>
+							<span>{operation.dryRun && 'DRY RUN'}</span>
+						</div>
+					</section>
+				</div>
+
 				<section className={cx('row', 'bottom-spacer-half')}>
-					<div className={cx('col-xs-3')}>
-						<Indicator label="Completed" value={completed} unit=" %" />
+					<div className={cx('col-xs')}>
+						<Indicator label="COMPLETED" value={completed} unit=" %" />
 					</div>
-					<div className={cx('col-xs-3')}>
-						<Indicator label="Speed" value={speed} unit=" MB/s" />
+					<div className={cx('col-xs')}>
+						<Indicator label="SPEED" value={speed} unit=" MB/s" />
 					</div>
-					<div className={cx('col-xs-3')}>
-						<Indicator label="Transferred / Total" value={transferred} unit="" />
+					<div className={cx('col-xs')}>
+						<Indicator label="TRANSFERRED" value={transferredValue} unit={transferredUnit} />
 					</div>
-					<div className={cx('col-xs-3')}>
-						<Indicator label="Remaining" value={remaining} unit="" />
+					<div className={cx('col-xs')}>
+						<Indicator label="TOTAL" value={totalValue} unit={totalUnit} />
+					</div>
+					<div className={cx('col-xs')}>
+						<Indicator label="REMAINING" value={remaining} unit="" />
 					</div>
 				</section>
 
