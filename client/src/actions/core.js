@@ -250,7 +250,11 @@ const calcPermIssue = ({ state, actions }, permStats) => {
 
 const scatterMove = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
+
 	ws.send({ topic: 'api/scatter/move' })
+
+	state.history.replace({ pathname: '/transfer' })
+
 	return state
 }
 
