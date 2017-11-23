@@ -3,6 +3,7 @@
 rm -rf /mnt/disk1/films/bluray
 rm -rf /mnt/disk1/films/blurip
 rm -rf /mnt/disk1/tvshows/*
+rm -rf /mnt/disk2/tvshows/*
 
 pushd /mnt/disk1/films
 
@@ -38,3 +39,15 @@ echo "banner.season01.jpg" > banner.s01.jpg
 popd
 
 popd # out of /mnt/disk1/tvshows
+
+pushd /mnt/disk2/tvshows
+
+mkdir -p "Lost/Season 03"
+pushd "Lost/Season 03"
+dd if=/dev/urandom of=lost.s03e01.1080p bs=1M count=161
+dd if=/dev/urandom of=lost.s03e02.1080p bs=1M count=162
+dd if=/dev/urandom of=lost.s03e03.1080p bs=1M count=163
+echo "banner.season03.jpg" > banner.s03.jpg
+popd
+
+popd # out of /mnt/disk2/tvshows
