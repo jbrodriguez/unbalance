@@ -48,4 +48,6 @@ const (
 	API_GATHER_CALCULATE          = "api/gather/calculate"
 	INT_GATHER_CALCULATE          = "int/gather/calc"
 	INT_GATHER_CALCULATE_FINISHED = "int/gather/calc/finished"
+
+	API_GATHER_MOVE = "api/gather/move"
 )

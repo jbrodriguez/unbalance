@@ -264,6 +264,16 @@ const scatterCopy = ({ state, actions, opts: { ws } }) => {
 	return state
 }
 
+function gatherMove({ state, actions, opts: { ws } }, drive) {
+	actions.setBusy(true)
+
+	ws.send({ topic: 'api/gather/move', payload: drive })
+
+	state.history.replace({ pathname: '/transfer' })
+
+	return state
+}
+
 const transferStarted = ({ state }, operation) => {
 	return {
 		...state,
@@ -323,6 +333,8 @@ export default {
 
 	scatterMove,
 	scatterCopy,
+
+	gatherMove,
 
 	transferStarted,
 	transferProgress,

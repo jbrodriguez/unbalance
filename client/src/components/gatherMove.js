@@ -77,7 +77,7 @@ export default class GatherMove extends PureComponent {
 					<div className={cx('col-xs-12')}>
 						<button
 							className={cx('btn', 'btn-primary')}
-							onClick={() => actions.gather(state.gather.target)}
+							onClick={() => actions.gatherMove(state.gather.target)}
 							disabled={transferDisabled || opInProgress}
 						>
 							PROCEED
