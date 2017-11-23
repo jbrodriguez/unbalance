@@ -80,8 +80,7 @@
 [[projects]]
   name = "github.com/teris-io/shortid"
   packages = ["."]
-  revision = "6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33"
-  version = "v1.0"
+  revision = "771a37caa5cf0c81f585d7b6df4dfc77e0615b5c"
 
 [[projects]]
   branch = "master"
@@ -121,6 +120,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "af85ce5a515928524123c052cfa299a0f64ea8487d259dd325f96a5cf2771785"
+  inputs-digest = "52a5990682f897451def93a84a9d277efbc8e9b0c1b985a37fb1d60f6e6a2b87"
   solver-name = "gps-cdcl"
   solver-version = 1

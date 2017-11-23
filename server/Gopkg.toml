@@ -59,4 +59,4 @@
 
 [[constraint]]
   name = "github.com/teris-io/shortid"
-  version = "1.0.0"
+  revision = "771a37caa5cf0c81f585d7b6df4dfc77e0615b5c"
