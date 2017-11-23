@@ -45,6 +45,26 @@ const removeFeedback = ({ state }) => {
 	}
 }
 
+const getLog = ({ state, actions, opts: { ws } }) => {
+	actions.setBusy(true)
+
+	ws.send({ topic: 'api/get/log' })
+
+	return state
+}
+
+const gotLog = ({ state, actions }, log) => {
+	actions.setBusy(true)
+
+	return {
+		...state,
+		env: {
+			...state.env,
+			log,
+		},
+	}
+}
+
 // function checkForUpdate({ state, actions, opts: { api } }) {
 // 	// console.log(`checking`)
 // 	api.checkForUpdate().then(json => actions.updateAvailable(json))
@@ -68,9 +88,14 @@ const removeFeedback = ({ state }) => {
 
 export default {
 	setBusy,
+
 	clearConsole,
+
 	addFeedback,
 	removeFeedback,
+
+	getLog,
+	gotLog,
 	// checkForUpdate,
 	// updateAvailable,
 	// removeUpdateAvailable,

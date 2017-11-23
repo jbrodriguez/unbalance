@@ -48,6 +48,7 @@ func (a *Array) Start() (err error) {
 
 	a.actor.Register(common.INT_GET_ARRAY_STATUS, a.getStatus)
 	a.actor.Register(common.API_GET_TREE, a.getTree)
+	a.actor.Register(common.API_GET_LOG, a.getLog)
 
 	go a.actor.React()
 
@@ -225,4 +226,17 @@ func (a *Array) getTree(msg *pubsub.Message) {
 	entry.Nodes = items
 
 	msg.Reply <- entry
+}
+
+func (a *Array) getLog(msg *pubsub.Message) {
+	cmd := "tail -n 100 /boot/logs/unbalance.log"
+
+	log := make([]string, 0)
+
+	lib.Shell(cmd, mlog.Warning, "Get Log error:", "", func(line string) {
+		log = append(log, line)
+	})
+
+	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
+	a.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 }

@@ -169,7 +169,7 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/notifyCalc")
+	s.bus.Pub(msg, common.API_NOTIFY_CALC)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -187,7 +187,7 @@ func (s *Server) setNotifyMove(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/notifyMove")
+	s.bus.Pub(msg, common.API_NOTIFY_MOVE)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -205,7 +205,7 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/reservedSpace")
+	s.bus.Pub(msg, common.API_SET_RESERVED)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -223,7 +223,7 @@ func (s *Server) setVerbosity(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/verbosity")
+	s.bus.Pub(msg, common.API_SET_VERBOSITY)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -241,7 +241,7 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/checkUpdate")
+	s.bus.Pub(msg, common.API_SET_CHECKUPDATE)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -252,7 +252,7 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 
 func (s *Server) getUpdate(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/update")
+	s.bus.Pub(msg, common.API_GET_UPDATE)
 
 	reply := <-msg.Reply
 	resp := reply.(string)
@@ -299,7 +299,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
 	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/toggle/dryRun")
+	s.bus.Pub(msg, common.API_TOGGLE_DRYRUN)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -349,17 +349,3 @@ func (s *Server) broadcast(msg *pubsub.Message) {
 		conn.Write(packet)
 	}
 }
-
-// func (s *Server) noRoute(c *gin.Context) {
-// 	var path string
-// 	if _, err := os.Stat("./index.html"); err == nil {
-// 		path = "./"
-// 	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
-// 		path = guiLocation
-// 	} else {
-// 		slashdot, _ := filepath.Abs("./")
-// 		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
-// 	}
-
-// 	c.File(filepath.Join(path, "index.html"))
-// }

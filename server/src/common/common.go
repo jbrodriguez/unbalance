@@ -13,14 +13,6 @@ const (
 	OP_GATHER_CALC      = 5
 	OP_GATHER_MOVE      = 6
 
-	// StateIdle        = 0
-	// StateCalc        = 1
-	// StateMove        = 2
-	// StateCopy        = 3
-	// StateValidate    = 4
-	// StateFindTargets = 5
-	// StateGather      = 6
-
 	API_GET_CONFIG       = "core/get/config"
 	API_GET_STATUS       = "core/get/status"
 	API_GET_STATE        = "core/get/state"
@@ -28,6 +20,7 @@ const (
 	INT_GET_ARRAY_STATUS = "int/array/get/status"
 	API_GET_TREE         = "array/get/tree"
 	API_LOCATE_FOLDER    = "core/locate/folder"
+	API_GET_LOG          = "api/get/log"
 
 	API_SCATTER_CALCULATE          = "api/scatter/calculate"
 	INT_SCATTER_CALCULATE          = "int/scatter/calc"
@@ -50,4 +43,12 @@ const (
 	INT_GATHER_CALCULATE_FINISHED = "int/gather/calc/finished"
 
 	API_GATHER_MOVE = "api/gather/move"
+
+	API_TOGGLE_DRYRUN   = "config/toggle/dryrun"
+	API_NOTIFY_CALC     = "config/notify/calc"
+	API_NOTIFY_MOVE     = "config/notify/move"
+	API_SET_RESERVED    = "config/set/reserved"
+	API_SET_VERBOSITY   = "config/set/verbosity"
+	API_SET_CHECKUPDATE = "config/set/checkupdate"
+	API_GET_UPDATE      = "config/get/update"
 )
