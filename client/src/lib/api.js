@@ -20,6 +20,11 @@ export default class Api {
 		return fetch(`${this.hostr}/state/${mode}`).then(resp => resp.json())
 	}
 
+	getHistory() {
+		// console.log('this.hostr', this.hostr)
+		return fetch(`${this.hostr}/history`).then(resp => resp.json())
+	}
+
 	resetOperation() {
 		return fetch(`${this.hostr}/resetOp`).then(resp => resp.json())
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	version "github.com/mcuadros/go-version"
+	"github.com/teris-io/shortid"
 )
 
 const (
@@ -98,11 +99,23 @@ func (c *Core) Start() (err error) {
 	c.state.Status = common.OP_NEUTRAL
 	c.state.Unraid = message.Data.(*domain.Unraid)
 	c.state.Operation = resetOp(c.state.Unraid.Disks)
-	c.state.History = make([]*domain.Operation, 0)
+
+	history, err := c.historyRead()
+	if err != nil {
+		mlog.Warning("Unable to read history: %s", err)
+	}
+
+	c.state.History = history
+	// for _, op := range c.state.History {
+	// 	mlog.Info(`op
+	// 		%+v
+	// 		`, op)
+	// }
 
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
 	c.actor.Register(common.API_GET_STATUS, c.getStatus)
 	c.actor.Register(common.API_GET_STATE, c.getState)
+	c.actor.Register(common.API_GET_HISTORY, c.getHistory)
 	c.actor.Register(common.API_RESET_OP, c.resetOp)
 	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
 
@@ -160,6 +173,11 @@ func (c *Core) getState(msg *pubsub.Message) {
 	mlog.Info("Sending state")
 
 	msg.Reply <- c.state
+}
+
+func (c *Core) getHistory(msg *pubsub.Message) {
+	mlog.Info("Sending history")
+	msg.Reply <- c.state.History
 }
 
 func (c *Core) resetOp(msg *pubsub.Message) {
@@ -842,16 +860,17 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 }
 
 func (c *Core) operationFinished(msg *pubsub.Message) {
-	c.state.History = append(c.state.History, c.state.Operation)
-
-	b, err := json.Marshal(c.state.Operation)
-	if err != nil {
-		mlog.Warning("Unable to serialize op: %s", err)
+	count := len(c.state.History)
+	if count == common.HISTORY_CAPACITY {
+		c.state.History = append(c.state.History[1:], c.state.Operation)
+	} else {
+		c.state.History = append(c.state.History, c.state.Operation)
 	}
 
-	mlog.Info(`Serialized
-	%s
-	`, string(b))
+	err := c.historyWrite(c.state.History)
+	if err != nil {
+		mlog.Warning("Unable to write history: %s", err)
+	}
 
 	c.state.Status = common.OP_NEUTRAL
 	c.state.Operation = resetOp(c.state.Unraid.Disks)
@@ -1076,6 +1095,51 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 	}
 
 	return msg
+}
+
+func (c *Core) historyRead() ([]*domain.Operation, error) {
+	history := make([]*domain.Operation, 0)
+	fileName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		return history, err
+	}
+	defer file.Close()
+
+	mlog.Info(`before decoding`)
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&history)
+	if err != nil {
+		return history, err
+	}
+
+	mlog.Info(`insider(%+v)`, history)
+
+	return history, nil
+}
+
+func (c *Core) historyWrite(history []*domain.Operation) error {
+	// b, err := json.Marshal(history)
+	// if err != nil {
+	// 	mlog.Warning("Unable to serialize op: %s", err)
+	// }
+
+	tmpName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME+"."+shortid.MustGenerate())
+
+	file, err := os.Create(tmpName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.Encode(history)
+
+	os.Rename(tmpName, filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME))
+
+	return err
 }
 
 // func (c *Core) validate(msg *pubsub.Message) {

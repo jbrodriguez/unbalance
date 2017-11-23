@@ -1,9 +1,12 @@
 package common
 
 const (
-	MailCmd = "/usr/local/emhttp/webGui/scripts/notify"
+	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify"
+	PLUGIN_LOCATION = "/boot/config/plugins/unbalance"
 
-	CHAN_CAPACITY = 3
+	CHAN_CAPACITY    = 3
+	HISTORY_CAPACITY = 2
+	HISTORY_FILENAME = "unbalance.hist"
 
 	OP_NEUTRAL          = 0
 	OP_SCATTER_CALC     = 1
@@ -16,6 +19,7 @@ const (
 	API_GET_CONFIG       = "core/get/config"
 	API_GET_STATUS       = "core/get/status"
 	API_GET_STATE        = "core/get/state"
+	API_GET_HISTORY      = "core/get/history"
 	API_RESET_OP         = "core/reset/op"
 	INT_GET_ARRAY_STATUS = "int/array/get/status"
 	API_GET_TREE         = "array/get/tree"

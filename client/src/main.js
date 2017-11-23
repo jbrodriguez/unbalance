@@ -26,6 +26,7 @@ import App from './components/app'
 import Scatter from './components/scatter'
 import Gather from './components/gather'
 import Transfer from './components/transfer'
+import History from './components/history'
 import Settings from './components/settings'
 import Log from './components/log'
 
@@ -157,6 +158,7 @@ class Layout extends PureComponent {
 					<Route exact path="/" render={props => <Scatter store={store} {...props} />} />
 					<Route path="/gather" render={props => <Gather store={store} {...props} />} />
 					<Route exact path="/transfer" render={props => <Transfer store={store} {...props} />} />
+					<Route exact path="/history" render={props => <History store={store} {...props} />} />
 					<Route exact path="/settings" render={props => <Settings store={store} {...props} />} />
 					<Route exact path="/log" render={props => <Log store={store} {...props} />} />
 				</App>

@@ -119,6 +119,16 @@ class App extends PureComponent {
 
 										<ReactiveLink
 											exact
+											to="/history"
+											activeClassName={active}
+											text="HISTORY"
+											disabled={linksDisabled}
+										/>
+
+										<div className={cx('lspacer')} />
+
+										<ReactiveLink
+											exact
 											to="/settings"
 											activeClassName={active}
 											text="SETTINGS"

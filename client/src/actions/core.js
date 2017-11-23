@@ -61,7 +61,7 @@ const gotStatus = ({ state }, status) => {
 	}
 }
 
-function getState({ state, actions, opts: { api } }, mode) {
+const getState = ({ state, actions, opts: { api } }, mode) => {
 	actions.setBusy(true)
 
 	api.getState(mode).then(json => {
@@ -74,7 +74,7 @@ function getState({ state, actions, opts: { api } }, mode) {
 	return state
 }
 
-function gotState({ state, actions }, core) {
+const gotState = ({ state, actions }, core) => {
 	// const lines = []
 
 	// let pathname = '/'
@@ -118,6 +118,27 @@ function gotState({ state, actions }, core) {
 		// 	...state.env,
 		// 	lines,
 		// },
+	}
+}
+
+const getHistory = ({ state, actions, opts: { api } }, history) => {
+	actions.setBusy(true)
+
+	api.getHistory().then(json => {
+		actions.setBusy(false)
+		actions.gotHistory(json)
+	})
+
+	return state
+}
+
+const gotHistory = ({ state }, history) => {
+	return {
+		...state,
+		core: {
+			...state.core,
+			history,
+		},
 	}
 }
 
@@ -324,6 +345,9 @@ export default {
 
 	getState,
 	gotState,
+
+	getHistory,
+	gotHistory,
 
 	resetOperation,
 	gotOperation,
