@@ -11,7 +11,10 @@ const setBusy = ({ state }, isBusy) => {
 const clearConsole = ({ state }) => {
 	return {
 		...state,
-		lines: [],
+		env: {
+			...state.env,
+			lines: [],
+		},
 	}
 }
 
