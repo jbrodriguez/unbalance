@@ -61,13 +61,13 @@ func (c *Calc) Stop() {
 	mlog.Info("stopped service Calc ...")
 }
 
-func getSourceAndDestinationDisks(state *domain.State) ([]*domain.Disk, []*domain.Disk) {
-	srcDisks := make([]*domain.Disk, 0)
+func getSourceAndDestinationDisks(state *domain.State) (*domain.Disk, []*domain.Disk) {
+	var srcDisk *domain.Disk
 	dstDisks := make([]*domain.Disk, 0)
 
 	for _, disk := range state.Unraid.Disks {
 		if state.Operation.VDisks[disk.Path].Src {
-			srcDisks = append(srcDisks, disk)
+			srcDisk = disk
 		}
 
 		if state.Operation.VDisks[disk.Path].Dst {
@@ -75,7 +75,7 @@ func getSourceAndDestinationDisks(state *domain.State) ([]*domain.Disk, []*domai
 		}
 	}
 
-	return srcDisks, dstDisks
+	return srcDisk, dstDisks
 }
 
 func (c *Calc) getIssues(disk *domain.Disk, path string) (int64, int64, int64, int64) {
@@ -309,15 +309,13 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 	// create two slices
 	// one of source disks, the other of destinations disks
 	// in scatter srcDisks will contain only one element
-	srcDisks, dstDisks := getSourceAndDestinationDisks(state)
+	srcDisk, dstDisks := getSourceAndDestinationDisks(state)
 
 	// get dest disks with more free space to the top
 	sort.Slice(dstDisks, func(i, j int) bool { return dstDisks[i].Free < dstDisks[j].Free })
 
 	// some logging
-	for _, disk := range srcDisks {
-		mlog.Info("scatterCalc:sourceDisk:(%s)", disk.Path)
-	}
+	mlog.Info("scatterCalc:sourceDisk:(%s)", srcDisk.Path)
 
 	for _, disk := range dstDisks {
 		mlog.Info("scatterCalc:destDisk:(%s)", disk.Path)
@@ -328,25 +326,20 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 
 	// Get owner/permission issues
 	// Get items to be transferred
-	for _, disk := range srcDisks {
-		for _, path := range state.Operation.ChosenFolders {
-			// check owner and permissions issues for this folder/disk combination
-			ownIssue, grpIssue, fldIssue, filIssue := c.getIssues(disk, path)
-			ownerIssue += ownIssue
-			groupIssue += grpIssue
-			folderIssue += fldIssue
-			fileIssue += filIssue
+	for _, path := range state.Operation.ChosenFolders {
+		// check owner and permissions issues for this folder/disk combination
+		ownIssue, grpIssue, fldIssue, filIssue := c.getIssues(srcDisk, path)
+		ownerIssue += ownIssue
+		groupIssue += grpIssue
+		folderIssue += fldIssue
+		fileIssue += filIssue
 
-			// get children files/folders to be transferred
-			entries := c.getEntries(disk.Path, path)
-			if entries != nil {
-				items = append(items, entries...)
-			}
+		// get children files/folders to be transferred
+		entries := c.getEntries(srcDisk.Path, path)
+		if entries != nil {
+			items = append(items, entries...)
 		}
 	}
-
-	// this is true for scatter calculation, where only one source disk is allowed
-	srcDisk := srcDisks[0]
 
 	state.Operation.OwnerIssue = ownerIssue
 	state.Operation.GroupIssue = groupIssue
@@ -367,8 +360,7 @@ func (c *Calc) scatter(msg *pubsub.Message) {
 		state.Operation.BytesToTransfer = 0
 
 		for _, disk := range dstDisks {
-			diskWithoutMnt := disk.Path[5:]
-			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", disk.Name)
 			outbound = &dto.Packet{Topic: common.WS_CALC_PROGRESS, Payload: msg}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("scatterCalc:%s", msg)
@@ -525,8 +517,7 @@ func (c *Calc) gather(msg *pubsub.Message) {
 		state.Operation.BytesToTransfer = 0
 
 		for _, disk := range state.Unraid.Disks {
-			diskWithoutMnt := disk.Path[5:]
-			msg := fmt.Sprintf("Trying to allocate folders to %s ...", diskWithoutMnt)
+			msg := fmt.Sprintf("Trying to allocate folders to %s ...", disk.Name)
 			outbound = &dto.Packet{Topic: common.WS_CALC_PROGRESS, Payload: msg}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("gatherCalc:%s", msg)
