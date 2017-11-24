@@ -6,6 +6,12 @@ export const OP_SCATTER_VALIDATE = 4
 export const OP_GATHER_CALC = 5
 export const OP_GATHER_MOVE = 6
 
+export const opMap = {
+	[OP_SCATTER_MOVE]: 'SCATTER / MOVE',
+	[OP_SCATTER_COPY]: 'SCATTER / COPY',
+	[OP_GATHER_MOVE]: 'GATHER / MOVE',
+}
+
 // export const stateIdle = 0
 // export const stateCalc = 1
 // export const stateMove = 2

@@ -13,12 +13,6 @@ import * as constant from '../lib/const'
 
 const cx = classNames.bind(styles)
 
-const opMap = {
-	[constant.OP_SCATTER_MOVE]: 'SCATTER / MOVE',
-	[constant.OP_SCATTER_COPY]: 'SCATTER / COPY',
-	[constant.OP_GATHER_MOVE]: 'GATHER / MOVE',
-}
-
 export default class Transfers extends PureComponent {
 	static propTypes = {
 		store: PropTypes.object.isRequired,
@@ -67,13 +61,8 @@ export default class Transfers extends PureComponent {
 
 		const remaining = operation.remaining
 
-		// console.log(`line(${operation.line})`)
-
 		const rows = operation.commands.map(command => {
 			let status
-
-			// console.log(`line(${operation.line})-commandxfer(${command.transferred})-commandxfer(${command.size})`)
-
 			if (command.transferred === 0) {
 				status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
 			} else if (command.transferred === command.size) {
@@ -123,7 +112,7 @@ export default class Transfers extends PureComponent {
 				<div className={cx('transferHeader', 'bottom-spacer-half')}>
 					<section className={cx('row')}>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'start-sm')}>
-							<span>{opMap[operation.opKind]}</span>
+							<span>{constant.opMap[operation.opKind]}</span>
 						</div>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'end-sm')}>
 							<span>{operation.dryRun && 'DRY RUN'}</span>

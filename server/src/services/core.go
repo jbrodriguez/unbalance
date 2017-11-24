@@ -106,11 +106,6 @@ func (c *Core) Start() (err error) {
 	}
 
 	c.state.History = history
-	// for _, op := range c.state.History {
-	// 	mlog.Info(`op
-	// 		%+v
-	// 		`, op)
-	// }
 
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
 	c.actor.Register(common.API_GET_STATUS, c.getStatus)
