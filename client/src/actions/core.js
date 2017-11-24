@@ -74,7 +74,7 @@ const getState = ({ state, actions, opts: { api } }, mode) => {
 	return state
 }
 
-const gotState = ({ state, actions }, core) => {
+const gotState = ({ state, actions }, data) => {
 	// const lines = []
 
 	// let pathname = '/'
@@ -111,9 +111,15 @@ const gotState = ({ state, actions }, core) => {
 
 	// state.history.replace({ pathname })
 
+	const { history, historyOrder } = buildHistory(data.history)
+
 	return {
 		...state,
-		core,
+		core: {
+			...data,
+			history,
+			historyOrder,
+		},
 		// env: {
 		// 	...state.env,
 		// 	lines,
@@ -132,12 +138,15 @@ const getHistory = ({ state, actions, opts: { api } }, history) => {
 	return state
 }
 
-const gotHistory = ({ state }, history) => {
+const gotHistory = ({ state }, data) => {
+	const { history, historyOrder } = buildHistory(data)
+
 	return {
 		...state,
 		core: {
 			...state.core,
 			history,
+			historyOrder,
 		},
 	}
 }
@@ -331,6 +340,21 @@ const transferFinished = ({ state, actions }, operation) => {
 	}
 }
 
+const flipOperation = ({ state }, id) => {
+	const operation = { ...state.core.history[id] }
+	operation.open = !operation.open
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			history: {
+				...state.core.history,
+				[id]: operation,
+			},
+		},
+	}
+}
 // function setState({ state, actions }, backendState) {
 // 	return {
 // 		...state,
@@ -338,6 +362,17 @@ const transferFinished = ({ state, actions }, operation) => {
 // 		operation: backendState.operation,
 // 	}
 // }
+
+const buildHistory = data => {
+	const history = data.reduce((map, operation) => {
+		map[operation.id] = operation
+		return map
+	}, {})
+
+	const historyOrder = Object.keys(history).reverse()
+
+	return { history, historyOrder }
+}
 
 export default {
 	getStatus,
@@ -367,4 +402,6 @@ export default {
 	transferStarted,
 	transferProgress,
 	transferFinished,
+
+	flipOperation,
 }
