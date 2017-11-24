@@ -12,6 +12,7 @@ import (
 // ??? - copy
 // ??? - validate
 type Operation struct {
+	ID       string    `json:"id"`
 	OpKind   int64     `json:"opKind"`
 	Started  time.Time `json:"started"`
 	Finished time.Time `json:"finished"`

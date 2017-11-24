@@ -411,6 +411,7 @@ func (c *Core) gatherCalculateFinished(msg *pubsub.Message) {
 // SCATTER TRANSFER
 func (c *Core) setupScatterTransferOperation(copyOperation *domain.Operation) *domain.Operation {
 	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
 		OpKind:          c.state.Status,
 		BytesToTransfer: copyOperation.BytesToTransfer,
 		DryRun:          c.settings.DryRun,
@@ -485,6 +486,7 @@ func (c *Core) setupGatherTransferOperation(msg *pubsub.Message) (*domain.Operat
 	currentOp := c.state.Operation
 
 	operation := &domain.Operation{
+		ID:         shortid.MustGenerate(),
 		OpKind:     c.state.Status,
 		DryRun:     c.settings.DryRun,
 		RsyncFlags: c.settings.RsyncFlags,
@@ -1063,6 +1065,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 
 func resetOp(disks []*domain.Disk) *domain.Operation {
 	op := &domain.Operation{
+		ID:     shortid.MustGenerate(),
 		OpKind: common.OP_NEUTRAL,
 		VDisks: make(map[string]*domain.VDisk, 0),
 	}

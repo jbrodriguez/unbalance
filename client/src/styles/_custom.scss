@@ -285,6 +285,38 @@ p {
 	color: $unbalance-footer;
 }
 
+.chevron {
+	font-size: 1.75em;
+}
+
+.historyItem {
+	background-color: $mirage;
+	padding: 0.5em;
+}
+
+.historyTitle {
+	font-size: 1.5em;
+	color: $lighter-gray;
+}
+
+.historyValue {
+	font-size: 2em;
+	color: white;
+}
+
+.historyLabel {
+	padding-left: 0.25em;
+	padding-right: 0.25em;
+	font-size: 0.75em;
+	background-color: $black-pearl;
+	color: $cement-gray;
+	border-radius: 3px;
+}
+
+.historyTime {
+	color: $cement-gray;
+}
+
 // .title {
 // 	padding: 1em;
 // }
