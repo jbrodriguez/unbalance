@@ -19,18 +19,9 @@ export default class Scatter extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
-	constructor(props) {
-		super(props)
-
-		this.state = {
-			fromDisk: {},
-			toDisk: {},
-		}
-	}
-
 	componentDidMount() {
 		const { actions } = this.props.store
-		actions.getState('scatter')
+		actions.getStorage()
 	}
 
 	onCollapse = node => {
@@ -44,55 +35,38 @@ export default class Scatter extends PureComponent {
 	}
 
 	checkFrom = path => e => {
-		const { state: { core }, actions: { checkFrom, resetOperation } } = this.props.store
+		const { state: { scatter }, actions: { checkFrom } } = this.props.store
 
-		if (this.state.fromDisk[path]) {
+		if (scatter.plan.vdisks[path].src) {
 			e.preventDefault()
 			return
 		}
 
-		const fromDisk = { ...this.state.fromDisk }
-		const toDisk = { ...this.state.toDisk }
-
-		core.unraid.disks.forEach(disk => {
-			fromDisk[disk.path] = disk.path === path
-			toDisk[disk.path] = disk.path !== path
-		})
-
-		this.setState({ fromDisk, toDisk })
-
 		checkFrom(path)
-		resetOperation()
 	}
 
 	checkTo = path => e => {
-		const { resetOperation } = this.props.store.actions
-		const { fromDisk, toDisk } = this.state
+		const { state: { scatter }, actions: { checkTo } } = this.props.store
 
-		if (fromDisk[path]) {
+		if (scatter.plan.vdisks[path].src) {
 			e.preventDefault()
 			return
 		}
 
-		this.setState({
-			toDisk: {
-				...toDisk,
-				[path]: !toDisk[path],
-			},
-		})
-
-		resetOperation()
+		checkTo(path)
 	}
 
 	render() {
 		const { state, actions } = this.props.store
-		const { fromDisk, toDisk } = this.state
 
-		if (!(state.core && state.core.unraid && state.core.operation)) {
+		if (!(state.core && state.core.unraid && state.scatter && state.scatter.plan)) {
 			return null
 		}
 
+		const plan = state.scatter.plan
 		const stateOk = state.core.unraid.state === 'STARTED'
+
+		console.log(`plan(${JSON.stringify(plan)})`)
 
 		if (!stateOk) {
 			return (
@@ -111,14 +85,14 @@ export default class Scatter extends PureComponent {
 		const calcDisabled =
 			opInProgress ||
 			Object.keys(state.scatter.chosen).length === 0 ||
-			!(Object.keys(fromDisk).some(from => fromDisk[from]) && Object.keys(toDisk).some(to => toDisk[to]))
-		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
+			!state.core.unraid.disks.some(disk => plan.vdisks[disk.path].src || plan.vdisks[disk.path].dst)
+		const transferDisabled = opInProgress || plan.bytesToTransfer === 0
 
 		const buttons = (
 			<div className={cx('flexSection')}>
 				<button
 					className={cx('btn', 'btn-primary')}
-					onClick={() => actions.scatterCalculate(fromDisk, toDisk)}
+					onClick={() => actions.scatterPlan()}
 					disabled={calcDisabled}
 				>
 					CALCULATE
@@ -184,24 +158,16 @@ export default class Scatter extends PureComponent {
 		}
 
 		const rows = state.core.unraid.disks.map((disk, i) => {
-			const operation = state.core.operation
+			const vdisks = state.scatter.plan.vdisks
 
-			const plannedFree = operation.vdisks[disk.path].plannedFree
+			// console.log(`path(${disk.path})-src(${vdisks[disk.path].src})-dst(${vdisks[disk.path].dst})`)
 
 			const diskChanged = cx({
-				label: plannedFree !== disk.free,
-				'label-success': plannedFree !== disk.free && fromDisk[disk.path],
+				label: vdisks[disk.path].plannedFree !== disk.free,
+				'label-success': vdisks[disk.path].src && vdisks[disk.path].plannedFree !== disk.free,
 			})
 
 			const percent = percentage((disk.size - disk.free) / disk.size)
-
-			const fromChecked = fromDisk.hasOwnProperty(disk.path)
-				? fromDisk[disk.path]
-				: operation.vdisks[disk.path].src
-
-			const toChecked = toDisk.hasOwnProperty(disk.path) ? toDisk[disk.path] : operation.vdisks[disk.path].dst
-
-			// console.log("disk.name.length: ", disk.name.length)
 
 			// let serial = scramble(disk.serial)
 			if (disk.type === 'Cache' && disk.name.length > 5) {
@@ -225,10 +191,14 @@ export default class Scatter extends PureComponent {
 							{disk.serial} ({disk.device})
 						</td>
 						<td>
-							<input type="checkbox" checked={fromChecked} onChange={this.checkFrom(disk.path)} />
+							<input
+								type="checkbox"
+								checked={vdisks[disk.path].src}
+								onChange={this.checkFrom(disk.path)}
+							/>
 						</td>
 						<td>
-							<input type="checkbox" checked={toChecked} onChange={this.checkTo(disk.path)} />
+							<input type="checkbox" checked={vdisks[disk.path].dst} onChange={this.checkTo(disk.path)} />
 						</td>
 						<td>{humanBytes(disk.size)}</td>
 						<td>{humanBytes(disk.free)}</td>
@@ -238,14 +208,14 @@ export default class Scatter extends PureComponent {
 							</div>
 						</td>
 						<td>
-							<span className={diskChanged}>{humanBytes(plannedFree)}</span>
+							<span className={diskChanged}>{humanBytes(vdisks[disk.path].plannedFree)}</span>
 						</td>
 					</tr>,
 				]
 
 				// if it's the source disk, let's add a second row, with the
 				// tree-menu
-				if (fromDisk[disk.path]) {
+				if (vdisks[disk.path].src) {
 					const key = i + 100
 					lines.push(
 						<tr key={key}>

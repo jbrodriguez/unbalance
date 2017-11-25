@@ -9,32 +9,37 @@ const (
 	HISTORY_FILENAME = "unbalance.hist"
 
 	OP_NEUTRAL          = 0
-	OP_SCATTER_CALC     = 1
+	OP_SCATTER_PLAN     = 1
 	OP_SCATTER_MOVE     = 2
 	OP_SCATTER_COPY     = 3
 	OP_SCATTER_VALIDATE = 4
-	OP_GATHER_CALC      = 5
+	OP_GATHER_PLAN      = 5
 	OP_GATHER_MOVE      = 6
 
 	API_GET_CONFIG       = "core/get/config"
 	API_GET_STATUS       = "core/get/status"
 	API_GET_STATE        = "core/get/state"
+	API_GET_STORAGE      = "array/get/storage"
 	API_GET_HISTORY      = "core/get/history"
-	API_RESET_OP         = "core/reset/op"
 	INT_GET_ARRAY_STATUS = "int/array/get/status"
 	API_GET_TREE         = "array/get/tree"
 	API_LOCATE_FOLDER    = "core/locate/folder"
 	API_GET_LOG          = "api/get/log"
 
-	API_SCATTER_CALCULATE          = "api/scatter/calculate"
-	INT_SCATTER_CALCULATE          = "int/scatter/calc"
-	INT_SCATTER_CALCULATE_FINISHED = "int/scatter/calc/finished"
-	INT_SCATTER_CALCULATE_ERROR    = "int/scatter/calc/error"
+	API_SCATTER_PLAN          = "api/scatter/plan"
+	INT_SCATTER_PLAN          = "int/scatter/plan"
+	INT_SCATTER_PLAN_FINISHED = "int/scatter/plan/finished"
+	INT_SCATTER_PLAN_ERROR    = "int/scatter/plan/error"
 
-	WS_CALC_STARTED  = "calcStarted"
-	WS_CALC_PROGRESS = "calcProgress"
-	WS_CALC_FINISHED = "calcFinished"
-	WS_CALC_ISSUES   = "calcPermIssue"
+	WS_SCATTERPLAN_STARTED  = "scatterPlanStarted"
+	WS_SCATTERPLAN_PROGRESS = "scatterPlanProgress"
+	WS_SCATTERPLAN_FINISHED = "scatterPlanFinished"
+	WS_SCATTERPLAN_ISSUES   = "scatterPlanIssue"
+
+	WS_GATHERPLAN_STARTED  = "gatherPlanStarted"
+	WS_GATHERPLAN_PROGRESS = "gatherPlanProgress"
+	WS_GATHERPLAN_FINISHED = "gatherPlanFinished"
+	WS_GATHERPLAN_ISSUES   = "gatherPlanIssue"
 
 	API_SCATTER_MOVE     = "api/scatter/move"
 	API_SCATTER_COPY     = "api/scatter/copy"
@@ -42,9 +47,9 @@ const (
 
 	INT_OPERATION_FINISHED = "core/operation/finished"
 
-	API_GATHER_CALCULATE          = "api/gather/calculate"
-	INT_GATHER_CALCULATE          = "int/gather/calc"
-	INT_GATHER_CALCULATE_FINISHED = "int/gather/calc/finished"
+	API_GATHER_PLAN          = "api/gather/plan"
+	INT_GATHER_PLAN          = "int/gather/plan"
+	INT_GATHER_PLAN_FINISHED = "int/gather/plan/finished"
 
 	API_GATHER_MOVE = "api/gather/move"
 

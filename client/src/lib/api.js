@@ -10,14 +10,18 @@ export default class Api {
 		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
-	getStatus() {
+	// getStatus() {
+	// 	// console.log('this.hostr', this.hostr)
+	// 	return fetch(`${this.hostr}/status`).then(resp => resp.json())
+	// }
+
+	getState() {
 		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/status`).then(resp => resp.json())
+		return fetch(`${this.hostr}/state`).then(resp => resp.json())
 	}
 
-	getState(mode) {
-		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/state/${mode}`).then(resp => resp.json())
+	getStorage() {
+		return fetch(`${this.hostr}/storage`).then(resp => resp.json())
 	}
 
 	getHistory() {
@@ -51,11 +55,6 @@ export default class Api {
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: JSON.stringify({ amount, unit }) }),
 		}).then(resp => resp.json())
-	}
-
-	getStorage() {
-		// console.log('this.hostr', this.hostr)
-		return fetch(`${this.hostr}/storage`).then(resp => resp.json())
 	}
 
 	getTree(path) {

@@ -98,7 +98,6 @@ func (c *Core) Start() (err error) {
 
 	c.state.Status = common.OP_NEUTRAL
 	c.state.Unraid = message.Data.(*domain.Unraid)
-	c.state.Operation = resetOp(c.state.Unraid.Disks)
 
 	history, err := c.historyRead()
 	if err != nil {
@@ -110,19 +109,19 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
 	c.actor.Register(common.API_GET_STATUS, c.getStatus)
 	c.actor.Register(common.API_GET_STATE, c.getState)
+	c.actor.Register(common.API_GET_STORAGE, c.getStorage)
 	c.actor.Register(common.API_GET_HISTORY, c.getHistory)
-	c.actor.Register(common.API_RESET_OP, c.resetOp)
 	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
 
-	c.actor.Register(common.API_SCATTER_CALCULATE, c.scatterCalculate)
-	c.actor.Register(common.INT_SCATTER_CALCULATE_FINISHED, c.scatterCalculateFinished)
+	c.actor.Register(common.API_SCATTER_PLAN, c.scatterPlan)
+	c.actor.Register(common.INT_SCATTER_PLAN_FINISHED, c.scatterPlanFinished)
 	c.actor.Register(common.API_SCATTER_MOVE, c.scatterMove)
 	c.actor.Register(common.API_SCATTER_COPY, c.scatterCopy)
 
 	c.actor.Register(common.INT_OPERATION_FINISHED, c.operationFinished)
 
-	c.actor.Register(common.API_GATHER_CALCULATE, c.gatherCalculate)
-	c.actor.Register(common.INT_GATHER_CALCULATE_FINISHED, c.gatherCalculateFinished)
+	c.actor.Register(common.API_GATHER_PLAN, c.gatherPlan)
+	c.actor.Register(common.INT_GATHER_PLAN_FINISHED, c.gatherPlanFinished)
 	c.actor.Register(common.API_GATHER_MOVE, c.gatherMove)
 
 	c.actor.Register(common.API_TOGGLE_DRYRUN, c.toggleDryRun)
@@ -170,18 +169,35 @@ func (c *Core) getState(msg *pubsub.Message) {
 	msg.Reply <- c.state
 }
 
+func (c *Core) getStorage(msg *pubsub.Message) {
+	mlog.Info("Sending storage")
+
+	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	c.bus.Pub(param, common.INT_GET_ARRAY_STATUS)
+	reply := <-param.Reply
+	message := reply.(dto.Message)
+	if message.Error != nil {
+		mlog.Warning("Unable to get storage: %s", message.Error)
+		return
+	}
+
+	c.state.Unraid = message.Data.(*domain.Unraid)
+
+	msg.Reply <- c.state.Unraid
+}
+
 func (c *Core) getHistory(msg *pubsub.Message) {
 	mlog.Info("Sending history")
 	msg.Reply <- c.state.History
 }
 
-func (c *Core) resetOp(msg *pubsub.Message) {
-	mlog.Info("resetting op")
+// func (c *Core) resetOp(msg *pubsub.Message) {
+// 	mlog.Info("resetting op")
 
-	c.state.Operation = resetOp(c.state.Unraid.Disks)
+// 	c.state.Operation = resetOp(c.state.Unraid.Disks)
 
-	msg.Reply <- c.state.Operation
-}
+// 	msg.Reply <- c.state.Operation
+// }
 
 func (c *Core) locate(msg *pubsub.Message) {
 	chosen := msg.Payload.([]string)
@@ -220,75 +236,64 @@ func (c *Core) locate(msg *pubsub.Message) {
 }
 
 // SCATTER CALCULATE
-func (c *Core) setupScatterCalculateOperation(msg *pubsub.Message) (*domain.Operation, error) {
+func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	payload, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert scatter calculate parameters")
+		return nil, errors.New("Unable to convert scatter plan parameters")
 	}
 
-	var param domain.Operation
-	err := json.Unmarshal([]byte(payload), &param)
+	var plan domain.Plan
+	err := json.Unmarshal([]byte(payload), &plan)
 	if err != nil {
 		return nil, err
 	}
 
-	// get a fresh operation
-	operation := resetOp(c.state.Unraid.Disks)
-
-	operation.OpKind = common.OP_SCATTER_CALC
-	operation.ChosenFolders = param.ChosenFolders
-
-	for _, disk := range c.state.Unraid.Disks {
-		operation.VDisks[disk.Path].Src = param.VDisks[disk.Path].Src
-		operation.VDisks[disk.Path].Dst = param.VDisks[disk.Path].Dst
-	}
-
-	return operation, nil
+	return &plan, nil
 }
 
-func (c *Core) scatterCalculate(msg *pubsub.Message) {
-	c.state.Status = common.OP_SCATTER_CALC
+func (c *Core) scatterPlan(msg *pubsub.Message) {
+	c.state.Status = common.OP_SCATTER_PLAN
 
-	operation, err := c.setupScatterCalculateOperation(msg)
+	plan, err := c.getScatterPlan(msg)
 	if err != nil {
+		mlog.Warning("Unable to get scatter plan: %s", err)
+
 		// send to front end the signal of operation finished
-		outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: resetOp(c.state.Unraid.Disks)}
+		outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_FINISHED, Payload: plan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: err.Error()}
+		outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_ISSUES, Payload: err.Error()}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		return
 	}
 
-	calc := &pubsub.Message{Payload: &domain.State{
-		Status:    c.state.Status,
-		Unraid:    c.state.Unraid,
-		Operation: operation,
+	param := &pubsub.Message{Payload: &domain.State{
+		Status: c.state.Status,
+		Unraid: c.state.Unraid,
+		Plan:   plan,
 	}}
 
-	c.bus.Pub(calc, common.INT_SCATTER_CALCULATE)
+	c.bus.Pub(param, common.INT_SCATTER_PLAN)
 }
 
-func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
-	operation := msg.Payload.(*domain.Operation)
+func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
+	plan := msg.Payload.(*domain.Plan)
 
 	c.state.Status = common.OP_NEUTRAL
-	c.state.Operation = operation
 
 	// send to front end the signal of operation finished
-	outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: operation}
+	outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_FINISHED, Payload: plan}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
 	// and there actually perm issues
-	if c.state.Operation.BytesToTransfer > 0 && (c.state.Operation.OwnerIssue+c.state.Operation.GroupIssue+c.state.Operation.FolderIssue+c.state.Operation.FileIssue > 0) {
-		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", c.state.Operation.OwnerIssue, c.state.Operation.GroupIssue, c.state.Operation.FolderIssue, c.state.Operation.FileIssue)}
+	if plan.BytesToTransfer > 0 && (plan.OwnerIssue+plan.GroupIssue+plan.FolderIssue+plan.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	mlog.Info(`Operation
-		OpKind: %d
+	mlog.Info(`Plan
 		Started: %s
 		Finished: %s
 		ChosenFolders: %v
@@ -298,19 +303,13 @@ func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 		FolderIssue: %d
 		FileIssue: %d
 		BytesToTransfer: %d
-		DryRun: %t
-		RsyncFlags: %v
-		RsyncStrFlags: %s
-		Commands: %v
-		BytesTransferred: %d
-	`, operation.OpKind, operation.Started, operation.Finished, operation.ChosenFolders,
-		operation.FoldersNotTransferred, operation.OwnerIssue, operation.GroupIssue,
-		operation.FolderIssue, operation.FileIssue, operation.BytesToTransfer, operation.DryRun,
-		operation.RsyncFlags, operation.RsyncStrFlags, operation.Commands, operation.BytesTransferred,
+	`, plan.Started, plan.Finished, plan.ChosenFolders,
+		plan.FoldersNotTransferred, plan.OwnerIssue, plan.GroupIssue,
+		plan.FolderIssue, plan.FileIssue, plan.BytesToTransfer,
 	)
 
 	for _, disk := range c.state.Unraid.Disks {
-		vdisk := operation.VDisks[disk.Path]
+		vdisk := plan.VDisks[disk.Path]
 
 		if vdisk.Bin != nil {
 			mlog.Info(`VDisk
@@ -344,75 +343,76 @@ func (c *Core) scatterCalculateFinished(msg *pubsub.Message) {
 }
 
 // GATHER CALCULATE
-func (c *Core) setupGatherCalculateOperation(msg *pubsub.Message) (*domain.Operation, error) {
+func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
 		return nil, errors.New("Unable to convert findTargets parameters")
 	}
 
-	var chosen []string
-	err := json.Unmarshal([]byte(data), &chosen)
+	var plan domain.Plan
+	err := json.Unmarshal([]byte(data), &plan)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Unable to bind findTargets parameters: %s", err))
 	}
 
-	operation := resetOp(c.state.Unraid.Disks)
-
-	operation.OpKind = c.state.Status
-	operation.ChosenFolders = chosen
-
-	return operation, nil
+	return &plan, nil
 }
 
-func (c *Core) gatherCalculate(msg *pubsub.Message) {
-	c.state.Status = common.OP_GATHER_CALC
+func (c *Core) gatherPlan(msg *pubsub.Message) {
+	c.state.Status = common.OP_GATHER_PLAN
 
-	operation, err := c.setupGatherCalculateOperation(msg)
+	plan, err := c.getGatherPlan(msg)
 	if err != nil {
-		mlog.Warning(err.Error())
-		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		mlog.Warning("Unable to get gather plan: %s", err)
+
+		// send to front end the signal of operation finished
+		outbound := &dto.Packet{Topic: common.WS_GATHERPLAN_FINISHED, Payload: plan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		outbound = &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 		return
 	}
 
 	// TODO: we should probably refresh unraid here (applies to scatterCalculate too)
-	calc := &pubsub.Message{Payload: &domain.State{
-		Status:    c.state.Status,
-		Unraid:    c.state.Unraid,
-		Operation: operation,
+	param := &pubsub.Message{Payload: &domain.State{
+		Status: c.state.Status,
+		Unraid: c.state.Unraid,
+		Plan:   plan,
 	}}
 
-	c.bus.Pub(calc, common.INT_GATHER_CALCULATE)
+	c.bus.Pub(param, common.INT_GATHER_PLAN)
 }
 
-func (c *Core) gatherCalculateFinished(msg *pubsub.Message) {
-	operation := msg.Payload.(*domain.Operation)
+func (c *Core) gatherPlanFinished(msg *pubsub.Message) {
+	plan := msg.Payload.(*domain.Plan)
 
 	c.state.Status = common.OP_NEUTRAL
-	c.state.Operation = operation
 
 	// send to front end the signal of operation finished
-	outbound := &dto.Packet{Topic: common.WS_CALC_FINISHED, Payload: operation}
+	outbound := &dto.Packet{Topic: common.WS_GATHERPLAN_FINISHED, Payload: plan}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
 	// and there actually perm issues
-	if c.state.Operation.BytesToTransfer > 0 && (c.state.Operation.OwnerIssue+c.state.Operation.GroupIssue+c.state.Operation.FolderIssue+c.state.Operation.FileIssue > 0) {
-		outbound = &dto.Packet{Topic: common.WS_CALC_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", c.state.Operation.OwnerIssue, c.state.Operation.GroupIssue, c.state.Operation.FolderIssue, c.state.Operation.FileIssue)}
+	if plan.BytesToTransfer > 0 && (plan.OwnerIssue+plan.GroupIssue+plan.FolderIssue+plan.FileIssue > 0) {
+		outbound = &dto.Packet{Topic: common.WS_GATHERPLAN_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 }
 
 // SCATTER TRANSFER
-func (c *Core) setupScatterTransferOperation(copyOperation *domain.Operation) *domain.Operation {
+func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk, plan *domain.Plan) *domain.Operation {
 	operation := &domain.Operation{
 		ID:              shortid.MustGenerate(),
-		OpKind:          c.state.Status,
-		BytesToTransfer: copyOperation.BytesToTransfer,
+		OpKind:          status,
+		BytesToTransfer: plan.BytesToTransfer,
 		DryRun:          c.settings.DryRun,
 		RsyncFlags:      c.settings.RsyncFlags,
-		VDisks:          copyOperation.VDisks,
 	}
+
+	mlog.Info("vdisks(%+v)", plan.VDisks)
 
 	// user may have changed rsync flags or dry-run setting, adjust for it
 	if operation.DryRun {
@@ -422,8 +422,9 @@ func (c *Core) setupScatterTransferOperation(copyOperation *domain.Operation) *d
 
 	operation.Commands = make([]*domain.Command, 0)
 
-	for _, disk := range c.state.Unraid.Disks {
-		vdisk := operation.VDisks[disk.Path]
+	for _, disk := range disks {
+		vdisk := plan.VDisks[disk.Path]
+
 		if vdisk.Bin == nil || vdisk.Src {
 			continue
 		}
@@ -453,47 +454,56 @@ func (c *Core) setupScatterTransferOperation(copyOperation *domain.Operation) *d
 
 func (c *Core) scatterMove(msg *pubsub.Message) {
 	c.state.Status = common.OP_SCATTER_MOVE
-	c.state.Operation = c.setupScatterTransferOperation(c.state.Operation)
+
+	plan, err := c.getScatterPlan(msg)
+	if err != nil {
+		mlog.Warning("Unable to get scatter plan: %s", err.Error())
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+
 	go c.runOperation("Move")
 }
 
 func (c *Core) scatterCopy(msg *pubsub.Message) {
 	c.state.Status = common.OP_SCATTER_COPY
-	c.state.Operation = c.setupScatterTransferOperation(c.state.Operation)
+
+	plan, err := c.getScatterPlan(msg)
+	if err != nil {
+		mlog.Warning("Unable to get scatter plan: %s", err)
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+
 	go c.runOperation("Copy")
 }
 
 // GATHER TRANSFER
-func (c *Core) setupGatherTransferOperation(msg *pubsub.Message) (*domain.Operation, error) {
-	// mlog.Info("%+v", msg.Payload)
-
-	data, ok := msg.Payload.(string)
-	if !ok {
-		return nil, errors.New("Unable to convert gather parameters")
-	}
-
-	var target domain.Disk
-	err := json.Unmarshal([]byte(data), &target)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Unable to bind gather parameters: %s", err))
-	}
-
-	currentOp := c.state.Operation
-
+func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, plan *domain.Plan) *domain.Operation {
 	operation := &domain.Operation{
 		ID:         shortid.MustGenerate(),
-		OpKind:     c.state.Status,
+		OpKind:     status,
 		DryRun:     c.settings.DryRun,
 		RsyncFlags: c.settings.RsyncFlags,
-		VDisks:     currentOp.VDisks,
+		VDisks:     plan.VDisks,
 	}
 
 	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
 	// that's the amount of data we need to transfer. Also remove bin from all other disks,
 	// since only the target will have work to do
-	for _, disk := range c.state.Unraid.Disks {
-		if disk.Path == target.Path {
-			operation.BytesToTransfer = operation.VDisks[target.Path].Bin.Size
+	for _, disk := range disks {
+		if plan.VDisks[disk.Path].Src {
+			operation.BytesToTransfer = operation.VDisks[disk.Path].Bin.Size
 		} else {
 			operation.VDisks[disk.Path].Bin = nil
 		}
@@ -533,19 +543,23 @@ func (c *Core) setupGatherTransferOperation(msg *pubsub.Message) (*domain.Operat
 		}
 	}
 
-	return operation, nil
+	return operation
 }
 
 func (c *Core) gatherMove(msg *pubsub.Message) {
 	c.state.Status = common.OP_GATHER_MOVE
 
-	operation, err := c.setupGatherTransferOperation(msg)
+	plan, err := c.getGatherPlan(msg)
 	if err != nil {
-		mlog.Warning(err.Error())
+		mlog.Warning("Unable to get gather plan: %s", err)
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 		return
 	}
 
-	c.state.Operation = operation
+	c.state.Operation = c.setupGatherTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
 
 	go c.runOperation("Move")
 }
@@ -1058,20 +1072,20 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 	}()
 }
 
-func resetOp(disks []*domain.Disk) *domain.Operation {
-	op := &domain.Operation{
-		ID:     shortid.MustGenerate(),
-		OpKind: common.OP_NEUTRAL,
-		VDisks: make(map[string]*domain.VDisk, 0),
-	}
+// func resetOp(disks []*domain.Disk) *domain.Operation {
+// 	op := &domain.Operation{
+// 		ID:     shortid.MustGenerate(),
+// 		OpKind: common.OP_NEUTRAL,
+// 		VDisks: make(map[string]*domain.VDisk, 0),
+// 	}
 
-	for _, disk := range disks {
-		vdisk := &domain.VDisk{Path: disk.Path, PlannedFree: disk.Free, Src: false, Dst: false}
-		op.VDisks[disk.Path] = vdisk
-	}
+// 	for _, disk := range disks {
+// 		vdisk := &domain.VDisk{Path: disk.Path, PlannedFree: disk.Free, Src: false, Dst: false}
+// 		op.VDisks[disk.Path] = vdisk
+// 	}
 
-	return op
-}
+// 	return op
+// }
 
 func progress(bytesToTransfer, bytesTransferred int64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
 	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
