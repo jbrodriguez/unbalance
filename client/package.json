@@ -11,13 +11,17 @@
 	},
 	"ava": {
 		"babel": "inherit",
-		"files": ["tests/**/*.js", "!tests/setup.js"]
+		"files": [
+			"tests/**/*.js",
+			"!tests/setup.js"
+		]
 	},
 	"dependencies": {
 		"classnames": "^2.2.5",
 		"font-awesome": "^4.7.0",
 		"history": "^4.7.2",
 		"isomorphic-fetch": "^2.2.1",
+		"luxon": "^0.2.0",
 		"react": "^15.6.1",
 		"react-dom": "^15.6.1",
 		"react-router": "^4.2.0",

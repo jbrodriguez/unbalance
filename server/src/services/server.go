@@ -5,9 +5,10 @@ import (
 	// "os"
 	"path/filepath"
 
+	"jbrodriguez/unbalance/server/src/common"
+	"jbrodriguez/unbalance/server/src/domain"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/model"
 	"jbrodriguez/unbalance/server/src/net"
 
 	"github.com/jbrodriguez/actor"
@@ -81,14 +82,18 @@ func (s *Server) Start() {
 	s.engine.GET("/skt", echo.WrapHandler(websocket.Handler(s.handleWs)))
 
 	api := s.engine.Group(apiVersion)
+
+	api.GET("/config", s.getConfig)
+	api.GET("/status", s.getStatus)
+	api.GET("/state/:op", s.getState)
+	api.GET("/history", s.getHistory)
+	api.GET("/resetOp", s.resetOp)
+
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
 	api.PUT("/config/notifyMove", s.setNotifyMove)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/checkUpdate", s.setCheckUpdate)
-	api.GET("/config", s.getConfig)
-	api.GET("/status", s.getStatus)
-	api.GET("/storage", s.getStorage)
 	api.GET("/update", s.getUpdate)
 	api.POST("/tree", s.getTree)
 	api.POST("/locate", s.locate)
@@ -112,7 +117,7 @@ func (s *Server) Stop() {
 
 func (s *Server) getConfig(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/config")
+	s.bus.Pub(msg, common.API_GET_CONFIG)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -123,12 +128,46 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 
 func (s *Server) getStatus(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/status")
+	s.bus.Pub(msg, common.API_GET_STATUS)
 
 	reply := <-msg.Reply
-	resp := reply.(uint64)
-	data := fmt.Sprintf(`{"status": %d}`, resp)
-	c.JSONBlob(200, []byte(data))
+	status := reply.(int64)
+	c.JSON(200, status)
+
+	return nil
+}
+
+func (s *Server) getState(c echo.Context) (err error) {
+	op := c.Param("op")
+
+	msg := &pubsub.Message{Payload: op, Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_STATE)
+
+	reply := <-msg.Reply
+	state := reply.(*domain.State)
+	c.JSON(200, state)
+
+	return nil
+}
+
+func (s *Server) getHistory(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_HISTORY)
+
+	reply := <-msg.Reply
+	history := reply.([]*domain.Operation)
+	c.JSON(200, history)
+
+	return nil
+}
+
+func (s *Server) resetOp(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_RESET_OP)
+
+	reply := <-msg.Reply
+	op := reply.(*domain.Operation)
+	c.JSON(200, op)
 
 	return nil
 }
@@ -142,7 +181,7 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/notifyCalc")
+	s.bus.Pub(msg, common.API_NOTIFY_CALC)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -160,7 +199,7 @@ func (s *Server) setNotifyMove(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/notifyMove")
+	s.bus.Pub(msg, common.API_NOTIFY_MOVE)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -178,7 +217,7 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/reservedSpace")
+	s.bus.Pub(msg, common.API_SET_RESERVED)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -196,7 +235,7 @@ func (s *Server) setVerbosity(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/verbosity")
+	s.bus.Pub(msg, common.API_SET_VERBOSITY)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -214,7 +253,7 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/checkUpdate")
+	s.bus.Pub(msg, common.API_SET_CHECKUPDATE)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -223,20 +262,9 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getStorage(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/storage")
-
-	reply := <-msg.Reply
-	resp := reply.(*model.Unraid)
-	c.JSON(200, &resp)
-
-	return nil
-}
-
 func (s *Server) getUpdate(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/update")
+	s.bus.Pub(msg, common.API_GET_UPDATE)
 
 	reply := <-msg.Reply
 	resp := reply.(string)
@@ -254,7 +282,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/get/tree")
+	s.bus.Pub(msg, common.API_GET_TREE)
 
 	reply := <-msg.Reply
 	resp := reply.(*dto.Entry)
@@ -272,10 +300,10 @@ func (s *Server) locate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/disks/locate")
+	s.bus.Pub(msg, common.API_LOCATE_FOLDER)
 
 	reply := <-msg.Reply
-	resp := reply.([]*model.Disk)
+	resp := reply.(*dto.Location)
 	c.JSON(200, &resp)
 
 	return nil
@@ -283,7 +311,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
 	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/toggle/dryRun")
+	s.bus.Pub(msg, common.API_TOGGLE_DRYRUN)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -333,17 +361,3 @@ func (s *Server) broadcast(msg *pubsub.Message) {
 		conn.Write(packet)
 	}
 }
-
-// func (s *Server) noRoute(c *gin.Context) {
-// 	var path string
-// 	if _, err := os.Stat("./index.html"); err == nil {
-// 		path = "./"
-// 	} else if _, err := os.Stat(filepath.Join(guiLocation, "index.html")); err == nil {
-// 		path = guiLocation
-// 	} else {
-// 		slashdot, _ := filepath.Abs("./")
-// 		mlog.Fatalf("Looked for web ui files in \n %s \n %s \n but didn\\'t find them", slashdot, guiLocation)
-// 	}
-
-// 	c.File(filepath.Join(path, "index.html"))
-// }

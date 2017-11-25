@@ -1,11 +1,11 @@
-package model
+package domain
 
 import (
 	"time"
 )
 
-// Condition -
-type Condition struct {
+// Unraid -
+type Unraid struct {
 	NumDisks     int64     `json:"numDisks"`
 	NumProtected int64     `json:"numProtected"`
 	Synced       time.Time `json:"synced"`
@@ -15,5 +15,5 @@ type Condition struct {
 	State        string    `json:"state"`
 	Size         int64     `json:"size"`
 	Free         int64     `json:"free"`
-	NewFree      int64     `json:"newFree"`
+	Disks        []*Disk   `json:"disks"`
 }

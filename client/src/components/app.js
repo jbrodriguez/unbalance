@@ -28,12 +28,12 @@ class App extends PureComponent {
 		const { children, store } = this.props
 		const { state } = store
 
-		const linksDisabled = state.status !== constant.stateIdle || state.opInProgress !== null
+		const linksDisabled = state.env.isBusy || !state.core || state.core.status !== constant.OP_NEUTRAL
 
 		// console.log(`latestVersion(${state.latestVersion})`)
 
 		let updateAvailable = null
-		if (state.latestVersion !== '') {
+		if (state.env.latestVersion !== '') {
 			updateAvailable = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -44,7 +44,7 @@ class App extends PureComponent {
 		}
 
 		let alert = null
-		if (state.feedback.length !== 0) {
+		if (state.env.feedback.length !== 0) {
 			alert = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -54,13 +54,8 @@ class App extends PureComponent {
 			)
 		}
 
-		let stats = null
-		if (state.stats !== '') {
-			stats = <span>{state.stats}</span>
-		}
-
 		let progress = null
-		if (state.opInProgress) {
+		if (state.env.isBusy) {
 			progress = (
 				<div className={cx('loading')}>
 					<div className={cx('loading-bar')} />
@@ -90,7 +85,7 @@ class App extends PureComponent {
 						<ul className={cx('col-xs-12', 'col-sm-10')}>
 							<li className={cx('headerMenuBg')}>
 								<section className={cx('row', 'middle-xs')}>
-									<div className={cx('col-xs-12', 'col-sm-4', 'flexSection', 'routerSection')}>
+									<div className={cx('col-xs-12', 'col-sm-11', 'flexSection', 'routerSection')}>
 										<div className={cx('lspacer')} />
 
 										<ReactiveLink
@@ -107,6 +102,26 @@ class App extends PureComponent {
 											to="/gather"
 											activeClassName={active}
 											text="GATHER"
+											disabled={linksDisabled}
+										/>
+
+										<div className={cx('lspacer')} />
+
+										<ReactiveLink
+											exact
+											to="/transfer"
+											activeClassName={active}
+											text="TRANSFER"
+											disabled={linksDisabled}
+										/>
+
+										<div className={cx('lspacer')} />
+
+										<ReactiveLink
+											exact
+											to="/history"
+											activeClassName={active}
+											text="HISTORY"
 											disabled={linksDisabled}
 										/>
 
@@ -131,25 +146,15 @@ class App extends PureComponent {
 										/>
 									</div>
 
-									<div className={cx('col-xs-12', 'col-sm-8')}>
+									<div className={cx('col-xs-12', 'col-sm-1')}>
 										<div className={cx('gridHeader')}>
-											<section className={cx('row', 'between-xs', 'middle-xs')}>
+											<section className={cx('row', 'between-xs', 'center-xs', 'middle-xs')}>
 												<div
-													className={cx(
-														'col-xs-12',
-														'col-sm-1',
-														'flexSection',
-														'center-xs',
-														'middle-xs',
-													)}
+													className={cx('col-xs-12', 'flexSection', 'center-xs', 'middle-xs')}
 												>
 													<img alt="Marker" src={vm} />
 													{progress}
-												</div>
-
-												<div className={cx('col-xs-12', 'col-sm-11', 'statsSection')}>
-													{stats}
-												</div>
+												</div>{' '}
 											</section>
 										</div>
 									</div>
@@ -170,7 +175,7 @@ class App extends PureComponent {
 						<ul className={cx('col-xs-12', 'col-sm-4')}>
 							<div className={cx('flexSection')}>
 								<span className={cx('copyright', 'lspacer')}>Copyright &copy; &nbsp;</span>
-								<a href="http://jbrodriguez.io/">Juan B. Rodriguez</a>
+								<a href="https://jbrio.net/posts/">Juan B. Rodriguez</a>
 							</div>
 						</ul>
 
@@ -227,7 +232,7 @@ class App extends PureComponent {
 								</a>
 								<a
 									className={cx('spacer')}
-									href="http://jbrodriguez.io/"
+									href="https://jbrio.net/posts/"
 									title="jbrodriguez.io"
 									rel="noreferrer noopener"
 									target="_blank"

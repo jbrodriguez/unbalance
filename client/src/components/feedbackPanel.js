@@ -27,7 +27,7 @@ export default function FeedbackPanel({ state, actions: { removeFeedback } }) {
 			<section className={cx('row')}>
 				<div className={cx('col-xs-12')}>
 					<ul className={cx('lspacer')}>
-						{state.feedback.map((feedback, i) => <li key={i}>{feedback}</li>)}
+						{state.env.feedback.map((feedback, i) => <li key={i}>{feedback}</li>)}
 					</ul>
 				</div>
 			</section>

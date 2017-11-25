@@ -1,23 +1,16 @@
-module.exports = {
-	humanBytes,
-	percentage,
-	scramble,
-	isValid,
-}
-
-function phpRound(number, precision = 0) {
+const phpRound = (number, precision = 0) => {
 	const factor = Math.pow(10, precision)
 	const tmp = number * factor
 	const roundedTmp = Math.round(tmp)
 	return roundedTmp / factor
 }
 
-function toFixedFix(n, prec) {
+const toFixedFix = (n, prec) => {
 	const k = Math.pow(10, prec)
 	return `${(Math.round(n * k) / k).toFixed(prec)}`
 }
 
-function numberFormat(number, decimals, decPoint, thousandsSep) {
+const numberFormat = (number, decimals, decPoint, thousandsSep) => {
 	const value = `${number}`.replace(/[^0-9+\-Ee.]/g, '')
 
 	const n = !isFinite(+value) ? 0 : +value
@@ -44,8 +37,13 @@ function numberFormat(number, decimals, decPoint, thousandsSep) {
 const k = 1000
 const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
-function humanBytes(bytes) {
-	if (bytes === 0) return '0 Byte'
+const humanBytes = bytes => {
+	const { value, unit } = formatBytes(bytes)
+	return `${value} ${unit}`
+}
+
+const formatBytes = bytes => {
+	if (bytes === 0) return { value: '0', unit: 'Byte' }
 
 	let base = bytes ? Math.floor(Math.log(bytes) / Math.log(k)) : 0
 	bytes = bytes / Math.pow(k, base)
@@ -58,9 +56,7 @@ function humanBytes(bytes) {
 		base += 1
 	}
 
-	// return `${(bytes / Math.pow(k, i)).toPrecision(3)} ${sizes[i]}` // eslint-disable-line
-
-	return `${numberFormat(bytes, precision, '.', bytes >= 10000 ? ',' : '')} ${sizes[base]}`
+	return { value: `${numberFormat(bytes, precision, '.', bytes >= 10000 ? ',' : '')}`, unit: `${sizes[base]}` }
 }
 
 // function humanBytes(bytes) {
@@ -73,11 +69,11 @@ function humanBytes(bytes) {
 // 	return `${(bytes / Math.pow(k, i)).toPrecision(3)} ${sizes[i]}` // eslint-disable-line
 // }
 
-function percentage(input, decimals = 2, suffix = '%') {
+const percentage = (input, decimals = 2, suffix = '%') => {
 	return `${Math.round(input * Math.pow(10, decimals + 2)) / Math.pow(10, decimals)}${suffix}` // eslint-disable-line
 }
 
-function scramble(serial) {
+const scramble = serial => {
 	if (serial.startsWith('WDC_WD30EZRX')) {
 		return `WDC_WD30EZRX-${makeid()}`
 	} else if (serial.startsWith('ST3000DM001')) {
@@ -99,7 +95,7 @@ function scramble(serial) {
 	return serial
 }
 
-function makeid() {
+const makeid = () => {
 	let text = ''
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
@@ -110,8 +106,60 @@ function makeid() {
 	return text
 }
 
-function isValid(obj) {
+const isValid = obj => {
 	if (typeof obj === 'undefined') return false
 	if (!obj) return false
 	return true
 }
+
+// tree helper functions
+const getNode = (tree, lineage) => {
+	if (lineage.length === 0) {
+		return null
+	} else if (lineage.length === 1) {
+		return tree[lineage[0]]
+	}
+
+	const node = lineage.shift()
+	return getNode(tree[node].children, lineage)
+}
+
+const markChosen = (tree, lineage, chosen) => {
+	if (lineage.length === 0) {
+		// no-op
+	} else if (lineage.length === 1) {
+		const node = tree[lineage[0]]
+
+		if (node.checked) {
+			delete chosen[node.path]
+		} else {
+			uncheckChildren(node.children, chosen)
+			chosen[node.path] = true
+		}
+
+		node.checked = !node.checked
+	} else {
+		const index = lineage.shift() // this mutates lineage
+		const node = tree[index]
+
+		if (node.checked) {
+			delete chosen[node.path]
+			node.checked = false
+		}
+
+		markChosen(node.children, lineage, chosen)
+	}
+}
+
+const uncheckChildren = (tree, chosen) => {
+	if (!tree) return
+
+	tree.forEach(node => {
+		delete chosen[node.path]
+		node.checked = false
+
+		uncheckChildren(node.children, chosen)
+	})
+}
+
+export { humanBytes, formatBytes, percentage, scramble, isValid, getNode, markChosen, uncheckChildren }

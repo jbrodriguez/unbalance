@@ -7,6 +7,8 @@ import { NextButton, PrevButton } from './buttons'
 import styles from '../styles/core.scss'
 import { isValid } from '../lib/utils'
 
+import * as constant from '../lib/const'
+
 const cx = classNames.bind(styles)
 
 export default class Wizard extends PureComponent {
@@ -32,7 +34,7 @@ export default class Wizard extends PureComponent {
 		let targetDisabled = true
 		let moveDisabled = true
 
-		const targetPresent = isValid(state.gatherTree.target)
+		const targetPresent = isValid(state.gather.target)
 
 		switch (match.url) {
 			case '/gather/target':
@@ -52,15 +54,18 @@ export default class Wizard extends PureComponent {
 			case '/gather':
 			default:
 				next = '/gather/target'
-				nextDisabled = Object.keys(state.gatherTree.chosen).length === 0
+				nextDisabled = Object.keys(state.gather.chosen).length === 0
 				targetStyle = cx('circular', 'circular-disabled')
 				moveStyle = cx('circular', 'circular-disabled')
 				chooseDisabled = false
 				break
 		}
 
-		prevDisabled = prevDisabled || state.opInProgress !== null
-		nextDisabled = nextDisabled || state.opInProgress !== null
+		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
+		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
+
+		prevDisabled = prevDisabled || opInProgress
+		nextDisabled = nextDisabled || opInProgress
 
 		return (
 			<section className={cx('row', 'bottom-spacer-half')}>
@@ -89,7 +94,7 @@ export default class Wizard extends PureComponent {
 							type="checkbox"
 							checked={state.config.dryRun}
 							onChange={() => actions.toggleDryRun()}
-							disabled={state.transferDisabled || state.opInProgress || !targetPresent}
+							disabled={transferDisabled || opInProgress || !targetPresent}
 						/>
 						&nbsp;
 						<label htmlFor="dryRun">dry run</label>

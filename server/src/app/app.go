@@ -60,9 +60,13 @@ func (a *App) Run(settings *lib.Settings) {
 	bus := pubsub.New(623)
 
 	server := services.NewServer(bus, settings)
+	array := services.NewArray(bus, settings)
+	calc := services.NewCalc(bus, settings)
 	core := services.NewCore(bus, settings)
 
 	server.Start()
+	mlog.FatalIfError(array.Start())
+	calc.Start()
 	mlog.FatalIfError(core.Start())
 
 	mlog.Info("Press Ctrl+C to stop ...")
@@ -72,6 +76,8 @@ func (a *App) Run(settings *lib.Settings) {
 	mlog.Info("Received signal: (%s) ... shutting down the app now ...", <-c)
 
 	core.Stop()
+	calc.Stop()
+	array.Stop()
 	server.Stop()
 
 	mlog.Stop()

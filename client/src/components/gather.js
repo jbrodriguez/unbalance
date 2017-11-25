@@ -18,20 +18,18 @@ export default class Gather extends PureComponent {
 	}
 
 	componentDidMount() {
-		// we do this in order to populate state.unraid
 		const { actions } = this.props.store
-		actions.getStorage()
+		actions.getState('gather')
 	}
 
 	render() {
 		const { state } = this.props.store
-		// console.log(`props-(${JSON.stringify(Object.keys(this.props))})`)
 
-		if (!state.unraid) {
+		if (!(state.core && state.core.unraid && state.core.operation)) {
 			return null
 		}
 
-		if (state.unraid.condition.state !== 'STARTED') {
+		if (state.core.unraid.state !== 'STARTED') {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>

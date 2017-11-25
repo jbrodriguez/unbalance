@@ -37,7 +37,7 @@ export default class Log extends PureComponent {
 				</section>
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.log} styleClass={'console-logs'} />
+						<ConsolePanel lines={state.env.log} styleClass={'console-logs'} />
 					</div>
 				</section>
 			</div>

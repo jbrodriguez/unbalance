@@ -11,12 +11,6 @@ export default class ReactiveLink extends PureComponent {
 	render() {
 		const { disabled, text, ...rest } = this.props
 
-		return disabled
-			? <span>
-					{text}
-				</span>
-			: <NavLink {...rest}>
-					{text}
-				</NavLink>
+		return disabled ? <span>{text}</span> : <NavLink {...rest}>{text}</NavLink>
 	}
 }

@@ -21,7 +21,7 @@ export default class GatherSource extends PureComponent {
 		const { store: { state, actions } } = this.props
 
 		actions.clearConsole()
-		if (Object.keys(state.gatherTree.chosen).length === 0) {
+		if (Object.keys(state.gather.chosen).length === 0) {
 			actions.getShares()
 		}
 	}
@@ -50,11 +50,8 @@ export default class GatherSource extends PureComponent {
 								<div className={cx('col-xs-6')}>
 									<span>SHARES EXPLORER</span>
 								</div>
-								<div className={cx('col-xs-5')}>
+								<div className={cx('col-xs-6')}>
 									<span>SELECTED</span>
-								</div>
-								<div className={cx('col-xs-1')}>
-									<span>LOCATION</span>
 								</div>
 							</div>
 						</div>
@@ -75,27 +72,18 @@ export default class GatherSource extends PureComponent {
 								onTreeNodeCheckChange={this.onCheck}
 								collapsible
 								collapsed={false}
-								data={state.gatherTree.items}
+								data={state.gather.items}
 							/>
 						</div>
 
-						<div className={cx('col-xs-5', 'scroller')}>
+						<div className={cx('col-xs-6', 'scroller')}>
 							<ul>
-								{Object.keys(state.gatherTree.chosen).map(chosen =>
+								{Object.keys(state.gather.chosen).map(chosen => (
 									<li key={chosen}>
-										- {chosen.slice(10)}
-									</li>,
-								)}
-							</ul>
-						</div>
-
-						<div className={cx('col-xs-1', 'scroller')}>
-							<ul>
-								{state.gatherTree.present.map(disk =>
-									<li key={disk.id}>
-										- {disk.name}
-									</li>,
-								)}
+										- {chosen.slice(10)}:{' '}
+										{state.gather.location && state.gather.location.presence[chosen.slice(10)]}
+									</li>
+								))}
 							</ul>
 						</div>
 					</div>
