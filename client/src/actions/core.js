@@ -228,7 +228,7 @@ const transferFinished = ({ state, actions }, bState) => {
 }
 
 const flipOperation = ({ state }, id) => {
-	const operation = { ...state.core.history[id] }
+	const operation = { ...state.core.history.items[id] }
 	operation.open = !operation.open
 
 	return {
@@ -237,7 +237,10 @@ const flipOperation = ({ state }, id) => {
 			...state.core,
 			history: {
 				...state.core.history,
-				[id]: operation,
+				items: {
+					...state.core.history.items,
+					[id]: operation,
+				},
 			},
 		},
 	}
