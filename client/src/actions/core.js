@@ -1,66 +1,5 @@
 import * as constant from '../lib/const'
 
-// const getStatus = ({ state, actions, opts: { api } }) => {
-// 	actions.setBusy(true)
-
-// 	api.getStatus().then(json => {
-// 		actions.gotStatus(json)
-// 		actions.setBusy(false)
-// 	})
-
-// 	return state
-// }
-
-// const gotStatus = ({ state }, status) => {
-// 	const lines = []
-
-// 	let pathname = '/'
-// 	let line = ''
-
-// 	switch (status) {
-// 		case constant.OP_SCATTER_PLAN:
-// 			line = 'PLANNING: in progress ...'
-// 			break
-// 		case constant.OP_SCATTER_MOVE:
-// 			line = 'MOVE: in progress ...'
-// 			break
-// 		case constant.OP_SCATTER_COPY:
-// 			line = 'COPY: in progress ...'
-// 			break
-// 		case constant.OP_SCATTER_VALIDATE:
-// 			line = 'VALIDATE: in progress ...'
-// 			break
-// 		case constant.OP_GATHER_PLAN:
-// 			line = 'FIND TARGET: in progress ...'
-// 			pathname = '/gather/target'
-// 			break
-// 		case constant.OP_GATHER_MOVE:
-// 			line = 'MOVE: in progress ...'
-// 			pathname = '/gather/move'
-// 			break
-// 		default:
-// 			break
-// 	}
-
-// 	if (line !== '') {
-// 		lines.push(line)
-// 	}
-
-// 	state.history.replace({ pathname })
-
-// 	return {
-// 		...state,
-// 		core: {
-// 			...state.core,
-// 			status,
-// 		},
-// 		env: {
-// 			...state.env,
-// 			lines,
-// 		},
-// 	}
-// }
-
 const getState = ({ state, actions, opts: { api } }, mode) => {
 	actions.setBusy(true)
 
@@ -127,6 +66,30 @@ const gotState = ({ state, actions }, core) => {
 		env: {
 			...state.env,
 			lines,
+		},
+	}
+}
+
+const resetState = ({ state }) => {
+	return {
+		scatter: {
+			cache: null,
+			chosen: {},
+			items: [],
+			plan: initPlan(state.core.unraid.disks),
+		},
+		gather: {
+			cache: null,
+			chosen: {},
+			items: [],
+			present: [],
+			elegible: [],
+			target: null,
+			plan: initPlan(state.core.unraid.disks),
+		},
+		env: {
+			...state.env,
+			lines: [],
 		},
 	}
 }
@@ -274,6 +237,8 @@ const initPlan = disks => {
 export default {
 	getState,
 	gotState,
+
+	resetState,
 
 	getStorage,
 	gotStorage,
