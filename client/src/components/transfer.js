@@ -72,7 +72,7 @@ export default class Transfers extends PureComponent {
 			const percent = percentage(command.transferred / command.size)
 
 			return (
-				<tr key={command.entry}>
+				<tr key={`${command.src}${command.entry}`}>
 					<td>{status}</td>
 					<td>{command.src}</td>
 					<td>
