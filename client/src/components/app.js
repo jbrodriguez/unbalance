@@ -2,7 +2,9 @@ import React, { PureComponent } from 'react'
 import { PropTypes } from 'prop-types'
 import { withRouter } from 'react-router-dom'
 
+import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
+import { DateTime } from 'luxon'
 
 import FeedbackPanel from './feedbackPanel'
 import UpdatePanel from './updatePanel'
@@ -72,6 +74,15 @@ class App extends PureComponent {
 			active: true,
 		})
 
+		const history =
+			state.core &&
+			state.core.history &&
+			state.core.history.order.some(id => {
+				const finished = DateTime.fromISO(state.core.history.items[id].finished)
+				const lastChecked = DateTime.fromISO(state.core.history.lastChecked)
+				return finished.diff(lastChecked).toObject().milliseconds > 0
+			})
+
 		return (
 			<div className={cx('container', 'body')}>
 				<header>
@@ -88,22 +99,15 @@ class App extends PureComponent {
 									<div className={cx('col-xs-12', 'col-sm-11', 'flexSection', 'routerSection')}>
 										<div className={cx('lspacer')} />
 
-										<ReactiveLink
-											exact
-											to="/"
-											activeClassName={active}
-											text="SCATTER"
-											disabled={linksDisabled}
-										/>
+										<ReactiveLink exact to="/" activeClassName={active} disabled={linksDisabled}>
+											SCATTER
+										</ReactiveLink>
 
 										<div className={cx('lspacer')} />
 
-										<ReactiveLink
-											to="/gather"
-											activeClassName={active}
-											text="GATHER"
-											disabled={linksDisabled}
-										/>
+										<ReactiveLink to="/gather" activeClassName={active} disabled={linksDisabled}>
+											GATHER
+										</ReactiveLink>
 
 										<div className={cx('lspacer')} />
 
@@ -111,9 +115,10 @@ class App extends PureComponent {
 											exact
 											to="/transfer"
 											activeClassName={active}
-											text="TRANSFER"
 											disabled={linksDisabled}
-										/>
+										>
+											TRANSFER
+										</ReactiveLink>
 
 										<div className={cx('lspacer')} />
 
@@ -121,9 +126,11 @@ class App extends PureComponent {
 											exact
 											to="/history"
 											activeClassName={active}
-											text="HISTORY"
 											disabled={linksDisabled}
-										/>
+										>
+											HISTORY{' '}
+											{history && <i className={cx('fa fa-plus-circle', 'statusInterrupted')} />}
+										</ReactiveLink>
 
 										<div className={cx('lspacer')} />
 
@@ -131,19 +138,16 @@ class App extends PureComponent {
 											exact
 											to="/settings"
 											activeClassName={active}
-											text="SETTINGS"
 											disabled={linksDisabled}
-										/>
+										>
+											SETTINGS
+										</ReactiveLink>
 
 										<div className={cx('lspacer')} />
 
-										<ReactiveLink
-											exact
-											to="/log"
-											activeClassName={active}
-											text="LOG"
-											disabled={linksDisabled}
-										/>
+										<ReactiveLink exact to="/log" activeClassName={active} disabled={linksDisabled}>
+											LOG
+										</ReactiveLink>
 									</div>
 
 									<div className={cx('col-xs-12', 'col-sm-1')}>

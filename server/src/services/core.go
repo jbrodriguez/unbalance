@@ -118,8 +118,6 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.API_SCATTER_MOVE, c.scatterMove)
 	c.actor.Register(common.API_SCATTER_COPY, c.scatterCopy)
 
-	c.actor.Register(common.INT_OPERATION_FINISHED, c.operationFinished)
-
 	c.actor.Register(common.API_GATHER_PLAN, c.gatherPlan)
 	c.actor.Register(common.INT_GATHER_PLAN_FINISHED, c.gatherPlanFinished)
 	c.actor.Register(common.API_GATHER_MOVE, c.gatherMove)
@@ -187,16 +185,17 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 
 func (c *Core) getHistory(msg *pubsub.Message) {
 	mlog.Info("Sending history")
+
+	c.state.History.LastChecked = time.Now()
 	msg.Reply <- c.state.History
+
+	go func() {
+		err := c.historyWrite(c.state.History)
+		if err != nil {
+			mlog.Warning("Unable to write history: %s", err)
+		}
+	}()
 }
-
-// func (c *Core) resetOp(msg *pubsub.Message) {
-// 	mlog.Info("resetting op")
-
-// 	c.state.Operation = resetOp(c.state.Unraid.Disks)
-
-// 	msg.Reply <- c.state.Operation
-// }
 
 func (c *Core) locate(msg *pubsub.Message) {
 	chosen := msg.Payload.([]string)
@@ -834,7 +833,14 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	ffinished := operation.Finished.Format(timeFormat)
 	elapsed := lib.Round(time.Since(operation.Started), time.Millisecond)
 
-	outbound := &dto.Packet{Topic: "transferFinished", Payload: operation}
+	c.updateHistory(c.state.History, operation)
+
+	state := &domain.State{
+		Operation: operation,
+		History:   c.state.History,
+	}
+
+	outbound := &dto.Packet{Topic: "transferFinished", Payload: state}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s",
@@ -860,22 +866,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	mlog.Info("\n%s\n%s", subject, message)
 
-	c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
-}
-
-func (c *Core) operationFinished(msg *pubsub.Message) {
-	count := len(c.state.History)
-	if count == common.HISTORY_CAPACITY {
-		c.state.History = append(c.state.History[1:], c.state.Operation)
-	} else {
-		c.state.History = append(c.state.History, c.state.Operation)
-	}
-
-	err := c.historyWrite(c.state.History)
-	if err != nil {
-		mlog.Warning("Unable to write history: %s", err)
-	}
-
+	// c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
 	c.state.Status = common.OP_NEUTRAL
 	c.state.Operation = nil
 }
@@ -1087,35 +1078,37 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 	return msg
 }
 
-func (c *Core) historyRead() ([]*domain.Operation, error) {
-	history := make([]*domain.Operation, 0)
+func (c *Core) historyRead() (*domain.History, error) {
+	var history domain.History
+
 	fileName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME)
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		return history, err
+		empty := &domain.History{
+			Items: make(map[string]*domain.Operation, 0),
+			Order: make([]string, 0),
+		}
+
+		return empty, err
 	}
 	defer file.Close()
 
-	mlog.Info(`before decoding`)
-
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&history)
+	err = decoder.Decode(history)
 	if err != nil {
-		return history, err
+		empty := &domain.History{
+			Items: make(map[string]*domain.Operation, 0),
+			Order: make([]string, 0),
+		}
+
+		return empty, err
 	}
 
-	mlog.Info(`insider(%+v)`, history)
-
-	return history, nil
+	return &history, nil
 }
 
-func (c *Core) historyWrite(history []*domain.Operation) error {
-	// b, err := json.Marshal(history)
-	// if err != nil {
-	// 	mlog.Warning("Unable to serialize op: %s", err)
-	// }
-
+func (c *Core) historyWrite(history *domain.History) error {
 	tmpName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME+"."+shortid.MustGenerate())
 
 	file, err := os.Create(tmpName)
@@ -1130,6 +1123,27 @@ func (c *Core) historyWrite(history []*domain.Operation) error {
 	os.Rename(tmpName, filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME))
 
 	return err
+}
+
+func (c *Core) updateHistory(history *domain.History, operation *domain.Operation) {
+	count := len(history.Order)
+	if count == common.HISTORY_CAPACITY {
+		delete(history.Items, history.Order[count-1])
+		// prepend item, remove oldest item
+		history.Order = append([]string{c.state.Operation.ID}, history.Order[:count-1]...)
+	} else {
+		// prepend item
+		history.Order = append([]string{c.state.Operation.ID}, history.Order...)
+	}
+
+	history.Items[operation.ID] = operation
+
+	go func() {
+		err := c.historyWrite(history)
+		if err != nil {
+			mlog.Warning("Unable to write history: %s", err)
+		}
+	}()
 }
 
 // func (c *Core) validate(msg *pubsub.Message) {

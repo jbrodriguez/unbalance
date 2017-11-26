@@ -31,7 +31,7 @@ export default class History extends PureComponent {
 	render() {
 		const { state } = this.props.store
 
-		if (!(state.core && state.core.historyOrder && state.core.historyOrder.length > 0)) {
+		if (!(state.core && state.core.history && state.core.history.order && state.core.history.order.length > 0)) {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
@@ -41,8 +41,8 @@ export default class History extends PureComponent {
 			)
 		}
 
-		const operations = state.core.historyOrder.map(id => {
-			const op = state.core.history[id]
+		const operations = state.core.history.order.map(id => {
+			const op = state.core.history.items[id]
 
 			const status =
 				op.bytesTransferred === op.bytesToTransfer ? (

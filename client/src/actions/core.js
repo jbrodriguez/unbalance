@@ -73,7 +73,7 @@ const getState = ({ state, actions, opts: { api } }, mode) => {
 	return state
 }
 
-const gotState = ({ state, actions }, data) => {
+const gotState = ({ state, actions }, core) => {
 	const lines = []
 
 	let pathname = '/'
@@ -113,24 +113,16 @@ const gotState = ({ state, actions }, data) => {
 
 	state.history.replace({ pathname })
 
-	const { history, historyOrder } = buildHistory(data.history)
-
 	return {
 		...state,
-		core: {
-			status: data.status,
-			unraid: data.unraid,
-			operation: data.operation,
-			history,
-			historyOrder,
-		},
+		core,
 		scatter: {
 			...state.scatter,
-			plan: initPlan(data.unraid.disks),
+			plan: initPlan(core.unraid.disks),
 		},
 		gather: {
 			...state.gather,
-			plan: initPlan(data.unraid.disks),
+			plan: initPlan(core.unraid.disks),
 		},
 		env: {
 			...state.env,
@@ -181,7 +173,7 @@ const gotOperation = ({ state }, operation) => {
 	}
 }
 
-const getHistory = ({ state, actions, opts: { api } }, history) => {
+const getHistory = ({ state, actions, opts: { api } }) => {
 	actions.setBusy(true)
 
 	api.getHistory().then(json => {
@@ -192,15 +184,12 @@ const getHistory = ({ state, actions, opts: { api } }, history) => {
 	return state
 }
 
-const gotHistory = ({ state }, data) => {
-	const { history, historyOrder } = buildHistory(data)
-
+const gotHistory = ({ state }, history) => {
 	return {
 		...state,
 		core: {
 			...state.core,
 			history,
-			historyOrder,
 		},
 	}
 }
@@ -225,14 +214,15 @@ const transferProgress = ({ state }, operation) => {
 	}
 }
 
-const transferFinished = ({ state, actions }, operation) => {
+const transferFinished = ({ state, actions }, bState) => {
 	actions.setBusy(false)
 
 	return {
 		...state,
 		core: {
 			...state.core,
-			operation,
+			operation: bState.operation,
+			history: bState.history,
 		},
 	}
 }
@@ -276,17 +266,6 @@ const initPlan = disks => {
 	}
 
 	return plan
-}
-
-const buildHistory = data => {
-	const history = data.reduce((map, operation) => {
-		map[operation.id] = operation
-		return map
-	}, {})
-
-	const historyOrder = Object.keys(history).reverse()
-
-	return { history, historyOrder }
 }
 
 export default {
