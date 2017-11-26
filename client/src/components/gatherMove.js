@@ -17,6 +17,10 @@ export default class GatherMove extends PureComponent {
 		match: PropTypes.object.isRequired,
 	}
 
+	componentDidMount() {
+		this.props.store.actions.clearConsole()
+	}
+
 	render() {
 		const { match, store: { state, actions } } = this.props
 
