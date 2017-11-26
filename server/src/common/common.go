@@ -5,7 +5,7 @@ const (
 	PLUGIN_LOCATION = "/boot/config/plugins/unbalance"
 
 	CHAN_CAPACITY    = 3
-	HISTORY_CAPACITY = 2
+	HISTORY_CAPACITY = 25
 	HISTORY_FILENAME = "unbalance.hist"
 
 	OP_NEUTRAL          = 0
@@ -44,8 +44,6 @@ const (
 	API_SCATTER_MOVE     = "api/scatter/move"
 	API_SCATTER_COPY     = "api/scatter/copy"
 	API_SCATTER_VALIDATE = "api/scatter/validate"
-
-	INT_OPERATION_FINISHED = "core/operation/finished"
 
 	API_GATHER_PLAN          = "api/gather/plan"
 	INT_GATHER_PLAN          = "int/gather/plan"

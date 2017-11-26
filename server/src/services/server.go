@@ -175,7 +175,7 @@ func (s *Server) getHistory(c echo.Context) (err error) {
 	s.bus.Pub(msg, common.API_GET_HISTORY)
 
 	reply := <-msg.Reply
-	history := reply.([]*domain.Operation)
+	history := reply.(*domain.History)
 	c.JSON(200, history)
 
 	return nil
