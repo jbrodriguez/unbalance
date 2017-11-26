@@ -19,7 +19,7 @@ export default class Gather extends PureComponent {
 
 	componentDidMount() {
 		const { actions } = this.props.store
-		actions.getState('gather')
+		actions.getStorage()
 	}
 
 	render() {
