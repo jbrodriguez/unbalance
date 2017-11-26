@@ -71,36 +71,24 @@ p {
 	}
 }
 
-.statsSection {
-	font-size: 0.8em;
-}
-
 .gridHeader {
 	background-color: $headerMenuBackground;
-	// padding: 1em 0;
 
 	label {
 		font-size: 0.75em;
 	}
 }
 
-// .gridSection {
-// }
-
 .console {
-	// display: flex;
-
 	overflow-y: auto;
 	overflow-x: hidden;
-	// width: 100%;
-	// border: 1px solid $console-border;
+
 	padding: 0.75em;
 	color: $consoleColor;
 	background-color: $consoleBg;
 
 	.consoleLine {
 		font-size: 0.8em;
-		// line-height: 0.5em;
 	}
 
 	p {
@@ -114,15 +102,12 @@ p {
 }
 
 .console-logs {
-	// flex: 1;
-	// min-height: 100vh;
 	height: 700px;
 }
 
 .treeView {
 	user-select: none;
 	padding: 0.5em;
-	// background-color: $cement-gray;
 
 	ul {
 		margin: 0;
@@ -151,20 +136,6 @@ p {
 		color: $silverChalice;
 	}
 }
-
-// .sidebar,
-// .content {
-// 	color: $primaryTextColor;
-// 	// padding: 1em;
-// }
-
-.sidebar {
-	background-color: $cement-gray;
-}
-
-// .content {
-// 	background-color: white;
-// }
 
 .explorerHeader {
 	color: $light-gray;

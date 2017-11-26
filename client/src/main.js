@@ -32,9 +32,6 @@ const initialState = {
 	core: null,
 	env: {
 		isBusy: false,
-		transferDisabled: true,
-		validateDisabled: true,
-		stats: '',
 		lines: [],
 		log: [],
 		feedback: [],
@@ -51,10 +48,8 @@ const initialState = {
 		cache: null,
 		chosen: {},
 		items: [],
-		present: [],
-		elegible: [],
-		target: null,
 		plan: null,
+		target: null,
 	},
 	history,
 }

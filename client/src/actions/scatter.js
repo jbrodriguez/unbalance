@@ -223,6 +223,8 @@ const scatterPlan = ({ state, actions, opts: { ws } }) => {
 const scatterMove = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 
+	actions.resetState()
+
 	ws.send({ topic: constant.API_SCATTER_MOVE, payload: state.scatter.plan })
 
 	state.history.replace({ pathname: '/transfer' })
@@ -232,6 +234,8 @@ const scatterMove = ({ state, actions, opts: { ws } }) => {
 
 const scatterCopy = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
+
+	actions.resetState()
 
 	ws.send({ topic: constant.API_SCATTER_COPY, payload: state.scatter.plan })
 

@@ -230,6 +230,18 @@ const gatherPlan = ({ state, actions, opts: { ws } }) => {
 	}
 }
 
+const gatherMove = ({ state, actions, opts: { ws } }) => {
+	actions.setBusy(true)
+
+	actions.resetState()
+
+	ws.send({ topic: constant.API_GATHER_MOVE, payload: state.gather.plan })
+
+	state.history.replace({ pathname: '/transfer' })
+
+	return state
+}
+
 export default {
 	getEntries,
 
@@ -250,4 +262,5 @@ export default {
 	gatherPlanIssue,
 
 	gatherPlan,
+	gatherMove,
 }
