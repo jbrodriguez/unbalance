@@ -19,8 +19,8 @@ export default class GatherTarget extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { actions, state } = this.props.store
-		actions.findTargets(state.gather.chosen)
+		const { actions } = this.props.store
+		actions.gatherPlan()
 	}
 
 	checkTarget = disk => e => {
@@ -44,13 +44,13 @@ export default class GatherTarget extends PureComponent {
 
 		// if free === newFree then this disk isn't elegible as a target
 		const elegible = state.core.unraid.disks.filter(
-			disk => disk.free !== state.core.operation.vdisks[disk.path].plannedFree,
+			disk => disk.free !== state.gather.plan.vdisks[disk.path].plannedFree,
 		)
 
 		// sort elegible disks by least amount of data transfer
 		const targets = elegible.sort((a, b) => {
-			const xferA = a.free - state.core.operation.vdisks[a.path].plannedFree
-			const xferB = b.free - state.core.operation.vdisks[a.path].plannedFree
+			const xferA = a.free - state.gather.plan.vdisks[a.path].plannedFree
+			const xferB = b.free - state.gather.plan.vdisks[a.path].plannedFree
 			if (xferA < xferB) return -1
 			if (xferA > xferB) return 1
 			if (a.id < b.id) return -1
@@ -73,7 +73,7 @@ export default class GatherTarget extends PureComponent {
 					<td>
 						{disk.serial} ({disk.device})
 					</td>
-					<td>{humanBytes(disk.free - state.core.operation.vdisks[disk.path].plannedFree)}</td>
+					<td>{humanBytes(disk.free - state.gather.plan.vdisks[disk.path].plannedFree)}</td>
 					<td>{humanBytes(disk.size)}</td>
 					<td>{humanBytes(disk.free)}</td>
 					<td>
@@ -83,7 +83,7 @@ export default class GatherTarget extends PureComponent {
 					</td>
 					<td>
 						<span className={cx('label', 'label-success')}>
-							{humanBytes(state.core.operation.vdisks[disk.path].plannedFree)}
+							{humanBytes(state.gather.plan.vdisks[disk.path].plannedFree)}
 						</span>
 					</td>
 				</tr>

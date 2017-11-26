@@ -18,11 +18,9 @@ export default class Transfers extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
-	// this is a dirty trick to play around the fact that react-router is kind of dumb when it comes to
-	// redux like scenarios: https://reacttraining.com/react-router/web/guides/redux-integration
 	componentDidMount() {
 		const { actions } = this.props.store
-		actions.getConfig()
+		actions.getOperation()
 	}
 
 	render() {

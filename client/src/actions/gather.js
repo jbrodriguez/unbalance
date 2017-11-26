@@ -1,6 +1,7 @@
 import { markChosen, getNode } from '../lib/utils'
+import * as constant from '../lib/const'
 
-const getShares = ({ state, actions }) => {
+const getEntries = ({ state, actions }) => {
 	actions.getGatherTree('/mnt/user')
 
 	return {
@@ -51,6 +52,26 @@ const gotGatherTree = ({ state }, newTree) => {
 	}
 }
 
+const checkTarget = ({ state }, drive, checked) => {
+	return {
+		...state,
+		gather: {
+			...state.gather,
+			plan: {
+				...state.gather.plan,
+				target: checked ? drive : null,
+				vdisks: {
+					...state.gather.plan.vdisks,
+					[drive.path]: {
+						...state.gather.plan.vdisks[drive.path],
+						dst: checked,
+					},
+				},
+			},
+		},
+	}
+}
+
 const gatherTreeCollapsed = ({ state, actions }, lineage) => {
 	const tree = [].concat(state.gather.items)
 	const node = getNode(tree, lineage)
@@ -77,13 +98,10 @@ const gatherTreeCollapsed = ({ state, actions }, lineage) => {
 const gatherTreeChecked = ({ state, actions }, lineage) => {
 	const items = [].concat(state.gather.items)
 	const chosen = Object.assign({}, state.gather.chosen)
-	// const lineage2 = [].concat(lineage)
 
 	markChosen(items, lineage, chosen)
 
-	// trigger search for disks where this share/folder is present
 	actions.gatherTreeLocate(Object.keys(chosen))
-	// actions.gatherTreeLocate(lineage2)
 
 	return {
 		...state,
@@ -97,20 +115,12 @@ const gatherTreeChecked = ({ state, actions }, lineage) => {
 }
 
 const gatherTreeLocate = ({ state, actions, opts: { api } }, chosen) => {
-	// const tree = [].concat(state.gatherTree.items)
-	// const node = getNode(tree, lineage)
-
-	// node.path is in the form of /mnt/user/tvshows/Breaking Bad
-	// so we remove /mnt/user
-	// const path = node.path.slice(10)
-
 	api.locate(chosen).then(json => actions.gatherTreeLocated(json))
 
 	return state
 }
 
 const gatherTreeLocated = ({ state }, location) => {
-	console.log(`location-(${JSON.stringify(location)})`)
 	return {
 		...state,
 		gather: {
@@ -120,26 +130,33 @@ const gatherTreeLocated = ({ state }, location) => {
 	}
 }
 
-const findTargets = ({ state, actions, opts: { ws } }) => {
-	actions.setBusy(true)
-
-	const folders = Object.keys(state.gather.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
-	ws.send({ topic: 'api/gather/calculate', payload: folders })
-
+const gatherPlanStarted = ({ state }, line) => {
 	return {
 		...state,
-		gather: {
-			...state.gather,
-			target: null,
+		env: {
+			...state.env,
+			lines: [].concat(`PLANNING: ${line}`),
 		},
 	}
 }
 
-const findFinished = ({ state, actions }, operation) => {
-	if (operation.bytesToTransfer === 0) {
+const gatherPlanProgress = ({ state }, line) => {
+	const lines = state.env.lines.length > 1000 ? [] : state.env.lines
+
+	return {
+		...state,
+		env: {
+			...state.env,
+			lines: lines.concat(`PLANNING: ${line}`),
+		},
+	}
+}
+
+const gatherPlanFinished = ({ state, actions }, plan) => {
+	if (plan.bytesToTransfer === 0) {
 		const feedback = []
 
-		feedback.push('The calculate operation found that no folders/files can be moved/copied.')
+		feedback.push('The planning stage found that no folders/files can be moved/copied.')
 		feedback.push('')
 		feedback.push('This might be due to one of the following reasons:')
 		feedback.push(
@@ -156,42 +173,70 @@ const findFinished = ({ state, actions }, operation) => {
 		actions.addFeedback(feedback)
 	}
 
-	actions.gotOperation(operation)
 	actions.setBusy(false)
+
+	return {
+		...state,
+		gather: {
+			...state.gather,
+			plan,
+		},
+	}
+}
+
+const gatherPlanIssue = ({ state, actions }, permStats) => {
+	const permIssues = permStats.split('|')
+
+	const feedback = []
+
+	feedback.push('There are some permission issues with the folders/files you want to move')
+	feedback.push(`${permIssues[0]} file(s)/folder(s) with an owner other than 'nobody'`)
+	feedback.push(`${permIssues[1]} file(s)/folder(s) with a group other than 'users'`)
+	feedback.push(`${permIssues[2]} folder(s) with a permission other than 'drwxrwxrwx'`)
+	feedback.push(`${permIssues[3]} files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'`)
+	feedback.push('You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)')
+	feedback.push('')
+	feedback.push(
+		'At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation',
+	)
+	feedback.push('')
+	feedback.push(
+		'You are STRONGLY suggested to install the Fix Common Problems plugin, then run the Docker Safe New Permissions command',
+	)
+
+	actions.addFeedback(feedback)
 
 	return state
 }
 
-const checkTarget = ({ state }, drive, checked) => {
-	// actions.setBusy(true)
+const gatherPlan = ({ state, actions, opts: { ws } }) => {
+	actions.setBusy(true)
 
-	const operation = { ...state.core.operation }
+	const chosenFolders = Object.keys(state.gather.chosen).map(folder => folder.slice(10)) // remove /mnt/user/
 
-	state.core.unraid.disks.forEach(disk => {
-		operation.vdisks[disk.path].src = false
-		operation.vdisks[disk.path].dst = disk.path === drive.path && checked
-	})
+	const plan = {
+		...state.gather.plan,
+		chosenFolders,
+	}
 
-	const target = checked ? drive : null
+	ws.send({ topic: constant.API_GATHER_PLAN, payload: plan })
 
 	return {
 		...state,
-		core: {
-			...state.core,
-			operation,
-		},
 		gather: {
 			...state.gather,
-			target,
+			plan,
 		},
 	}
 }
 
 export default {
-	getShares,
+	getEntries,
 
 	getGatherTree,
 	gotGatherTree,
+
+	checkTarget,
 
 	gatherTreeCollapsed,
 	gatherTreeChecked,
@@ -199,8 +244,10 @@ export default {
 	gatherTreeLocate,
 	gatherTreeLocated,
 
-	findTargets,
-	findFinished,
+	gatherPlanStarted,
+	gatherPlanProgress,
+	gatherPlanFinished,
+	gatherPlanIssue,
 
-	checkTarget,
+	gatherPlan,
 }

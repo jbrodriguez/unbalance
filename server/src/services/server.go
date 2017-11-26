@@ -84,10 +84,10 @@ func (s *Server) Start() {
 	api := s.engine.Group(apiVersion)
 
 	api.GET("/config", s.getConfig)
-	api.GET("/status", s.getStatus)
-	api.GET("/state/:op", s.getState)
+	api.GET("/state", s.getState)
+	api.GET("/storage", s.getStorage)
+	api.GET("/operation", s.getOperation)
 	api.GET("/history", s.getHistory)
-	api.GET("/resetOp", s.resetOp)
 
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
 	api.PUT("/config/notifyMove", s.setNotifyMove)
@@ -126,26 +126,46 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 	return nil
 }
 
-func (s *Server) getStatus(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_STATUS)
+// func (s *Server) getStatus(c echo.Context) (err error) {
+// 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+// 	s.bus.Pub(msg, common.API_GET_STATUS)
 
-	reply := <-msg.Reply
-	status := reply.(int64)
-	c.JSON(200, status)
+// 	reply := <-msg.Reply
+// 	status := reply.(int64)
+// 	c.JSON(200, status)
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *Server) getState(c echo.Context) (err error) {
-	op := c.Param("op")
-
-	msg := &pubsub.Message{Payload: op, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, common.API_GET_STATE)
 
 	reply := <-msg.Reply
 	state := reply.(*domain.State)
 	c.JSON(200, state)
+
+	return nil
+}
+
+func (s *Server) getStorage(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_STORAGE)
+
+	reply := <-msg.Reply
+	storage := reply.(*domain.Unraid)
+	c.JSON(200, storage)
+
+	return nil
+}
+
+func (s *Server) getOperation(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_OPERATION)
+
+	reply := <-msg.Reply
+	operation := reply.(*domain.Operation)
+	c.JSON(200, operation)
 
 	return nil
 }
@@ -157,17 +177,6 @@ func (s *Server) getHistory(c echo.Context) (err error) {
 	reply := <-msg.Reply
 	history := reply.([]*domain.Operation)
 	c.JSON(200, history)
-
-	return nil
-}
-
-func (s *Server) resetOp(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_RESET_OP)
-
-	reply := <-msg.Reply
-	op := reply.(*domain.Operation)
-	c.JSON(200, op)
 
 	return nil
 }

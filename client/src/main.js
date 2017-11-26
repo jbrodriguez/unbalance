@@ -45,6 +45,7 @@ const initialState = {
 		cache: null,
 		chosen: {},
 		items: [],
+		plan: null,
 	},
 	gather: {
 		cache: null,
@@ -53,6 +54,7 @@ const initialState = {
 		present: [],
 		elegible: [],
 		target: null,
+		plan: null,
 	},
 	history,
 }

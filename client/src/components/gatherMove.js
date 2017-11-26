@@ -29,7 +29,7 @@ export default class GatherMove extends PureComponent {
 		const { match, store: { state, actions } } = this.props
 
 		const preReqNotPresent = Object.keys(state.gather.chosen).length === 0 || !isValid(state.gather.target)
-		const runningMove = state.core.status ? state.core.status === constant.OP_GATHER_MOVE : false
+		const runningMove = state.core.status === constant.OP_GATHER_MOVE
 
 		if (preReqNotPresent && !runningMove) {
 			return null
@@ -47,7 +47,7 @@ export default class GatherMove extends PureComponent {
 		}
 
 		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
-		const transferDisabled = opInProgress || state.core.operation.bytesToTransfer === 0
+		const transferDisabled = opInProgress || state.gather.plan.bytesToTransfer === 0
 
 		let summary = null
 		let proceed = null
@@ -56,9 +56,9 @@ export default class GatherMove extends PureComponent {
 			let size = 0
 
 			state.core.unraid.disks.forEach(disk => {
-				if (state.core.operation.vdisks[disk.path].dst) {
+				if (state.gather.plan.vdisks[disk.path].dst) {
 					dst = disk
-					size = dst.free - state.core.operation.vdisks[dst.path].plannedFree
+					size = dst.free - state.gather.plan.vdisks[dst.path].plannedFree
 				}
 			})
 

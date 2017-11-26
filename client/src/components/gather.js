@@ -25,7 +25,7 @@ export default class Gather extends PureComponent {
 	render() {
 		const { state } = this.props.store
 
-		if (!(state.core && state.core.unraid && state.core.operation)) {
+		if (!(state.core && state.core.unraid && state.gather && state.gather.plan)) {
 			return null
 		}
 

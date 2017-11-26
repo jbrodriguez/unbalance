@@ -6,7 +6,8 @@ const start = ({ state, actions, opts: { ws } }) => {
 	})
 
 	actions.getConfig()
-	actions.getStatus()
+	actions.getState()
+	// actions.getStatus()
 	// actions.checkForUpdate()
 
 	return state
