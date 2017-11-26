@@ -62,7 +62,10 @@ const checkTarget = ({ state }, drive, checked) => {
 				target: checked ? drive : null,
 				vdisks: {
 					...state.gather.plan.vdisks,
-					[drive.path]: checked,
+					[drive.path]: {
+						...state.gather.plan.vdisks[drive.path],
+						dst: checked,
+					},
 				},
 			},
 		},

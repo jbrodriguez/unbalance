@@ -494,18 +494,6 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 		OpKind:     status,
 		DryRun:     c.settings.DryRun,
 		RsyncFlags: c.settings.RsyncFlags,
-		VDisks:     plan.VDisks,
-	}
-
-	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
-	// that's the amount of data we need to transfer. Also remove bin from all other disks,
-	// since only the target will have work to do
-	for _, disk := range disks {
-		if plan.VDisks[disk.Path].Src {
-			operation.BytesToTransfer = operation.VDisks[disk.Path].Bin.Size
-		} else {
-			operation.VDisks[disk.Path].Bin = nil
-		}
 	}
 
 	// user may have changed rsync flags or dry-run setting, adjust for it
@@ -516,11 +504,17 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 
 	operation.Commands = make([]*domain.Command, 0)
 
-	for _, disk := range c.state.Unraid.Disks {
-		vdisk := operation.VDisks[disk.Path]
-		if vdisk.Bin == nil {
+	for _, disk := range disks {
+		vdisk := plan.VDisks[disk.Path]
+
+		// only one disk will be destination (target)
+		if !vdisk.Dst {
 			continue
 		}
+
+		// user chose a target disk, adjust bytestotransfer to the size of its bin, since
+		// that's the amount of data we need to transfer. Also remove bin from all other disks,
+		operation.BytesToTransfer = vdisk.Bin.Size
 
 		for _, item := range vdisk.Bin.Items {
 			var entry string
@@ -550,7 +544,7 @@ func (c *Core) gatherMove(msg *pubsub.Message) {
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
-		mlog.Warning("Unable to get gather plan: %s", err)
+		mlog.Warning("Unable to get gather plan: %s", err.Error())
 
 		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
@@ -883,7 +877,7 @@ func (c *Core) operationFinished(msg *pubsub.Message) {
 	}
 
 	c.state.Status = common.OP_NEUTRAL
-	c.state.Operation = resetOp(c.state.Unraid.Disks)
+	c.state.Operation = nil
 }
 
 // SETTINGS RELATED
@@ -1070,21 +1064,6 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 		}
 	}()
 }
-
-// func resetOp(disks []*domain.Disk) *domain.Operation {
-// 	op := &domain.Operation{
-// 		ID:     shortid.MustGenerate(),
-// 		OpKind: common.OP_NEUTRAL,
-// 		VDisks: make(map[string]*domain.VDisk, 0),
-// 	}
-
-// 	for _, disk := range disks {
-// 		vdisk := &domain.VDisk{Path: disk.Path, PlannedFree: disk.Free, Src: false, Dst: false}
-// 		op.VDisks[disk.Path] = vdisk
-// 	}
-
-// 	return op
-// }
 
 func progress(bytesToTransfer, bytesTransferred int64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
 	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
