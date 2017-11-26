@@ -6,17 +6,10 @@ export default class Api {
 	}
 
 	getConfig() {
-		// console.log('this.hostr', this.hostr)
 		return fetch(`${this.hostr}/config`).then(resp => resp.json())
 	}
 
-	// getStatus() {
-	// 	// console.log('this.hostr', this.hostr)
-	// 	return fetch(`${this.hostr}/status`).then(resp => resp.json())
-	// }
-
 	getState() {
-		// console.log('this.hostr', this.hostr)
 		return fetch(`${this.hostr}/state`).then(resp => resp.json())
 	}
 
@@ -24,8 +17,11 @@ export default class Api {
 		return fetch(`${this.hostr}/storage`).then(resp => resp.json())
 	}
 
+	getOperation() {
+		return fetch(`${this.hostr}/operation`).then(resp => resp.json())
+	}
+
 	getHistory() {
-		// console.log('this.hostr', this.hostr)
 		return fetch(`${this.hostr}/history`).then(resp => resp.json())
 	}
 

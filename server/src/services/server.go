@@ -86,6 +86,7 @@ func (s *Server) Start() {
 	api.GET("/config", s.getConfig)
 	api.GET("/state", s.getState)
 	api.GET("/storage", s.getStorage)
+	api.GET("/operation", s.getOperation)
 	api.GET("/history", s.getHistory)
 
 	api.PUT("/config/notifyCalc", s.setNotifyCalc)
@@ -154,6 +155,17 @@ func (s *Server) getStorage(c echo.Context) (err error) {
 	reply := <-msg.Reply
 	storage := reply.(*domain.Unraid)
 	c.JSON(200, storage)
+
+	return nil
+}
+
+func (s *Server) getOperation(c echo.Context) (err error) {
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	s.bus.Pub(msg, common.API_GET_OPERATION)
+
+	reply := <-msg.Reply
+	operation := reply.(*domain.Operation)
+	c.JSON(200, operation)
 
 	return nil
 }

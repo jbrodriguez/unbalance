@@ -17,9 +17,9 @@ const (
 	OP_GATHER_MOVE      = 6
 
 	API_GET_CONFIG       = "core/get/config"
-	API_GET_STATUS       = "core/get/status"
 	API_GET_STATE        = "core/get/state"
 	API_GET_STORAGE      = "array/get/storage"
+	API_GET_OPERATION    = "core/get/operation"
 	API_GET_HISTORY      = "core/get/history"
 	INT_GET_ARRAY_STATUS = "int/array/get/status"
 	API_GET_TREE         = "array/get/tree"

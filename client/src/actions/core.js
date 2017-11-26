@@ -160,6 +160,27 @@ const gotStorage = ({ state }, unraid) => {
 	}
 }
 
+const getOperation = ({ state, actions, opts: { api } }) => {
+	actions.setBusy(true)
+
+	api.getOperation().then(json => {
+		actions.gotOperation(json)
+		actions.setBusy(false)
+	})
+
+	return state
+}
+
+const gotOperation = ({ state }, operation) => {
+	return {
+		...state,
+		core: {
+			...state.core,
+			operation,
+		},
+	}
+}
+
 const getHistory = ({ state, actions, opts: { api } }, history) => {
 	actions.setBusy(true)
 
@@ -183,37 +204,6 @@ const gotHistory = ({ state }, data) => {
 		},
 	}
 }
-
-// const resetOperation = ({ state, actions, opts: { api } }) => {
-// 	actions.setBusy(true)
-
-// 	api.resetOperation().then(json => {
-// 		actions.gotOperation(json)
-// 		actions.setBusy(false)
-// 	})
-
-// 	return state
-// }
-
-// const gotOperation = ({ state }, operation) => {
-// 	return {
-// 		...state,
-// 		core: {
-// 			...state.core,
-// 			operation,
-// 		},
-// 	}
-// }
-
-// function gatherMove({ state, actions, opts: { ws } }, drive) {
-// 	actions.setBusy(true)
-
-// 	ws.send({ topic: 'api/gather/move', payload: drive })
-
-// 	state.history.replace({ pathname: '/transfer' })
-
-// 	return state
-// }
 
 const transferStarted = ({ state }, operation) => {
 	return {
@@ -300,22 +290,17 @@ const buildHistory = data => {
 }
 
 export default {
-	// getStatus,
-	// gotStatus,
-
 	getState,
 	gotState,
 
 	getStorage,
 	gotStorage,
 
+	getOperation,
+	gotOperation,
+
 	getHistory,
 	gotHistory,
-
-	// resetOperation,
-	// gotOperation,
-
-	// gatherMove,
 
 	transferStarted,
 	transferProgress,

@@ -107,9 +107,9 @@ func (c *Core) Start() (err error) {
 	c.state.History = history
 
 	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
-	c.actor.Register(common.API_GET_STATUS, c.getStatus)
 	c.actor.Register(common.API_GET_STATE, c.getState)
 	c.actor.Register(common.API_GET_STORAGE, c.getStorage)
+	c.actor.Register(common.API_GET_OPERATION, c.getOperation)
 	c.actor.Register(common.API_GET_HISTORY, c.getHistory)
 	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
 
@@ -157,16 +157,15 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-func (c *Core) getStatus(msg *pubsub.Message) {
-	mlog.Info("Sending status")
-
-	msg.Reply <- c.state.Status
-}
-
 func (c *Core) getState(msg *pubsub.Message) {
 	mlog.Info("Sending state")
 
 	msg.Reply <- c.state
+}
+
+func (c *Core) getOperation(msg *pubsub.Message) {
+	mlog.Info("Sending operation")
+	msg.Reply <- c.state.Operation
 }
 
 func (c *Core) getStorage(msg *pubsub.Message) {
