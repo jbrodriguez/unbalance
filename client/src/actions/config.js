@@ -17,67 +17,60 @@ const gotConfig = ({ state }, config) => {
 	}
 }
 
-// function setNotifyCalc({ state, actions, opts: { api } }, notify) {
-// 	if (state.config.notifyCalc !== notify) {
-// 		api.setNotifyCalc(notify).then(json => actions.gotConfig(json))
-// 	}
+const setNotifyCalc = ({ state, actions, opts: { api } }, notify) => {
+	if (state.config.notifyCalc !== notify) {
+		api.setNotifyCalc(notify).then(json => actions.gotConfig(json))
+	}
 
-// 	return state
-// }
+	return state
+}
 
-// function setNotifyMove({ state, actions, opts: { api } }, notify) {
-// 	if (state.config.notifyMove !== notify) {
-// 		api.setNotifyMove(notify).then(json => actions.gotConfig(json))
-// 	}
+const setNotifyMove = ({ state, actions, opts: { api } }, notify) => {
+	if (state.config.notifyMove !== notify) {
+		api.setNotifyMove(notify).then(json => actions.gotConfig(json))
+	}
 
-// 	return state
-// }
+	return state
+}
 
-// function setReservedSpace({ state, actions, opts: { api } }, stringAmount, unit) {
-// 	// console.log('typeof: ', typeof amount)
-// 	// if (typeof amount !== 'number') {
-// 	// 	actions.addFeedback('Reserved space must be a number')
-// 	// 	return state
-// 	// }
+const setReservedSpace = ({ state, actions, opts: { api } }, stringAmount, unit) => {
+	const amount = Number(stringAmount)
 
-// 	const amount = Number(stringAmount)
-// 	// if (typeof amount !== 'number') {
-// 	// 	actions.addFeedback('Reserved space must be a number')
-// 	// 	return state
-// 	// }
+	switch (unit) {
+		case '%':
+			if (amount < 0 || amount > 100) {
+				actions.addFeedback('Percentage value must be between 0 and 100')
+				return state
+			}
+			break
 
-// 	switch (unit) {
-// 		case '%':
-// 			if (amount < 0 || amount > 100) {
-// 				actions.addFeedback('Percentage value must be between 0 and 100')
-// 				return state
-// 			}
-// 			break
+		case 'Gb':
+			if (amount < 0.45) {
+				actions.addFeedback('Gb value must be higher than 0.45')
+				return state
+			}
+			break
 
-// 		case 'Gb':
-// 			if (amount < 0.45) {
-// 				actions.addFeedback('Gb value must be higher than 0.45')
-// 				return state
-// 			}
-// 			break
+		case 'Mb':
+		default:
+			if (amount < 450) {
+				actions.addFeedback('Mb value must be higher than 450')
+				return state
+			}
+			break
+	}
 
-// 		case 'Mb':
-// 		default:
-// 			if (amount < 450) {
-// 				actions.addFeedback('Mb value must be higher than 450')
-// 				return state
-// 			}
-// 			break
-// 	}
+	if (state.config.reservedAmount !== amount || state.config.reservedUnit !== unit) {
+		actions.setBusy(true)
 
-// 	if (state.config.reservedAmount !== amount || state.config.reservedUnit !== unit) {
-// 		actions.setOpInProgress('Setting Reserved Space')
+		api.setReservedSpace(amount, unit).then(json => {
+			actions.gotConfig(json)
+			actions.setBusy(false)
+		})
+	}
 
-// 		api.setReservedSpace(amount, unit).then(json => actions.gotConfig(json))
-// 	}
-
-// 	return state
-// }
+	return state
+}
 
 const toggleDryRun = ({ state, actions, opts: { api } }) => {
 	actions.setBusy(true)
@@ -97,42 +90,42 @@ const dryRunToggled = ({ state, actions }, config) => {
 	}
 }
 
-// function setRsyncFlags({ state, actions, opts: { api } }, flags) {
-// 	api.setRsyncFlags(flags).then(json => actions.gotConfig(json))
+const setRsyncFlags = ({ state, actions, opts: { api } }, flags) => {
+	api.setRsyncFlags(flags).then(json => actions.gotConfig(json))
 
-// 	return state
-// }
+	return state
+}
 
-// function setVerbosity({ state, actions, opts: { api } }, verbosity) {
-// 	if (state.config.verbosity !== verbosity) {
-// 		api.setVerbosity(verbosity).then(json => actions.gotConfig(json))
-// 	}
+const setVerbosity = ({ state, actions, opts: { api } }, verbosity) => {
+	if (state.config.verbosity !== verbosity) {
+		api.setVerbosity(verbosity).then(json => actions.gotConfig(json))
+	}
 
-// 	return state
-// }
+	return state
+}
 
-// function setUpdateCheck({ state, actions, opts: { api } }, checkForUpdate) {
-// 	if (state.config.checkForUpdate !== checkForUpdate) {
-// 		api.setUpdateCheck(checkForUpdate).then(json => actions.gotConfig(json))
-// 	}
+const setUpdateCheck = ({ state, actions, opts: { api } }, checkForUpdate) => {
+	if (state.config.checkForUpdate !== checkForUpdate) {
+		api.setUpdateCheck(checkForUpdate).then(json => actions.gotConfig(json))
+	}
 
-// 	return state
-// }
+	return state
+}
 
 export default {
 	getConfig,
 	gotConfig,
 
-	// setNotifyCalc,
-	// setNotifyMove,
+	setNotifyCalc,
+	setNotifyMove,
 
-	// setReservedSpace,
+	setReservedSpace,
 
 	toggleDryRun,
 	dryRunToggled,
 
-	// setRsyncFlags,
+	setRsyncFlags,
 
-	// setVerbosity,
-	// setUpdateCheck,
+	setVerbosity,
+	setUpdateCheck,
 }
