@@ -82,10 +82,8 @@ const resetState = ({ state }) => {
 			cache: null,
 			chosen: {},
 			items: [],
-			present: [],
-			elegible: [],
-			target: null,
 			plan: initPlan(state.core.unraid.disks),
+			target: null,
 		},
 		env: {
 			...state.env,
