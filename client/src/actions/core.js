@@ -72,6 +72,7 @@ const gotState = ({ state, actions }, core) => {
 
 const resetState = ({ state }) => {
 	return {
+		...state,
 		scatter: {
 			cache: null,
 			chosen: {},
