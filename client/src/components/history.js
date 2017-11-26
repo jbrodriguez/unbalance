@@ -127,7 +127,9 @@ export default class History extends PureComponent {
 						<div
 							className={cx('flexSection', 'col-xs-12', 'col-sm-3', 'center-xs', 'middle-xs', 'start-sm')}
 						>
-							<span className={cx('historyTitle')}>{constant.opMap[op.opKind]}</span>
+							<span className={cx('historyTitle', constant.opMap[op.opKind].color)}>
+								{constant.opMap[op.opKind].name}
+							</span>
 						</div>
 						<div className={cx('flexSection', 'col-xs-12', 'col-sm-4', 'center-xs', 'middle-xs', 'end-sm')}>
 							<span className={cx('rspacer', 'historyTime')}>

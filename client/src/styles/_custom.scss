@@ -267,7 +267,7 @@ p {
 
 .historyTitle {
 	font-size: 1.5em;
-	color: $lighter-gray;
+	// color: $lighter-gray;
 }
 
 .historyValue {
@@ -286,4 +286,16 @@ p {
 
 .historyTime {
 	color: $cement-gray;
+}
+
+.opOrange {
+	color: $bright-orange;
+}
+
+.opYellow {
+	color: #cbcb41;
+}
+
+.opWhite {
+	color: $lighter-gray;
 }
