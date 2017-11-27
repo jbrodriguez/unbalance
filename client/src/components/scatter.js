@@ -66,8 +66,6 @@ export default class Scatter extends PureComponent {
 		const plan = state.scatter.plan
 		const stateOk = state.core.unraid.state === 'STARTED'
 
-		console.log(`plan(${JSON.stringify(plan)})`)
-
 		if (!stateOk) {
 			return (
 				<section className={cx('row', 'bottom-spacer-half')}>

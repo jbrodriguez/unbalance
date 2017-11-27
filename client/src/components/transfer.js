@@ -72,7 +72,7 @@ export default class Transfers extends PureComponent {
 			const percent = percentage(command.transferred / command.size)
 
 			return (
-				<tr key={command.entry}>
+				<tr key={`${command.src}${command.entry}`}>
 					<td>{status}</td>
 					<td>{command.src}</td>
 					<td>
@@ -107,13 +107,17 @@ export default class Transfers extends PureComponent {
 
 		return (
 			<div>
-				<div className={cx('transferHeader', 'bottom-spacer-half')}>
+				<div className={cx('historyItem', 'bottom-spacer-half')}>
 					<section className={cx('row')}>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'start-sm')}>
-							<span>{constant.opMap[operation.opKind]}</span>
+							<span className={cx('historyTitle', constant.opMap[op.opKind].color)}>
+								{constant.opMap[operation.opKind].name}
+							</span>
 						</div>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'end-sm')}>
-							<span>{operation.dryRun && 'DRY RUN'}</span>
+							<span>
+								{operation.dryRun && <span className={cx('lspacer', 'historyLabel')}>dry</span>}
+							</span>
 						</div>
 					</section>
 				</div>

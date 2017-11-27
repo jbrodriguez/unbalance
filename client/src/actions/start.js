@@ -1,7 +1,7 @@
 const start = ({ state, actions, opts: { ws } }) => {
 	ws.receive(event => {
 		const data = JSON.parse(event.data)
-		console.log(`topic(${data.topic})`)
+		// console.log(`topic(${data.topic})`)
 		actions[data.topic](data.payload)
 	})
 

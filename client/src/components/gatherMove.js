@@ -18,20 +18,15 @@ export default class GatherMove extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { state, actions } = this.props.store
-
-		if (state.core.status === constant.OP_NEUTRAL) {
-			actions.clearConsole()
-		}
+		this.props.store.actions.clearConsole()
 	}
 
 	render() {
 		const { match, store: { state, actions } } = this.props
 
 		const preReqNotPresent = Object.keys(state.gather.chosen).length === 0 || !isValid(state.gather.target)
-		const runningMove = state.core.status === constant.OP_GATHER_MOVE
 
-		if (preReqNotPresent && !runningMove) {
+		if (preReqNotPresent) {
 			return null
 		}
 
@@ -77,7 +72,7 @@ export default class GatherMove extends PureComponent {
 					<div className={cx('col-xs-12')}>
 						<button
 							className={cx('btn', 'btn-primary')}
-							onClick={() => actions.gatherMove(state.gather.target)}
+							onClick={() => actions.gatherMove()}
 							disabled={transferDisabled || opInProgress}
 						>
 							PROCEED

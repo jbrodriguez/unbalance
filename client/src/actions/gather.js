@@ -57,9 +57,9 @@ const checkTarget = ({ state }, drive, checked) => {
 		...state,
 		gather: {
 			...state.gather,
+			target: checked ? drive : null,
 			plan: {
 				...state.gather.plan,
-				target: checked ? drive : null,
 				vdisks: {
 					...state.gather.plan.vdisks,
 					[drive.path]: {

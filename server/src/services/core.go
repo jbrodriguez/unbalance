@@ -575,7 +575,7 @@ func (c *Core) runOperation(opName string) {
 	// Initialize local variables
 	var calls int64
 	var callsPerDelta int64
-	var elapsed time.Duration
+	// var elapsed time.Duration
 
 	commandsExecuted := make([]string, 0)
 
@@ -706,7 +706,7 @@ func (c *Core) runOperation(opName string) {
 			return
 		}
 
-		c.commandCompleted(operation, command, elapsed)
+		c.commandCompleted(operation, command)
 
 		commandsExecuted = append(commandsExecuted, cmd)
 	}
@@ -737,12 +737,12 @@ func (c *Core) transferInterrupted(opName string, operation *domain.Operation, c
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
 
-func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command, elapsed time.Duration) {
+func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command) {
 	text := "Command Finished"
 	mlog.Info(text)
 
 	operation.BytesTransferred += command.Size
-	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
 
 	operation.Completed = percent
 	operation.Speed = speed
@@ -815,7 +815,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 
 func (c *Core) operationCompleted(opName string, operation *domain.Operation, commandsExecuted []string) {
 	operation.Finished = time.Now()
-	elapsed := time.Since(operation.Started)
+	elapsed := operation.Finished.Sub(operation.Started)
 
 	subject := fmt.Sprintf("unBALANCE - %s operation completed", strings.ToUpper(opName))
 	headline := fmt.Sprintf("%s operation has finished", opName)
@@ -831,7 +831,7 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 func (c *Core) endOperation(subject, headline string, commands []string, operation *domain.Operation) {
 	fstarted := operation.Started.Format(timeFormat)
 	ffinished := operation.Finished.Format(timeFormat)
-	elapsed := lib.Round(time.Since(operation.Started), time.Millisecond)
+	elapsed := lib.Round(operation.Finished.Sub(operation.Started), time.Millisecond)
 
 	c.updateHistory(c.state.History, operation)
 

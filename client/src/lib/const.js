@@ -7,9 +7,9 @@ export const OP_GATHER_PLAN = 5
 export const OP_GATHER_MOVE = 6
 
 export const opMap = {
-	[OP_SCATTER_MOVE]: 'SCATTER / MOVE',
-	[OP_SCATTER_COPY]: 'SCATTER / COPY',
-	[OP_GATHER_MOVE]: 'GATHER / MOVE',
+	[OP_SCATTER_MOVE]: { name: 'SCATTER / MOVE', color: 'opWhite' },
+	[OP_SCATTER_COPY]: { name: 'SCATTER / COPY', color: 'opYellow' },
+	[OP_GATHER_MOVE]: { name: 'GATHER / MOVE', color: 'opOrange' },
 }
 
 export const API_SCATTER_PLAN = 'api/scatter/plan'
@@ -17,3 +17,4 @@ export const API_SCATTER_MOVE = 'api/scatter/move'
 export const API_SCATTER_COPY = 'api/scatter/copy'
 
 export const API_GATHER_PLAN = 'api/gather/plan'
+export const API_GATHER_MOVE = 'api/gather/move'

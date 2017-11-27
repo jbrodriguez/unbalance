@@ -72,6 +72,7 @@ const gotState = ({ state, actions }, core) => {
 
 const resetState = ({ state }) => {
 	return {
+		...state,
 		scatter: {
 			cache: null,
 			chosen: {},
@@ -83,6 +84,7 @@ const resetState = ({ state }) => {
 			chosen: {},
 			items: [],
 			plan: initPlan(state.core.unraid.disks),
+			location: null,
 			target: null,
 		},
 		env: {
