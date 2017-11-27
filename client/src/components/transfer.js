@@ -76,7 +76,7 @@ export default class Transfers extends PureComponent {
 					<td>{status}</td>
 					<td>{command.src}</td>
 					<td>
-						rsync {operation.rsyncStrFlags} &quot;{command.entry}&quot; &quot;{command.dst}&quot;
+						rsync {operation.rsyncStrArgs} &quot;{command.entry}&quot; &quot;{command.dst}&quot;
 					</td>
 					<td>
 						<div className={cx('progress')}>
