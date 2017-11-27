@@ -233,8 +233,8 @@ export default class Settings extends PureComponent {
 								By default, rsync is invoked with <b>-avPRX</b> flags.
 							</p>
 							<p>
-								Here you can add custom flags, except for the dry run argument which will be
-								automatically added, if needed.
+								Here you can add custom flags, except for the dry run flag which will be automatically
+								added, if needed.
 							</p>
 							<p>
 								Be careful with the flags you choose, since it can drastically alter the expected

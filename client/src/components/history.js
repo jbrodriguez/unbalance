@@ -82,7 +82,7 @@ export default class History extends PureComponent {
 					const percent = percentage(command.transferred / command.size)
 
 					return (
-						<tr key={`${command.src}${command.entry}`}>
+						<tr key={command.id}>
 							<td>{status}</td>
 							<td>{command.src}</td>
 							<td>
