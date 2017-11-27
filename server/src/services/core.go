@@ -431,6 +431,7 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 			}
 
 			operation.Commands = append(operation.Commands, &domain.Command{
+				ID:    shortid.MustGenerate(),
 				Src:   item.Location,
 				Dst:   vdisk.Path + string(filepath.Separator),
 				Entry: entry,
@@ -520,6 +521,7 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 			}
 
 			operation.Commands = append(operation.Commands, &domain.Command{
+				ID:    shortid.MustGenerate(),
 				Src:   item.Location,
 				Dst:   vdisk.Path + string(filepath.Separator),
 				Entry: entry,

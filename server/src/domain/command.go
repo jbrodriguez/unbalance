@@ -1,6 +1,7 @@
 package domain
 
 type Command struct {
+	ID          string `json:"id"`
 	Src         string `json:"src"`
 	Dst         string `json:"dst"`
 	Entry       string `json:"entry"`
