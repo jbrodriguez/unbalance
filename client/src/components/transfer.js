@@ -110,7 +110,7 @@ export default class Transfers extends PureComponent {
 				<div className={cx('historyItem', 'bottom-spacer-half')}>
 					<section className={cx('row')}>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'start-sm')}>
-							<span className={cx('historyTitle', constant.opMap[op.opKind].color)}>
+							<span className={cx('historyTitle', constant.opMap[operation.opKind].color)}>
 								{constant.opMap[operation.opKind].name}
 							</span>
 						</div>
