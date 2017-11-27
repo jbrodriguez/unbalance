@@ -114,7 +114,7 @@ export default class Settings extends PureComponent {
 								first, in order to receive notifications from unBALANCE.
 							</p>
 
-							<span> Calculate: </span>
+							<span> Planning: </span>
 							<input
 								id="calc0"
 								className={cx('lspacer')}
