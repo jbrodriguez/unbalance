@@ -90,8 +90,8 @@ const dryRunToggled = ({ state, actions }, config) => {
 	}
 }
 
-const setRsyncFlags = ({ state, actions, opts: { api } }, flags) => {
-	api.setRsyncFlags(flags).then(json => actions.gotConfig(json))
+const setRsyncArgs = ({ state, actions, opts: { api } }, args) => {
+	api.setRsyncArgs(args).then(json => actions.gotConfig(json))
 
 	return state
 }
@@ -124,7 +124,7 @@ export default {
 	toggleDryRun,
 	dryRunToggled,
 
-	setRsyncFlags,
+	setRsyncArgs,
 
 	setVerbosity,
 	setUpdateCheck,

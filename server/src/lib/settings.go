@@ -19,7 +19,7 @@ type Config struct {
 	NotifyMove     int      `json:"notifyMove"`
 	ReservedAmount int64    `json:"reservedAmount"`
 	ReservedUnit   string   `json:"reservedUnit"`
-	RsyncFlags     []string `json:"rsyncFlags"`
+	RsyncArgs      []string `json:"rsyncArgs"`
 	Version        string   `json:"version"`
 	Verbosity      int      `json:"verbosity"`
 	CheckForUpdate int      `json:"checkForUpdate"`
@@ -46,7 +46,7 @@ const defaultConfLocation = "/boot/config/plugins/unbalance"
 
 // NewSettings -
 func NewSettings(name, version string, locations []string) (*Settings, error) {
-	var port, logDir, folders, rsyncFlags, apiFolders string
+	var port, logDir, folders, rsyncFlags, rsyncArgs, apiFolders string
 	var dryRun bool
 	var notifyCalc, notifyMove, verbosity, checkForUpdate int
 
@@ -58,7 +58,8 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	flagset.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
 	flagset.IntVar(&notifyCalc, "notifyCalc", 0, "notify via email after calculation operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flagset.IntVar(&notifyMove, "notifyMove", 0, "notify via email after move operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
-	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags")
+	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "custom rsync flags") // to be deprecated
+	flagset.StringVar(&rsyncArgs, "rsyncArgs", "", "custom rsync arguments")
 	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 	flagset.IntVar(&verbosity, "verbosity", 0, "include rsync output in log files: 0 (default) - include; 1 - do not include")
 	flagset.IntVar(&checkForUpdate, "checkForUpdate", 1, "checkForUpdate: 0 - dont' check; 1 (default) - check")
@@ -74,10 +75,10 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 
 	s := &Settings{}
 
-	if rsyncFlags == "" {
-		s.RsyncFlags = []string{"-avPRX"}
+	if rsyncArgs == "" {
+		s.RsyncArgs = []string{""}
 	} else {
-		s.RsyncFlags = strings.Split(rsyncFlags, "|")
+		s.RsyncArgs = strings.Split(rsyncArgs, "|")
 	}
 
 	s.DryRun = dryRun
@@ -125,8 +126,8 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	rsyncFlags := strings.Join(s.RsyncFlags, "|")
-	if err = WriteLine(tmpFile, fmt.Sprintf("rsyncFlags=%s", rsyncFlags)); err != nil {
+	rsyncArgs := strings.Join(s.RsyncArgs, "|")
+	if err = WriteLine(tmpFile, fmt.Sprintf("rsyncArgs=%s", rsyncArgs)); err != nil {
 		return err
 	}
 

@@ -2,5 +2,5 @@ package dto
 
 // Rsync -
 type Rsync struct {
-	Flags []string `json:"rsyncFlags"`
+	Args []string `json:"rsyncArgs"`
 }

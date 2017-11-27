@@ -7,6 +7,7 @@ const (
 	CHAN_CAPACITY    = 3
 	HISTORY_CAPACITY = 25
 	HISTORY_FILENAME = "unbalance.hist"
+	RSYNC_ARGS       = "-avPRX"
 
 	OP_NEUTRAL          = 0
 	OP_SCATTER_PLAN     = 1
@@ -58,4 +59,5 @@ const (
 	API_SET_VERBOSITY   = "config/set/verbosity"
 	API_SET_CHECKUPDATE = "config/set/checkupdate"
 	API_GET_UPDATE      = "config/get/update"
+	API_SET_RSYNC_ARGS  = "config/set/rsyncArgs"
 )

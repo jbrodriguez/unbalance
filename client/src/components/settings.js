@@ -19,7 +19,7 @@ export default class Settings extends PureComponent {
 		this.state = {
 			reservedAmount: props.store.state.config.reservedAmount,
 			reservedUnit: props.store.state.config.reservedUnit,
-			rsyncFlags: props.store.state.config.rsyncFlags,
+			rsyncArgs: props.store.state.config.rsyncArgs,
 		}
 	}
 
@@ -29,16 +29,16 @@ export default class Settings extends PureComponent {
 	}
 
 	componentWillReceiveProps(next) {
-		const { reservedAmount, reservedUnit, rsyncFlags } = next.store.state.config
+		const { reservedAmount, reservedUnit, rsyncArgs } = next.store.state.config
 		if (
 			reservedAmount !== this.state.reservedAmount ||
 			reservedUnit !== this.state.reservedUnit ||
-			rsyncFlags !== this.state.rsyncFlags
+			rsyncArgs !== this.state.rsyncArgs
 		) {
 			this.setState({
 				reservedUnit,
 				reservedAmount,
-				rsyncFlags,
+				rsyncArgs,
 			})
 		}
 	}
@@ -70,21 +70,21 @@ export default class Settings extends PureComponent {
 		setReservedSpace(this.state.reservedAmount, this.state.reservedUnit)
 	}
 
-	_onChangeRsyncFlags = e => {
+	_onChangeRsyncArgs = e => {
 		this.setState({
-			rsyncFlags: e.target.value.split(' '),
+			rsyncArgs: e.target.value.split(' '),
 		})
 	}
 
-	_setRsyncFlags = () => {
-		const { setRsyncFlags } = this.props.store.actions
-		const flags = this.state.rsyncFlags.join(' ')
-		setRsyncFlags(flags.trim().split(' '))
+	_setRsyncArgs = () => {
+		const { setRsyncArgs } = this.props.store.actions
+		const args = this.state.rsyncArgs.join(' ')
+		setRsyncArgs(args.trim().split(' '))
 	}
 
 	_setRsyncDefault = () => {
-		const { setRsyncFlags } = this.props.store.actions
-		setRsyncFlags(['-avPRX'])
+		const { setRsyncArgs } = this.props.store.actions
+		setRsyncArgs([''])
 	}
 
 	setVerbosity = verbosity => () => {
@@ -100,7 +100,7 @@ export default class Settings extends PureComponent {
 	render() {
 		const { state } = this.props.store
 
-		const flags = this.state.rsyncFlags.join(' ')
+		const args = this.state.rsyncArgs.join(' ')
 
 		return (
 			<div>
@@ -228,24 +228,17 @@ export default class Settings extends PureComponent {
 						<div>
 							<h3>CUSTOM RSYNC FLAGS</h3>
 
-							<p>Internally unBALANCE uses rsync to transfer files across disks.</p>
+							<p>Internally, unBALANCE uses rsync to transfer files across disks.</p>
 							<p>
 								By default, rsync is invoked with <b>-avPRX</b> flags.
 							</p>
 							<p>
-								Here you can set custom flags to override the default ones, except for the dry run flag
-								which will be automatically added, if needed.
+								Here you can add custom flags, except for the dry run argument which will be
+								automatically added, if needed.
 							</p>
-							<p>It&apos;s strongly recommended to keep the -R flag, for optimal operation.</p>
 							<p>
 								Be careful with the flags you choose, since it can drastically alter the expected
 								behaviour of rsync under unBALANCE.
-							</p>
-							<p>
-								<span className={cx('opWarning')}>
-									Also note that for proper VALIDATE functionality, the custom flags MUST being with
-									&quot;-a&quot;.
-								</span>
 							</p>
 
 							<div className={cx('row')}>
@@ -254,18 +247,18 @@ export default class Settings extends PureComponent {
 										<input
 											className={cx('addon-field')}
 											type="string"
-											value={flags}
-											onChange={this._onChangeRsyncFlags}
+											value={args}
+											onChange={this._onChangeRsyncArgs}
 										/>
 									</div>
 								</div>
 								<div className={cx('col-xs-4')}>
-									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncFlags}>
+									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncArgs}>
 										Apply
 									</button>
 									&nbsp;
 									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault}>
-										Reset to default
+										Reset to empty
 									</button>
 								</div>
 							</div>

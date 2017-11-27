@@ -86,7 +86,7 @@ export default class History extends PureComponent {
 							<td>{status}</td>
 							<td>{command.src}</td>
 							<td>
-								rsync {op.rsyncStrFlags} &quot;{command.entry}&quot; &quot;{command.dst}&quot;
+								rsync {op.rsyncStrArgs} &quot;{command.entry}&quot; &quot;{command.dst}&quot;
 							</td>
 							<td>
 								<div className={cx('progress')}>

@@ -129,7 +129,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.API_SET_VERBOSITY, c.setVerbosity)
 	c.actor.Register(common.API_SET_CHECKUPDATE, c.setCheckUpdate)
 	c.actor.Register(common.API_GET_UPDATE, c.getUpdate)
-	// c.actor.Register("/config/set/rsyncFlags", c.setRsyncFlags)
+	c.actor.Register("/config/set/rsyncArgs", c.setRsyncArgs)
 	// c.actor.Register("validate", c.validate)
 	// c.actor.Register("getLog", c.getLog)
 
@@ -145,13 +145,6 @@ func (c *Core) Stop() {
 
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
-
-	rsyncFlags := strings.Join(c.settings.RsyncFlags, " ")
-	if rsyncFlags == "-avX --partial" || rsyncFlags == "-avRX --partial" {
-		c.settings.RsyncFlags = []string{"-avPRX"}
-		c.settings.Save()
-	}
-
 	msg.Reply <- &c.settings.Config
 }
 
@@ -407,16 +400,15 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 		OpKind:          status,
 		BytesToTransfer: plan.BytesToTransfer,
 		DryRun:          c.settings.DryRun,
-		RsyncFlags:      c.settings.RsyncFlags,
 	}
 
-	mlog.Info("vdisks(%+v)", plan.VDisks)
+	operation.RsyncArgs = append([]string{common.RSYNC_ARGS}, c.settings.RsyncArgs...)
 
-	// user may have changed rsync flags or dry-run setting, adjust for it
+	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
-		operation.RsyncFlags = append(operation.RsyncFlags, "--dry-run")
+		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
 	}
-	operation.RsyncStrFlags = strings.Join(operation.RsyncFlags, " ")
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
 	operation.Commands = make([]*domain.Command, 0)
 
@@ -489,17 +481,18 @@ func (c *Core) scatterCopy(msg *pubsub.Message) {
 // GATHER TRANSFER
 func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, plan *domain.Plan) *domain.Operation {
 	operation := &domain.Operation{
-		ID:         shortid.MustGenerate(),
-		OpKind:     status,
-		DryRun:     c.settings.DryRun,
-		RsyncFlags: c.settings.RsyncFlags,
+		ID:     shortid.MustGenerate(),
+		OpKind: status,
+		DryRun: c.settings.DryRun,
 	}
 
-	// user may have changed rsync flags or dry-run setting, adjust for it
+	operation.RsyncArgs = append([]string{common.RSYNC_ARGS}, c.settings.RsyncArgs...)
+
+	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
-		operation.RsyncFlags = append(operation.RsyncFlags, "--dry-run")
+		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
 	}
-	operation.RsyncStrFlags = strings.Join(operation.RsyncFlags, " ")
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
 	operation.Commands = make([]*domain.Command, 0)
 
@@ -581,11 +574,11 @@ func (c *Core) runOperation(opName string) {
 
 	for _, command := range operation.Commands {
 		args := append(
-			operation.RsyncFlags,
+			operation.RsyncArgs,
 			command.Entry,
 			command.Dst,
 		)
-		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrFlags, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 		mlog.Info("Command Started: (src: %s) %s ", command.Src, cmd)
 
 		operation.Line = cmd
@@ -970,12 +963,12 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-func (c *Core) setRsyncFlags(msg *pubsub.Message) {
+func (c *Core) setRsyncArgs(msg *pubsub.Message) {
 	// mlog.Warning("payload: %+v", msg.Payload)
 	payload, ok := msg.Payload.(string)
 	if !ok {
-		mlog.Warning("Unable to convert Rsync Flags parameters")
-		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert Rsync Flags parameters"}
+		mlog.Warning("Unable to convert Rsync arguments")
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert Rsync arguments"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		msg.Reply <- &c.settings.Config
@@ -986,16 +979,16 @@ func (c *Core) setRsyncFlags(msg *pubsub.Message) {
 	var rsync dto.Rsync
 	err := json.Unmarshal([]byte(payload), &rsync)
 	if err != nil {
-		mlog.Warning("Unable to bind rsyncFlags parameters: %s", err)
-		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind rsyncFlags parameters"}
+		mlog.Warning("Unable to bind rsyncArgs parameters: %s", err)
+		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind rsyncArgs parameters"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		return
 		// mlog.Fatalf(err.Error())
 	}
 
-	mlog.Info("Setting rsyncFlags to (%s)", strings.Join(rsync.Flags, " "))
+	mlog.Info("Setting rsyncArgs to (%s)", strings.Join(rsync.Args, " "))
 
-	c.settings.RsyncFlags = rsync.Flags
+	c.settings.RsyncArgs = rsync.Args
 	c.settings.Save()
 
 	msg.Reply <- &c.settings.Config
@@ -1043,7 +1036,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 	message := "\n\nThe following commands will be executed:\n\n"
 
 	for _, command := range operation.Commands {
-		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.Src, operation.RsyncStrFlags, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.Src, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 		message += cmd + "\n"
 	}
 
