@@ -1088,7 +1088,7 @@ func (c *Core) historyRead() (*domain.History, error) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(history)
+	err = decoder.Decode(&history)
 	if err != nil {
 		empty := &domain.History{
 			Items: make(map[string]*domain.Operation, 0),
