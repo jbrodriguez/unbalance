@@ -7,6 +7,7 @@ type Entry struct {
 }
 
 // Node -
+// {label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},
 type Node struct {
 	Label     string `json:"label"`
 	Checkbox  bool   `json:"checkbox"`
@@ -14,5 +15,3 @@ type Node struct {
 	Children  []Node `json:"children"`
 	Path      string `json:"path"`
 }
-
-// 	{label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},

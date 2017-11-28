@@ -295,7 +295,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 }
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
-	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
 	s.bus.Pub(msg, common.APIToggleDryRun)
 
 	reply := <-msg.Reply
