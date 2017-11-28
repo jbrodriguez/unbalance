@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -66,13 +67,13 @@ func (a *App) Run(settings *lib.Settings) {
 
 	server.Start()
 	mlog.FatalIfError(array.Start())
-	planner.Start()
+	mlog.FatalIfError(planner.Start())
 	mlog.FatalIfError(core.Start())
 
 	mlog.Info("Press Ctrl+C to stop ...")
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 	mlog.Info("Received signal: (%s) ... shutting down the app now ...", <-c)
 
 	core.Stop()
@@ -80,5 +81,8 @@ func (a *App) Run(settings *lib.Settings) {
 	array.Stop()
 	server.Stop()
 
-	mlog.Stop()
+	err := mlog.Stop()
+	if err != nil {
+		log.Printf("Unable to stop mlog: %s", err)
+	}
 }

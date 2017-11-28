@@ -21,6 +21,7 @@ import (
 	"github.com/jbrodriguez/pubsub"
 )
 
+// Planner -
 type Planner struct {
 	bus      *pubsub.PubSub
 	settings *lib.Settings
@@ -30,7 +31,7 @@ type Planner struct {
 	reStat  *regexp.Regexp
 }
 
-// NewCore -
+// NewPlanner -
 func NewPlanner(bus *pubsub.PubSub, settings *lib.Settings) *Planner {
 	calc := &Planner{
 		bus:      bus,
@@ -48,8 +49,8 @@ func NewPlanner(bus *pubsub.PubSub, settings *lib.Settings) *Planner {
 func (c *Planner) Start() (err error) {
 	mlog.Info("starting service Planner ...")
 
-	c.actor.Register(common.INT_SCATTER_PLAN, c.scatter)
-	c.actor.Register(common.INT_GATHER_PLAN, c.gather)
+	c.actor.Register(common.IntScatterPlan, c.scatter)
+	c.actor.Register(common.IntGatherPlan, c.gather)
 
 	go c.actor.React()
 
@@ -82,7 +83,7 @@ func (c *Planner) getIssues(disk *domain.Disk, path string) (int64, int64, int64
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 
 	// Check owner and permission issues
-	outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: fmt.Sprintf("Scanning %s on %s", path, disk.Path)}
+	outbound := &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: fmt.Sprintf("Scanning %s on %s", path, disk.Path)}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	folder := filepath.Join(disk.Path, path)
@@ -99,7 +100,7 @@ func (c *Planner) getIssues(disk *domain.Disk, path string) (int64, int64, int64
 
 	mlog.Info("getIssues:Executing:(%s)", cmdText)
 
-	lib.Shell(cmdText, mlog.Warning, "getIssues:find/stat:", "", func(line string) {
+	err := lib.Shell(cmdText, mlog.Warning, "getIssues:find/stat:", "", func(line string) {
 		result := c.reStat.FindStringSubmatch(line)
 		if result == nil {
 			mlog.Warning("getIssues:Unable to parse:(%s)", line)
@@ -152,9 +153,13 @@ func (c *Planner) getIssues(disk *domain.Disk, path string) (int64, int64, int64
 		}
 	})
 
+	if err != nil {
+		mlog.Warning("getIssues:Unable to execute %s: %s", cmdText, err)
+	}
+
 	mlog.Info("getIssues:owner(%d),group(%d),folder(%d),file(%d)", ownerIssue, groupIssue, folderIssue, fileIssue)
 
-	outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: "Checked permissions ..."}
+	outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: "Checked permissions ..."}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	return ownerIssue, groupIssue, folderIssue, fileIssue
@@ -181,7 +186,7 @@ func (c *Planner) getEntries(src string, folder string) []*domain.Item {
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
-		outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: msg}
+		outbound := &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		return items
@@ -204,7 +209,7 @@ func (c *Planner) getEntries(src string, folder string) []*domain.Item {
 
 	mlog.Info("getEntries:Executing:(%s)", cmdText)
 
-	lib.Shell(cmdText, mlog.Warning, "getEntries:find/du:", "", func(line string) {
+	err = lib.Shell(cmdText, mlog.Warning, "getEntries:find/du:", "", func(line string) {
 		mlog.Info("getEntries:find(%s): %s", scanFolder, line)
 
 		result := c.reItems.FindStringSubmatch(line)
@@ -215,9 +220,13 @@ func (c *Planner) getEntries(src string, folder string) []*domain.Item {
 		items = append(items, item)
 
 		msg := fmt.Sprintf("Found %s (%s)", filepath.Base(item.Name), lib.ByteSize(size))
-		outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: msg}
+		outbound := &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	})
+
+	if err != nil {
+		mlog.Warning("getEntries:Unable to execute (%s): %s", cmdText, err)
+	}
 
 	return items
 }
@@ -265,14 +274,11 @@ func (c *Planner) getReservedAmount(size int64) int64 {
 	switch c.settings.ReservedUnit {
 	case "%":
 		fcalc := size * c.settings.ReservedAmount / 100
-		reserved = int64(fcalc)
-		break
+		reserved = fcalc
 	case "Mb":
 		reserved = c.settings.ReservedAmount * 1000 * 1000
-		break
 	case "Gb":
 		reserved = c.settings.ReservedAmount * 1000 * 1000 * 1000
-		break
 	default:
 		reserved = lib.ReservedSpace
 	}
@@ -305,7 +311,7 @@ func (c *Planner) scatter(msg *pubsub.Message) {
 	plan := state.Plan
 	plan.Started = time.Now()
 
-	outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_STARTED, Payload: "Planning started"}
+	outbound := &dto.Packet{Topic: common.WsScatterPlanStarted, Payload: "Planning started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// create two slices
@@ -363,7 +369,7 @@ func (c *Planner) scatter(msg *pubsub.Message) {
 
 		for _, disk := range dstDisks {
 			msg := fmt.Sprintf("Trying to allocate folders to %s ...", disk.Name)
-			outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: msg}
+			outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: msg}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("scatterPlan:%s", msg)
 			// time.Sleep(2 * time.Second)
@@ -399,7 +405,7 @@ func (c *Planner) scatter(msg *pubsub.Message) {
 	ffinished := plan.Finished.Format(timeFormat)
 
 	// Send to frontend console started/ended/elapsed times
-	c.sendTimeFeedbackToFrontend(common.WS_SCATTERPLAN_PROGRESS, fstarted, ffinished, elapsed)
+	c.sendTimeFeedbackToFrontend(common.WsScatterPlanProgress, fstarted, ffinished, elapsed)
 
 	// some logging
 	if len(willBeTransferred) == 0 {
@@ -416,14 +422,14 @@ func (c *Planner) scatter(msg *pubsub.Message) {
 	notTransferred := ""
 
 	if len(items) > 0 {
-		outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: "The following items will not be transferred, because there's not enough space in the target disks:\n"}
+		outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: "The following items will not be transferred, because there's not enough space in the target disks:\n"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		mlog.Info("scatterPlan:%d items will NOT be transferred.", len(items))
 		for _, item := range items {
 			notTransferred += item.Path + "\n"
 
-			outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: item.Path}
+			outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: item.Path}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("scatterPlan:notTransferred(%s)", item.Path)
 		}
@@ -463,10 +469,10 @@ func (c *Planner) scatter(msg *pubsub.Message) {
 	mlog.Info("Bytes To Transfer: %s", lib.ByteSize(plan.BytesToTransfer))
 	mlog.Info("---------------------------------------------------------")
 
-	outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_PROGRESS, Payload: "Planning Finished"}
+	outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: "Planning Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	c.bus.Pub(&pubsub.Message{Payload: plan}, common.INT_SCATTER_PLAN_FINISHED)
+	c.bus.Pub(&pubsub.Message{Payload: plan}, common.IntScatterPlanFinished)
 }
 
 func (c *Planner) gather(msg *pubsub.Message) {
@@ -477,7 +483,7 @@ func (c *Planner) gather(msg *pubsub.Message) {
 	plan := state.Plan
 	plan.Started = time.Now()
 
-	outbound := &dto.Packet{Topic: common.WS_GATHERPLAN_STARTED, Payload: "Planning Started"}
+	outbound := &dto.Packet{Topic: common.WsGatherPlanStarted, Payload: "Planning Started"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
@@ -522,7 +528,7 @@ func (c *Planner) gather(msg *pubsub.Message) {
 
 		for _, disk := range state.Unraid.Disks {
 			msg := fmt.Sprintf("Trying to allocate folders to %s ...", disk.Name)
-			outbound = &dto.Packet{Topic: common.WS_GATHERPLAN_PROGRESS, Payload: msg}
+			outbound = &dto.Packet{Topic: common.WsGatherPlanProgress, Payload: msg}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("gatherPlan:%s", msg)
 			// time.Sleep(2 * time.Second)
@@ -554,7 +560,7 @@ func (c *Planner) gather(msg *pubsub.Message) {
 	ffinished := plan.Finished.Format(timeFormat)
 
 	// Send to frontend console started/ended/elapsed times
-	c.sendTimeFeedbackToFrontend(common.WS_GATHERPLAN_PROGRESS, fstarted, ffinished, elapsed)
+	c.sendTimeFeedbackToFrontend(common.WsGatherPlanProgress, fstarted, ffinished, elapsed)
 
 	// send to frontend the items that will not be transferred, if any
 	// notTransferred holds a string representation of all the items, separated by a '\n'
@@ -592,8 +598,8 @@ func (c *Planner) gather(msg *pubsub.Message) {
 	mlog.Info("Bytes To Transfer: %s", lib.ByteSize(plan.BytesToTransfer))
 	mlog.Info("---------------------------------------------------------")
 
-	outbound = &dto.Packet{Topic: common.WS_GATHERPLAN_PROGRESS, Payload: "Planning Finished"}
+	outbound = &dto.Packet{Topic: common.WsGatherPlanProgress, Payload: "Planning Finished"}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	c.bus.Pub(&pubsub.Message{Payload: plan}, common.INT_GATHER_PLAN_FINISHED)
+	c.bus.Pub(&pubsub.Message{Payload: plan}, common.IntGatherPlanFinished)
 }

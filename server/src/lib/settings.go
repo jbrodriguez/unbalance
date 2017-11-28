@@ -135,7 +135,10 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	os.Rename(tmpFile, confLocation)
+	err = os.Rename(tmpFile, confLocation)
+	if err != nil {
+		return err
+	}
 
 	return
 }

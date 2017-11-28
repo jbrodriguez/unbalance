@@ -1,5 +1,6 @@
 package domain
 
+// Disk -
 type Disk struct {
 	ID     int64  `json:"id"`
 	Name   string `json:"name"`

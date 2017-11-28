@@ -20,6 +20,7 @@ import (
 	ini "github.com/vaughan0/go-ini"
 )
 
+// Array -
 type Array struct {
 	bus      *pubsub.PubSub
 	settings *lib.Settings
@@ -46,9 +47,9 @@ func (a *Array) Start() (err error) {
 		return err
 	}
 
-	a.actor.Register(common.INT_GET_ARRAY_STATUS, a.getStatus)
-	a.actor.Register(common.API_GET_TREE, a.getTree)
-	a.actor.Register(common.API_GET_LOG, a.getLog)
+	a.actor.Register(common.IntGetArrayStatus, a.getStatus)
+	a.actor.Register(common.APIGetTree, a.getTree)
+	a.actor.Register(common.APIGetLog, a.getLog)
 
 	go a.actor.React()
 
@@ -60,6 +61,7 @@ func (a *Array) Stop() {
 	mlog.Info("stopped service Array ...")
 }
 
+// SanityCheck -
 func (a *Array) SanityCheck(locations []string) error {
 	location := lib.SearchFile("var.ini", locations)
 	if location == "" {
@@ -94,7 +96,7 @@ func getArrayData() (*domain.Unraid, error) {
 
 	tmp, _ := file.Get("", "mdNumDisks")
 	numDisks := strings.Replace(tmp, "\"", "", -1)
-	unraid.NumDisks, err = strconv.ParseInt(numDisks, 10, 64)
+	unraid.NumDisks, _ = strconv.ParseInt(numDisks, 10, 64)
 
 	tmp, _ = file.Get("", "mdNumProtected")
 	numProtected := strings.Replace(tmp, "\"", "", -1)
@@ -233,9 +235,13 @@ func (a *Array) getLog(msg *pubsub.Message) {
 
 	log := make([]string, 0)
 
-	lib.Shell(cmd, mlog.Warning, "Get Log error:", "", func(line string) {
+	err := lib.Shell(cmd, mlog.Warning, "Get Log error:", "", func(line string) {
 		log = append(log, line)
 	})
+
+	if err != nil {
+		mlog.Warning("Unable to get log: %s", err)
+	}
 
 	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
 	a.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")

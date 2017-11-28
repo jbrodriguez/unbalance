@@ -2,8 +2,6 @@ package algorithm
 
 import (
 	"jbrodriguez/unbalance/server/src/domain"
-
-	"github.com/jbrodriguez/mlog"
 )
 
 // Greedy -
@@ -26,6 +24,7 @@ func NewGreedy(disk *domain.Disk, entries []*domain.Item, total, reserved int64)
 	return g
 }
 
+// FitAll - Make sure that the disk has enough space to hold all given entries
 func (g *Greedy) FitAll() *domain.Bin {
 	sizeToFit := g.toFit
 	bin := &domain.Bin{}
@@ -40,15 +39,9 @@ func (g *Greedy) FitAll() *domain.Bin {
 		}
 	}
 
-	mlog.Info("disk(%s)-sizeToFit+buffer(%d)-diskFree(%d)", g.disk.Path, sizeToFit+g.buffer, g.disk.Free)
-
 	if sizeToFit+g.buffer > g.disk.Free {
-		// g.disk.Bin = nil
 		return nil
 	}
 
-	// g.disk.Bin = bin
-
 	return bin
-	// if g.disk.Free >= g.toFit + reserved
 }
