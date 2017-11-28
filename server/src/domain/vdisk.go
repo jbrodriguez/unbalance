@@ -1,5 +1,6 @@
 package domain
 
+// VDisk -
 type VDisk struct {
 	Path        string `json:"path"`
 	PlannedFree int64  `json:"plannedFree"`

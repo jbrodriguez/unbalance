@@ -12,16 +12,7 @@ import (
 	"time"
 )
 
-const (
-	byteUnit = 1.0
-	kilobyte = 1024 * byteUnit
-	megabyte = 1024 * kilobyte
-	gigabyte = 1024 * megabyte
-	terabyte = 1024 * gigabyte
-)
-
-// Exists -
-// Check if File / Directory Exists
+// Exists - Check if File / Directory Exists
 func Exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 
@@ -42,7 +33,8 @@ func IsEmpty(folder string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
+	// defer f.Close()
 
 	_, err = f.Readdirnames(1) // Or f.Readdir(1)
 	if err == io.EOF {
@@ -87,11 +79,8 @@ func WriteLine(fullpath, line string) error {
 	defer f.Close()
 
 	_, err = f.WriteString(line + "\n")
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 // WriteLines -
@@ -140,7 +129,7 @@ func Max(x, y int64) int64 {
 	return y
 }
 
-// Download -
+// GetLatestVersion  -
 func GetLatestVersion(url string) (dst string, err error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -158,6 +147,7 @@ func GetLatestVersion(url string) (dst string, err error) {
 	return string(body), nil
 }
 
+// Sendmail -
 func Sendmail(cmd string, notify int, subject, message string, dryRun bool) (err error) {
 	if notify == 0 {
 		return nil

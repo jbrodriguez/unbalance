@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// History -
 type History struct {
 	LastChecked time.Time             `json:"lastChecked"`
 	Items       map[string]*Operation `json:"items"`

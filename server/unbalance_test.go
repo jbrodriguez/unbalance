@@ -2,16 +2,19 @@ package main
 
 import (
 	"encoding/json"
+
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	// "github.com/labstack/echo"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+
 	"jbrodriguez/unbalance/server/src/algorithm"
+	"jbrodriguez/unbalance/server/src/domain"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/model"
 	"jbrodriguez/unbalance/server/src/services"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	// "net/http"
 	// "net/http/httptest"
 	"os"
@@ -39,45 +42,46 @@ func TestMain(m *testing.M) {
 
 	// tearDown(home)
 	// assert.NoError(m, err)
-
-	folders := []string{
-		"/Files/Media/Videos/Movies",
-		"/Backup",
-		"/TVShows",
-		"/films/blu rip",
+	locations := []string{
+		"/boot/config/plugins/unbalance",
+		home,
 	}
+
+	// settings, err := lib.NewSettings("unbalance.conf", version, locations)
+
+	// folders := []string{
+	// 	"/Files/Media/Videos/Movies",
+	// 	"/Backup",
+	// 	"/TVShows",
+	// 	"/films/blu rip",
+	// }
 
 	bus = pubsub.New(23)
 
-	settings, _ := lib.NewSettings("test")
-	settings.Folders = folders
+	settings, _ := lib.NewSettings("test", "vtest", locations)
 	settings.DryRun = false
 	settings.ReservedAmount = 450000000 / 1000 / 1000
 	settings.ReservedUnit = "Mb"
 	settings.APIFolders = []string{filepath.Join(home, "tmp/unbalance", "var/local/emhttp")}
-	settings.RsyncFlags = []string{"-avRX", "--partial"}
+	settings.RsyncArgs = []string{"-avPRX"}
 
-	condition := &model.Condition{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108, NewFree: 0}
-	disks := []*model.Disk{
-		&model.Disk{ID: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
-		&model.Disk{ID: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
-		&model.Disk{ID: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, NewFree: 0, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
+	unraid := &domain.Unraid{NumDisks: 3, NumProtected: 3, Synced: time.Now(), SyncErrs: 0, Resync: 0, ResyncPos: 0, State: "STARTED", Size: 300, Free: 108}
+	disks := []*domain.Disk{
+		&domain.Disk{ID: 1, Name: "md1", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk1"), Device: "sdc", Free: 1000000000000, Size: 4398046511104, Serial: "SAMSUNG_HD01", Status: "DISK_OK"},
+		&domain.Disk{ID: 2, Name: "md2", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk2"), Device: "sdd", Free: 1000000000000, Size: 4398046511104, Serial: "SAMSUNG_HD02", Status: "DISK_OK"},
+		&domain.Disk{ID: 3, Name: "md3", Path: filepath.Join(home, "tmp/unbalance", "mnt/disk3"), Device: "sde", Free: 500000000000, Size: 4398046511104, Serial: "SAMSUNG_HD03", Status: "DISK_OK"},
 	}
 
 	// assert.Equal(m, 3, len(disks))
 
-	unraid := &model.Unraid{}
-	unraid.Condition = condition
 	unraid.Disks = disks
-	unraid.SourceDiskName = ""
-	unraid.BytesToMove = 0
 
 	fmt.Println("siete")
 	core := services.NewCore(bus, settings)
-	core.SetStorage(unraid)
+	// core.SetStorage(unraid)
 
 	fmt.Println("ocho")
-	mlog.Info("before start")
+	// mlog.Info("before start")
 	core.Start()
 	// require.Nil(m, err, "core.start error should be nil")
 
@@ -94,27 +98,26 @@ func TestMain(m *testing.M) {
 func TestOk(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
-	disk := &model.Disk{
-		ID:      1,
-		Name:    "md1",
-		Path:    "/mnt/disk1",
-		Device:  "sdc",
-		Free:    100,
-		NewFree: 0,
-		Size:    100,
-		Serial:  "SAMSUNG_HD15",
-		Status:  "DISK_OK",
+	disk := &domain.Disk{
+		ID:     1,
+		Name:   "md1",
+		Path:   "/mnt/disk1",
+		Device: "sdc",
+		Free:   100,
+		Size:   100,
+		Serial: "SAMSUNG_HD15",
+		Status: "DISK_OK",
 	}
 
-	folders := make([]*model.Item, 0)
+	folders := make([]*domain.Item, 0)
 	folders = append(folders,
-		&model.Item{Name: "movie1", Size: 1, Path: "/mnt/disk1/Movies/movie1"},
-		&model.Item{Name: "movie2", Size: 2, Path: "/mnt/disk1/Movies/movie2"},
-		&model.Item{Name: "movie3", Size: 3, Path: "/mnt/disk1/Movies/movie3"},
-		&model.Item{Name: "movie4", Size: 4, Path: "/mnt/disk1/Movies/movie4"},
-		&model.Item{Name: "movie5", Size: 5, Path: "/mnt/disk1/Movies/movie5"},
-		&model.Item{Name: "movie6", Size: 6, Path: "/mnt/disk1/Movies/movie6"},
-		&model.Item{Name: "movie7", Size: 7, Path: "/mnt/disk1/Movies/movie7"},
+		&domain.Item{Name: "movie1", Size: 1, Path: "/mnt/disk1/Movies/movie1"},
+		&domain.Item{Name: "movie2", Size: 2, Path: "/mnt/disk1/Movies/movie2"},
+		&domain.Item{Name: "movie3", Size: 3, Path: "/mnt/disk1/Movies/movie3"},
+		&domain.Item{Name: "movie4", Size: 4, Path: "/mnt/disk1/Movies/movie4"},
+		&domain.Item{Name: "movie5", Size: 5, Path: "/mnt/disk1/Movies/movie5"},
+		&domain.Item{Name: "movie6", Size: 6, Path: "/mnt/disk1/Movies/movie6"},
+		&domain.Item{Name: "movie7", Size: 7, Path: "/mnt/disk1/Movies/movie7"},
 	)
 
 	assert.Equal(t, 7, len(folders), "there should be 7 folders")
@@ -122,16 +125,15 @@ func TestOk(t *testing.T) {
 	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
-	if assert.NotNil(t, bin) {
-		bin.Print()
-	}
+	// if assert.NotNil(t, bin) {
+	// 	// bin.Print()
+	// }
 
-	if assert.NotNil(t, disk) {
-		disk.Print()
-	}
+	// if assert.NotNil(t, disk) {
+	// 	// disk.Print()
+	// }
 
-	var size int64
-	size = 28
+	var size int64 = 28
 
 	assert.Equal(t, size, bin.Size, "bin size should be 28")
 
@@ -141,23 +143,22 @@ func TestOk(t *testing.T) {
 func TestFit1(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
-	disk := &model.Disk{
-		ID:      1,
-		Name:    "md1",
-		Path:    "/mnt/disk1",
-		Device:  "sdc",
-		Free:    100,
-		NewFree: 0,
-		Size:    100,
-		Serial:  "SAMSUNG_HD15",
-		Status:  "DISK_OK",
+	disk := &domain.Disk{
+		ID:     1,
+		Name:   "md1",
+		Path:   "/mnt/disk1",
+		Device: "sdc",
+		Free:   100,
+		Size:   100,
+		Serial: "SAMSUNG_HD15",
+		Status: "DISK_OK",
 	}
 
-	folders := make([]*model.Item, 0)
+	folders := make([]*domain.Item, 0)
 	folders = append(folders,
-		&model.Item{Name: "movie1", Size: 100, Path: "/mnt/disk1/Movies/movie1"},
-		&model.Item{Name: "movie3", Size: 98, Path: "/mnt/disk1/Movies/movie3"},
-		&model.Item{Name: "movie2", Size: 99, Path: "/mnt/disk1/Movies/movie2"},
+		&domain.Item{Name: "movie1", Size: 100, Path: "/mnt/disk1/Movies/movie1"},
+		&domain.Item{Name: "movie3", Size: 98, Path: "/mnt/disk1/Movies/movie3"},
+		&domain.Item{Name: "movie2", Size: 99, Path: "/mnt/disk1/Movies/movie2"},
 	)
 
 	assert.Equal(t, 3, len(folders), "there should be 3 folders")
@@ -165,16 +166,16 @@ func TestFit1(t *testing.T) {
 	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
-	if assert.NotNil(t, bin) {
-		bin.Print()
-	}
+	// if assert.NotNil(t, bin) {
+	// 	// bin.Print()
+	// }
 
-	if assert.NotNil(t, disk) {
-		disk.Print()
-	}
+	// if assert.NotNil(t, disk) {
+	// 	// disk.Print()
+	// }
 
-	var size int64
-	size = 99
+	var size int64 = 99
+
 	assert.Equal(t, size, bin.Size, "bin.size should be 99")
 
 	// mlog.Stop()
@@ -183,23 +184,22 @@ func TestFit1(t *testing.T) {
 func TestFit2(t *testing.T) {
 	// mlog.Start(mlog.LevelInfo, "")
 
-	disk := &model.Disk{
-		ID:      1,
-		Name:    "md1",
-		Path:    "/mnt/disk1",
-		Device:  "sdc",
-		Free:    100,
-		NewFree: 0,
-		Size:    100,
-		Serial:  "SAMSUNG_HD15",
-		Status:  "DISK_OK",
+	disk := &domain.Disk{
+		ID:     1,
+		Name:   "md1",
+		Path:   "/mnt/disk1",
+		Device: "sdc",
+		Free:   100,
+		Size:   100,
+		Serial: "SAMSUNG_HD15",
+		Status: "DISK_OK",
 	}
 
-	folders := make([]*model.Item, 0)
+	folders := make([]*domain.Item, 0)
 	folders = append(folders,
-		&model.Item{Name: "movie1", Size: 50, Path: "/mnt/disk1/Movies/movie1"},
-		&model.Item{Name: "movie2", Size: 49, Path: "/mnt/disk1/Movies/movie2"},
-		&model.Item{Name: "movie3", Size: 1, Path: "/mnt/disk1/Movies/movie3"},
+		&domain.Item{Name: "movie1", Size: 50, Path: "/mnt/disk1/Movies/movie1"},
+		&domain.Item{Name: "movie2", Size: 49, Path: "/mnt/disk1/Movies/movie2"},
+		&domain.Item{Name: "movie3", Size: 1, Path: "/mnt/disk1/Movies/movie3"},
 	)
 
 	assert.Equal(t, 3, len(folders), "there should be 3 folders")
@@ -207,16 +207,16 @@ func TestFit2(t *testing.T) {
 	packer := algorithm.NewKnapsack(disk, folders, 1)
 	bin := packer.BestFit()
 
-	if assert.NotNil(t, bin) {
-		bin.Print()
-	}
+	// if assert.NotNil(t, bin) {
+	// 	// bin.Print()
+	// }
 
-	if assert.NotNil(t, disk) {
-		disk.Print()
-	}
+	// if assert.NotNil(t, disk) {
+	// 	// disk.Print()
+	// }
 
-	var size int64
-	size = 99
+	var size int64 = 99
+
 	assert.Equal(t, size, bin.Size, "bin.size should be 99")
 
 	// mlog.Stop()
@@ -232,11 +232,7 @@ func createFile(home, folder, name string, size int64, mode os.FileMode) error {
 	}
 	defer fd.Close()
 
-	if err := fd.Truncate(size); err != nil {
-		return err
-	}
-
-	return nil
+	return fd.Truncate(size)
 }
 
 // func TestFoldersNotMoved(t *testing.T) {
@@ -333,49 +329,49 @@ func createFile(home, folder, name string, size int64, mode os.FileMode) error {
 // 	core.Stop()
 // }
 
-func tearDown(home string) error {
-	os.RemoveAll(filepath.Join(home, "tmp/unbalance/mnt"))
+// func tearDown(home string) error {
+// 	os.RemoveAll(filepath.Join(home, "tmp/unbalance/mnt"))
 
-	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk2"), 0777)
-	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk3"), 0777)
+// 	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk2"), 0777)
+// 	os.MkdirAll(filepath.Join(home, "tmp/unbalance/mnt", "disk3"), 0777)
 
-	err := createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "The Fast & The Furious.mkv", 800, 0777)
-	if err != nil {
-		return err
-	}
+// 	err := createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "The Fast & The Furious.mkv", 800, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "Faster & Furiousest.mkv", 1200, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/The Fast & Furious Series", "Faster & Furiousest.mkv", 1200, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/", "Synchronicity [2015].mkv", 1500, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/Files/Media/Videos/Movies/", "Synchronicity [2015].mkv", 1500, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/Backup/", "data.txt", 700, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/Backup/", "data.txt", 700, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/TVShows/NCIS/", "NCIS 04x17 - Skeletons.avi", 2700, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/TVShows/NCIS/", "NCIS 04x17 - Skeletons.avi", 2700, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/Air (2014)", "air.mkv", 1600, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/Air (2014)", "air.mkv", 1600, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/", "Interstellar.mkv", 1900, 0777)
-	if err != nil {
-		return err
-	}
+// 	err = createFile(home, "tmp/unbalance/mnt/disk1/films/blu rip/", "Interstellar.mkv", 1900, 0777)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func TestRsyncError(t *testing.T) {
 	mlog.Info("TestRsyncError")
@@ -424,7 +420,6 @@ func TestRsyncError(t *testing.T) {
 	bus.Pub(msg, "calculate")
 
 	usr, _ := user.Current()
-	mlog.Info("Marranidad mas grande")
 	mlog.Info("user %+v", usr)
 
 	time.Sleep(5 * time.Second)
@@ -743,7 +738,7 @@ func TestStat(t *testing.T) {
 
 	os.RemoveAll(folder)
 
-	err := createFile(home, "tmp/unbalance/mnt/disk1/movies/Interstellar (2014)", "Interstellar.mkv", 800, 222) // 902
+	err := createFile(home, "tmp/unbalance/mnt/disk1/movies/Interstellar (2014)", "Interstellar.mkv", 800, 0222) // 902
 	assert.NoError(t, err)
 
 	dirs, err := ioutil.ReadDir(folder)

@@ -1,63 +1,69 @@
 package common
 
+// MailCmd - location of notify command
 const (
-	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify"
-	PLUGIN_LOCATION = "/boot/config/plugins/unbalance"
+	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify" // MailCmd - location of notify command
+	PluginLocation  = "/boot/config/plugins/unbalance"          // PluginLocation - plugin's base config path
+	ChanCapacity    = 3
+	HistoryCapacity = 25
+	HistoryFilename = "unbalance.hist"
+	RsyncArgs       = "-avPRX"
+)
 
-	CHAN_CAPACITY    = 3
-	HISTORY_CAPACITY = 25
-	HISTORY_FILENAME = "unbalance.hist"
-	RSYNC_ARGS       = "-avPRX"
+// OpNeutral -
+const (
+	OpNeutral         = 0
+	OpScatterPlan     = 1
+	OpScatterMove     = 2
+	OpScatterCopy     = 3
+	OpScatterValidate = 4
+	OpGatherPlan      = 5
+	OpGatherMove      = 6
+)
 
-	OP_NEUTRAL          = 0
-	OP_SCATTER_PLAN     = 1
-	OP_SCATTER_MOVE     = 2
-	OP_SCATTER_COPY     = 3
-	OP_SCATTER_VALIDATE = 4
-	OP_GATHER_PLAN      = 5
-	OP_GATHER_MOVE      = 6
+// APIGetConfig -
+const (
+	APIGetConfig      = "core/get/config"
+	APIGetState       = "core/get/state"
+	APIGetStorage     = "array/get/storage"
+	APIGetOperation   = "core/get/operation"
+	APIGetHistory     = "core/get/history"
+	IntGetArrayStatus = "int/array/get/status"
+	APIGetTree        = "array/get/tree"
+	APILocateFolder   = "core/locate/folder"
+	APIGetLog         = "api/get/log"
 
-	API_GET_CONFIG       = "core/get/config"
-	API_GET_STATE        = "core/get/state"
-	API_GET_STORAGE      = "array/get/storage"
-	API_GET_OPERATION    = "core/get/operation"
-	API_GET_HISTORY      = "core/get/history"
-	INT_GET_ARRAY_STATUS = "int/array/get/status"
-	API_GET_TREE         = "array/get/tree"
-	API_LOCATE_FOLDER    = "core/locate/folder"
-	API_GET_LOG          = "api/get/log"
+	APIScatterPlan         = "api/scatter/plan"
+	IntScatterPlan         = "int/scatter/plan"
+	IntScatterPlanFinished = "int/scatter/plan/finished"
+	IntScatterPlanError    = "int/scatter/plan/error"
 
-	API_SCATTER_PLAN          = "api/scatter/plan"
-	INT_SCATTER_PLAN          = "int/scatter/plan"
-	INT_SCATTER_PLAN_FINISHED = "int/scatter/plan/finished"
-	INT_SCATTER_PLAN_ERROR    = "int/scatter/plan/error"
+	WsScatterPlanStarted  = "scatterPlanStarted"
+	WsScatterPlanProgress = "scatterPlanProgress"
+	WsScatterPlanFinished = "scatterPlanFinished"
+	WsScatterPlanIssues   = "scatterPlanIssue"
 
-	WS_SCATTERPLAN_STARTED  = "scatterPlanStarted"
-	WS_SCATTERPLAN_PROGRESS = "scatterPlanProgress"
-	WS_SCATTERPLAN_FINISHED = "scatterPlanFinished"
-	WS_SCATTERPLAN_ISSUES   = "scatterPlanIssue"
+	WsGatherPlanStarted  = "gatherPlanStarted"
+	WsGatherPlanProgress = "gatherPlanProgress"
+	WsGatherPlanFinished = "gatherPlanFinished"
+	WsGatherPlanIssues   = "gatherPlanIssue"
 
-	WS_GATHERPLAN_STARTED  = "gatherPlanStarted"
-	WS_GATHERPLAN_PROGRESS = "gatherPlanProgress"
-	WS_GATHERPLAN_FINISHED = "gatherPlanFinished"
-	WS_GATHERPLAN_ISSUES   = "gatherPlanIssue"
+	APIScatterMove     = "api/scatter/move"
+	APIScatterCopy     = "api/scatter/copy"
+	APIScatterValidate = "api/scatter/validate"
 
-	API_SCATTER_MOVE     = "api/scatter/move"
-	API_SCATTER_COPY     = "api/scatter/copy"
-	API_SCATTER_VALIDATE = "api/scatter/validate"
+	APIGatherPlan         = "api/gather/plan"
+	IntGatherPlan         = "int/gather/plan"
+	IntGatherPlanFinished = "int/gather/plan/finished"
 
-	API_GATHER_PLAN          = "api/gather/plan"
-	INT_GATHER_PLAN          = "int/gather/plan"
-	INT_GATHER_PLAN_FINISHED = "int/gather/plan/finished"
+	APIGatherMove = "api/gather/move"
 
-	API_GATHER_MOVE = "api/gather/move"
-
-	API_TOGGLE_DRYRUN   = "config/toggle/dryrun"
-	API_NOTIFY_CALC     = "config/notify/calc"
-	API_NOTIFY_MOVE     = "config/notify/move"
-	API_SET_RESERVED    = "config/set/reserved"
-	API_SET_VERBOSITY   = "config/set/verbosity"
-	API_SET_CHECKUPDATE = "config/set/checkupdate"
-	API_GET_UPDATE      = "config/get/update"
-	API_SET_RSYNC_ARGS  = "config/set/rsyncArgs"
+	APIToggleDryRun   = "config/toggle/dryrun"
+	APINotifyCalc     = "config/notify/calc"
+	APINotifyMove     = "config/notify/move"
+	APISetReserved    = "config/set/reserved"
+	APISetVerbosity   = "config/set/verbosity"
+	APISetCheckUpdate = "config/set/checkupdate"
+	APIGetUpdate      = "config/get/update"
+	APISetRsyncArgs   = "config/set/rsyncArgs"
 )

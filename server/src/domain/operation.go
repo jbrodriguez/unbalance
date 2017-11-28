@@ -6,10 +6,10 @@ import (
 
 // Operation - represents the different types of operationns in the app
 // OpKind can be
-// OP_SCATTER_MOVE
-// OP_SCATTER_COPY
-// OP_SCATTER_VALIDATE
-// OP_GATHER_MOVE
+// OpScatterMove
+// OpScatterCopy
+// OpScatterValidate
+// OpGatherMove
 type Operation struct {
 	ID       string    `json:"id"`
 	OpKind   int64     `json:"opKind"`

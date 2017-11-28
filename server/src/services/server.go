@@ -117,68 +117,52 @@ func (s *Server) Stop() {
 
 func (s *Server) getConfig(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_CONFIG)
+	s.bus.Pub(msg, common.APIGetConfig)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
-
-// func (s *Server) getStatus(c echo.Context) (err error) {
-// 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-// 	s.bus.Pub(msg, common.API_GET_STATUS)
-
-// 	reply := <-msg.Reply
-// 	status := reply.(int64)
-// 	c.JSON(200, status)
-
-// 	return nil
-// }
 
 func (s *Server) getState(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_STATE)
+	s.bus.Pub(msg, common.APIGetState)
 
 	reply := <-msg.Reply
 	state := reply.(*domain.State)
-	c.JSON(200, state)
 
-	return nil
+	return c.JSON(200, state)
 }
 
 func (s *Server) getStorage(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_STORAGE)
+	s.bus.Pub(msg, common.APIGetStorage)
 
 	reply := <-msg.Reply
 	storage := reply.(*domain.Unraid)
-	c.JSON(200, storage)
 
-	return nil
+	return c.JSON(200, storage)
 }
 
 func (s *Server) getOperation(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_OPERATION)
+	s.bus.Pub(msg, common.APIGetOperation)
 
 	reply := <-msg.Reply
 	operation := reply.(*domain.Operation)
-	c.JSON(200, operation)
 
-	return nil
+	return c.JSON(200, operation)
 }
 
 func (s *Server) getHistory(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_HISTORY)
+	s.bus.Pub(msg, common.APIGetHistory)
 
 	reply := <-msg.Reply
 	history := reply.(*domain.History)
-	c.JSON(200, history)
 
-	return nil
+	return c.JSON(200, history)
 }
 
 func (s *Server) setNotifyCalc(c echo.Context) (err error) {
@@ -190,13 +174,12 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_NOTIFY_CALC)
+	s.bus.Pub(msg, common.APINotifyCalc)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) setNotifyMove(c echo.Context) (err error) {
@@ -208,13 +191,12 @@ func (s *Server) setNotifyMove(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_NOTIFY_MOVE)
+	s.bus.Pub(msg, common.APINotifyMove)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) setReservedSpace(c echo.Context) (err error) {
@@ -226,13 +208,12 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_SET_RESERVED)
+	s.bus.Pub(msg, common.APISetReserved)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) setVerbosity(c echo.Context) (err error) {
@@ -244,13 +225,12 @@ func (s *Server) setVerbosity(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_SET_VERBOSITY)
+	s.bus.Pub(msg, common.APISetVerbosity)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) setCheckUpdate(c echo.Context) (err error) {
@@ -262,24 +242,22 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_SET_CHECKUPDATE)
+	s.bus.Pub(msg, common.APISetCheckUpdate)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) getUpdate(c echo.Context) (err error) {
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_UPDATE)
+	s.bus.Pub(msg, common.APIGetUpdate)
 
 	reply := <-msg.Reply
 	resp := reply.(string)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) getTree(c echo.Context) (err error) {
@@ -291,13 +269,12 @@ func (s *Server) getTree(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_GET_TREE)
+	s.bus.Pub(msg, common.APIGetTree)
 
 	reply := <-msg.Reply
 	resp := reply.(*dto.Entry)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) locate(c echo.Context) (err error) {
@@ -309,24 +286,22 @@ func (s *Server) locate(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_LOCATE_FOLDER)
+	s.bus.Pub(msg, common.APILocateFolder)
 
 	reply := <-msg.Reply
 	resp := reply.(*dto.Location)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
 	msg := &pubsub.Message{Payload: nil, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.API_TOGGLE_DRYRUN)
+	s.bus.Pub(msg, common.APIToggleDryRun)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) setRsyncArgs(c echo.Context) (err error) {
@@ -338,13 +313,12 @@ func (s *Server) setRsyncArgs(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, "/config/set/rsyncArgs")
+	s.bus.Pub(msg, common.APISetRsyncArgs)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
-	c.JSON(200, &resp)
 
-	return nil
+	return c.JSON(200, &resp)
 }
 
 func (s *Server) handleWs(ws *websocket.Conn) {

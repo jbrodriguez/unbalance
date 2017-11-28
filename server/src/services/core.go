@@ -89,14 +89,14 @@ func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
 	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	c.bus.Pub(msg, common.INT_GET_ARRAY_STATUS)
+	c.bus.Pub(msg, common.IntGetArrayStatus)
 	reply := <-msg.Reply
 	message := reply.(dto.Message)
 	if message.Error != nil {
 		return message.Error
 	}
 
-	c.state.Status = common.OP_NEUTRAL
+	c.state.Status = common.OpNeutral
 	c.state.Unraid = message.Data.(*domain.Unraid)
 
 	history, err := c.historyRead()
@@ -106,30 +106,30 @@ func (c *Core) Start() (err error) {
 
 	c.state.History = history
 
-	c.actor.Register(common.API_GET_CONFIG, c.getConfig)
-	c.actor.Register(common.API_GET_STATE, c.getState)
-	c.actor.Register(common.API_GET_STORAGE, c.getStorage)
-	c.actor.Register(common.API_GET_OPERATION, c.getOperation)
-	c.actor.Register(common.API_GET_HISTORY, c.getHistory)
-	c.actor.Register(common.API_LOCATE_FOLDER, c.locate)
+	c.actor.Register(common.APIGetConfig, c.getConfig)
+	c.actor.Register(common.APIGetState, c.getState)
+	c.actor.Register(common.APIGetStorage, c.getStorage)
+	c.actor.Register(common.APIGetOperation, c.getOperation)
+	c.actor.Register(common.APIGetHistory, c.getHistory)
+	c.actor.Register(common.APILocateFolder, c.locate)
 
-	c.actor.Register(common.API_SCATTER_PLAN, c.scatterPlan)
-	c.actor.Register(common.INT_SCATTER_PLAN_FINISHED, c.scatterPlanFinished)
-	c.actor.Register(common.API_SCATTER_MOVE, c.scatterMove)
-	c.actor.Register(common.API_SCATTER_COPY, c.scatterCopy)
+	c.actor.Register(common.APIScatterPlan, c.scatterPlan)
+	c.actor.Register(common.IntScatterPlanFinished, c.scatterPlanFinished)
+	c.actor.Register(common.APIScatterMove, c.scatterMove)
+	c.actor.Register(common.APIScatterCopy, c.scatterCopy)
 
-	c.actor.Register(common.API_GATHER_PLAN, c.gatherPlan)
-	c.actor.Register(common.INT_GATHER_PLAN_FINISHED, c.gatherPlanFinished)
-	c.actor.Register(common.API_GATHER_MOVE, c.gatherMove)
+	c.actor.Register(common.APIGatherPlan, c.gatherPlan)
+	c.actor.Register(common.IntGatherPlanFinished, c.gatherPlanFinished)
+	c.actor.Register(common.APIGatherMove, c.gatherMove)
 
-	c.actor.Register(common.API_TOGGLE_DRYRUN, c.toggleDryRun)
-	c.actor.Register(common.API_NOTIFY_CALC, c.setNotifyCalc)
-	c.actor.Register(common.API_NOTIFY_MOVE, c.setNotifyMove)
-	c.actor.Register(common.API_SET_RESERVED, c.setReservedSpace)
-	c.actor.Register(common.API_SET_VERBOSITY, c.setVerbosity)
-	c.actor.Register(common.API_SET_CHECKUPDATE, c.setCheckUpdate)
-	c.actor.Register(common.API_GET_UPDATE, c.getUpdate)
-	c.actor.Register("/config/set/rsyncArgs", c.setRsyncArgs)
+	c.actor.Register(common.APIToggleDryRun, c.toggleDryRun)
+	c.actor.Register(common.APINotifyCalc, c.setNotifyCalc)
+	c.actor.Register(common.APINotifyMove, c.setNotifyMove)
+	c.actor.Register(common.APISetReserved, c.setReservedSpace)
+	c.actor.Register(common.APISetVerbosity, c.setVerbosity)
+	c.actor.Register(common.APISetCheckUpdate, c.setCheckUpdate)
+	c.actor.Register(common.APIGetUpdate, c.getUpdate)
+	c.actor.Register(common.APISetRsyncArgs, c.setRsyncArgs)
 	// c.actor.Register("validate", c.validate)
 	// c.actor.Register("getLog", c.getLog)
 
@@ -163,7 +163,7 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 	mlog.Info("Sending storage")
 
 	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	c.bus.Pub(param, common.INT_GET_ARRAY_STATUS)
+	c.bus.Pub(param, common.IntGetArrayStatus)
 	reply := <-param.Reply
 	message := reply.(dto.Message)
 	if message.Error != nil {
@@ -194,8 +194,8 @@ func (c *Core) locate(msg *pubsub.Message) {
 	chosen := msg.Payload.([]string)
 
 	location := &dto.Location{
-		Disks:    make(map[string]*domain.Disk, 0),
-		Presence: make(map[string]string, 0),
+		Disks:    make(map[string]*domain.Disk),
+		Presence: make(map[string]string),
 	}
 
 	for _, disk := range c.state.Unraid.Disks {
@@ -243,17 +243,17 @@ func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 }
 
 func (c *Core) scatterPlan(msg *pubsub.Message) {
-	c.state.Status = common.OP_SCATTER_PLAN
+	c.state.Status = common.OpScatterPlan
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
 		mlog.Warning("Unable to get scatter plan: %s", err)
 
 		// send to front end the signal of operation finished
-		outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_FINISHED, Payload: plan}
+		outbound := &dto.Packet{Topic: common.WsScatterPlanFinished, Payload: plan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_ISSUES, Payload: err.Error()}
+		outbound = &dto.Packet{Topic: common.WsScatterPlanIssues, Payload: err.Error()}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		return
@@ -265,22 +265,22 @@ func (c *Core) scatterPlan(msg *pubsub.Message) {
 		Plan:   plan,
 	}}
 
-	c.bus.Pub(param, common.INT_SCATTER_PLAN)
+	c.bus.Pub(param, common.IntScatterPlan)
 }
 
 func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
 	plan := msg.Payload.(*domain.Plan)
 
-	c.state.Status = common.OP_NEUTRAL
+	c.state.Status = common.OpNeutral
 
 	// send to front end the signal of operation finished
-	outbound := &dto.Packet{Topic: common.WS_SCATTERPLAN_FINISHED, Payload: plan}
+	outbound := &dto.Packet{Topic: common.WsScatterPlanFinished, Payload: plan}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
 	// and there actually perm issues
 	if plan.BytesToTransfer > 0 && (plan.OwnerIssue+plan.GroupIssue+plan.FolderIssue+plan.FileIssue > 0) {
-		outbound = &dto.Packet{Topic: common.WS_SCATTERPLAN_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
+		outbound = &dto.Packet{Topic: common.WsScatterPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
@@ -343,21 +343,21 @@ func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	var plan domain.Plan
 	err := json.Unmarshal([]byte(data), &plan)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Unable to bind findTargets parameters: %s", err))
+		return nil, fmt.Errorf("Unable to bind findTargets parameters: %s", err)
 	}
 
 	return &plan, nil
 }
 
 func (c *Core) gatherPlan(msg *pubsub.Message) {
-	c.state.Status = common.OP_GATHER_PLAN
+	c.state.Status = common.OpGatherPlan
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
 		mlog.Warning("Unable to get gather plan: %s", err)
 
 		// send to front end the signal of operation finished
-		outbound := &dto.Packet{Topic: common.WS_GATHERPLAN_FINISHED, Payload: plan}
+		outbound := &dto.Packet{Topic: common.WsGatherPlanFinished, Payload: plan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		outbound = &dto.Packet{Topic: "opError", Payload: err.Error()}
@@ -373,22 +373,22 @@ func (c *Core) gatherPlan(msg *pubsub.Message) {
 		Plan:   plan,
 	}}
 
-	c.bus.Pub(param, common.INT_GATHER_PLAN)
+	c.bus.Pub(param, common.IntGatherPlan)
 }
 
 func (c *Core) gatherPlanFinished(msg *pubsub.Message) {
 	plan := msg.Payload.(*domain.Plan)
 
-	c.state.Status = common.OP_NEUTRAL
+	c.state.Status = common.OpNeutral
 
 	// send to front end the signal of operation finished
-	outbound := &dto.Packet{Topic: common.WS_GATHERPLAN_FINISHED, Payload: plan}
+	outbound := &dto.Packet{Topic: common.WsGatherPlanFinished, Payload: plan}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
 	// and there actually perm issues
 	if plan.BytesToTransfer > 0 && (plan.OwnerIssue+plan.GroupIssue+plan.FolderIssue+plan.FileIssue > 0) {
-		outbound = &dto.Packet{Topic: common.WS_GATHERPLAN_ISSUES, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
+		outbound = &dto.Packet{Topic: common.WsGatherPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 }
@@ -402,7 +402,7 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 		DryRun:          c.settings.DryRun,
 	}
 
-	operation.RsyncArgs = append([]string{common.RSYNC_ARGS}, c.settings.RsyncArgs...)
+	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.settings.RsyncArgs...)
 
 	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
@@ -444,7 +444,7 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 }
 
 func (c *Core) scatterMove(msg *pubsub.Message) {
-	c.state.Status = common.OP_SCATTER_MOVE
+	c.state.Status = common.OpScatterMove
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -462,7 +462,7 @@ func (c *Core) scatterMove(msg *pubsub.Message) {
 }
 
 func (c *Core) scatterCopy(msg *pubsub.Message) {
-	c.state.Status = common.OP_SCATTER_COPY
+	c.state.Status = common.OpScatterCopy
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -487,7 +487,7 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 		DryRun: c.settings.DryRun,
 	}
 
-	operation.RsyncArgs = append([]string{common.RSYNC_ARGS}, c.settings.RsyncArgs...)
+	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.settings.RsyncArgs...)
 
 	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
@@ -534,7 +534,7 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 }
 
 func (c *Core) gatherMove(msg *pubsub.Message) {
-	c.state.Status = common.OP_GATHER_MOVE
+	c.state.Status = common.OpGatherMove
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
@@ -686,7 +686,7 @@ func (c *Core) runOperation(opName string) {
 
 				operation.Completed = percent
 				operation.Speed = speed
-				operation.Remaining = fmt.Sprintf("%s", left)
+				operation.Remaining = string(left)
 				operation.DeltaTransfer = cmdTransferred
 				command.Transferred = cmdTransferred
 
@@ -725,7 +725,7 @@ func (c *Core) transferInterrupted(opName string, operation *domain.Operation, c
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = fmt.Sprintf("%s", left)
+	operation.Remaining = string(left)
 	operation.DeltaTransfer = cmdTransferred
 	command.Transferred = cmdTransferred
 
@@ -741,7 +741,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = fmt.Sprintf("%s", left)
+	operation.Remaining = string(left)
 	operation.DeltaTransfer = 0
 	operation.Line = text
 	command.Transferred = command.Size
@@ -753,7 +753,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
-	if operation.DryRun && operation.OpKind == common.OP_GATHER_MOVE {
+	if operation.DryRun && operation.OpKind == common.OpGatherMove {
 		parent := filepath.Dir(command.Entry)
 		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
 		if parent != "." {
@@ -764,7 +764,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 	}
 
 	// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
-	if !operation.DryRun && (operation.OpKind == common.OP_SCATTER_MOVE || operation.OpKind == common.OP_GATHER_MOVE) {
+	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
 		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
 		if exists {
 			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
@@ -782,7 +782,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 				mlog.Warning(msg)
 			}
 
-			if operation.OpKind == common.OP_GATHER_MOVE {
+			if operation.OpKind == common.OpGatherMove {
 				parent := filepath.Dir(command.Entry)
 				if parent != "." {
 					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
@@ -818,7 +818,7 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = fmt.Sprintf("%s", left)
+	operation.Remaining = string(left)
 
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
@@ -862,7 +862,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	mlog.Info("\n%s\n%s", subject, message)
 
 	// c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
-	c.state.Status = common.OP_NEUTRAL
+	c.state.Status = common.OpNeutral
 	c.state.Operation = nil
 }
 
@@ -874,7 +874,10 @@ func (c *Core) setNotifyCalc(msg *pubsub.Message) {
 	mlog.Info("Setting notifyCalc to (%d)", notify)
 
 	c.settings.NotifyCalc = notify
-	c.settings.Save()
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -886,7 +889,10 @@ func (c *Core) setNotifyMove(msg *pubsub.Message) {
 	mlog.Info("Setting notifyMove to (%d)", notify)
 
 	c.settings.NotifyMove = notify
-	c.settings.Save()
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -900,7 +906,7 @@ func (c *Core) setVerbosity(msg *pubsub.Message) {
 	c.settings.Verbosity = verbosity
 	err := c.settings.Save()
 	if err != nil {
-		mlog.Warning("not right %s", err)
+		mlog.Warning("Unable to save settings: %s", err)
 	}
 
 	msg.Reply <- &c.settings.Config
@@ -951,7 +957,10 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 
 	c.settings.ReservedAmount = amount
 	c.settings.ReservedUnit = unit
-	c.settings.Save()
+	err = c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -960,7 +969,10 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 	mlog.Info("Toggling dryRun from (%t)", c.settings.DryRun)
 
 	c.settings.ToggleDryRun()
-	c.settings.Save()
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -991,7 +1003,10 @@ func (c *Core) setRsyncArgs(msg *pubsub.Message) {
 	mlog.Info("Setting rsyncArgs to (%s)", strings.Join(rsync.Args, " "))
 
 	c.settings.RsyncArgs = rsync.Args
-	c.settings.Save()
+	err = c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
 
 	msg.Reply <- &c.settings.Config
 }
@@ -1076,12 +1091,12 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 func (c *Core) historyRead() (*domain.History, error) {
 	var history domain.History
 
-	fileName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME)
+	fileName := filepath.Join(common.PluginLocation, common.HistoryFilename)
 
 	file, err := os.Open(fileName)
 	if err != nil {
 		empty := &domain.History{
-			Items: make(map[string]*domain.Operation, 0),
+			Items: make(map[string]*domain.Operation),
 			Order: make([]string, 0),
 		}
 
@@ -1093,7 +1108,7 @@ func (c *Core) historyRead() (*domain.History, error) {
 	err = decoder.Decode(&history)
 	if err != nil {
 		empty := &domain.History{
-			Items: make(map[string]*domain.Operation, 0),
+			Items: make(map[string]*domain.Operation),
 			Order: make([]string, 0),
 		}
 
@@ -1104,7 +1119,7 @@ func (c *Core) historyRead() (*domain.History, error) {
 }
 
 func (c *Core) historyWrite(history *domain.History) error {
-	tmpName := filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME+"."+shortid.MustGenerate())
+	tmpName := filepath.Join(common.PluginLocation, common.HistoryFilename+"."+shortid.MustGenerate())
 
 	file, err := os.Create(tmpName)
 	if err != nil {
@@ -1113,16 +1128,19 @@ func (c *Core) historyWrite(history *domain.History) error {
 	defer file.Close()
 
 	encoder := json.NewEncoder(file)
-	encoder.Encode(history)
+	err = encoder.Encode(history)
+	if err != nil {
+		return err
+	}
 
-	os.Rename(tmpName, filepath.Join(common.PLUGIN_LOCATION, common.HISTORY_FILENAME))
+	err = os.Rename(tmpName, filepath.Join(common.PluginLocation, common.HistoryFilename))
 
 	return err
 }
 
 func (c *Core) updateHistory(history *domain.History, operation *domain.Operation) {
 	count := len(history.Order)
-	if count == common.HISTORY_CAPACITY {
+	if count == common.HistoryCapacity {
 		delete(history.Items, history.Order[count-1])
 		// prepend item, remove oldest item
 		history.Order = append([]string{c.state.Operation.ID}, history.Order[:count-1]...)
