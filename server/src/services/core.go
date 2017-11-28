@@ -150,7 +150,6 @@ func (c *Core) getConfig(msg *pubsub.Message) {
 
 func (c *Core) getState(msg *pubsub.Message) {
 	mlog.Info("Sending state")
-
 	msg.Reply <- c.state
 }
 
@@ -168,10 +167,9 @@ func (c *Core) getStorage(msg *pubsub.Message) {
 	message := reply.(dto.Message)
 	if message.Error != nil {
 		mlog.Warning("Unable to get storage: %s", message.Error)
-		return
+	} else {
+		c.state.Unraid = message.Data.(*domain.Unraid)
 	}
-
-	c.state.Unraid = message.Data.(*domain.Unraid)
 
 	msg.Reply <- c.state.Unraid
 }
@@ -366,7 +364,7 @@ func (c *Core) gatherPlan(msg *pubsub.Message) {
 		return
 	}
 
-	// TODO: we should probably refresh unraid here (applies to scatterCalculate too)
+	// TODO: we should probably refresh unraid here (applies to scatterPlan too)
 	param := &pubsub.Message{Payload: &domain.State{
 		Status: c.state.Status,
 		Unraid: c.state.Unraid,
