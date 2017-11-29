@@ -182,7 +182,7 @@ func (c *Planner) gather(msg *pubsub.Message) {
 	for _, item := range items {
 		mlog.Info("gatherPlan:found(%s):size(%d)", filepath.Join(item.Location, item.Path), item.Size)
 
-		msg := fmt.Sprintf("Found %s (%s)", item.Name, lib.ByteSize(item.Size))
+		msg := fmt.Sprintf("Found %s (%s)", filepath.Join(item.Location, item.Path), lib.ByteSize(item.Size))
 		outbound = &dto.Packet{Topic: common.WsGatherPlanProgress, Payload: msg}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
@@ -290,22 +290,23 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, error) {
+func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
+	var total int64
 	srcFolder := filepath.Join(src, folder)
 
 	var fi os.FileInfo
 	var err error
 	if fi, err = os.Stat(srcFolder); os.IsNotExist(err) {
-		return nil, err
+		return nil, total, err
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}}, nil
+		return []*domain.Item{&domain.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}}, fi.Size(), nil
 	}
 
 	entries, err := ioutil.ReadDir(srcFolder)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	scanFolder := srcFolder + "/."
@@ -322,12 +323,13 @@ func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*do
 		result := re.FindStringSubmatch(line)
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
+		total += size
 
 		item := &domain.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src}
 		items = append(items, item)
 	})
 
-	return items, err
+	return items, total, err
 }
 
 func (c *Planner) getItemsAndIssues(status int64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
@@ -350,25 +352,25 @@ func (c *Planner) getItemsAndIssues(status int64, reItems, reStat *regexp.Regexp
 
 			ownIssue, grpIssue, fldIssue, filIssue, err := getIssues(reStat, disk, path)
 			if err != nil {
-				mlog.Warning("Unable to get issues: %s", err)
+				mlog.Warning("issues:not-available:(%s)", err)
+			} else {
+				ownerIssue += ownIssue
+				groupIssue += grpIssue
+				folderIssue += fldIssue
+				fileIssue += filIssue
+
+				mlog.Info("issues:owner(%d):group(%d):folder(%d):file(%d)", ownerIssue, groupIssue, folderIssue, fileIssue)
 			}
-
-			ownerIssue += ownIssue
-			groupIssue += grpIssue
-			folderIssue += fldIssue
-			fileIssue += filIssue
-
-			mlog.Info("issues:owner(%d),group(%d),folder(%d),file(%d)", ownerIssue, groupIssue, folderIssue, fileIssue)
 
 			// get children files/folders to be transferred
 			outbound = &dto.Packet{Topic: getTopic(status), Payload: "Getting items ..."}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			list, err := getItems(status, reItems, disk.Path, path)
+			list, total, err := getItems(status, reItems, disk.Path, path)
 			if err != nil {
-				mlog.Warning("Unable to get items: %s", err)
+				mlog.Warning("items:not-available:(%s)", err)
 			} else {
-				mlog.Info("items:(%d)", len(list))
+				mlog.Info("items:count(%d):size(%s)", len(list), lib.ByteSize(total))
 				items = append(items, list...)
 			}
 		}
@@ -442,31 +444,33 @@ func (c *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 	// Send to frontend console started/ended/elapsed times
 	c.sendTimeFeedbackToFrontend(getTopic(status), fstarted, ffinished, elapsed)
 
-	// some logging
-	if len(toBeTransferred) == 0 {
-		mlog.Info("%s:No items can be transferred.", getName(status))
-	} else {
-		mlog.Info("%s:%d items will be transferred.", getName(status), len(toBeTransferred))
-		for _, folder := range toBeTransferred {
-			mlog.Info("%s:willBeTransferred(%s)", getName(status), folder.Path)
-		}
-	}
-
 	// send to frontend the items that will not be transferred, if any
 	// notTransferred holds a string representation of all the items, separated by a '\n'
 	notTransferred := ""
 
-	if len(items) > 0 {
-		outbound := &dto.Packet{Topic: getTopic(status), Payload: "The following items will not be transferred, because there's not enough space in the target disks:\n"}
-		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	if status == common.OpScatterPlan {
+		// some logging
+		if len(toBeTransferred) == 0 {
+			mlog.Info("%s:No items can be transferred.", getName(status))
+		} else {
+			mlog.Info("%s:%d items will be transferred.", getName(status), len(toBeTransferred))
+			for _, folder := range toBeTransferred {
+				mlog.Info("%s:willBeTransferred(%s)", getName(status), folder.Path)
+			}
+		}
 
-		mlog.Info("scatterPlan:%d items will NOT be transferred.", len(items))
-		for _, item := range items {
-			notTransferred += item.Path + "\n"
-
-			outbound = &dto.Packet{Topic: getTopic(status), Payload: item.Path}
+		if len(items) > 0 {
+			outbound := &dto.Packet{Topic: getTopic(status), Payload: "The following items will not be transferred, because there's not enough space in the target disks:\n"}
 			c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-			mlog.Info("scatterPlan:notTransferred(%s)", item.Path)
+
+			mlog.Info("%s:%d items will NOT be transferred.", getName(status), len(items))
+			for _, item := range items {
+				notTransferred += item.Path + "\n"
+
+				outbound = &dto.Packet{Topic: getTopic(status), Payload: item.Path}
+				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+				mlog.Info("%s:notTransferred(%s)", getName(status), item.Path)
+			}
 		}
 	}
 
@@ -474,8 +478,8 @@ func (c *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 	c.sendMailFeeback(fstarted, ffinished, elapsed, plan, notTransferred)
 
 	// some local logging
-	mlog.Info("scatterCalc:ItemsLeft(%d)", len(items))
-	mlog.Info("scatterCalc:Listing (%d) disks ...", len(disks))
+	mlog.Info("%s:ItemsLeft(%d)", getName(status), len(items))
+	mlog.Info("%s:Listing (%d) disks ...", getName(status), len(disks))
 	for _, disk := range disks {
 		if plan.VDisks[disk.Path].Bin != nil {
 			mlog.Info("=========================================================")

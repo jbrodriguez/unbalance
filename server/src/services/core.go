@@ -702,7 +702,7 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Command) {
 	if operation.DryRun && operation.OpKind == common.OpGatherMove {
 		parent := filepath.Dir(command.Entry)
-		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
+		// mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
 		if parent != "." {
 			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
 		} else {
