@@ -29,7 +29,6 @@ export default class History extends PureComponent {
 	}
 
 	render() {
-		const { state } = this.props.store
 		const { state, actions } = this.props.store
 
 		if (!(state.core && state.core.history && state.core.history.order && state.core.history.order.length > 0)) {
@@ -157,6 +156,15 @@ export default class History extends PureComponent {
 									disabled={!validate}
 								>
 									VALIDATE
+								</button>
+							)}
+							{replay && (
+								<button
+									className={cx('btn', 'btn-primary', 'rspacer')}
+									onClick={() => actions.replay(op.id)}
+									disabled={!replay}
+								>
+									REPLAY
 								</button>
 							)}
 							{chevron}

@@ -22,3 +22,4 @@ export const API_GATHER_MOVE = 'api/gather/move'
 export const API_GET_LOG = 'api/get/log'
 
 export const API_VALIDATE = 'api/validate'
+export const API_REPLAY = 'api/replay'

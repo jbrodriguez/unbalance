@@ -231,6 +231,18 @@ const validate = ({ state, actions, opts: { ws } }, id) => {
 
 	return state
 }
+
+const replay = ({ state, actions, opts: { ws } }, id) => {
+	actions.setBusy(true)
+	actions.resetState()
+
+	ws.send({ topic: constant.API_REPLAY, payload: state.history.items[id] })
+
+	state.history.replace({ pathname: '/transfer' })
+
+	return state
+}
+
 export default {
 	getState,
 	gotState,
@@ -253,4 +265,5 @@ export default {
 	flipOperation,
 
 	validate,
+	replay,
 }
