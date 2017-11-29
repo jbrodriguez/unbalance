@@ -531,11 +531,6 @@ func (c *Core) runOperation(opName string) {
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	// Initialize local variables
-	var calls int64
-	var callsPerDelta int64
-	// var elapsed time.Duration
-
 	commandsExecuted := make([]string, 0)
 
 	for _, command := range operation.Commands {
@@ -544,6 +539,7 @@ func (c *Core) runOperation(opName string) {
 			command.Entry,
 			command.Dst,
 		)
+
 		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 		mlog.Info("Command Started: (src: %s) %s ", command.Src, cmd)
 
@@ -551,7 +547,7 @@ func (c *Core) runOperation(opName string) {
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		cmdTransferred, err := runCommand(operation, command, c.bus, c.reProgress, args, calls, callsPerDelta, c.settings.Verbosity)
+		cmdTransferred, err := runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
 
 		if err != nil {
 			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
@@ -566,7 +562,7 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, calls, callsPerDelta int64, verbosity int) (int64, error) {
+func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
 	// tvshows/Billions/Season 01/banner.s01.jpg
 	//              20 100%    0.00kB/s    0:00:00
 	//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
@@ -609,6 +605,9 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 
 	var cmdTransferred, accumTransferred, perFileTransferred int64
 
+	started := time.Now()
+	throttled := false
+
 	// actual shell execution
 	err := lib.ShellEx(func(text string) {
 		line := strings.TrimSpace(text)
@@ -616,16 +615,6 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 		if len(line) <= 0 {
 			return
 		}
-
-		if callsPerDelta <= 50 {
-			calls++
-		}
-
-		delta := int64(time.Since(operation.Started) / time.Second)
-		if delta == 0 {
-			delta = 1
-		}
-		callsPerDelta = calls / delta
 
 		match := re.FindStringSubmatch(line)
 
@@ -639,7 +628,7 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 				mlog.Info("%s", line)
 			}
 
-			if callsPerDelta <= 50 {
+			if !throttled {
 				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			}
@@ -661,17 +650,25 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 			accumTransferred += perFileTransferred
 		}
 
-		if callsPerDelta <= 50 {
-			percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
 
-			operation.Completed = percent
-			operation.Speed = speed
-			operation.Remaining = string(left)
-			operation.DeltaTransfer = cmdTransferred
-			command.Transferred = cmdTransferred
+		operation.Completed = percent
+		operation.Speed = speed
+		operation.Remaining = left.String()
+		operation.DeltaTransfer = cmdTransferred
+		command.Transferred = cmdTransferred
 
+		if !throttled {
 			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		}
+
+		current := time.Now()
+		if current.Sub(started) < 250*time.Millisecond {
+			throttled = true
+		} else {
+			throttled = false
+			started = current
 		}
 
 	}, mlog.Warning, command.Src, "rsync", args...)
@@ -695,7 +692,7 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = string(left)
+	operation.Remaining = left.String()
 	operation.DeltaTransfer = cmdTransferred
 	command.Transferred = cmdTransferred
 
@@ -711,7 +708,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = string(left)
+	operation.Remaining = left.String()
 	operation.DeltaTransfer = 0
 	operation.Line = text
 	command.Transferred = command.Size
@@ -788,7 +785,7 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = string(left)
+	operation.Remaining = left.String()
 
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
