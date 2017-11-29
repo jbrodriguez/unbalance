@@ -80,7 +80,7 @@ export default class Scatter extends PureComponent {
 		}
 
 		const opInProgress = state.env.isBusy || state.core.status !== constant.OP_NEUTRAL
-		const calcDisabled =
+		const planDisabled =
 			opInProgress ||
 			Object.keys(state.scatter.chosen).length === 0 ||
 			!state.core.unraid.disks.some(disk => plan.vdisks[disk.path].src || plan.vdisks[disk.path].dst)
@@ -91,9 +91,9 @@ export default class Scatter extends PureComponent {
 				<button
 					className={cx('btn', 'btn-primary')}
 					onClick={() => actions.scatterPlan()}
-					disabled={calcDisabled}
+					disabled={planDisabled}
 				>
-					CALCULATE
+					PLAN
 				</button>
 				<span>&nbsp; | &nbsp;</span>
 				<button
@@ -110,13 +110,7 @@ export default class Scatter extends PureComponent {
 				>
 					COPY
 				</button>
-				<button
-					className={cx('btn', 'btn-primary', 'lspacer')}
-					onClick={() => actions.validate()}
-					disabled={transferDisabled}
-				>
-					VALIDATE
-				</button>
+
 				<span>&nbsp; | &nbsp;</span>
 				<div className={cx('flexSection', 'middle-xs', 'rspacer')}>
 					<input

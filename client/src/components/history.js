@@ -30,6 +30,7 @@ export default class History extends PureComponent {
 
 	render() {
 		const { state } = this.props.store
+		const { state, actions } = this.props.store
 
 		if (!(state.core && state.core.history && state.core.history.order && state.core.history.order.length > 0)) {
 			return (
@@ -116,13 +117,17 @@ export default class History extends PureComponent {
 				)
 			}
 
+			const replay = !op.dryRun && op.opKind !== constant.OP_SCATTER_VALIDATE
+			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY
+
 			return (
 				<div key={op.id} className={cx('historyItem', 'bottom-spacer-half')}>
 					<section className={cx('row')}>
 						<div
 							className={cx('flexSection', 'col-xs-12', 'col-sm-1', 'center-xs', 'middle-xs', 'start-sm')}
 						>
-							{status} {op.dryRun && <span className={cx('lspacer', 'historyLabel')}>dry</span>}
+							{status}{' '}
+							{op.dryRun && <span className={cx('lspacer', 'historyLabel', 'rspacer')}>dry</span>}
 						</div>
 						<div
 							className={cx('flexSection', 'col-xs-12', 'col-sm-3', 'center-xs', 'middle-xs', 'start-sm')}
@@ -140,9 +145,20 @@ export default class History extends PureComponent {
 								{elapsed.hours}h, {elapsed.minutes}m, {elapsed.seconds}s
 							</span>
 						</div>
-						<div className={cx('flexSection', 'col-xs-12', 'col-sm-4', 'center-xs', 'middle-xs', 'end-sm')}>
+						<div className={cx('flexSection', 'col-xs-12', 'col-sm-2', 'center-xs', 'middle-xs', 'end-sm')}>
 							<span className={cx('historyValue')}>{value}</span>
 							<span className={cx('rspacer')}>&nbsp;{unit}</span>
+						</div>
+						<div className={cx('flexSection', 'col-xs-12', 'col-sm-2', 'center-xs', 'middle-xs', 'end-sm')}>
+							{validate && (
+								<button
+									className={cx('btn', 'btn-primary', 'rspacer')}
+									onClick={() => actions.validate(op.id)}
+									disabled={!validate}
+								>
+									VALIDATE
+								</button>
+							)}
 							{chevron}
 						</div>
 					</section>
