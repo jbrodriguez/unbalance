@@ -699,6 +699,63 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
 
+func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Command) {
+	if operation.DryRun && operation.OpKind == common.OpGatherMove {
+		parent := filepath.Dir(command.Entry)
+		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
+		if parent != "." {
+			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
+		} else {
+			mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+		}
+	}
+}
+
+func handleItemDeletion(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub) {
+	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
+		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
+		if exists {
+			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
+			mlog.Info("Removing: %s", rmrf)
+			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
+				mlog.Info(line)
+			})
+
+			if err != nil {
+				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+				mlog.Warning(msg)
+			}
+
+			if operation.OpKind == common.OpGatherMove {
+				parent := filepath.Dir(command.Entry)
+				if parent != "." {
+					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+					mlog.Info("Running %s", rmdir)
+
+					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
+						mlog.Info(line)
+					})
+
+					if err != nil {
+						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+
+						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+						bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+						mlog.Warning(msg)
+					}
+				}
+			}
+		} else {
+			mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
+		}
+	}
+}
+
 func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command) {
 	text := "Command Finished"
 	mlog.Info(text)
@@ -720,59 +777,10 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 	// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
-	if operation.DryRun && operation.OpKind == common.OpGatherMove {
-		parent := filepath.Dir(command.Entry)
-		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
-		if parent != "." {
-			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
-		} else {
-			mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-		}
-	}
+	showPotentiallyPrunedItems(operation, command)
 
 	// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
-	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
-		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
-		if exists {
-			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
-			mlog.Info("Removing: %s", rmrf)
-			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
-				mlog.Info(line)
-			})
-
-			if err != nil {
-				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
-
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-				mlog.Warning(msg)
-			}
-
-			if operation.OpKind == common.OpGatherMove {
-				parent := filepath.Dir(command.Entry)
-				if parent != "." {
-					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-					mlog.Info("Running %s", rmdir)
-
-					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
-						mlog.Info(line)
-					})
-
-					if err != nil {
-						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
-
-						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-						c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-						mlog.Warning(msg)
-					}
-				}
-			}
-		} else {
-			mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
-		}
-	}
+	handleItemDeletion(operation, command, c.bus)
 }
 
 func (c *Core) operationCompleted(opName string, operation *domain.Operation, commandsExecuted []string) {
