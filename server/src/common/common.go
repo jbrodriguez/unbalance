@@ -68,4 +68,5 @@ const (
 	APISetRsyncArgs   = "config/set/rsyncArgs"
 
 	APIValidate = "api/validate"
+	APIReplay   = "api/replay"
 )

@@ -131,6 +131,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APIGetUpdate, c.getUpdate)
 	c.actor.Register(common.APISetRsyncArgs, c.setRsyncArgs)
 	c.actor.Register(common.APIValidate, c.validate)
+	c.actor.Register(common.APIReplay, c.replay)
 	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
@@ -568,6 +569,67 @@ func (c *Core) validate(msg *pubsub.Message) {
 	c.state.Operation = c.setupValidateOperation(originalOp)
 
 	go c.runOperation("Validate")
+}
+
+func (c *Core) getReplayOperation(msg *pubsub.Message) (*domain.Operation, error) {
+	data, ok := msg.Payload.(string)
+	if !ok {
+		return nil, errors.New("Unable to convert replay parameters")
+	}
+
+	var operation domain.Operation
+	err := json.Unmarshal([]byte(data), &operation)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to bind replay parameters: %s", err)
+	}
+
+	return &operation, nil
+}
+
+func (c *Core) setupReplayOperation(originalOp *domain.Operation) *domain.Operation {
+	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
+		OpKind:          common.OpScatterValidate,
+		BytesToTransfer: originalOp.BytesToTransfer,
+		DryRun:          false,
+	}
+
+	operation.RsyncArgs = originalOp.RsyncArgs
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
+
+	operation.Commands = originalOp.Commands
+
+	for _, command := range operation.Commands {
+		command.ID = shortid.MustGenerate()
+		command.Transferred = 0
+	}
+
+	return operation
+}
+
+func getOpName(status int64) string {
+	if status == common.OpScatterMove || status == common.OpGatherMove {
+		return "Move"
+	}
+
+	return "Copy"
+}
+
+func (c *Core) replay(msg *pubsub.Message) {
+	originalOp, err := c.getReplayOperation(msg)
+	if err != nil {
+		mlog.Warning("Unable to get replay operation: %s", err)
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	c.state.Operation = c.setupReplayOperation(originalOp)
+	c.state.Status = c.state.Operation.OpKind
+
+	go c.runOperation(getOpName(c.state.Status))
 }
 
 // COMMON TRANSFER
