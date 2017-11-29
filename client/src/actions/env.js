@@ -10,16 +10,6 @@ const setBusy = ({ state }, isBusy) => {
 	}
 }
 
-const clearConsole = ({ state }) => {
-	return {
-		...state,
-		env: {
-			...state.env,
-			lines: [],
-		},
-	}
-}
-
 const addFeedback = ({ state, actions }, feedback) => {
 	if (state.env.timeout) {
 		window.clearTimeout(state.env.timeout)
@@ -90,8 +80,6 @@ const gotLog = ({ state, actions }, log) => {
 
 export default {
 	setBusy,
-
-	clearConsole,
 
 	addFeedback,
 	removeFeedback,

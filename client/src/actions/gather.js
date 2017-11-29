@@ -13,6 +13,17 @@ const getEntries = ({ state, actions }) => {
 			chosen: {},
 			location: null,
 			target: null,
+			lines: [],
+		},
+	}
+}
+
+const clearGatherConsole = ({ state }) => {
+	return {
+		...state,
+		gather: {
+			...state.gather,
+			lines: [],
 		},
 	}
 }
@@ -133,20 +144,20 @@ const gatherTreeLocated = ({ state }, location) => {
 const gatherPlanStarted = ({ state }, line) => {
 	return {
 		...state,
-		env: {
-			...state.env,
-			lines: [].concat(`PLANNING: ${line}`),
+		gather: {
+			...state.gather,
+			lines: [`PLANNING: ${line}`],
 		},
 	}
 }
 
 const gatherPlanProgress = ({ state }, line) => {
-	const lines = state.env.lines.length > 1000 ? [] : state.env.lines
+	const lines = state.gather.lines.length > 1000 ? [] : state.gather.lines
 
 	return {
 		...state,
-		env: {
-			...state.env,
+		gather: {
+			...state.gather,
 			lines: lines.concat(`PLANNING: ${line}`),
 		},
 	}
@@ -244,6 +255,7 @@ const gatherMove = ({ state, actions, opts: { ws } }) => {
 
 export default {
 	getEntries,
+	clearGatherConsole,
 
 	getGatherTree,
 	gotGatherTree,
