@@ -67,5 +67,5 @@ const (
 	APIGetUpdate      = "config/get/update"
 	APISetRsyncArgs   = "config/set/rsyncArgs"
 
-	ApiValidate = "api/validate"
+	APIValidate = "api/validate"
 )

@@ -130,7 +130,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APISetCheckUpdate, c.setCheckUpdate)
 	c.actor.Register(common.APIGetUpdate, c.getUpdate)
 	c.actor.Register(common.APISetRsyncArgs, c.setRsyncArgs)
-	// c.actor.Register("validate", c.validate)
+	c.actor.Register(common.APIValidate, c.validate)
 	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
@@ -513,6 +513,61 @@ func (c *Core) gatherMove(msg *pubsub.Message) {
 	c.state.Operation = c.setupGatherTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
 
 	go c.runOperation("Move")
+}
+
+// VALIDATE TRANSFER
+func (c *Core) getValidateOperation(msg *pubsub.Message) (*domain.Operation, error) {
+	data, ok := msg.Payload.(string)
+	if !ok {
+		return nil, errors.New("Unable to convert validate parameters")
+	}
+
+	var operation domain.Operation
+	err := json.Unmarshal([]byte(data), &operation)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to bind validate parameters: %s", err)
+	}
+
+	return &operation, nil
+}
+
+func (c *Core) setupValidateOperation(originalOp *domain.Operation) *domain.Operation {
+	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
+		OpKind:          common.OpScatterValidate,
+		BytesToTransfer: originalOp.BytesToTransfer,
+		DryRun:          false,
+	}
+
+	operation.RsyncArgs = append([]string{strings.Replace(common.RsyncArgs, "-a", "-rc", -1)}, originalOp.RsyncArgs[1:]...)
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
+
+	operation.Commands = originalOp.Commands
+
+	for _, command := range operation.Commands {
+		command.ID = shortid.MustGenerate()
+		command.Transferred = 0
+	}
+
+	return operation
+}
+
+func (c *Core) validate(msg *pubsub.Message) {
+	c.state.Status = common.OpScatterValidate
+
+	originalOp, err := c.getValidateOperation(msg)
+	if err != nil {
+		mlog.Warning("Unable to get validate operation: %s", err)
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	c.state.Operation = c.setupValidateOperation(originalOp)
+
+	go c.runOperation("Validate")
 }
 
 // COMMON TRANSFER
