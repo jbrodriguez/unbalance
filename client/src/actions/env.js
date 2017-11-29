@@ -1,3 +1,5 @@
+import * as constant from '../lib/const'
+
 const setBusy = ({ state }, isBusy) => {
 	return {
 		...state,
@@ -48,7 +50,7 @@ const removeFeedback = ({ state }) => {
 const getLog = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 
-	ws.send({ topic: 'api/get/log' })
+	ws.send({ topic: constant.API_GET_LOG })
 
 	return state
 }

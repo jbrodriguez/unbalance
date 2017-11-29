@@ -18,3 +18,5 @@ export const API_SCATTER_COPY = 'api/scatter/copy'
 
 export const API_GATHER_PLAN = 'api/gather/plan'
 export const API_GATHER_MOVE = 'api/gather/move'
+
+export const API_GET_LOG = 'api/get/log'
