@@ -32,7 +32,6 @@ const initialState = {
 	core: null,
 	env: {
 		isBusy: false,
-		lines: [],
 		log: [],
 		feedback: [],
 		timeout: null,

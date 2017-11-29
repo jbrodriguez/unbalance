@@ -18,7 +18,7 @@ export default class GatherMove extends PureComponent {
 	}
 
 	componentDidMount() {
-		this.props.store.actions.clearConsole()
+		this.props.store.actions.clearGatherConsole()
 	}
 
 	render() {
@@ -31,11 +31,11 @@ export default class GatherMove extends PureComponent {
 		}
 
 		let consolePanel = null
-		if (state.env.lines.length !== 0) {
+		if (state.gather.lines.length !== 0) {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.env.lines} styleClass={'console-feedback'} />
+						<ConsolePanel lines={state.gather.lines} styleClass={'console-feedback'} />
 					</div>
 				</section>
 			)

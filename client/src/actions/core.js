@@ -13,41 +13,33 @@ const getState = ({ state, actions, opts: { api } }, mode) => {
 }
 
 const gotState = ({ state, actions }, core) => {
-	const lines = []
-
 	let pathname = '/'
-	let line = ''
+
+	let scatterLine = []
+	let gatherLine = []
 
 	switch (status) {
 		case constant.OP_SCATTER_PLAN:
-			line = 'PLANNING: in progress ...'
+			scatterLine = ['PLANNING: in progress ...']
 			break
 		case constant.OP_SCATTER_MOVE:
-			line = 'MOVE: in progress ...'
 			pathname = '/transfer'
 			break
 		case constant.OP_SCATTER_COPY:
-			line = 'COPY: in progress ...'
 			pathname = '/transfer'
 			break
 		case constant.OP_SCATTER_VALIDATE:
-			line = 'VALIDATE: in progress ...'
 			pathname = '/transfer'
 			break
 		case constant.OP_GATHER_PLAN:
-			line = 'FIND TARGET: in progress ...'
+			gatherLine = ['PLANNING: in progress ...']
 			pathname = '/gather/target'
 			break
 		case constant.OP_GATHER_MOVE:
-			line = 'MOVE: in progress ...'
 			pathname = '/transfer'
 			break
 		default:
 			break
-	}
-
-	if (line !== '') {
-		lines.push(line)
 	}
 
 	state.history.replace({ pathname })
@@ -58,14 +50,12 @@ const gotState = ({ state, actions }, core) => {
 		scatter: {
 			...state.scatter,
 			plan: initPlan(core.unraid.disks),
+			lines: scatterLine,
 		},
 		gather: {
 			...state.gather,
 			plan: initPlan(core.unraid.disks),
-		},
-		env: {
-			...state.env,
-			lines,
+			lines: gatherLine,
 		},
 	}
 }
@@ -78,18 +68,16 @@ const resetState = ({ state }) => {
 			chosen: {},
 			items: [],
 			plan: initPlan(state.core.unraid.disks),
+			lines: [],
 		},
 		gather: {
 			cache: null,
 			chosen: {},
 			items: [],
 			plan: initPlan(state.core.unraid.disks),
+			lines: [],
 			location: null,
 			target: null,
-		},
-		env: {
-			...state.env,
-			lines: [],
 		},
 	}
 }
@@ -222,7 +210,6 @@ const initPlan = disks => {
 
 	const plan = {
 		chosenFolders: [],
-		foldersNotTransferred: [],
 		ownerIssue: 0,
 		groupIssue: 0,
 		folderIssue: 0,

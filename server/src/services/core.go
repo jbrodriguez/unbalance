@@ -282,53 +282,12 @@ func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	mlog.Info(`Plan
-		Started: %s
-		Finished: %s
-		ChosenFolders: %v
-		FolderNotTransferred: %v
-		OwnerIssue: %d
-		GroupIssue: %d
-		FolderIssue: %d
-		FileIssue: %d
-		BytesToTransfer: %d
-	`, plan.Started, plan.Finished, plan.ChosenFolders,
-		plan.FoldersNotTransferred, plan.OwnerIssue, plan.GroupIssue,
-		plan.FolderIssue, plan.FileIssue, plan.BytesToTransfer,
-	)
+	// order := make([]string, 0)
+	// for _, disk := range c.state.Unraid.Disks {
+	// 	order = append(order, disk.Path)
+	// }
 
-	for _, disk := range c.state.Unraid.Disks {
-		vdisk := plan.VDisks[disk.Path]
-
-		if vdisk.Bin != nil {
-			mlog.Info(`VDisk
-			Path: %s
-			PlannedFree: %d
-			Src: %t,
-			Dst: %t
-		`, vdisk.Path, vdisk.PlannedFree, vdisk.Src, vdisk.Dst)
-
-			mlog.Info(`Bin
-				Size: %d
-			`, vdisk.Bin.Size)
-
-			for _, item := range vdisk.Bin.Items {
-				mlog.Info(`Item
-					Name: %s
-					Size: %d
-					Path: %s
-					Location: %s
-				`, item.Name, item.Size, item.Path, item.Location)
-			}
-		} else {
-			mlog.Info(`VDisk
-				Path: %s
-				PlannedFree: %d
-				Src: %t,
-				Dst: %t
-			`, vdisk.Path, vdisk.PlannedFree, vdisk.Src, vdisk.Dst)
-		}
-	}
+	// plan.Print(order)
 }
 
 // GATHER CALCULATE
@@ -389,6 +348,13 @@ func (c *Core) gatherPlanFinished(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WsGatherPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
+
+	// order := make([]string, 0)
+	// for _, disk := range c.state.Unraid.Disks {
+	// 	order = append(order, disk.Path)
+	// }
+
+	// plan.Print(order)
 }
 
 // SCATTER TRANSFER
@@ -565,11 +531,6 @@ func (c *Core) runOperation(opName string) {
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	// Initialize local variables
-	var calls int64
-	var callsPerDelta int64
-	// var elapsed time.Duration
-
 	commandsExecuted := make([]string, 0)
 
 	for _, command := range operation.Commands {
@@ -578,6 +539,7 @@ func (c *Core) runOperation(opName string) {
 			command.Entry,
 			command.Dst,
 		)
+
 		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 		mlog.Info("Command Started: (src: %s) %s ", command.Src, cmd)
 
@@ -585,117 +547,10 @@ func (c *Core) runOperation(opName string) {
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		// tvshows/Billions/Season 01/banner.s01.jpg
-		//              20 100%    0.00kB/s    0:00:00
-		//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
-		// tvshows/Billions/Season 01/billions.s01e01.1080p
-		//          32,768   0%    1.01MB/s    0:02:53
-		//      48,005,120  26%   45.78MB/s    0:00:02
-		//     100,696,064  56%   47.97MB/s    0:00:01
-		//     157,810,688  88%   50.15MB/s    0:00:00
-		//     179,306,496 100%   52.91MB/s    0:00:03 (xfr#2, to-chk=3/8)
-		// tvshows/Billions/Season 01/billions.s01e02.1080p
-		//          32,768   0%  137.34kB/s    0:21:52
-		//      38,305,792  21%   36.35MB/s    0:00:03
-		//     106,397,696  58%   50.58MB/s    0:00:01
-		//     180,355,072 100%   64.83MB/s    0:00:02 (xfr#3, to-chk=2/8)
-		// tvshows/Billions/Season 01/billions.s01e03.1080p
-		//          32,768   0%   49.31kB/s    1:01:18
-		//      41,811,968  23%   39.88MB/s    0:00:03
-		//     157,810,688  86%   75.29MB/s    0:00:00
-		//     181,403,648 100%   79.21MB/s    0:00:02 (xfr#4, to-chk=1/8)
-		// tvshows/Billions/Season 01/billions.s01e04.1080p
-		//          32,768   0%  171.12kB/s    0:17:46
-		//      82,542,592  45%   78.72MB/s    0:00:01
-		//     112,492,544  61%   53.45MB/s    0:00:01
-		//     120,881,152  66%   38.11MB/s    0:00:01
-		//     164,134,912  89%   38.30MB/s    0:00:00
-		//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
-		//
-		// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
-		// particular file, then starts over with the next file
-		// makes sense for them I guess, but it's a pita to track and get an overall total
-		//
-		// so this is what the following represent:
-		//
-		// - cmdTransferred holds the running total for the current command
-		//
-		// - accumTransferred holds the running total for all the files that have been transferred, not including the
-		// current file, for the current command
-		//
-		// - perFileTransferred holds the running total for the file that is currently being transferred
-
-		var cmdTransferred, accumTransferred, perFileTransferred int64
-
-		// actual shell execution
-		err := lib.ShellEx(func(text string) {
-			line := strings.TrimSpace(text)
-
-			if len(line) <= 0 {
-				return
-			}
-
-			if callsPerDelta <= 50 {
-				calls++
-			}
-
-			delta := int64(time.Since(operation.Started) / time.Second)
-			if delta == 0 {
-				delta = 1
-			}
-			callsPerDelta = calls / delta
-
-			match := c.reProgress.FindStringSubmatch(line)
-
-			// this is a regular output line from rsync
-			if match == nil {
-				// make sure it's available for the front end
-				operation.Line = line
-
-				// log it according to verbosity settings
-				if c.settings.Verbosity == 1 {
-					mlog.Info("%s", line)
-				}
-
-				if callsPerDelta <= 50 {
-					outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-					c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-				}
-
-				return
-			}
-
-			// this is a file transfer progress output line
-			if match[1] == "" {
-				// this happens when the file hasn't finished transferring
-				moved := strings.Replace(match[2], ",", "", -1)
-				perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-				cmdTransferred = accumTransferred + perFileTransferred
-			} else {
-				// the file has finished transferring
-				moved := strings.Replace(match[1], ",", "", -1)
-				perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-				cmdTransferred = accumTransferred + perFileTransferred
-				accumTransferred += perFileTransferred
-			}
-
-			if callsPerDelta <= 50 {
-				percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
-
-				operation.Completed = percent
-				operation.Speed = speed
-				operation.Remaining = string(left)
-				operation.DeltaTransfer = cmdTransferred
-				command.Transferred = cmdTransferred
-
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-			}
-
-		}, mlog.Warning, command.Src, "rsync", args...)
+		cmdTransferred, err := runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
 
 		if err != nil {
-			c.transferInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
+			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
 		}
 
@@ -707,7 +562,121 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func (c *Core) transferInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
+func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+	// tvshows/Billions/Season 01/banner.s01.jpg
+	//              20 100%    0.00kB/s    0:00:00
+	//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
+	// tvshows/Billions/Season 01/billions.s01e01.1080p
+	//          32,768   0%    1.01MB/s    0:02:53
+	//      48,005,120  26%   45.78MB/s    0:00:02
+	//     100,696,064  56%   47.97MB/s    0:00:01
+	//     157,810,688  88%   50.15MB/s    0:00:00
+	//     179,306,496 100%   52.91MB/s    0:00:03 (xfr#2, to-chk=3/8)
+	// tvshows/Billions/Season 01/billions.s01e02.1080p
+	//          32,768   0%  137.34kB/s    0:21:52
+	//      38,305,792  21%   36.35MB/s    0:00:03
+	//     106,397,696  58%   50.58MB/s    0:00:01
+	//     180,355,072 100%   64.83MB/s    0:00:02 (xfr#3, to-chk=2/8)
+	// tvshows/Billions/Season 01/billions.s01e03.1080p
+	//          32,768   0%   49.31kB/s    1:01:18
+	//      41,811,968  23%   39.88MB/s    0:00:03
+	//     157,810,688  86%   75.29MB/s    0:00:00
+	//     181,403,648 100%   79.21MB/s    0:00:02 (xfr#4, to-chk=1/8)
+	// tvshows/Billions/Season 01/billions.s01e04.1080p
+	//          32,768   0%  171.12kB/s    0:17:46
+	//      82,542,592  45%   78.72MB/s    0:00:01
+	//     112,492,544  61%   53.45MB/s    0:00:01
+	//     120,881,152  66%   38.11MB/s    0:00:01
+	//     164,134,912  89%   38.30MB/s    0:00:00
+	//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
+	//
+	// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
+	// particular file, then starts over with the next file
+	// makes sense for them I guess, but it's a pita to track and get an overall total
+	//
+	// so this is what the following represent:
+	//
+	// - cmdTransferred holds the running total for the current command
+	//
+	// - accumTransferred holds the running total for all the files that have been transferred, not including the
+	// current file, for the current command
+	//
+	// - perFileTransferred holds the running total for the file that is currently being transferred
+
+	var cmdTransferred, accumTransferred, perFileTransferred int64
+
+	started := time.Now()
+	throttled := false
+
+	// actual shell execution
+	err := lib.ShellEx(func(text string) {
+		line := strings.TrimSpace(text)
+
+		if len(line) <= 0 {
+			return
+		}
+
+		match := re.FindStringSubmatch(line)
+
+		// this is a regular output line from rsync
+		if match == nil {
+			// make sure it's available for the front end
+			operation.Line = line
+
+			// log it according to verbosity settings
+			if verbosity == 1 {
+				mlog.Info("%s", line)
+			}
+
+			if !throttled {
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			}
+
+			return
+		}
+
+		// this is a file transfer progress output line
+		if match[1] == "" {
+			// this happens when the file hasn't finished transferring
+			moved := strings.Replace(match[2], ",", "", -1)
+			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
+			cmdTransferred = accumTransferred + perFileTransferred
+		} else {
+			// the file has finished transferring
+			moved := strings.Replace(match[1], ",", "", -1)
+			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
+			cmdTransferred = accumTransferred + perFileTransferred
+			accumTransferred += perFileTransferred
+		}
+
+		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+
+		operation.Completed = percent
+		operation.Speed = speed
+		operation.Remaining = left.String()
+		operation.DeltaTransfer = cmdTransferred
+		command.Transferred = cmdTransferred
+
+		if !throttled {
+			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		}
+
+		current := time.Now()
+		if current.Sub(started) < 250*time.Millisecond {
+			throttled = true
+		} else {
+			throttled = false
+			started = current
+		}
+
+	}, mlog.Warning, command.Src, "rsync", args...)
+
+	return cmdTransferred, err
+}
+
+func (c *Core) commandInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
 	operation.Finished = time.Now()
 	elapsed := time.Since(operation.Started)
 
@@ -723,45 +692,26 @@ func (c *Core) transferInterrupted(opName string, operation *domain.Operation, c
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = string(left)
+	operation.Remaining = left.String()
 	operation.DeltaTransfer = cmdTransferred
 	command.Transferred = cmdTransferred
 
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
 
-func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command) {
-	text := "Command Finished"
-	mlog.Info(text)
-
-	operation.BytesTransferred += command.Size
-	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
-
-	operation.Completed = percent
-	operation.Speed = speed
-	operation.Remaining = string(left)
-	operation.DeltaTransfer = 0
-	operation.Line = text
-	command.Transferred = command.Size
-
-	msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, operation.Remaining, speed)
-	mlog.Info("Current progress: %s", msg)
-
-	outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-	// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
+func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Command) {
 	if operation.DryRun && operation.OpKind == common.OpGatherMove {
 		parent := filepath.Dir(command.Entry)
-		mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
+		// mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
 		if parent != "." {
 			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
 		} else {
 			mlog.Info(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
 		}
 	}
+}
 
-	// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+func handleItemDeletion(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub) {
 	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
 		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
 		if exists {
@@ -775,7 +725,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
 
 				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-				c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				mlog.Warning(msg)
 			}
@@ -794,7 +744,7 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
 
 						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
-						c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+						bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 						mlog.Warning(msg)
 					}
@@ -804,6 +754,33 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 			mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
 		}
 	}
+}
+
+func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command) {
+	text := "Command Finished"
+	mlog.Info(text)
+
+	operation.BytesTransferred += command.Size
+	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
+
+	operation.Completed = percent
+	operation.Speed = speed
+	operation.Remaining = left.String()
+	operation.DeltaTransfer = 0
+	operation.Line = text
+	command.Transferred = command.Size
+
+	msg := fmt.Sprintf("%.2f%% done ~ %s left (%.2f MB/s)", percent, operation.Remaining, speed)
+	mlog.Info("Current progress: %s", msg)
+
+	outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// this is just a heads up for the user, shows which folders would/wouldn't be pruned if run without dry-run
+	showPotentiallyPrunedItems(operation, command)
+
+	// if it isn't a dry-run and the operation is Move or Gather, delete the source folder
+	handleItemDeletion(operation, command, c.bus)
 }
 
 func (c *Core) operationCompleted(opName string, operation *domain.Operation, commandsExecuted []string) {
@@ -816,7 +793,7 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = string(left)
+	operation.Remaining = left.String()
 
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }

@@ -120,20 +120,20 @@ const scatterTreeChecked = ({ state, actions }, lineage) => {
 const scatterPlanStarted = ({ state }, line) => {
 	return {
 		...state,
-		env: {
-			...state.env,
-			lines: [].concat(`PLANNING: ${line}`),
+		scatter: {
+			...state.scatter,
+			lines: [`PLANNING: ${line}`],
 		},
 	}
 }
 
 const scatterPlanProgress = ({ state }, line) => {
-	const lines = state.env.lines.length > 1000 ? [] : state.env.lines
+	const lines = state.scatter.lines.length > 1000 ? [] : state.scatter.lines
 
 	return {
 		...state,
-		env: {
-			...state.env,
+		scatter: {
+			...state.scatter,
 			lines: lines.concat(`PLANNING: ${line}`),
 		},
 	}

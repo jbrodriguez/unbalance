@@ -145,11 +145,11 @@ export default class Scatter extends PureComponent {
 		)
 
 		let consolePanel = null
-		if (state.env.lines.length !== 0) {
+		if (state.scatter.lines.length !== 0) {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.env.lines} styleClass={'console-feedback'} />
+						<ConsolePanel lines={state.scatter.lines} styleClass={'console-feedback'} />
 					</div>
 				</section>
 			)

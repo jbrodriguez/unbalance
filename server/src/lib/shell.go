@@ -3,13 +3,8 @@ package lib
 import (
 	"bufio"
 	"bytes"
-	// "errors"
 	"io"
-	// "log"
-	// "os"
 	"os/exec"
-	// "strings"
-	// "syscall"
 )
 
 // Callback -
@@ -178,4 +173,28 @@ func ShellEx(callback Callback, writer StderrWriter, workDir, name string, args 
 	}
 
 	return nil
+}
+
+// Shell2 -
+func Shell2(command string, callback Callback) error {
+	args := append([]string{"-c"}, command)
+	cmd := exec.Command("/bin/sh", args...)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	scanner := bufio.NewScanner(stdout)
+
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+
+	for scanner.Scan() {
+		callback(scanner.Text())
+	}
+
+	// Wait for the result of the command; also closes our end of the pipe
+	return cmd.Wait()
 }

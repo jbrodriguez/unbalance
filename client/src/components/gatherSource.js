@@ -20,7 +20,7 @@ export default class GatherSource extends PureComponent {
 	componentDidMount() {
 		const { store: { state, actions } } = this.props
 
-		actions.clearConsole()
+		actions.clearGatherConsole()
 		if (Object.keys(state.gather.chosen).length === 0) {
 			actions.getEntries()
 		}

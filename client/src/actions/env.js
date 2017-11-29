@@ -1,19 +1,11 @@
+import * as constant from '../lib/const'
+
 const setBusy = ({ state }, isBusy) => {
 	return {
 		...state,
 		env: {
 			...state.env,
 			isBusy,
-		},
-	}
-}
-
-const clearConsole = ({ state }) => {
-	return {
-		...state,
-		env: {
-			...state.env,
-			lines: [],
 		},
 	}
 }
@@ -48,7 +40,7 @@ const removeFeedback = ({ state }) => {
 const getLog = ({ state, actions, opts: { ws } }) => {
 	actions.setBusy(true)
 
-	ws.send({ topic: 'api/get/log' })
+	ws.send({ topic: constant.API_GET_LOG })
 
 	return state
 }
@@ -88,8 +80,6 @@ const gotLog = ({ state, actions }, log) => {
 
 export default {
 	setBusy,
-
-	clearConsole,
 
 	addFeedback,
 	removeFeedback,

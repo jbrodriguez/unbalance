@@ -32,11 +32,11 @@ export default class GatherTarget extends PureComponent {
 		const { match, store: { state } } = this.props
 
 		let consolePanel = null
-		if (state.env.lines.length !== 0) {
+		if (state.gather.lines.length !== 0) {
 			consolePanel = (
 				<section className={cx('row', 'bottom-spacer-half')}>
 					<div className={cx('col-xs-12')}>
-						<ConsolePanel lines={state.env.lines} styleClass={'console-feedback'} />
+						<ConsolePanel lines={state.gather.lines} styleClass={'console-feedback'} />
 					</div>
 				</section>
 			)
