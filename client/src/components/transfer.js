@@ -3,6 +3,7 @@ import { PropTypes } from 'prop-types'
 
 import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
+import { DateTime } from 'luxon'
 
 import Indicator from './indicator'
 
@@ -67,7 +68,13 @@ export default class Transfers extends PureComponent {
 			} else if (command.transferred === command.size) {
 				status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
 			} else {
-				status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
+				const finished = DateTime.fromISO(operation.finished)
+				const started = DateTime.fromISO(operation.started)
+				if (finished.diff(started).toObject().milliseconds < 0) {
+					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
+				} else {
+					status = <i className={cx('fa fa-times-circle', 'statusInterrupted', 'rspacer')} />
+				}
 			}
 
 			const percent = percentage(command.transferred / command.size)
