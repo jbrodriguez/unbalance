@@ -191,12 +191,12 @@ class App extends PureComponent {
 							<div className={cx('flexSection', 'middle-xs', 'end-xs')}>
 								<a
 									className={cx('lspacer')}
-									href="https://www.paypal.me/jbrodriguezio"
-									title="@jbrodriguezio"
+									href="https://github.com/jbrodriguez/unbalance#support-fund"
+									title="Support Fund"
 									rel="noreferrer noopener"
 									target="_blank"
 								>
-									<span className={cx('fund')}>SUPPORT FUND</span>
+									<i className={cx('fa fa-gift', 'social')} />
 								</a>
 
 								<a
