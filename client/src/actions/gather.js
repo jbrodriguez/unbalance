@@ -11,9 +11,8 @@ const getEntries = ({ state, actions }) => {
 			cache: null,
 			items: [{ label: 'Loading ...' }],
 			chosen: {},
-			location: null,
-			target: null,
 			lines: [],
+			location: null,
 		},
 	}
 }
@@ -63,21 +62,24 @@ const gotGatherTree = ({ state }, newTree) => {
 	}
 }
 
-const checkTarget = ({ state }, drive, checked) => {
+const checkTarget = ({ state }, path) => {
+	const vdisks = Object.keys(state.gather.plan.vdisks).reduce((map, id) => {
+		const vdisk = state.gather.plan.vdisks[id]
+		map[id] = {
+			...vdisk,
+			src: false,
+			dst: id === path,
+		}
+		return map
+	}, {})
+
 	return {
 		...state,
 		gather: {
 			...state.gather,
-			target: checked ? drive : null,
 			plan: {
 				...state.gather.plan,
-				vdisks: {
-					...state.gather.plan.vdisks,
-					[drive.path]: {
-						...state.gather.plan.vdisks[drive.path],
-						dst: checked,
-					},
-				},
+				vdisks,
 			},
 		},
 	}

@@ -162,7 +162,7 @@ export default class Scatter extends PureComponent {
 				'label-success': vdisks[disk.path].src && vdisks[disk.path].plannedFree !== disk.free,
 			})
 
-			const percent = percentage((disk.size - disk.free) / disk.size)
+			const percent = percentage((disk.size - vdisks[disk.path].plannedFree) / disk.size)
 
 			// let serial = scramble(disk.serial)
 			if (disk.type === 'Cache' && disk.name.length > 5) {

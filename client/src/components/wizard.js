@@ -5,7 +5,6 @@ import classNames from 'classnames/bind'
 
 import { NextButton, PrevButton } from './buttons'
 import styles from '../styles/core.scss'
-import { isValid } from '../lib/utils'
 
 import * as constant from '../lib/const'
 
@@ -34,7 +33,7 @@ export default class Wizard extends PureComponent {
 		let targetDisabled = true
 		let moveDisabled = true
 
-		const targetPresent = isValid(state.gather.target)
+		const targetPresent = Object.keys(state.gather.plan.vdisks).some(id => state.gather.plan.vdisks[id].dst)
 
 		switch (match.url) {
 			case '/gather/target':

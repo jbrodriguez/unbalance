@@ -23,9 +23,15 @@ export default class GatherTarget extends PureComponent {
 		actions.gatherPlan()
 	}
 
-	checkTarget = disk => e => {
-		const { checkTarget } = this.props.store.actions
-		checkTarget(disk, e.target.checked)
+	checkTarget = path => e => {
+		const { state: { gather }, actions: { checkTarget } } = this.props.store
+
+		if (gather.plan.vdisks[path].dst) {
+			e.preventDefault()
+			return
+		}
+
+		checkTarget(path)
 	}
 
 	render() {
@@ -59,13 +65,17 @@ export default class GatherTarget extends PureComponent {
 		})
 
 		const rows = targets.map(disk => {
-			const percent = percentage((disk.size - disk.free) / disk.size)
+			const percent = percentage((disk.size - state.gather.plan.vdisks[disk.path].plannedFree) / disk.size)
 			const present = state.gather.location && state.gather.location.disks[disk.name]
 
 			return (
 				<tr key={disk.id}>
 					<td>
-						<input type="checkbox" checked={disk.dst} onChange={this.checkTarget(disk)} />
+						<input
+							type="checkbox"
+							checked={state.gather.plan.vdisks[disk.path].dst}
+							onChange={this.checkTarget(disk.path)}
+						/>
 					</td>
 					<td>{present && <span>*</span>}</td>
 					<td>{disk.name}</td>
