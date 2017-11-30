@@ -50,6 +50,28 @@ const checkTo = ({ state, actions }, path) => {
 	}
 }
 
+const checkAll = ({ state }, checked) => {
+	const vdisks = Object.keys(state.scatter.plan.vdisks).reduce((map, id) => {
+		const vdisk = state.scatter.plan.vdisks[id]
+		map[id] = {
+			...vdisk,
+			dst: !vdisk.src && checked,
+		}
+		return map
+	}, {})
+
+	return {
+		...state,
+		scatter: {
+			...state.scatter,
+			plan: {
+				...state.scatter.plan,
+				vdisks,
+			},
+		},
+	}
+}
+
 const scatterGetTree = ({ state, actions, opts: { api } }, path) => {
 	actions.setBusy(true)
 
@@ -248,6 +270,7 @@ export default {
 
 	checkFrom,
 	checkTo,
+	checkAll,
 
 	scatterTreeCollapsed,
 	scatterTreeChecked,

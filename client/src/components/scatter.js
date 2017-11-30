@@ -19,6 +19,14 @@ export default class Scatter extends PureComponent {
 		store: PropTypes.object.isRequired,
 	}
 
+	constructor(props) {
+		super(props)
+
+		this.state = {
+			allChecked: false,
+		}
+	}
+
 	componentDidMount() {
 		const { actions } = this.props.store
 		actions.getStorage()
@@ -54,6 +62,12 @@ export default class Scatter extends PureComponent {
 		}
 
 		checkTo(path)
+	}
+
+	checkAll = e => {
+		const { checkAll } = this.props.store.actions
+		checkAll(e.target.checked)
+		this.setState({ allChecked: e.target.checked })
 	}
 
 	render() {
@@ -262,7 +276,10 @@ export default class Scatter extends PureComponent {
 						<tbody>{rows}</tbody>
 						<tfoot>
 							<tr>
-								<th colSpan="5">TOTAL</th>
+								<th colSpan="4">TOTAL</th>
+								<th>
+									<input type="checkbox" checked={this.state.allChecked} onChange={this.checkAll} />
+								</th>
 								<th>{humanBytes(state.core.unraid.size)}</th>
 								<th>{humanBytes(state.core.unraid.free)}</th>
 								<th>
