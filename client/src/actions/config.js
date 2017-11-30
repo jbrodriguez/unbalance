@@ -17,17 +17,17 @@ const gotConfig = ({ state }, config) => {
 	}
 }
 
-const setNotifyCalc = ({ state, actions, opts: { api } }, notify) => {
-	if (state.config.notifyCalc !== notify) {
-		api.setNotifyCalc(notify).then(json => actions.gotConfig(json))
+const setNotifyPlan = ({ state, actions, opts: { api } }, notify) => {
+	if (state.config.notifyPlan !== notify) {
+		api.setNotifyPlan(notify).then(json => actions.gotConfig(json))
 	}
 
 	return state
 }
 
-const setNotifyMove = ({ state, actions, opts: { api } }, notify) => {
-	if (state.config.notifyMove !== notify) {
-		api.setNotifyMove(notify).then(json => actions.gotConfig(json))
+const setNotifyTransfer = ({ state, actions, opts: { api } }, notify) => {
+	if (state.config.notifyTransfer !== notify) {
+		api.setNotifyTransfer(notify).then(json => actions.gotConfig(json))
 	}
 
 	return state
@@ -116,8 +116,8 @@ export default {
 	getConfig,
 	gotConfig,
 
-	setNotifyCalc,
-	setNotifyMove,
+	setNotifyPlan,
+	setNotifyTransfer,
 
 	setReservedSpace,
 

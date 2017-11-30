@@ -10,22 +10,22 @@ import (
 
 // Plan - represents the different types of operation planning in the app
 // OpKind can be
-// OP_SCATTER_CALC
-// OP_GATHER_CALC
+// OpScatterPlan
+// OpGatherPlan
 type Plan struct {
 	Started  time.Time `json:"started"`
 	Finished time.Time `json:"finished"`
 
-	// calculate section
-	ChosenFolders []string `json:"chosenFolders"`
-	OwnerIssue    int64    `json:"ownerIssue"`
-	GroupIssue    int64    `json:"groupIssue"`
-	FolderIssue   int64    `json:"folderIssue"`
-	FileIssue     int64    `json:"fileIssue"`
+	// plan section
+	ChosenFolders []string          `json:"chosenFolders"`
+	OwnerIssue    int64             `json:"ownerIssue"`
+	GroupIssue    int64             `json:"groupIssue"`
+	FolderIssue   int64             `json:"folderIssue"`
+	FileIssue     int64             `json:"fileIssue"`
+	VDisks        map[string]*VDisk `json:"vdisks"`
 
 	// transfer section
-	BytesToTransfer int64             `json:"bytesToTransfer"`
-	VDisks          map[string]*VDisk `json:"vdisks"`
+	BytesToTransfer int64 `json:"bytesToTransfer"`
 }
 
 // Print -

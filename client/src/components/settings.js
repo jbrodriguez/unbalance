@@ -43,14 +43,14 @@ export default class Settings extends PureComponent {
 		}
 	}
 
-	setNotifyCalc = notify => () => {
-		const { setNotifyCalc } = this.props.store.actions
-		setNotifyCalc(notify)
+	setNotifyPlan = notify => () => {
+		const { setNotifyPlan } = this.props.store.actions
+		setNotifyPlan(notify)
 	}
 
-	setNotifyMove = notify => () => {
-		const { setNotifyMove } = this.props.store.actions
-		setNotifyMove(notify)
+	setNotifyTransfer = notify => () => {
+		const { setNotifyTransfer } = this.props.store.actions
+		setNotifyTransfer(notify)
 	}
 
 	setReservedAmount = e => {
@@ -116,67 +116,67 @@ export default class Settings extends PureComponent {
 
 							<span> Planning: </span>
 							<input
-								id="calc0"
+								id="plan0"
 								className={cx('lspacer')}
 								type="radio"
-								name="calc"
-								checked={state.config.notifyCalc === 0}
-								onChange={this.setNotifyCalc(0)}
+								name="plan"
+								checked={state.config.notifyPlan === 0}
+								onChange={this.setNotifyPlan(0)}
 							/>
-							<label htmlFor="calc0">No Notifications</label>
+							<label htmlFor="plan0">No Notifications</label>
 
 							<input
-								id="calc1"
+								id="plan1"
 								className={cx('lspacer')}
 								type="radio"
-								name="calc"
-								checked={state.config.notifyCalc === 1}
-								onChange={this.setNotifyCalc(1)}
+								name="plan"
+								checked={state.config.notifyPlan === 1}
+								onChange={this.setNotifyPlan(1)}
 							/>
-							<label htmlFor="calc1">Basic</label>
+							<label htmlFor="plan1">Basic</label>
 
 							<input
-								id="calc2"
+								id="plan2"
 								className={cx('lspacer')}
 								type="radio"
-								name="calc"
-								checked={state.config.notifyCalc === 2}
-								onChange={this.setNotifyCalc(2)}
+								name="plan"
+								checked={state.config.notifyPlan === 2}
+								onChange={this.setNotifyPlan(2)}
 							/>
-							<label htmlFor="calc2">Detailed</label>
+							<label htmlFor="plan2">Detailed</label>
 
 							<br />
 
 							<span> Transfer: </span>
 							<input
-								id="move0"
+								id="transfer0"
 								className={cx('lspacer')}
 								type="radio"
-								name="move"
-								checked={state.config.notifyMove === 0}
-								onChange={this.setNotifyMove(0)}
+								name="transfer"
+								checked={state.config.notifyTransfer === 0}
+								onChange={this.setNotifyTransfer(0)}
 							/>
-							<label htmlFor="move0">No Notifications</label>
+							<label htmlFor="transfer0">No Notifications</label>
 
 							<input
-								id="move0"
+								id="transfer0"
 								className={cx('lspacer')}
 								type="radio"
-								name="move"
-								checked={state.config.notifyMove === 1}
-								onChange={this.setNotifyMove(1)}
+								name="transfer"
+								checked={state.config.notifyTransfer === 1}
+								onChange={this.setNotifyTransfer(1)}
 							/>
-							<label htmlFor="move0">Basic</label>
+							<label htmlFor="transfer0">Basic</label>
 
 							<input
-								id="move0"
+								id="transfer0"
 								className={cx('lspacer')}
 								type="radio"
-								name="move"
-								checked={state.config.notifyMove === 2}
-								onChange={this.setNotifyMove(2)}
+								name="transfer"
+								checked={state.config.notifyTransfer === 2}
+								onChange={this.setNotifyTransfer(2)}
 							/>
-							<label htmlFor="move0">Detailed</label>
+							<label htmlFor="transfer0">Detailed</label>
 						</div>
 					</div>
 				</section>
@@ -188,7 +188,7 @@ export default class Settings extends PureComponent {
 
 							<p>
 								unBALANCE uses the threshold defined here as the minimum free space that should be kept
-								available in a target disk, when calculating how much the disk can be filled.
+								available in a target disk, when planning how much the disk can be filled.
 							</p>
 							<p>This threshold cannot be less than 450Mb (hard limit set by this app).</p>
 

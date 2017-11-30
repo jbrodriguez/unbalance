@@ -89,8 +89,8 @@ func (s *Server) Start() {
 	api.GET("/operation", s.getOperation)
 	api.GET("/history", s.getHistory)
 
-	api.PUT("/config/notifyCalc", s.setNotifyCalc)
-	api.PUT("/config/notifyMove", s.setNotifyMove)
+	api.PUT("/config/notifyPlan", s.setNotifyPlan)
+	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/checkUpdate", s.setCheckUpdate)
@@ -165,7 +165,7 @@ func (s *Server) getHistory(c echo.Context) (err error) {
 	return c.JSON(200, history)
 }
 
-func (s *Server) setNotifyCalc(c echo.Context) (err error) {
+func (s *Server) setNotifyPlan(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -174,7 +174,7 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.APINotifyCalc)
+	s.bus.Pub(msg, common.APINotifyPlan)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)
@@ -182,7 +182,7 @@ func (s *Server) setNotifyCalc(c echo.Context) (err error) {
 	return c.JSON(200, &resp)
 }
 
-func (s *Server) setNotifyMove(c echo.Context) (err error) {
+func (s *Server) setNotifyTransfer(c echo.Context) (err error) {
 	var packet dto.Packet
 
 	err = c.Bind(&packet)
@@ -191,7 +191,7 @@ func (s *Server) setNotifyMove(c echo.Context) (err error) {
 	}
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
-	s.bus.Pub(msg, common.APINotifyMove)
+	s.bus.Pub(msg, common.APINotifyTransfer)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)

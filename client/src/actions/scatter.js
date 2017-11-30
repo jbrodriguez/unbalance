@@ -163,14 +163,14 @@ const scatterPlanFinished = ({ state, actions }, plan) => {
 	if (plan.bytesToTransfer === 0) {
 		const feedback = []
 
-		feedback.push('The planning stage found that no folders/files can be moved/copied.')
+		feedback.push('The planning stage found that no folders/files can be transferred.')
 		feedback.push('')
 		feedback.push('This might be due to one of the following reasons:')
 		feedback.push(
 			'- The source share(s)/folder(s) you selected are either empty or do not exist in the source disk',
 		)
 		feedback.push(
-			"- There isn't available space in any of the target disks, to move/copy the share(s)/folder(s) you selected",
+			"- There isn't available space in any of the target disks, to transfer the share(s)/folder(s) you selected",
 		)
 		feedback.push('')
 		feedback.push(
@@ -196,7 +196,7 @@ const scatterPlanIssue = ({ state, actions }, permStats) => {
 
 	const feedback = []
 
-	feedback.push('There are some permission issues with the folders/files you want to move')
+	feedback.push('There are some permission issues with the folders/files you want to transfer')
 	feedback.push(`${permIssues[0]} file(s)/folder(s) with an owner other than 'nobody'`)
 	feedback.push(`${permIssues[1]} file(s)/folder(s) with a group other than 'users'`)
 	feedback.push(`${permIssues[2]} folder(s) with a permission other than 'drwxrwxrwx'`)
@@ -204,7 +204,7 @@ const scatterPlanIssue = ({ state, actions }, permStats) => {
 	feedback.push('You can find more details about which files have issues in the log file (/boot/logs/unbalance.log)')
 	feedback.push('')
 	feedback.push(
-		'At this point, you can move the folders/files if you want, but be advised that it can cause errors in the operation',
+		'At this point, you can transfer the folders/files if you want, but be advised that it can cause errors in the operation',
 	)
 	feedback.push('')
 	feedback.push(

@@ -59,8 +59,8 @@ const (
 	APIGatherMove = "api/gather/move"
 
 	APIToggleDryRun   = "config/toggle/dryrun"
-	APINotifyCalc     = "config/notify/calc"
-	APINotifyMove     = "config/notify/move"
+	APINotifyPlan     = "config/notify/plan"
+	APINotifyTransfer = "config/notify/transfer"
 	APISetReserved    = "config/set/reserved"
 	APISetVerbosity   = "config/set/verbosity"
 	APISetCheckUpdate = "config/set/checkupdate"
