@@ -217,7 +217,7 @@ func (c *Core) locate(msg *pubsub.Message) {
 	msg.Reply <- location
 }
 
-// SCATTER CALCULATE
+// SCATTER PLAN
 func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	payload, ok := msg.Payload.(string)
 	if !ok {
@@ -284,17 +284,17 @@ func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
 	// plan.Print(order)
 }
 
-// GATHER CALCULATE
+// GATHER PLAN
 func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert findTargets parameters")
+		return nil, errors.New("Unable to convert gather plan parameters")
 	}
 
 	var plan domain.Plan
 	err := json.Unmarshal([]byte(data), &plan)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to bind findTargets parameters: %s", err)
+		return nil, fmt.Errorf("Unable to bind gather plan parameters: %s", err)
 	}
 
 	return &plan, nil
