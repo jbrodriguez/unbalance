@@ -44,7 +44,7 @@ const checkTo = ({ state, actions }, path) => {
 					...state.scatter.plan.vdisks,
 					[path]: {
 						...state.scatter.plan.vdisks[path],
-						dst: !state.scatter.plan.vdisks[path],
+						dst: !state.scatter.plan.vdisks[path].dst,
 					},
 				},
 			},
