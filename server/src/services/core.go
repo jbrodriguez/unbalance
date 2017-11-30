@@ -162,15 +162,7 @@ func (c *Core) getOperation(msg *pubsub.Message) {
 func (c *Core) getStorage(msg *pubsub.Message) {
 	mlog.Info("Sending storage")
 
-	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	c.bus.Pub(param, common.IntGetArrayStatus)
-	reply := <-param.Reply
-	message := reply.(dto.Message)
-	if message.Error != nil {
-		mlog.Warning("Unable to get storage: %s", message.Error)
-	} else {
-		c.state.Unraid = message.Data.(*domain.Unraid)
-	}
+	c.state.Unraid = c.refreshUnraid()
 
 	msg.Reply <- c.state.Unraid
 }
@@ -243,6 +235,7 @@ func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 
 func (c *Core) scatterPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterPlan
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -309,6 +302,7 @@ func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 
 func (c *Core) gatherPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpGatherPlan
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
@@ -324,7 +318,6 @@ func (c *Core) gatherPlan(msg *pubsub.Message) {
 		return
 	}
 
-	// TODO: we should probably refresh unraid here (applies to scatterPlan too)
 	param := &pubsub.Message{Payload: &domain.State{
 		Status: c.state.Status,
 		Unraid: c.state.Unraid,
@@ -410,6 +403,7 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 
 func (c *Core) scatterMove(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterMove
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -428,6 +422,7 @@ func (c *Core) scatterMove(msg *pubsub.Message) {
 
 func (c *Core) scatterCopy(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterCopy
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -500,6 +495,7 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 
 func (c *Core) gatherMove(msg *pubsub.Message) {
 	c.state.Status = common.OpGatherMove
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
@@ -555,6 +551,7 @@ func (c *Core) setupValidateOperation(originalOp *domain.Operation) *domain.Oper
 
 func (c *Core) validate(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterValidate
+	c.state.Unraid = c.refreshUnraid()
 
 	originalOp, err := c.getValidateOperation(msg)
 	if err != nil {
@@ -628,6 +625,7 @@ func (c *Core) replay(msg *pubsub.Message) {
 
 	c.state.Operation = c.setupReplayOperation(originalOp)
 	c.state.Status = c.state.Operation.OpKind
+	c.state.Unraid = c.refreshUnraid()
 
 	go c.runOperation(getOpName(c.state.Status))
 }
@@ -928,9 +926,12 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	c.updateHistory(c.state.History, operation)
 
+	c.state.Unraid = c.refreshUnraid()
+
 	state := &domain.State{
 		Operation: operation,
 		History:   c.state.History,
+		Unraid:    c.state.Unraid,
 	}
 
 	outbound := &dto.Packet{Topic: "transferFinished", Payload: state}
@@ -1255,4 +1256,21 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 			mlog.Warning("Unable to write history: %s", err)
 		}
 	}()
+}
+
+func (c *Core) refreshUnraid() *domain.Unraid {
+	unraid := c.state.Unraid
+
+	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	c.bus.Pub(param, common.IntGetArrayStatus)
+
+	reply := <-param.Reply
+	message := reply.(dto.Message)
+	if message.Error != nil {
+		mlog.Warning("Unable to get storage: %s", message.Error)
+	} else {
+		unraid = message.Data.(*domain.Unraid)
+	}
+
+	return unraid
 }

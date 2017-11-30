@@ -167,6 +167,7 @@ const transferProgress = ({ state }, operation) => {
 
 const transferFinished = ({ state, actions }, bState) => {
 	actions.setBusy(false)
+	actions.resetState()
 
 	return {
 		...state,
@@ -174,6 +175,7 @@ const transferFinished = ({ state, actions }, bState) => {
 			...state.core,
 			operation: bState.operation,
 			history: bState.history,
+			unraid: bState.unraid,
 		},
 	}
 }
