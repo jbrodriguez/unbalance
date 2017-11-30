@@ -637,8 +637,7 @@ func (c *Core) runOperation(opName string) {
 	operation := c.state.Operation
 	operation.Started = time.Now()
 
-	// notifyMove should be renamed to notifyTransfer
-	if c.settings.NotifyMove == 2 {
+	if c.settings.NotifyTransfer == 2 {
 		c.notifyCommandsToRun(opName, operation)
 	}
 
@@ -941,7 +940,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 		fstarted, ffinished, elapsed, headline, lib.ByteSize(operation.BytesTransferred), operation.Speed,
 	)
 
-	switch c.settings.NotifyMove {
+	switch c.settings.NotifyTransfer {
 	case 1:
 		message += fmt.Sprintf("\n\n%d commands were executed.", len(commands))
 	case 2:
@@ -953,7 +952,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	}
 
 	go func() {
-		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+		if sendErr := c.sendmail(c.settings.NotifyTransfer, subject, message, c.settings.DryRun); sendErr != nil {
 			mlog.Error(sendErr)
 		}
 	}()
@@ -1159,7 +1158,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 	subject := fmt.Sprintf("unBALANCE - %s operation STARTED", strings.ToUpper(opName))
 
 	go func() {
-		if sendErr := c.sendmail(c.settings.NotifyMove, subject, message, c.settings.DryRun); sendErr != nil {
+		if sendErr := c.sendmail(c.settings.NotifyTransfer, subject, message, c.settings.DryRun); sendErr != nil {
 			mlog.Error(sendErr)
 		}
 	}()
