@@ -162,15 +162,7 @@ func (c *Core) getOperation(msg *pubsub.Message) {
 func (c *Core) getStorage(msg *pubsub.Message) {
 	mlog.Info("Sending storage")
 
-	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
-	c.bus.Pub(param, common.IntGetArrayStatus)
-	reply := <-param.Reply
-	message := reply.(dto.Message)
-	if message.Error != nil {
-		mlog.Warning("Unable to get storage: %s", message.Error)
-	} else {
-		c.state.Unraid = message.Data.(*domain.Unraid)
-	}
+	c.state.Unraid = c.refreshUnraid()
 
 	msg.Reply <- c.state.Unraid
 }
@@ -243,6 +235,7 @@ func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 
 func (c *Core) scatterPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterPlan
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -309,6 +302,7 @@ func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 
 func (c *Core) gatherPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpGatherPlan
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
@@ -324,7 +318,6 @@ func (c *Core) gatherPlan(msg *pubsub.Message) {
 		return
 	}
 
-	// TODO: we should probably refresh unraid here (applies to scatterPlan too)
 	param := &pubsub.Message{Payload: &domain.State{
 		Status: c.state.Status,
 		Unraid: c.state.Unraid,
@@ -410,6 +403,7 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 
 func (c *Core) scatterMove(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterMove
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -428,6 +422,7 @@ func (c *Core) scatterMove(msg *pubsub.Message) {
 
 func (c *Core) scatterCopy(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterCopy
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getScatterPlan(msg)
 	if err != nil {
@@ -500,6 +495,7 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 
 func (c *Core) gatherMove(msg *pubsub.Message) {
 	c.state.Status = common.OpGatherMove
+	c.state.Unraid = c.refreshUnraid()
 
 	plan, err := c.getGatherPlan(msg)
 	if err != nil {
@@ -555,6 +551,7 @@ func (c *Core) setupValidateOperation(originalOp *domain.Operation) *domain.Oper
 
 func (c *Core) validate(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterValidate
+	c.state.Unraid = c.refreshUnraid()
 
 	originalOp, err := c.getValidateOperation(msg)
 	if err != nil {
@@ -628,6 +625,7 @@ func (c *Core) replay(msg *pubsub.Message) {
 
 	c.state.Operation = c.setupReplayOperation(originalOp)
 	c.state.Status = c.state.Operation.OpKind
+	c.state.Unraid = c.refreshUnraid()
 
 	go c.runOperation(getOpName(c.state.Status))
 }
@@ -781,10 +779,8 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 		}
 
 		current := time.Now()
-		if current.Sub(started) < 250*time.Millisecond {
-			throttled = true
-		} else {
-			throttled = false
+		throttled = current.Sub(started) < 250*time.Millisecond
+		if !throttled {
 			started = current
 		}
 
@@ -833,15 +829,16 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
 		if exists {
 			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
-			mlog.Info("Removing: %s", rmrf)
+			mlog.Info("removing:(%s)", rmrf)
 			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
 				mlog.Info(line)
 			})
 
 			if err != nil {
 				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+				operation.Line = msg
 
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				mlog.Warning(msg)
@@ -849,9 +846,13 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 
 			if operation.OpKind == common.OpGatherMove {
 				parent := filepath.Dir(command.Entry)
-				if parent != "." {
+				// if entry is a user share (tvshows), Dir returns ".", so we won't touch it
+				// if entry is a top-level children of a user share (tvshows/Billions), Dir returns "tvshows"
+				// if entry is a nested children (tvshows/Billions/Season 01), Dir returns "tvshows/Billions"
+				// in the first 2 cases no "/" is present in parent, so I won't prune them
+				if strings.Contains(parent, "/") {
 					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-					mlog.Info("Running %s", rmdir)
+					mlog.Info("pruning:(%s)", rmdir)
 
 					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
 						mlog.Info(line)
@@ -859,12 +860,15 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 
 					if err != nil {
 						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+						operation.Line = msg
 
-						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+						outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 						bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 						mlog.Warning(msg)
 					}
+				} else {
+					mlog.Warning("skipping:prune:(%s)", filepath.Join(command.Src, parent))
 				}
 			}
 		} else {
@@ -922,9 +926,12 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	c.updateHistory(c.state.History, operation)
 
+	c.state.Unraid = c.refreshUnraid()
+
 	state := &domain.State{
 		Operation: operation,
 		History:   c.state.History,
+		Unraid:    c.state.Unraid,
 	}
 
 	outbound := &dto.Packet{Topic: "transferFinished", Payload: state}
@@ -1251,103 +1258,19 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 	}()
 }
 
-// func (c *Core) validate(msg *pubsub.Message) {
-// 	c.operation.OpState = model.StateValidate
-// 	c.operation.PrevState = model.StateValidate
-// 	go c.checksum(msg)
-// }
+func (c *Core) refreshUnraid() *domain.Unraid {
+	unraid := c.state.Unraid
 
-// func (c *Core) checksum(msg *pubsub.Message) {
-// 	defer func() {
-// 		c.operation.OpState = model.StateIdle
-// 		c.operation.PrevState = model.StateIdle
-// 		c.operation.Started = time.Time{}
-// 		c.operation.BytesTransferred = 0
-// 	}()
+	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	c.bus.Pub(param, common.IntGetArrayStatus)
 
-// 	opName := "Validate"
+	reply := <-param.Reply
+	message := reply.(dto.Message)
+	if message.Error != nil {
+		mlog.Warning("Unable to get storage: %s", message.Error)
+	} else {
+		unraid = message.Data.(*domain.Unraid)
+	}
 
-// 	mlog.Info("Running %s operation ...", opName)
-// 	c.operation.Started = time.Now()
-
-// 	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	multiSource := false
-
-// 	if !strings.HasPrefix(c.operation.RsyncStrFlags, "-a") {
-// 		finished := time.Now()
-// 		elapsed := time.Since(c.operation.Started)
-
-// 		subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
-// 		headline := fmt.Sprintf("For proper %s operation, rsync flags MUST begin with -a", opName)
-
-// 		mlog.Warning(headline)
-// 		outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 		_, _, speed := progress(c.operation.BytesToTransfer, 0, elapsed)
-// 		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed, multiSource)
-
-// 		return
-// 	}
-
-// 	// Initialize local variables
-// 	// we use the rsync flags that were created by the transfer operation,
-// 	// but replace -a with -rc, to perform the validation
-// 	checkRsyncFlags := make([]string, 0)
-// 	for _, flag := range c.operation.RsyncFlags {
-// 		checkRsyncFlags = append(checkRsyncFlags, strings.Replace(flag, "-a", "-rc", -1))
-// 	}
-
-// 	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
-
-// 	// execute each rsync command created in the transfer phase
-// 	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags, multiSource)
-// }
-
-// func (c *Core) gather(msg *pubsub.Message) {
-// 	mlog.Info("%+v", msg.Payload)
-// 	data, ok := msg.Payload.(string)
-// 	if !ok {
-// 		mlog.Warning("Unable to convert gather parameters")
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert gather parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 	}
-
-// 	var target model.Disk
-// 	err := json.Unmarshal([]byte(data), &target)
-// 	if err != nil {
-// 		mlog.Warning("Unable to bind gather parameters: %s", err)
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind gather parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 		// mlog.Fatalf(err.Error())
-// 	}
-
-// 	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
-// 	// that's the amount of data we need to transfer. Also remove bin from all other disks,
-// 	// since only the target will have work to do
-// 	for _, disk := range c.storage.Disks {
-// 		if disk.Path == target.Path {
-// 			c.operation.BytesToTransfer = disk.Bin.Size
-// 		} else {
-// 			disk.Bin = nil
-// 		}
-// 	}
-
-// 	c.operation.OpState = model.StateGather
-// 	c.operation.PrevState = model.StateGather
-
-// 	go c.transfer("Move", true, msg)
-// }
-
-// func (c *Core) getLog(msg *pubsub.Message) {
-// 	log := c.storage.GetLog()
-
-// 	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	return
-// }
+	return unraid
+}

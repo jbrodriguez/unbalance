@@ -309,15 +309,15 @@ func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*do
 		return nil, total, err
 	}
 
-	scanFolder := srcFolder + "/."
-
-	if len(entries) == 0 && status == common.OpGatherMove {
-		scanFolder = srcFolder
+	if len(entries) == 0 {
+		// Size: 1 is a trick to allow natural processing of this empty folder: if set to zero, many comparison
+		// would misinterpret this as a pending transfer and so on
+		return []*domain.Item{&domain.Item{Name: srcFolder, Size: 1, Path: folder, Location: src}}, 0, nil
 	}
 
 	items := make([]*domain.Item, 0)
 
-	cmd := fmt.Sprintf(`find "%s" ! -name . -prune -exec du -bs {} +`, scanFolder)
+	cmd := fmt.Sprintf(`find "%s" ! -name . -prune -exec du -bs {} +`, srcFolder+"/.")
 
 	err = lib.Shell2(cmd, func(line string) {
 		result := re.FindStringSubmatch(line)
@@ -359,7 +359,7 @@ func (c *Planner) getItemsAndIssues(status int64, reItems, reStat *regexp.Regexp
 				folderIssue += fldIssue
 				fileIssue += filIssue
 
-				mlog.Info("issues:owner(%d):group(%d):folder(%d):file(%d)", ownerIssue, groupIssue, folderIssue, fileIssue)
+				mlog.Info("issues:owner(%d):group(%d):folder(%d):file(%d)", ownIssue, grpIssue, fldIssue, filIssue)
 			}
 
 			// get children files/folders to be transferred

@@ -42,13 +42,15 @@ const initialState = {
 		chosen: {},
 		items: [],
 		plan: null,
+		lines: [],
 	},
 	gather: {
 		cache: null,
 		chosen: {},
 		items: [],
 		plan: null,
-		target: null,
+		lines: [],
+		location: null,
 	},
 	history,
 }

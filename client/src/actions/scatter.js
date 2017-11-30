@@ -2,8 +2,6 @@ import { markChosen, getNode } from '../lib/utils'
 import * as constant from '../lib/const'
 
 const checkFrom = ({ state, actions }, path) => {
-	console.log(`keys(${JSON.stringify(Object.keys(state.scatter.plan.vdisks))})`)
-
 	const vdisks = Object.keys(state.scatter.plan.vdisks).reduce((map, id) => {
 		const vdisk = state.scatter.plan.vdisks[id]
 		map[id] = {
@@ -44,7 +42,7 @@ const checkTo = ({ state, actions }, path) => {
 					...state.scatter.plan.vdisks,
 					[path]: {
 						...state.scatter.plan.vdisks[path],
-						dst: !state.scatter.plan.vdisks[path],
+						dst: !state.scatter.plan.vdisks[path].dst,
 					},
 				},
 			},

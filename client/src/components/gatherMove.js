@@ -6,7 +6,7 @@ import classNames from 'classnames/bind'
 import Wizard from './wizard'
 import ConsolePanel from './consolePanel'
 import styles from '../styles/core.scss'
-import { isValid, humanBytes } from '../lib/utils'
+import { humanBytes } from '../lib/utils'
 import * as constant from '../lib/const'
 
 const cx = classNames.bind(styles)
@@ -24,7 +24,9 @@ export default class GatherMove extends PureComponent {
 	render() {
 		const { match, store: { state, actions } } = this.props
 
-		const preReqNotPresent = Object.keys(state.gather.chosen).length === 0 || !isValid(state.gather.target)
+		const preReqNotPresent =
+			Object.keys(state.gather.chosen).length === 0 ||
+			!Object.keys(state.gather.plan.vdisks).some(id => state.gather.plan.vdisks[id].dst)
 
 		if (preReqNotPresent) {
 			return null

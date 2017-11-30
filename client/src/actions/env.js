@@ -57,6 +57,11 @@ const gotLog = ({ state, actions }, log) => {
 	}
 }
 
+const opError = ({ state, actions }, error) => {
+	actions.addFeedback(error)
+	return state
+}
+
 // function checkForUpdate({ state, actions, opts: { api } }) {
 // 	// console.log(`checking`)
 // 	api.checkForUpdate().then(json => actions.updateAvailable(json))
@@ -86,6 +91,8 @@ export default {
 
 	getLog,
 	gotLog,
+
+	opError,
 	// checkForUpdate,
 	// updateAvailable,
 	// removeUpdateAvailable,

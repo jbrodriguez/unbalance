@@ -4,6 +4,7 @@ rm -rf /mnt/disk1/films/bluray
 rm -rf /mnt/disk1/films/blurip
 rm -rf /mnt/disk1/tvshows/*
 rm -rf /mnt/disk2/tvshows/*
+rm -rf /mnt/disk3/tvshows/*
 
 pushd /mnt/disk1/films
 
@@ -27,10 +28,10 @@ popd
 
 popd # out of /mnt/disk/films
 
-pushd /mnt/disk1/tvshows
+pushd /mnt/disk1
 
-mkdir -p "Billions/Season 01"
-pushd "Billions/Season 01"
+mkdir -p "tvshows/Billions/Season 01"
+pushd "tvshows/Billions/Season 01"
 dd if=/dev/urandom of=billions.s01e01.1080p bs=1M count=171
 dd if=/dev/urandom of=billions.s01e02.1080p bs=1M count=172
 dd if=/dev/urandom of=billions.s01e03.1080p bs=1M count=173
@@ -40,10 +41,10 @@ popd
 
 popd # out of /mnt/disk1/tvshows
 
-pushd /mnt/disk2/tvshows
+pushd /mnt/disk2
 
-mkdir -p "Lost/Season 03"
-pushd "Lost/Season 03"
+mkdir -p "tvshows/Lost/Season 03"
+pushd "tvshows/Lost/Season 03"
 dd if=/dev/urandom of=lost.s03e01.1080p bs=1M count=161
 dd if=/dev/urandom of=lost.s03e02.1080p bs=1M count=162
 dd if=/dev/urandom of=lost.s03e03.1080p bs=1M count=163
@@ -51,3 +52,16 @@ echo "banner.season03.jpg" > banner.s03.jpg
 popd
 
 popd # out of /mnt/disk2/tvshows
+
+pushd /mnt/disk3/
+
+mkdir -p "tvshows/Billions/Season 02"
+pushd "tvshows/Billions/Season 02"
+dd if=/dev/urandom of=billions.s02e01.1080p bs=1M count=151
+dd if=/dev/urandom of=billions.s02e02.1080p bs=1M count=152
+dd if=/dev/urandom of=billions.s02e03.1080p bs=1M count=153
+dd if=/dev/urandom of=billions.s02e04.1080p bs=1M count=154
+echo "banner.season02.jpg" > banner.s01.jpg
+popd
+
+popd # out of /mnt/disk3/tvshows

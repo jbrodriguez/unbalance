@@ -106,12 +106,6 @@ const makeid = () => {
 	return text
 }
 
-const isValid = obj => {
-	if (typeof obj === 'undefined') return false
-	if (!obj) return false
-	return true
-}
-
 // tree helper functions
 const getNode = (tree, lineage) => {
 	if (lineage.length === 0) {
@@ -162,4 +156,4 @@ const uncheckChildren = (tree, chosen) => {
 	})
 }
 
-export { humanBytes, formatBytes, percentage, scramble, isValid, getNode, markChosen, uncheckChildren }
+export { humanBytes, formatBytes, percentage, scramble, getNode, markChosen, uncheckChildren }

@@ -77,7 +77,6 @@ const resetState = ({ state }) => {
 			plan: initPlan(state.core.unraid.disks),
 			lines: [],
 			location: null,
-			target: null,
 		},
 	}
 }
@@ -167,6 +166,7 @@ const transferProgress = ({ state }, operation) => {
 
 const transferFinished = ({ state, actions }, bState) => {
 	actions.setBusy(false)
+	actions.resetState()
 
 	return {
 		...state,
@@ -174,6 +174,7 @@ const transferFinished = ({ state, actions }, bState) => {
 			...state.core,
 			operation: bState.operation,
 			history: bState.history,
+			unraid: bState.unraid,
 		},
 	}
 }
