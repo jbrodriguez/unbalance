@@ -10,6 +10,7 @@ export const opMap = {
 	[OP_SCATTER_MOVE]: { name: 'SCATTER / MOVE', color: 'opWhite' },
 	[OP_SCATTER_COPY]: { name: 'SCATTER / COPY', color: 'opYellow' },
 	[OP_GATHER_MOVE]: { name: 'GATHER / MOVE', color: 'opOrange' },
+	[OP_SCATTER_VALIDATE]: { name: 'SCATTER / VALIDATE', color: 'opBlue' },
 }
 
 export const API_SCATTER_PLAN = 'api/scatter/plan'

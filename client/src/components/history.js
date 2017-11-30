@@ -116,7 +116,7 @@ export default class History extends PureComponent {
 				)
 			}
 
-			const replay = !op.dryRun && op.opKind !== constant.OP_SCATTER_VALIDATE
+			const replay = !op.dryRun
 			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY
 
 			return (

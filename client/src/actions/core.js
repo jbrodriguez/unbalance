@@ -225,7 +225,7 @@ const validate = ({ state, actions, opts: { ws } }, id) => {
 	actions.setBusy(true)
 	actions.resetState()
 
-	ws.send({ topic: constant.API_VALIDATE, payload: state.history.items[id] })
+	ws.send({ topic: constant.API_VALIDATE, payload: state.core.history.items[id] })
 
 	state.history.replace({ pathname: '/transfer' })
 
@@ -236,7 +236,7 @@ const replay = ({ state, actions, opts: { ws } }, id) => {
 	actions.setBusy(true)
 	actions.resetState()
 
-	ws.send({ topic: constant.API_REPLAY, payload: state.history.items[id] })
+	ws.send({ topic: constant.API_REPLAY, payload: state.core.history.items[id] })
 
 	state.history.replace({ pathname: '/transfer' })
 

@@ -589,7 +589,7 @@ func (c *Core) getReplayOperation(msg *pubsub.Message) (*domain.Operation, error
 func (c *Core) setupReplayOperation(originalOp *domain.Operation) *domain.Operation {
 	operation := &domain.Operation{
 		ID:              shortid.MustGenerate(),
-		OpKind:          common.OpScatterValidate,
+		OpKind:          originalOp.OpKind,
 		BytesToTransfer: originalOp.BytesToTransfer,
 		DryRun:          false,
 	}
