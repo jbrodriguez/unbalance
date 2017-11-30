@@ -66,4 +66,7 @@ const (
 	APISetCheckUpdate = "config/set/checkupdate"
 	APIGetUpdate      = "config/get/update"
 	APISetRsyncArgs   = "config/set/rsyncArgs"
+
+	APIValidate = "api/validate"
+	APIReplay   = "api/replay"
 )

@@ -32,7 +32,8 @@ export default class Transfers extends PureComponent {
 				state.core.operation &&
 				(state.core.operation.opKind === constant.OP_SCATTER_MOVE ||
 					state.core.operation.opKind === constant.OP_SCATTER_COPY ||
-					state.core.operation.opKind === constant.OP_GATHER_MOVE)
+					state.core.operation.opKind === constant.OP_GATHER_MOVE ||
+					state.core.operation.opKind === constant.OP_SCATTER_VALIDATE)
 			)
 		) {
 			return (
