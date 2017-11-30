@@ -391,7 +391,7 @@ func (p *Planner) sendMailFeeback(fstarted, ffinished string, elapsed time.Durat
 	subject := "unBALANCE - PLANNING completed"
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
 	if notTransferred != "" {
-		switch p.settings.NotifyCalc {
+		switch p.settings.NotifyPlan {
 		case 1:
 			message += "\n\nSome folders will not be transferred because there's not enough space for them in any of the destination disks."
 		case 2:
@@ -411,7 +411,7 @@ func (p *Planner) sendMailFeeback(fstarted, ffinished string, elapsed time.Durat
 		`, plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
 	}
 
-	if sendErr := lib.Sendmail(common.MailCmd, p.settings.NotifyCalc, subject, message, false); sendErr != nil {
+	if sendErr := lib.Sendmail(common.MailCmd, p.settings.NotifyPlan, subject, message, false); sendErr != nil {
 		mlog.Error(sendErr)
 	}
 }

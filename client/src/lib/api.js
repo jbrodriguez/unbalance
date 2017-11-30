@@ -29,16 +29,16 @@ export default class Api {
 		return fetch(`${this.hostr}/resetOp`).then(resp => resp.json())
 	}
 
-	setNotifyCalc(notify) {
-		return fetch(`${this.hostr}/config/notifyCalc`, {
+	setNotifyPlan(notify) {
+		return fetch(`${this.hostr}/config/notifyPlan`, {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: notify }),
 		}).then(resp => resp.json())
 	}
 
-	setNotifyMove(notify) {
-		return fetch(`${this.hostr}/config/notifyMove`, {
+	setNotifyTransfer(notify) {
+		return fetch(`${this.hostr}/config/notifyTransfer`, {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ payload: notify }),

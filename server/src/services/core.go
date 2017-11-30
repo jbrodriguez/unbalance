@@ -123,8 +123,8 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APIGatherMove, c.gatherMove)
 
 	c.actor.Register(common.APIToggleDryRun, c.toggleDryRun)
-	c.actor.Register(common.APINotifyCalc, c.setNotifyCalc)
-	c.actor.Register(common.APINotifyMove, c.setNotifyMove)
+	c.actor.Register(common.APINotifyPlan, c.setNotifyPlan)
+	c.actor.Register(common.APINotifyTransfer, c.setNotifyTransfer)
 	c.actor.Register(common.APISetReserved, c.setReservedSpace)
 	c.actor.Register(common.APISetVerbosity, c.setVerbosity)
 	c.actor.Register(common.APISetCheckUpdate, c.setCheckUpdate)
@@ -966,13 +966,13 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 }
 
 // SETTINGS RELATED
-func (c *Core) setNotifyCalc(msg *pubsub.Message) {
+func (c *Core) setNotifyPlan(msg *pubsub.Message) {
 	fnotify := msg.Payload.(float64)
 	notify := int(fnotify)
 
-	mlog.Info("Setting notifyCalc to (%d)", notify)
+	mlog.Info("Setting notifyPlan to (%d)", notify)
 
-	c.settings.NotifyCalc = notify
+	c.settings.NotifyPlan = notify
 	err := c.settings.Save()
 	if err != nil {
 		mlog.Warning("Unable to save settings: %s", err)
@@ -981,13 +981,13 @@ func (c *Core) setNotifyCalc(msg *pubsub.Message) {
 	msg.Reply <- &c.settings.Config
 }
 
-func (c *Core) setNotifyMove(msg *pubsub.Message) {
+func (c *Core) setNotifyTransfer(msg *pubsub.Message) {
 	fnotify := msg.Payload.(float64)
 	notify := int(fnotify)
 
-	mlog.Info("Setting notifyMove to (%d)", notify)
+	mlog.Info("Setting notifyTransfer to (%d)", notify)
 
-	c.settings.NotifyMove = notify
+	c.settings.NotifyTransfer = notify
 	err := c.settings.Save()
 	if err != nil {
 		mlog.Warning("Unable to save settings: %s", err)

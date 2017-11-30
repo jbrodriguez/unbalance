@@ -229,7 +229,7 @@ export default class Scatter extends PureComponent {
 					lines.push(
 						<tr key={key}>
 							<td colSpan="3">
-								<b>Select folders/files to move</b>
+								<b>Select folders/files to transfer</b>
 								<br />
 								<TreeMenu
 									expandIconClass="fa fa-chevron-right"
