@@ -781,10 +781,8 @@ func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsu
 		}
 
 		current := time.Now()
-		if current.Sub(started) < 250*time.Millisecond {
-			throttled = true
-		} else {
-			throttled = false
+		throttled = current.Sub(started) < 250*time.Millisecond
+		if !throttled {
 			started = current
 		}
 
@@ -1250,104 +1248,3 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 		}
 	}()
 }
-
-// func (c *Core) validate(msg *pubsub.Message) {
-// 	c.operation.OpState = model.StateValidate
-// 	c.operation.PrevState = model.StateValidate
-// 	go c.checksum(msg)
-// }
-
-// func (c *Core) checksum(msg *pubsub.Message) {
-// 	defer func() {
-// 		c.operation.OpState = model.StateIdle
-// 		c.operation.PrevState = model.StateIdle
-// 		c.operation.Started = time.Time{}
-// 		c.operation.BytesTransferred = 0
-// 	}()
-
-// 	opName := "Validate"
-
-// 	mlog.Info("Running %s operation ...", opName)
-// 	c.operation.Started = time.Now()
-
-// 	outbound := &dto.Packet{Topic: "transferStarted", Payload: "Operation started"}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	multiSource := false
-
-// 	if !strings.HasPrefix(c.operation.RsyncStrFlags, "-a") {
-// 		finished := time.Now()
-// 		elapsed := time.Since(c.operation.Started)
-
-// 		subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
-// 		headline := fmt.Sprintf("For proper %s operation, rsync flags MUST begin with -a", opName)
-
-// 		mlog.Warning(headline)
-// 		outbound := &dto.Packet{Topic: "opError", Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 		_, _, speed := progress(c.operation.BytesToTransfer, 0, elapsed)
-// 		c.finishTransferOperation(subject, headline, make([]string, 0), c.operation.Started, finished, elapsed, 0, speed, multiSource)
-
-// 		return
-// 	}
-
-// 	// Initialize local variables
-// 	// we use the rsync flags that were created by the transfer operation,
-// 	// but replace -a with -rc, to perform the validation
-// 	checkRsyncFlags := make([]string, 0)
-// 	for _, flag := range c.operation.RsyncFlags {
-// 		checkRsyncFlags = append(checkRsyncFlags, strings.Replace(flag, "-a", "-rc", -1))
-// 	}
-
-// 	checkRsyncStrFlags := strings.Join(checkRsyncFlags, " ")
-
-// 	// execute each rsync command created in the transfer phase
-// 	c.runOperation(opName, checkRsyncFlags, checkRsyncStrFlags, multiSource)
-// }
-
-// func (c *Core) gather(msg *pubsub.Message) {
-// 	mlog.Info("%+v", msg.Payload)
-// 	data, ok := msg.Payload.(string)
-// 	if !ok {
-// 		mlog.Warning("Unable to convert gather parameters")
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to convert gather parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 	}
-
-// 	var target model.Disk
-// 	err := json.Unmarshal([]byte(data), &target)
-// 	if err != nil {
-// 		mlog.Warning("Unable to bind gather parameters: %s", err)
-// 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind gather parameters"}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-// 		return
-// 		// mlog.Fatalf(err.Error())
-// 	}
-
-// 	// user chose a target disk, adjust bytestotransfer to the size of its bin, since
-// 	// that's the amount of data we need to transfer. Also remove bin from all other disks,
-// 	// since only the target will have work to do
-// 	for _, disk := range c.storage.Disks {
-// 		if disk.Path == target.Path {
-// 			c.operation.BytesToTransfer = disk.Bin.Size
-// 		} else {
-// 			disk.Bin = nil
-// 		}
-// 	}
-
-// 	c.operation.OpState = model.StateGather
-// 	c.operation.PrevState = model.StateGather
-
-// 	go c.transfer("Move", true, msg)
-// }
-
-// func (c *Core) getLog(msg *pubsub.Message) {
-// 	log := c.storage.GetLog()
-
-// 	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
-// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-
-// 	return
-// }
