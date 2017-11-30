@@ -50,7 +50,7 @@ export default class GatherTarget extends PureComponent {
 		// sort elegible disks by least amount of data transfer
 		const targets = elegible.sort((a, b) => {
 			const xferA = a.free - state.gather.plan.vdisks[a.path].plannedFree
-			const xferB = b.free - state.gather.plan.vdisks[a.path].plannedFree
+			const xferB = b.free - state.gather.plan.vdisks[b.path].plannedFree
 			if (xferA < xferB) return -1
 			if (xferA > xferB) return 1
 			if (a.id < b.id) return -1

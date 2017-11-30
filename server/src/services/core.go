@@ -831,15 +831,16 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
 		if exists {
 			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
-			mlog.Info("Removing: %s", rmrf)
+			mlog.Info("removing:(%s)", rmrf)
 			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
 				mlog.Info(line)
 			})
 
 			if err != nil {
 				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+				operation.Line = msg
 
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 				mlog.Warning(msg)
@@ -847,9 +848,13 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 
 			if operation.OpKind == common.OpGatherMove {
 				parent := filepath.Dir(command.Entry)
-				if parent != "." {
+				// if entry is a user share (tvshows), Dir returns ".", so we won't touch it
+				// if entry is a top-level children of a user share (tvshows/Billions), Dir returns "tvshows"
+				// if entry is a nested children (tvshows/Billions/Season 01), Dir returns "tvshows/Billions"
+				// in the first 2 cases no "/" is present in parent, so I won't prune them
+				if strings.Contains(parent, "/") {
 					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-					mlog.Info("Running %s", rmdir)
+					mlog.Info("pruning:(%s)", rmdir)
 
 					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
 						mlog.Info(line)
@@ -857,12 +862,15 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 
 					if err != nil {
 						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
+						operation.Line = msg
 
-						outbound := &dto.Packet{Topic: "transferProgress", Payload: msg}
+						outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 						bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 						mlog.Warning(msg)
 					}
+				} else {
+					mlog.Warning("skipping:prune:(%s)", filepath.Join(command.Src, parent))
 				}
 			}
 		} else {
