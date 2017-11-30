@@ -83,7 +83,10 @@ export default class Scatter extends PureComponent {
 		const planDisabled =
 			opInProgress ||
 			Object.keys(state.scatter.chosen).length === 0 ||
-			!state.core.unraid.disks.some(disk => plan.vdisks[disk.path].src || plan.vdisks[disk.path].dst)
+			!(
+				state.core.unraid.disks.some(disk => plan.vdisks[disk.path].src) &&
+				state.core.unraid.disks.some(disk => plan.vdisks[disk.path].dst)
+			)
 		const transferDisabled = opInProgress || plan.bytesToTransfer === 0
 
 		const buttons = (
