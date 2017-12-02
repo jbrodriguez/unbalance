@@ -1,7 +1,8 @@
 package common
 
-// MailCmd - location of notify command
+// APIVersion - api version
 const (
+	APIVersion      = "/api/v1"
 	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify" // MailCmd - location of notify command
 	PluginLocation  = "/boot/config/plugins/unbalance"          // PluginLocation - plugin's base config path
 	ChanCapacity    = 3
