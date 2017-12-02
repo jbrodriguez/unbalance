@@ -4,6 +4,7 @@ import { PropTypes } from 'prop-types'
 // import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
 import { DateTime } from 'luxon'
+import Modal from 'react-modal'
 
 import styles from '../styles/core.scss'
 
@@ -15,6 +16,40 @@ const cx = classNames.bind(styles)
 export default class History extends PureComponent {
 	static propTypes = {
 		store: PropTypes.object.isRequired,
+	}
+
+	constructor(props) {
+		super(props)
+
+		this.state = {
+			showModal: false,
+			whichConfirmation: '',
+			id: '',
+		}
+	}
+
+	onRequestClose = _ => {
+		this.setState({ showModal: false, whichConfirmation: '', id: '' })
+	}
+
+	confirm = (whichConfirmation, id) => _ => {
+		this.setState({ showModal: true, whichConfirmation, id })
+	}
+
+	onYes = _ => {
+		const { actions } = this.props.store
+
+		if (this.state.whichConfirmation === 'replay') {
+			actions.replay(this.state.id)
+		} else {
+			actions.validate(this.state.id)
+		}
+
+		this.setState({ showModal: false, whichConfirmation: '', id: '' })
+	}
+
+	onNo = _ => {
+		this.setState({ showModal: false, whichConfirmation: '', id: '' })
 	}
 
 	flipOperation = id => e => {
@@ -29,7 +64,7 @@ export default class History extends PureComponent {
 	}
 
 	render() {
-		const { state, actions } = this.props.store
+		const { state } = this.props.store
 
 		if (!(state.core && state.core.history && state.core.history.order && state.core.history.order.length > 0)) {
 			return (
@@ -121,6 +156,21 @@ export default class History extends PureComponent {
 
 			return (
 				<div key={op.id} className={cx('historyItem', 'bottom-spacer-half')}>
+					<Modal
+						isOpen={this.state.showModal}
+						onRequestClose={this.onRequestClose}
+						className="modal"
+						overlayClassName="overlay"
+						ariaHideApp={false}
+					>
+						<h2>Are you sure ?</h2>
+						<button className={cx('btn', 'btn-primary', 'rspacer')} onClick={this.onYes}>
+							YES
+						</button>
+						<button className={cx('btn', 'btn-primary', 'rspacer')} onClick={this.onNo}>
+							NO
+						</button>
+					</Modal>
 					<section className={cx('row')}>
 						<div
 							className={cx('flexSection', 'col-xs-12', 'col-sm-1', 'center-xs', 'middle-xs', 'start-sm')}
@@ -152,7 +202,7 @@ export default class History extends PureComponent {
 							{validate && (
 								<button
 									className={cx('btn', 'btn-primary', 'rspacer')}
-									onClick={() => actions.validate(op.id)}
+									onClick={this.confirm('validate', op.id)}
 									disabled={!validate}
 								>
 									VALIDATE
@@ -161,7 +211,7 @@ export default class History extends PureComponent {
 							{replay && (
 								<button
 									className={cx('btn', 'btn-primary', 'rspacer')}
-									onClick={() => actions.replay(op.id)}
+									onClick={this.confirm('replay', op.id)}
 									disabled={!replay}
 								>
 									REPLAY

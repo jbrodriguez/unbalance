@@ -303,3 +303,24 @@ p {
 .opBlue {
 	color: $angular-blue;
 }
+
+.modal {
+	position: absolute;
+	top: 40%;
+	left: 40%;
+	right: 40%;
+	bottom: 40%;
+	background-color: $lighter-gray;
+}
+
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	// background-color: rgba(2, 36, 60, 0.8);
+	background-color: transparent;
+	// background: rgba(0, 0, 0, 0.2);
+	// background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+}
