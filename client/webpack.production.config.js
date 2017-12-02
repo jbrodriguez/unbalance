@@ -17,6 +17,12 @@ module.exports = {
 			inject: 'body',
 			filename: 'index.html',
 		}),
+		new webpack.optimize.UglifyJsPlugin({
+			compress: {
+				warnings: false,
+				drop_console: false,
+			},
+		}),
 		new ExtractTextPlugin('app/[name]-[hash:7].min.css'),
 
 		new webpack.DefinePlugin({
@@ -71,7 +77,6 @@ module.exports = {
 					{
 						loader: 'css-loader',
 						options: {
-							// localIdentName: '[name]_[local]_[hash:base64:5]',
 							minimize: true,
 						},
 					},
