@@ -72,18 +72,12 @@ module.exports = {
 				include: path.resolve(__dirname, 'src/styles'),
 				use: [
 					'style-loader',
-					{
-						loader: 'css-loader',
-						options: {
-							// localIdentName: '[name]_[local]_[hash:base64:5]',
-							minimize: true,
-						},
-					},
+					'css-loader',
 					{
 						loader: 'postcss-loader',
 						options: {
 							ident: 'postcss',
-							plugins: loader => [require('autoprefixer')()],
+							plugins: [require('autoprefixer')()],
 						},
 					},
 					'sass-loader',
