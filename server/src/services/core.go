@@ -88,7 +88,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 func (c *Core) Start() (err error) {
 	mlog.Info("starting service Core ...")
 
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	c.bus.Pub(msg, common.IntGetArrayStatus)
 	reply := <-msg.Reply
 	message := reply.(dto.Message)
@@ -1260,7 +1260,7 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 func (c *Core) refreshUnraid() *domain.Unraid {
 	unraid := c.state.Unraid
 
-	param := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	param := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	c.bus.Pub(param, common.IntGetArrayStatus)
 
 	reply := <-param.Reply

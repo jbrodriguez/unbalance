@@ -20,11 +20,6 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const (
-	apiVersion = "/api/v1"
-	capacity   = 3
-)
-
 // Server -
 type Server struct {
 	bus      *pubsub.PubSub
@@ -81,7 +76,7 @@ func (s *Server) Start() {
 
 	s.engine.GET("/skt", echo.WrapHandler(websocket.Handler(s.handleWs)))
 
-	api := s.engine.Group(apiVersion)
+	api := s.engine.Group(common.APIVersion)
 
 	api.GET("/config", s.getConfig)
 	api.GET("/state", s.getState)
@@ -116,7 +111,7 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) getConfig(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetConfig)
 
 	reply := <-msg.Reply
@@ -126,7 +121,7 @@ func (s *Server) getConfig(c echo.Context) (err error) {
 }
 
 func (s *Server) getState(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetState)
 
 	reply := <-msg.Reply
@@ -136,7 +131,7 @@ func (s *Server) getState(c echo.Context) (err error) {
 }
 
 func (s *Server) getStorage(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetStorage)
 
 	reply := <-msg.Reply
@@ -146,7 +141,7 @@ func (s *Server) getStorage(c echo.Context) (err error) {
 }
 
 func (s *Server) getOperation(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetOperation)
 
 	reply := <-msg.Reply
@@ -156,7 +151,7 @@ func (s *Server) getOperation(c echo.Context) (err error) {
 }
 
 func (s *Server) getHistory(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetHistory)
 
 	reply := <-msg.Reply
@@ -173,7 +168,7 @@ func (s *Server) setNotifyPlan(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APINotifyPlan)
 
 	reply := <-msg.Reply
@@ -190,7 +185,7 @@ func (s *Server) setNotifyTransfer(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APINotifyTransfer)
 
 	reply := <-msg.Reply
@@ -207,7 +202,7 @@ func (s *Server) setReservedSpace(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APISetReserved)
 
 	reply := <-msg.Reply
@@ -224,7 +219,7 @@ func (s *Server) setVerbosity(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APISetVerbosity)
 
 	reply := <-msg.Reply
@@ -241,7 +236,7 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APISetCheckUpdate)
 
 	reply := <-msg.Reply
@@ -251,7 +246,7 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 }
 
 func (s *Server) getUpdate(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetUpdate)
 
 	reply := <-msg.Reply
@@ -268,7 +263,7 @@ func (s *Server) getTree(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIGetTree)
 
 	reply := <-msg.Reply
@@ -285,7 +280,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 		mlog.Warning("error binding packet: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APILocateFolder)
 
 	reply := <-msg.Reply
@@ -295,7 +290,7 @@ func (s *Server) locate(c echo.Context) (err error) {
 }
 
 func (s *Server) toggleDryRun(c echo.Context) (err error) {
-	msg := &pubsub.Message{Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APIToggleDryRun)
 
 	reply := <-msg.Reply
@@ -312,7 +307,7 @@ func (s *Server) setRsyncArgs(c echo.Context) (err error) {
 		mlog.Warning("error binding: %s", err)
 	}
 
-	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, capacity)}
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APISetRsyncArgs)
 
 	reply := <-msg.Reply
