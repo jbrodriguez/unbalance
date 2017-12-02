@@ -3,6 +3,8 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
+// fontawesome based on https://www.laurivan.com/load-fontawesome-fonts-with-webpack-2/
+
 module.exports = {
 	entry: ['./src/main.js'],
 	output: {
@@ -10,7 +12,6 @@ module.exports = {
 		filename: 'app/[name]-[hash:7].min.js',
 	},
 	plugins: [
-		new webpack.optimize.OccurenceOrderPlugin(),
 		new HtmlWebpackPlugin({
 			template: 'index.tpl.html',
 			inject: 'body',
@@ -23,58 +24,85 @@ module.exports = {
 		}),
 	],
 	module: {
-		loaders: [
+		rules: [
 			{
 				test: /\.jsx?$/,
-				loader: 'babel',
-				include: path.join(__dirname, 'src'),
+				loader: 'babel-loader',
+				exclude: /node_modules/,
 			},
 			{
-				test: /\.json?$/,
-				loader: 'json',
-			},
-			{
-				test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-				loader: 'url-loader?limit=10000&minetype=application/font-woff&name=img/[name]-[hash:7].[ext]',
-			},
-			{
-				test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-				loader: 'file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]',
-			},
-			{
-				test: /\.(jpe?g|png|gif|svg)$/i,
+				test: /\.(jpe?g|png|gif|svg)$/,
 				include: path.resolve(__dirname, 'src/img'),
-				loaders: [
-					'file?hash=sha512&digest=hex&name=img/[name]-[hash:7].[ext]',
-					'image-webpack?{progressive:true, optimizationLevel: 7, interlaced: false, pngquant:{quality: "65-90", speed: 4}}',
+				use: [
+					{
+						loader: 'file-loader',
+						options: {
+							name: 'img/[name]-[hash:7].[ext]',
+							publicPath: '/',
+						},
+					},
+					{
+						loader: 'image-webpack-loader',
+						options: {
+							mozjpeg: {
+								progressive: true,
+								quality: 65,
+							},
+							// optipng.enabled: false will disable optipng
+							optipng: {
+								enabled: false,
+							},
+							pngquant: {
+								quality: '65-90',
+								speed: 4,
+							},
+							gifsicle: {
+								interlaced: false,
+							},
+						},
+					},
 				],
 			},
 			{
-				// 	test: /\.scss$/,
-				// 	loaders: [
-				// 		'style',
-				// 		'css?modules&localIdentName=[name]---[local]---[hash:base64:5]',
-				// 		'postcss',
-				// 		'sass'
-				// 	]
-				// }, {
-				// 	test: /\.css$/,
-				// 	loader: 'style!css?modules&localIdentName=[name]---[local]---[hash:base64:5]'
-				// }]
 				test: /\.scss$/,
-				include: path.join(__dirname, 'src/styles'),
-				loader: ExtractTextPlugin.extract(
-					'style',
-					'css?modules&localIdentName=[name]---[local]---[hash:base64:5]!postcss!sass',
-				),
+				include: path.resolve(__dirname, 'src/styles'),
+				use: [
+					'style-loader',
+					{
+						loader: 'css-loader',
+						options: {
+							// localIdentName: '[name]_[local]_[hash:base64:5]',
+							minimize: true,
+						},
+					},
+					{
+						loader: 'postcss-loader',
+						options: {
+							ident: 'postcss',
+							plugins: loader => [require('autoprefixer')()],
+						},
+					},
+					'sass-loader',
+				],
 			},
 			{
 				test: /\.css$/,
-				loader: ExtractTextPlugin.extract('style', 'css?modules&localIdentName=[local]'),
+				// include: path.resolve(__dirname, 'src/styles'),
+				use: [
+					'style-loader',
+					{
+						loader: 'css-loader',
+						options: {
+							localIdentName: '[name]_[local]_[hash:base64:5]',
+							minimize: true,
+						},
+					},
+				],
+			},
+			{
+				test: /\.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
+				loader: 'file-loader?name=fonts/[name]-[hash:7].[ext]',
 			},
 		],
 	},
-	postCss: [
-		require('autoprefixer'), // eslint-disable-line
-	],
 }

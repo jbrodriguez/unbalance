@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react'
 import { PropTypes } from 'prop-types'
 
-import 'font-awesome-webpack'
+// import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
 
 import styles from '../styles/core.scss'
