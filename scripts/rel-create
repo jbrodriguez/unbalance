@@ -28,10 +28,13 @@ cd src/jbrodriguez/unbalance
 
 pushd client
 npm install
+pushd node_modules/react-tree-menu
+npm install
+popd
 popd
 
 pushd server
-GOPATH="$CURRENT_DIR" gom install -v
+GOPATH="$CURRENT_DIR" dep ensure
 popd
 
 # compile with a temp gopath
