@@ -252,7 +252,13 @@ const gatherMove = ({ state, actions, opts: { ws } }) => {
 
 	state.history.replace({ pathname: '/transfer' })
 
-	return state
+	return {
+		...state,
+		core: {
+			...state.core,
+			status: constant.OP_GATHER_MOVE,
+		},
+	}
 }
 
 export default {

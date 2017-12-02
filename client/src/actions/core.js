@@ -18,25 +18,19 @@ const gotState = ({ state, actions }, core) => {
 	let scatterLine = []
 	let gatherLine = []
 
-	switch (status) {
+	switch (core.status) {
 		case constant.OP_SCATTER_PLAN:
 			scatterLine = ['PLANNING: in progress ...']
 			break
+		case constant.OP_GATHER_MOVE:
 		case constant.OP_SCATTER_MOVE:
-			pathname = '/transfer'
-			break
 		case constant.OP_SCATTER_COPY:
-			pathname = '/transfer'
-			break
 		case constant.OP_SCATTER_VALIDATE:
 			pathname = '/transfer'
 			break
 		case constant.OP_GATHER_PLAN:
 			gatherLine = ['PLANNING: in progress ...']
 			pathname = '/gather/target'
-			break
-		case constant.OP_GATHER_MOVE:
-			pathname = '/transfer'
 			break
 		default:
 			break
@@ -171,7 +165,7 @@ const transferFinished = ({ state, actions }, bState) => {
 	return {
 		...state,
 		core: {
-			...state.core,
+			status: constant.OP_NEUTRAL,
 			operation: bState.operation,
 			history: bState.history,
 			unraid: bState.unraid,
