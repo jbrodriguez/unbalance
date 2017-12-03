@@ -8,6 +8,7 @@ const (
 	ChanCapacity    = 3
 	HistoryCapacity = 25
 	HistoryFilename = "unbalance.hist"
+	HistoryVersion  = 1
 	RsyncArgs       = "-avPRX"
 )
 

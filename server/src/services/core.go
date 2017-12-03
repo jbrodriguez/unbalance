@@ -1194,8 +1194,9 @@ func (c *Core) historyRead() (*domain.History, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		empty := &domain.History{
-			Items: make(map[string]*domain.Operation),
-			Order: make([]string, 0),
+			Version: common.HistoryVersion,
+			Items:   make(map[string]*domain.Operation),
+			Order:   make([]string, 0),
 		}
 
 		return empty, err
@@ -1206,8 +1207,9 @@ func (c *Core) historyRead() (*domain.History, error) {
 	err = decoder.Decode(&history)
 	if err != nil {
 		empty := &domain.History{
-			Items: make(map[string]*domain.Operation),
-			Order: make([]string, 0),
+			Version: common.HistoryVersion,
+			Items:   make(map[string]*domain.Operation),
+			Order:   make([]string, 0),
 		}
 
 		return empty, err
