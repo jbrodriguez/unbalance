@@ -237,18 +237,28 @@ func (c *Core) scatterPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpScatterPlan
 	c.state.Unraid = c.refreshUnraid()
 
-	plan, err := c.getScatterPlan(msg)
+	basePlan, err := c.getScatterPlan(msg)
 	if err != nil {
 		mlog.Warning("Unable to get scatter plan: %s", err)
 
 		// send to front end the signal of operation finished
-		outbound := &dto.Packet{Topic: common.WsScatterPlanFinished, Payload: plan}
+		outbound := &dto.Packet{Topic: common.WsScatterPlanFinished, Payload: basePlan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		outbound = &dto.Packet{Topic: common.WsScatterPlanIssues, Payload: err.Error()}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		return
+	}
+
+	plan := &domain.Plan{
+		ChosenFolders: basePlan.ChosenFolders,
+		VDisks:        basePlan.VDisks,
+	}
+
+	for _, disk := range c.state.Unraid.Disks {
+		plan.VDisks[disk.Path].PlannedFree = disk.Free
+		plan.VDisks[disk.Path].Bin = nil
 	}
 
 	param := &pubsub.Message{Payload: &domain.State{
@@ -304,18 +314,28 @@ func (c *Core) gatherPlan(msg *pubsub.Message) {
 	c.state.Status = common.OpGatherPlan
 	c.state.Unraid = c.refreshUnraid()
 
-	plan, err := c.getGatherPlan(msg)
+	basePlan, err := c.getGatherPlan(msg)
 	if err != nil {
 		mlog.Warning("Unable to get gather plan: %s", err)
 
 		// send to front end the signal of operation finished
-		outbound := &dto.Packet{Topic: common.WsGatherPlanFinished, Payload: plan}
+		outbound := &dto.Packet{Topic: common.WsGatherPlanFinished, Payload: basePlan}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		outbound = &dto.Packet{Topic: "opError", Payload: err.Error()}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
 		return
+	}
+
+	plan := &domain.Plan{
+		ChosenFolders: basePlan.ChosenFolders,
+		VDisks:        basePlan.VDisks,
+	}
+
+	for _, disk := range c.state.Unraid.Disks {
+		plan.VDisks[disk.Path].PlannedFree = disk.Free
+		plan.VDisks[disk.Path].Bin = nil
 	}
 
 	param := &pubsub.Message{Payload: &domain.State{
