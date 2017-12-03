@@ -78,7 +78,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s := &Settings{}
 
 	if rsyncArgs == "" {
-		s.RsyncArgs = []string{""}
+		s.RsyncArgs = make([]string, 0)
 	} else {
 		s.RsyncArgs = strings.Split(rsyncArgs, "|")
 	}
