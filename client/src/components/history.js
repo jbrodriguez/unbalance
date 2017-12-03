@@ -76,7 +76,9 @@ export default class History extends PureComponent {
 			)
 		}
 
-		const operations = state.core.history.order.map(id => {
+		let dryRuns = 0
+
+		const operations = state.core.history.order.map((id, index) => {
 			const op = state.core.history.items[id]
 
 			const status =
@@ -151,8 +153,13 @@ export default class History extends PureComponent {
 				)
 			}
 
-			const replay = !op.dryRun
-			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY
+			// it's safe to validate or replay an operation only when it's the most recent, excluding dry-runs, since
+			// they don't physically alter files
+			if (op.dryRun) dryRuns++
+			const safe = index === 0 || index - dryRuns === 0
+
+			const replay = !op.dryRun && safe
+			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY && safe
 
 			return (
 				<div key={op.id} className={cx('historyItem', 'bottom-spacer-half')}>
