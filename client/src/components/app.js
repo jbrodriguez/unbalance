@@ -191,7 +191,7 @@ class App extends PureComponent {
 							<div className={cx('flexSection', 'middle-xs', 'end-xs')}>
 								<a
 									className={cx('lspacer')}
-									href="https://github.com/jbrodriguez/unbalance#support-fund"
+									href="https://github.com/jbrodriguez/unbalance/blob/master/DONATIONS.md"
 									title="Support Fund"
 									rel="noreferrer noopener"
 									target="_blank"
