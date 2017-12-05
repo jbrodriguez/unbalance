@@ -1,3 +1,126 @@
+Version 4.0.0 - 2017-12-05
+- Fix space calculation logic
+- Migrate gom to dep
+- Create new domain package
+- Create new array service
+- Make initial adjustments to core and server services
+- Make adjustments to client code
+- Create template for new services
+- Reorganize client actions
+- Use new state layout
+- Prettier formatting
+- Make modifications in helper libs
+- Improve Operation struct semantics
+- Improve backend (server) semantics
+- Initial refactoring scatter calculation (server)
+- Initial refactoring scatter calculation (client)
+- Reorganize status constants
+- Add script to create test environment on test server
+- Rename actions/api calls
+- Remove unneeded code
+- Change meaning of command fields
+- Initial implementation of transfer logic
+- Enable dryRun toggle
+- Change function declaration style
+- Add Transfer screen
+- Implement progress status for transfer operation
+- Fold Progress struct into Operation
+- Wording changes for legibility
+- Refactor code for readability
+- Initial implementation of operation history serializer
+- Fix active link for Transfer screen
+- Fix Gather screen ui issues
+- Change active command icon
+- Fix clearConsole logic
+- Implement gather calculate (findTargets) logic
+- Update test environment script
+- Improve display of selected items in Gather screen
+- Small tweak to calculate logic
+- Remove deprecated code
+- Reorganize code
+- Implement Gather move
+- Register additional endpoints
+- Fix log feature
+- Improve visuals of Transfer screen
+- Add shortid package
+- Modify package version
+- Change location on scatterMove
+- Initial implementation of History feature
+- Add datetime management package
+- Improve handling of history data
+- Improve UI of History components
+- Code cleanup
+- Refactor calculate concept to plan concept
+- Implement getOperation endpoint
+- Fix gather transfer setup
+- Modify history management logic
+- Fix flipOperation issue
+- Add missing gatherMove actions
+- Reset state upon transfer
+- Remove old code
+- Remove unneeded state elements
+- Remove unneeded style
+- Restore actions
+- Use current state when doing a reset
+- Fixes to make gather work
+- Fix issues with elapsed calculation
+- Restore clear console action
+- Use a better row key
+- Remove unneeded code
+- Improve Transfer screen UI
+- Remove logging
+- Change setting name
+- Make rsync default default flags immutable
+- Fix undefined variable issue
+- Fix issue decoding save history
+- Fix minor text issue
+- Add ID field to Command struct
+- Fix go lint issues
+- Fix tests
+- Clean up code
+- Avoid running stop script if not present
+- Refactor code for readibility/performance
+- Throttle command outuput based on elapsed time
+- Improve complexity of commandCompleted method
+- Improve operation logging
+- Code improvements
+- Keep separate console lines per operation
+- Reimplement validate operation (client)
+- Reimplement validate operation (server)
+- Reimplement validate operation (server)
+- Implement replay operation
+- Fixes after replay/validate testing
+- Code improvement
+- Fix processes for failed operations
+- Fix issues with gather operation
+- Fix checking a destination disk (scatter)
+- Fix logic to disable Plan button
+- Refresh unraid at appropriate times
+- Fix logic to (un)check targets when one is chosen
+- Change support fund text with an icon
+- Implement (un)check all To disk (scatter)
+- Replace calc/findTargets strings with plan
+- Rename notifyCalc/notifyMove
+- Rename missing elements
+- Upgrade client packages
+- Add react-modal package
+- Make user confirm replay/validate operations
+- Move constants to common package
+- Fix issue with refreshing page/restarting browser
+- Adjust CI scripts to new context
+- Add /fonts endpoint
+- Add uglifyjs step
+- Remove lato font
+- Minor adjustments
+- Add version to history
+- Reset plan parameters before running a plan
+- Fix issue with empty rsync args settings
+- Enable replay/validate only when it's safe
+- Update documentation
+- Relocate scatter validate invocation
+- Use vscode instead of atom
+
+
 Version 3.3.3 - 2017-09-12
 - Remove parent folder if empty
 - Replace yarn with npm5

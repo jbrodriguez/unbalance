@@ -1,0 +1,33 @@
+2017-12-05 - 4.0.0
+
+This is major release bringing in new features to improve the end user experience !
+
+### Transfer page
+Here you can monitor the progress of a transfer operation (move/copy), broken down by each rsync command that are
+taking place
+
+### History page
+This is a list of all the operations that have been executed. This allows you to
+
+- Replay the most recent one (excluding dry-runs)
+- Validate the latest Scatter copy operation
+
+(both replay and validate need a confirmation before proceeding)
+
+### Other features
+
+- The Scatter and Gather screens are now completely separate, which means you can switch freely among them, without any 
+side effects.
+- A select/deselect all checkbox was added for the TO column in the Scatter screen.
+- The default rsync flags are now fixed, you can only add flags.
+
+### Improvements / Bug fixes
+
+- Fix leaving empty folders behind (Gather operation)
+- Fix display of disk location per selection (Gather screen)
+- Fix calculation of space bar
+- Improve throttling of transfer progress updates
+- Avoid running stop script if not present
+- Fix enabling/disabling buttons based on selections
+- Refactor code to better represent the app's concepts (plan, operation, commands, etc.)
+- The size of the bundle was reduced by approximately 70%
