@@ -276,6 +276,23 @@ const scatterCopy = ({ state, actions, opts: { ws } }) => {
 	}
 }
 
+const scatterValidate = ({ state, actions, opts: { ws } }, id) => {
+	actions.setBusy(true)
+	actions.resetState()
+
+	ws.send({ topic: constant.API_VALIDATE, payload: state.core.history.items[id] })
+
+	state.history.replace({ pathname: '/transfer' })
+
+	return {
+		...state,
+		core: {
+			...state.core,
+			status: constant.OP_SCATTER_VALIDATE,
+		},
+	}
+}
+
 export default {
 	scatterGetTree,
 	scatterGotTree,
@@ -295,4 +312,5 @@ export default {
 	scatterPlan,
 	scatterMove,
 	scatterCopy,
+	scatterValidate,
 }
