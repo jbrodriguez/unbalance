@@ -36,6 +36,6 @@ ${COMMITS}
 ${PREVIOUS}
 EOF
 
-atom metadata/changes/${APP_VERSION}.txt
+code metadata/changes/${APP_VERSION}.txt
 
 echo "Bumped versions successfully"
