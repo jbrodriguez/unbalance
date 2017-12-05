@@ -42,7 +42,7 @@ export default class History extends PureComponent {
 		if (this.state.whichConfirmation === 'replay') {
 			actions.replay(this.state.id)
 		} else {
-			actions.validate(this.state.id)
+			actions.scatterValidate(this.state.id)
 		}
 
 		this.setState({ showModal: false, whichConfirmation: '', id: '' })

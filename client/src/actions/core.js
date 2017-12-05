@@ -216,17 +216,6 @@ const initPlan = disks => {
 	return plan
 }
 
-const validate = ({ state, actions, opts: { ws } }, id) => {
-	actions.setBusy(true)
-	actions.resetState()
-
-	ws.send({ topic: constant.API_VALIDATE, payload: state.core.history.items[id] })
-
-	state.history.replace({ pathname: '/transfer' })
-
-	return state
-}
-
 const replay = ({ state, actions, opts: { ws } }, id) => {
 	actions.setBusy(true)
 	actions.resetState()
@@ -259,6 +248,5 @@ export default {
 
 	flipOperation,
 
-	validate,
 	replay,
 }
