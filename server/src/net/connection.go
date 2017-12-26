@@ -1,6 +1,9 @@
 package net
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"jbrodriguez/unbalance/server/src/dto"
 
 	"github.com/gorilla/websocket"
@@ -32,10 +35,22 @@ func NewConnection(ws *websocket.Conn, onMessage MessageFunc, onClose CloseFunc)
 func (c *Connection) Read() (err error) {
 	for {
 		var packet dto.Packet
-		err = c.ws.ReadJSON(&packet)
+		var p []byte
+
+		_, p, err = c.ws.ReadMessage()
 		if err != nil {
-			go c.onClose(c, err)
-			return
+			errm := fmt.Errorf("unable to ReadMessage: (%s)", err)
+			go c.onClose(c, errm)
+			return err
+		}
+
+		err = json.Unmarshal(p, &packet)
+
+		// err = c.ws.ReadJSON(&packet)
+		if err != nil {
+			errm := fmt.Errorf("unable to Unmarshal: content(%s): err(%s)", p, err)
+			go c.onClose(c, errm)
+			return err
 		}
 
 		go c.onMessage(&packet)

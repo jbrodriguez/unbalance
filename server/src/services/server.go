@@ -339,7 +339,7 @@ func (s *Server) onMessage(packet *dto.Packet) {
 }
 
 func (s *Server) onClose(c *net.Connection, err error) {
-	mlog.Warning("closing socket (%+v): %s", c, err)
+	mlog.Warning("closing socket: %s", err)
 	if _, ok := s.pool[c]; ok {
 		delete(s.pool, c)
 	}
