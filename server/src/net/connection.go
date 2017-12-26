@@ -3,7 +3,7 @@ package net
 import (
 	"jbrodriguez/unbalance/server/src/dto"
 
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 )
 
 // MessageFunc -
@@ -32,7 +32,7 @@ func NewConnection(ws *websocket.Conn, onMessage MessageFunc, onClose CloseFunc)
 func (c *Connection) Read() (err error) {
 	for {
 		var packet dto.Packet
-		err = websocket.JSON.Receive(c.ws, &packet)
+		err = c.ws.ReadJSON(&packet)
 		if err != nil {
 			go c.onClose(c, err)
 			return
@@ -43,6 +43,6 @@ func (c *Connection) Read() (err error) {
 }
 
 func (c *Connection) Write(packet *dto.Packet) (err error) {
-	err = websocket.JSON.Send(c.ws, packet)
+	err = c.ws.WriteJSON(packet)
 	return
 }

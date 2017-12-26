@@ -54,9 +54,9 @@
   name = "github.com/vaughan0/go-ini"
 
 [[constraint]]
-  branch = "master"
-  name = "golang.org/x/net"
-
-[[constraint]]
   name = "github.com/teris-io/shortid"
   revision = "771a37caa5cf0c81f585d7b6df4dfc77e0615b5c"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
