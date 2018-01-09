@@ -26,6 +26,11 @@ dd if=/dev/urandom of=AprilFoolsDay.mkv bs=1M count=250
 echo "aprilfoolsday.jpg" > aprilfoolsday.jpg
 popd
 
+mkdir -p "anime/Chaos;Child (2017)"
+pushd "anime/Chaos;Child (2017)"
+dd if=/dev/urandom of="Chaos\;Child\ -\ 07\ -\ Episode\ 7\ \[1280x720\ x264\ AAC\ 2ch\].mkv" bs=1M count=147
+popd
+
 popd # out of /mnt/disk/films
 
 pushd /mnt/disk1
@@ -54,6 +59,27 @@ popd
 popd # out of /mnt/disk2/tvshows
 
 pushd /mnt/disk3/
+
+mkdir -p "blurip/'Master Harold' ... And the Boys (2010)"
+pushd "blurip/'Master Harold' ... And the Boys (2010)"
+dd if=/dev/urandom of=MasterHarold.mkv bs=1M count=223
+popd
+
+mkdir -p "blurip/*batteries not included (1987)"
+pushd "blurip/*batteries not included (1987)"
+dd if=/dev/urandom of=bni.mkv bs=1M count=217
+popd
+
+mkdir -p "blurip/WALL·E (2008)"
+pushd "blurip/WALL·E (2008)"
+dd if=/dev/urandom of=walle.mkv bs=1M count=208
+popd
+
+mkdir -p "blurip/Scotland, Pa. (2001)"
+pushd "blurip/Scotland, Pa. (2001)"
+dd if=/dev/urandom of=spa.mkv bs=1M count=203
+popd
+
 
 mkdir -p "tvshows/Billions/Season 02"
 pushd "tvshows/Billions/Season 02"

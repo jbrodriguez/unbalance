@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	// "os"
 	"path/filepath"
 
@@ -11,14 +12,17 @@ import (
 	"jbrodriguez/unbalance/server/src/lib"
 	"jbrodriguez/unbalance/server/src/net"
 
+	"github.com/gorilla/websocket"
 	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
-
-	"golang.org/x/net/websocket"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
 
 // Server -
 type Server struct {
@@ -75,7 +79,7 @@ func (s *Server) Start() {
 	s.engine.Static("/img", filepath.Join(location, "img"))
 	s.engine.Static("/fonts", filepath.Join(location, "fonts"))
 
-	s.engine.GET("/skt", echo.WrapHandler(websocket.Handler(s.handleWs)))
+	s.engine.GET("/skt", s.handleWs)
 
 	api := s.engine.Group(common.APIVersion)
 
@@ -317,10 +321,17 @@ func (s *Server) setRsyncArgs(c echo.Context) (err error) {
 	return c.JSON(200, &resp)
 }
 
-func (s *Server) handleWs(ws *websocket.Conn) {
+func (s *Server) handleWs(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+
 	conn := net.NewConnection(ws, s.onMessage, s.onClose)
 	s.pool[conn] = true
-	conn.Read()
+
+	err = conn.Read()
+	return err
 }
 
 func (s *Server) onMessage(packet *dto.Packet) {
@@ -328,7 +339,7 @@ func (s *Server) onMessage(packet *dto.Packet) {
 }
 
 func (s *Server) onClose(c *net.Connection, err error) {
-	mlog.Warning("closing socket (%+v): %s", c, err)
+	mlog.Warning("closing socket: %s", err)
 	if _, ok := s.pool[c]; ok {
 		delete(s.pool, c)
 	}
