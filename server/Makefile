@@ -10,6 +10,7 @@
 mb_version := $(shell cat ../VERSION)
 mb_count := $(shell git rev-list HEAD --count)
 mb_hash := $(shell git rev-parse --short HEAD)
+mb_plgver := $(shell cat ../PLGVER)
 
 # binary name to kill/restart
 PROG = unbalance
@@ -31,11 +32,11 @@ clean:
 # run formatting tool and build
 build: dependencies clean
 	go build fmt
-	go build -ldflags "-X main.Version=$(mb_version)-$(mb_count).$(mb_hash)" -v -o ${PROG} ${PROG}.go
+	go build -ldflags "-X main.Version=$(mb_version)-$(mb_count)-$(mb_hash)-$(mb_plgver)" -v -o ${PROG} ${PROG}.go
 
 server: dependencies clean
 	go build fmt
-	env GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=$(mb_version)-$(mb_count).$(mb_hash)" -v -o ../dist/${PROG} ${PROG}.go
+	env GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=$(mb_version)-$(mb_count)-$(mb_hash)-$(mb_plgver)" -v -o ../dist/${PROG} ${PROG}.go
 
 # run unit tests with code coverage
 test: dependencies
