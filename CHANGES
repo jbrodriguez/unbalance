@@ -1,3 +1,12 @@
+Version 4.0.1 - 2018-01-11
+- Remove presence check
+- Add test data
+- Replace go websocket with gorilla websocket
+- Improve error logging
+- Fix plugin install script
+- Add date based plugin version
+
+
 Version 4.0.0 - 2017-12-05
 - Fix space calculation logic
 - Migrate gom to dep
