@@ -4,15 +4,17 @@
 <!ENTITY name        "unbalance">
 <!ENTITY author      "Juan B. Rodriguez">
 <!ENTITY version     "{{version}}">
+<!ENTITY appver      "{{appver}}">
 <!ENTITY launch      "Settings/&name;">
 <!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/&name;.plg">
-<!ENTITY bundle      "&name;-&version;.tgz">
+<!ENTITY bundle      "&name;-&appver;.tgz">
 <!ENTITY md5         "{{md5}}">
 ]>
 
 <PLUGIN  name="&name;"
          author="&author;"
          version="&version;"
+         appver="&appver;"
          launch="&launch;"
          pluginURL="&pluginURL;"
 >
@@ -29,7 +31,7 @@ The plugin frees up space from a disk array in unRAID systems.
 Get the unBALANCE bundle.
 -->
 <FILE Name="/boot/config/plugins/&name;/&bundle;">
-<URL>"https://github.com/jbrodriguez/unbalance/releases/download/&version;/&bundle;"</URL>
+<URL>"https://github.com/jbrodriguez/unbalance/releases/download/&appver;/&bundle;"</URL>
 <MD5>&md5;</MD5>
 </FILE>
 
@@ -53,7 +55,7 @@ Prepare for installation.
 rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
 
 # Remove old 'bundle' files.
-rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;')
+rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&appver;')
 
 # Install the 'bundle'.
 tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins
