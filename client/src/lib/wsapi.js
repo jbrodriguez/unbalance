@@ -1,6 +1,7 @@
 export default class WebSocketApi {
 	constructor() {
-		const hostw = `ws://${document.location.host}/skt`
+		const proto = document.location.protocol === 'https:' ? 'wss' : 'ws'
+		const hostw = `${proto}://${document.location.host}/skt`
 
 		this.skt = new WebSocket(hostw)
 
