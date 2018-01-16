@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch'
 
 export default class Api {
 	constructor() {
-		this.hostr = `http://${document.location.host}/api/v1`
+		this.hostr = `${document.location.protocol}//${document.location.host}/api/v1`
 	}
 
 	getConfig() {

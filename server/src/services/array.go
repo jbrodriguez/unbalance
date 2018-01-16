@@ -76,6 +76,20 @@ func (a *Array) SanityCheck(locations []string) error {
 	return nil
 }
 
+// GetSSLSettings -
+func (a *Array) GetSSLSettings() string {
+	// get array status
+	file, err := ini.LoadFile("/var/local/emhttp/var.ini")
+	if err != nil {
+		return ""
+	}
+
+	usessl, _ := file.Get("", "USE_SSL")
+	usessl = strings.Replace(usessl, "\"", "", -1)
+
+	return usessl
+}
+
 func (a *Array) getStatus(msg *pubsub.Message) {
 	unraid, err := getArrayData()
 	if err != nil {
