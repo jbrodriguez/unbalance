@@ -61,7 +61,7 @@ func (a *App) Run(settings *lib.Settings) {
 	bus := pubsub.New(623)
 
 	array := services.NewArray(bus, settings)
-	server := services.NewServer(bus, settings, array.GetSSLSettings())
+	server := services.NewServer(bus, settings, array.GetCertificate())
 	planner := services.NewPlanner(bus, settings)
 	core := services.NewCore(bus, settings)
 

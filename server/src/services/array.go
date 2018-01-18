@@ -20,6 +20,8 @@ import (
 	ini "github.com/vaughan0/go-ini"
 )
 
+const certDir = "/boot/config/ssl/certs"
+
 // Array -
 type Array struct {
 	bus      *pubsub.PubSub
@@ -76,8 +78,8 @@ func (a *Array) SanityCheck(locations []string) error {
 	return nil
 }
 
-// GetSSLSettings -
-func (a *Array) GetSSLSettings() string {
+// GetCertificate -
+func (a *Array) GetCertificate() string {
 	// get array status
 	file, err := ini.LoadFile("/var/local/emhttp/var.ini")
 	if err != nil {
@@ -87,7 +89,18 @@ func (a *Array) GetSSLSettings() string {
 	usessl, _ := file.Get("", "USE_SSL")
 	usessl = strings.Replace(usessl, "\"", "", -1)
 
-	return usessl
+	name, _ := file.Get("", "NAME")
+	name = strings.Replace(name, "\"", "", -1)
+
+	cert := getCertificateName(certDir, name)
+
+	secure := cert != "" && !(usessl == "" || usessl == "no")
+
+	if secure {
+		return cert
+	}
+
+	return ""
 }
 
 func (a *Array) getStatus(msg *pubsub.Message) {
@@ -259,4 +272,32 @@ func (a *Array) getLog(msg *pubsub.Message) {
 
 	outbound := &dto.Packet{Topic: "gotLog", Payload: log}
 	a.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+}
+
+func getCertificateName(certDir, name string) string {
+	cert := filepath.Join(certDir, "certificate_bundle.pem")
+
+	exists, err := lib.Exists(cert)
+	if err != nil {
+		mlog.Warning("unable to check for %s presence:(%s)", cert, err)
+		return ""
+	}
+
+	if exists {
+		return cert
+	}
+
+	cert = filepath.Join(certDir, name+"_unraid_bundle.pem")
+
+	exists, err = lib.Exists(filepath.Join(certDir, cert))
+	if err != nil {
+		mlog.Warning("unable to check for %s presence:(%s)", cert, err)
+		return ""
+	}
+
+	if exists {
+		return cert
+	}
+
+	return ""
 }
