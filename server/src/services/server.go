@@ -24,8 +24,6 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-const certificate = "/boot/config/ssl/certs/certificate_bundle.pem"
-
 // Server -
 type Server struct {
 	bus      *pubsub.PubSub
@@ -34,17 +32,17 @@ type Server struct {
 	engine *echo.Echo
 	actor  *actor.Actor
 
-	ssl string
+	cert string
 
 	pool map[*net.Connection]bool
 }
 
 // NewServer -
-func NewServer(bus *pubsub.PubSub, settings *lib.Settings, ssl string) *Server {
+func NewServer(bus *pubsub.PubSub, settings *lib.Settings, cert string) *Server {
 	server := &Server{
 		bus:      bus,
 		actor:    actor.NewActor(bus),
-		ssl:      ssl,
+		cert:     cert,
 		settings: settings,
 		pool:     make(map[*net.Connection]bool),
 	}
@@ -108,10 +106,10 @@ func (s *Server) Start() {
 	port := fmt.Sprintf(":%s", s.settings.Port)
 
 	protocol := "http"
-	if s.useSsl() {
+	if s.cert != "" {
 		protocol = "https"
 		go func() {
-			err := s.engine.StartTLS(port, certificate, certificate)
+			err := s.engine.StartTLS(port, s.cert, s.cert)
 			if err != nil {
 				mlog.Fatalf("Unable to start on https: %s", err)
 			}
@@ -371,16 +369,4 @@ func (s *Server) broadcast(msg *pubsub.Message) {
 	for conn := range s.pool {
 		conn.Write(packet)
 	}
-}
-
-func (s *Server) useSsl() bool {
-	exists, err := lib.Exists(certificate)
-	if err != nil {
-		mlog.Warning("unable to check for certificate presence:(%s)", err)
-	}
-
-	// if usessl == "" this isn't a 6.4.x server
-	// otherwise usessl has some value, the plugin will serve off http if the value is no, in any
-	// other case, it will serve off https
-	return exists && !(s.ssl == "" || s.ssl == "no")
 }
