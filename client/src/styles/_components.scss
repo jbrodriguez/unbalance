@@ -383,7 +383,8 @@ tr:nth-of-type(even) {
 	// background: blue;
 }
 
-.height100 {
+.height100,
+.tree-view {
 	height: calc(100vh - 250px);
 }
 
