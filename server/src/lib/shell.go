@@ -7,6 +7,8 @@ import (
 	"os/exec"
 )
 
+const cRsyncBin = "/usr/bin/rsync"
+
 // Callback -
 type Callback func(line string)
 
@@ -45,7 +47,7 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 		}
 
 		// l.readLines += line
-		s.writer("%s: %s", s.prefix, line)
+		s.writer("%s:(%s)", s.prefix, line)
 	}
 
 	return
@@ -196,5 +198,19 @@ func Shell2(command string, callback Callback) error {
 	}
 
 	// Wait for the result of the command; also closes our end of the pipe
+	return cmd.Wait()
+}
+
+// StartRsync -
+func StartRsync(workDir string, writer StderrWriter, args ...string) (*exec.Cmd, error) {
+	cmd := exec.Command(cRsyncBin, args...)
+	cmd.Dir = workDir
+	cmd.Stderr = NewStreamer(writer, "rsync")
+
+	return cmd, cmd.Start()
+}
+
+// EndRsync -
+func EndRsync(cmd *exec.Cmd) error {
 	return cmd.Wait()
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -681,8 +682,7 @@ func (c *Core) runOperation(opName string) {
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		cmdTransferred, err := runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
-
+		cmdTransferred, err := c.runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
 		if err != nil {
 			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
@@ -696,116 +696,278 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
-	// tvshows/Billions/Season 01/banner.s01.jpg
-	//              20 100%    0.00kB/s    0:00:00
-	//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
-	// tvshows/Billions/Season 01/billions.s01e01.1080p
-	//          32,768   0%    1.01MB/s    0:02:53
-	//      48,005,120  26%   45.78MB/s    0:00:02
-	//     100,696,064  56%   47.97MB/s    0:00:01
-	//     157,810,688  88%   50.15MB/s    0:00:00
-	//     179,306,496 100%   52.91MB/s    0:00:03 (xfr#2, to-chk=3/8)
-	// tvshows/Billions/Season 01/billions.s01e02.1080p
-	//          32,768   0%  137.34kB/s    0:21:52
-	//      38,305,792  21%   36.35MB/s    0:00:03
-	//     106,397,696  58%   50.58MB/s    0:00:01
-	//     180,355,072 100%   64.83MB/s    0:00:02 (xfr#3, to-chk=2/8)
-	// tvshows/Billions/Season 01/billions.s01e03.1080p
-	//          32,768   0%   49.31kB/s    1:01:18
-	//      41,811,968  23%   39.88MB/s    0:00:03
-	//     157,810,688  86%   75.29MB/s    0:00:00
-	//     181,403,648 100%   79.21MB/s    0:00:02 (xfr#4, to-chk=1/8)
-	// tvshows/Billions/Season 01/billions.s01e04.1080p
-	//          32,768   0%  171.12kB/s    0:17:46
-	//      82,542,592  45%   78.72MB/s    0:00:01
-	//     112,492,544  61%   53.45MB/s    0:00:01
-	//     120,881,152  66%   38.11MB/s    0:00:01
-	//     164,134,912  89%   38.30MB/s    0:00:00
-	//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
-	//
-	// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
-	// particular file, then starts over with the next file
-	// makes sense for them I guess, but it's a pita to track and get an overall total
-	//
-	// so this is what the following represent:
-	//
-	// - cmdTransferred holds the running total for the current command
-	//
-	// - accumTransferred holds the running total for all the files that have been transferred, not including the
-	// current file, for the current command
-	//
-	// - perFileTransferred holds the running total for the file that is currently being transferred
+// func runCommand2(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+// 	// tvshows/Billions/Season 01/banner.s01.jpg
+// 	//              20 100%    0.00kB/s    0:00:00
+// 	//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
+// 	// tvshows/Billions/Season 01/billions.s01e01.1080p
+// 	//          32,768   0%    1.01MB/s    0:02:53
+// 	//      48,005,120  26%   45.78MB/s    0:00:02
+// 	//     100,696,064  56%   47.97MB/s    0:00:01
+// 	//     157,810,688  88%   50.15MB/s    0:00:00
+// 	//     179,306,496 100%   52.91MB/s    0:00:03 (xfr#2, to-chk=3/8)
+// 	// tvshows/Billions/Season 01/billions.s01e02.1080p
+// 	//          32,768   0%  137.34kB/s    0:21:52
+// 	//      38,305,792  21%   36.35MB/s    0:00:03
+// 	//     106,397,696  58%   50.58MB/s    0:00:01
+// 	//     180,355,072 100%   64.83MB/s    0:00:02 (xfr#3, to-chk=2/8)
+// 	// tvshows/Billions/Season 01/billions.s01e03.1080p
+// 	//          32,768   0%   49.31kB/s    1:01:18
+// 	//      41,811,968  23%   39.88MB/s    0:00:03
+// 	//     157,810,688  86%   75.29MB/s    0:00:00
+// 	//     181,403,648 100%   79.21MB/s    0:00:02 (xfr#4, to-chk=1/8)
+// 	// tvshows/Billions/Season 01/billions.s01e04.1080p
+// 	//          32,768   0%  171.12kB/s    0:17:46
+// 	//      82,542,592  45%   78.72MB/s    0:00:01
+// 	//     112,492,544  61%   53.45MB/s    0:00:01
+// 	//     120,881,152  66%   38.11MB/s    0:00:01
+// 	//     164,134,912  89%   38.30MB/s    0:00:00
+// 	//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
+// 	//
+// 	// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
+// 	// particular file, then starts over with the next file
+// 	// makes sense for them I guess, but it's a pita to track and get an overall total
+// 	//
+// 	// so this is what the following represent:
+// 	//
+// 	// - cmdTransferred holds the running total for the current command
+// 	//
+// 	// - accumTransferred holds the running total for all the files that have been transferred, not including the
+// 	// current file, for the current command
+// 	//
+// 	// - perFileTransferred holds the running total for the file that is currently being transferred
 
-	var cmdTransferred, accumTransferred, perFileTransferred int64
+// 	var cmdTransferred, accumTransferred, perFileTransferred int64
 
-	started := time.Now()
-	throttled := false
+// 	started := time.Now()
+// 	throttled := false
 
-	// actual shell execution
-	err := lib.ShellEx(func(text string) {
-		line := strings.TrimSpace(text)
+// 	// actual shell execution
+// 	err := lib.ShellEx(func(text string) {
+// 		line := strings.TrimSpace(text)
 
-		if len(line) <= 0 {
-			return
+// 		if len(line) <= 0 {
+// 			return
+// 		}
+
+// 		match := re.FindStringSubmatch(line)
+
+// 		// this is a regular output line from rsync
+// 		if match == nil {
+// 			// make sure it's available for the front end
+// 			operation.Line = line
+
+// 			// log it according to verbosity settings
+// 			if verbosity == 1 {
+// 				mlog.Info("%s", line)
+// 			}
+
+// 			if !throttled {
+// 				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+// 				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+// 			}
+
+// 			return
+// 		}
+
+// 		// this is a file transfer progress output line
+// 		if match[1] == "" {
+// 			// this happens when the file hasn't finished transferring
+// 			moved := strings.Replace(match[2], ",", "", -1)
+// 			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
+// 			cmdTransferred = accumTransferred + perFileTransferred
+// 		} else {
+// 			// the file has finished transferring
+// 			moved := strings.Replace(match[1], ",", "", -1)
+// 			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
+// 			cmdTransferred = accumTransferred + perFileTransferred
+// 			accumTransferred += perFileTransferred
+// 		}
+
+// 		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+
+// 		operation.Completed = percent
+// 		operation.Speed = speed
+// 		operation.Remaining = left.String()
+// 		operation.DeltaTransfer = cmdTransferred
+// 		command.Transferred = cmdTransferred
+
+// 		if !throttled {
+// 			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+// 			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+// 		}
+
+// 		current := time.Now()
+// 		throttled = current.Sub(started) < 250*time.Millisecond
+// 		if !throttled {
+// 			started = current
+// 		}
+
+// 	}, mlog.Warning, command.Src, "rsync", args...)
+
+// 	return cmdTransferred, err
+// }
+
+func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+	// start rsync command
+	cmd, err := lib.StartRsync(command.Src, mlog.Warning, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// give some time for /proc/pid to come alive
+	time.Sleep(time.Second * 1)
+
+	// monitor rsync progress
+	retcode, transferred, err := monitorRsync(operation, command, bus, cmd.Process.Pid)
+	if err != nil {
+		mlog.Warning("command:monitor(%s)", err)
+	}
+
+	mlog.Info("command:retcode(%d)", retcode)
+	// wCode := cmd.ProcessState.
+
+	// end rsync process
+	err = lib.EndRsync(cmd)
+	if err != nil {
+		mlog.Warning("command:end:error(%s)", err)
+	}
+
+	return transferred, err
+}
+
+func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, int64, error) {
+	var transferred int64
+	var current string
+	var retcode int
+	var zombie bool
+	var err error
+
+	// started := time.Now()
+	// throttled := false
+
+	pid := strconv.Itoa(procPid)
+
+	procStat := "/proc/" + pid + "/stat"
+	procIo := "/proc/" + pid + "/io"
+	procFd := "/proc/" + pid + "/fd/3"
+
+	for {
+		// isZombie
+		zombie, retcode, err = isZombie(procStat)
+		if err != nil {
+			mlog.Warning("no stat:err(%s)", err)
+			break
 		}
 
-		match := re.FindStringSubmatch(line)
-
-		// this is a regular output line from rsync
-		if match == nil {
-			// make sure it's available for the front end
-			operation.Line = line
-
-			// log it according to verbosity settings
-			if verbosity == 1 {
-				mlog.Info("%s", line)
-			}
-
-			if !throttled {
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-			}
-
-			return
+		// pid finished processing, exit the loop and Wait on the pid, to finish it properly
+		if zombie {
+			break
 		}
 
-		// this is a file transfer progress output line
-		if match[1] == "" {
-			// this happens when the file hasn't finished transferring
-			moved := strings.Replace(match[2], ",", "", -1)
-			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-			cmdTransferred = accumTransferred + perFileTransferred
-		} else {
-			// the file has finished transferring
-			moved := strings.Replace(match[1], ",", "", -1)
-			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-			cmdTransferred = accumTransferred + perFileTransferred
-			accumTransferred += perFileTransferred
+		// throttle both /proc consumption and messaging to the front end
+		time.Sleep(250 * time.Millisecond)
+
+		// getReadBytes
+		transferred, err = getReadBytes(procIo)
+		if err != nil {
+			mlog.Warning("have to break:err(%s):b(%d)", err, transferred)
+			break
 		}
 
-		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+		// getCurrentTransfer
+		current, err = getCurrentTransfer(procFd, filepath.Join(command.Src, command.Entry))
+		if err != nil {
+			mlog.Warning("unable to readlink:err(%s)", err)
+			continue
+		}
 
+		// mlog.Info("read(%d)-current(%s)-size(%d)", transferred, current, command.Size)
+
+		// update progress stats
+		transferred = lib.Min(transferred, command.Size)
+
+		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+transferred, time.Since(operation.Started))
+
+		operation.Line = current
 		operation.Completed = percent
 		operation.Speed = speed
 		operation.Remaining = left.String()
-		operation.DeltaTransfer = cmdTransferred
-		command.Transferred = cmdTransferred
+		operation.DeltaTransfer = transferred
+		command.Transferred = transferred
 
-		if !throttled {
-			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+		bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		// if !throttled {
+		// 	outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+		// 	bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		// }
+
+		// now := time.Now()
+		// throttled = now.Sub(started) < 250*time.Millisecond
+		// if !throttled {
+		// 	started = now
+		// }
+	}
+
+	return retcode, transferred, nil
+}
+
+func isZombie(proc string) (bool, int, error) {
+	var zombie bool
+	var retcode int
+
+	b, e := ioutil.ReadFile(proc)
+	if e != nil {
+		return false, 0, e
+	}
+
+	fields := strings.Split(string(b), " ")
+	state := fields[2]
+	zombie = state == "Z"
+	if zombie {
+		retcode, _ = strconv.Atoi(fields[51])
+	}
+
+	return zombie, retcode, nil
+}
+
+func getReadBytes(proc string) (int64, error) {
+	var sRead string
+
+	b, e := ioutil.ReadFile(proc)
+	if e != nil {
+		return 0, e
+	}
+
+	lines := strings.Split(string(b), "\n")
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "rchar:") {
+			sRead = line[7:]
+			break
 		}
+	}
 
-		current := time.Now()
-		throttled = current.Sub(started) < 250*time.Millisecond
-		if !throttled {
-			started = current
-		}
+	read, _ := strconv.ParseInt(sRead, 10, 64)
 
-	}, mlog.Warning, command.Src, "rsync", args...)
+	return read, nil
+}
 
-	return cmdTransferred, err
+func getCurrentTransfer(proc, prefix string) (string, error) {
+	var current string
+
+	name, e := os.Readlink(proc)
+	if e != nil {
+		return "", e
+	}
+
+	if strings.HasPrefix(name, prefix) {
+		current = name
+	}
+
+	return current, nil
 }
 
 func (c *Core) commandInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
