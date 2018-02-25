@@ -30,6 +30,8 @@ const (
 	timeFormat = "Jan _2, 2006 15:04:05"
 )
 
+type converter func(*domain.History) *domain.History
+
 // Core service
 type Core struct {
 	bus      *pubsub.PubSub
@@ -44,6 +46,8 @@ type Core struct {
 	reProgress  *regexp.Regexp
 
 	rsyncErrors map[int]string
+
+	converters []converter
 }
 
 // NewCore -
@@ -58,6 +62,10 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reRsync = regexp.MustCompile(`exit status (\d+)`)
 	core.reProgress = regexp.MustCompile(`(?s)^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
+
+	core.converters = []converter{
+		convertToV2,
+	}
 
 	core.rsyncErrors = map[int]string{
 		0:  "Success",
@@ -105,6 +113,17 @@ func (c *Core) Start() (err error) {
 		mlog.Warning("Unable to read history: %s", err)
 	}
 
+	if history.Version < common.HistoryVersion {
+		history = runConverters(history, c.converters, common.HistoryVersion)
+
+		history.Version = common.HistoryVersion
+
+		err := c.historyWrite(history)
+		if err != nil {
+			mlog.Warning("Unable to write history: %s", err)
+		}
+	}
+
 	c.state.History = history
 
 	c.actor.Register(common.APIGetConfig, c.getConfig)
@@ -143,6 +162,34 @@ func (c *Core) Start() (err error) {
 // Stop -
 func (c *Core) Stop() {
 	mlog.Info("stopped service Core ...")
+}
+
+func runConverters(history *domain.History, converters []converter, version int) *domain.History {
+	// converters is a zero-based array, we're currently at historyversion = 2, so we can do this math to get to
+	// the first converter we need to run
+	base := version - 2
+	toRun := converters[base:]
+	for _, converter := range toRun {
+		history = converter(history)
+	}
+
+	return history
+}
+
+func convertToV2(history *domain.History) *domain.History {
+	for _, item := range history.Items {
+		for _, command := range item.Commands {
+			if command.Transferred == 0 {
+				command.Status = common.CmdPending
+			} else if command.Transferred != command.Size {
+				command.Status = common.CmdStopped
+			} else {
+				command.Status = common.CmdCompleted
+			}
+		}
+	}
+
+	return history
 }
 
 func (c *Core) getConfig(msg *pubsub.Message) {
