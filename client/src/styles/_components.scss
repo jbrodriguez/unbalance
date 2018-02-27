@@ -213,6 +213,10 @@ legend {
 	@include button-variant($buttonAlertColor, $buttonAlertBg);
 }
 
+.btn-warning {
+	@include button-variant($buttonWarningColor, $buttonWarningBg);
+}
+
 .btn-nav {
 	@include button-variant($buttonNavColor, $buttonNavBg);
 }

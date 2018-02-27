@@ -47,11 +47,11 @@ if (isDeveloping) {
 	app.use(webpackHotMiddleware(compiler))
 
 	app.all('/api/*', (req, res) => {
-		proxy.web(req, res, { target: 'http://lucy.apertoire.org:6237' })
+		proxy.web(req, res, { target: 'https://lucy.apertoire.org:6237', changeOrigin: true, secure: false })
 	})
 
 	server.on('upgrade', (req, socket, head) => {
-		proxy.ws(req, socket, head, { target: 'http://lucy.apertoire.org:6237' })
+		proxy.ws(req, socket, head, { target: 'https://lucy.apertoire.org:6237', changeOrigin: true, secure: false })
 	})
 
 	app.get('*', (req, res) => {

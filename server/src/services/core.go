@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,8 @@ const (
 	timeFormat = "Jan _2, 2006 15:04:05"
 )
 
+type converter func(*domain.History) *domain.History
+
 // Core service
 type Core struct {
 	bus      *pubsub.PubSub
@@ -43,6 +46,8 @@ type Core struct {
 	reProgress  *regexp.Regexp
 
 	rsyncErrors map[int]string
+
+	converters []converter
 }
 
 // NewCore -
@@ -57,6 +62,10 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 	core.reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	core.reRsync = regexp.MustCompile(`exit status (\d+)`)
 	core.reProgress = regexp.MustCompile(`(?s)^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
+
+	core.converters = []converter{
+		convertToV2,
+	}
 
 	core.rsyncErrors = map[int]string{
 		0:  "Success",
@@ -104,6 +113,17 @@ func (c *Core) Start() (err error) {
 		mlog.Warning("Unable to read history: %s", err)
 	}
 
+	if history.Version < common.HistoryVersion {
+		history = runConverters(history, c.converters, common.HistoryVersion)
+
+		history.Version = common.HistoryVersion
+
+		err := c.historyWrite(history)
+		if err != nil {
+			mlog.Warning("Unable to write history: %s", err)
+		}
+	}
+
 	c.state.History = history
 
 	c.actor.Register(common.APIGetConfig, c.getConfig)
@@ -132,6 +152,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APISetRsyncArgs, c.setRsyncArgs)
 	c.actor.Register(common.APIValidate, c.validate)
 	c.actor.Register(common.APIReplay, c.replay)
+	c.actor.Register(common.APIRemoveSource, c.removeSource)
 	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
@@ -144,6 +165,7 @@ func (c *Core) Stop() {
 	mlog.Info("stopped service Core ...")
 }
 
+// COMMON API ENDPOINTS
 func (c *Core) getConfig(msg *pubsub.Message) {
 	mlog.Info("Sending config")
 	msg.Reply <- &c.settings.Config
@@ -409,11 +431,12 @@ func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk,
 			}
 
 			operation.Commands = append(operation.Commands, &domain.Command{
-				ID:    shortid.MustGenerate(),
-				Src:   item.Location,
-				Dst:   vdisk.Path + string(filepath.Separator),
-				Entry: entry,
-				Size:  item.Size,
+				ID:     shortid.MustGenerate(),
+				Src:    item.Location,
+				Dst:    vdisk.Path + string(filepath.Separator),
+				Entry:  entry,
+				Size:   item.Size,
+				Status: common.CmdPending,
 			})
 		}
 	}
@@ -501,11 +524,12 @@ func (c *Core) setupGatherTransferOperation(status int64, disks []*domain.Disk, 
 			}
 
 			operation.Commands = append(operation.Commands, &domain.Command{
-				ID:    shortid.MustGenerate(),
-				Src:   item.Location,
-				Dst:   vdisk.Path + string(filepath.Separator),
-				Entry: entry,
-				Size:  item.Size,
+				ID:     shortid.MustGenerate(),
+				Src:    item.Location,
+				Dst:    vdisk.Path + string(filepath.Separator),
+				Entry:  entry,
+				Size:   item.Size,
+				Status: common.CmdPending,
 			})
 		}
 	}
@@ -564,6 +588,7 @@ func (c *Core) setupValidateOperation(originalOp *domain.Operation) *domain.Oper
 	for _, command := range operation.Commands {
 		command.ID = shortid.MustGenerate()
 		command.Transferred = 0
+		command.Status = common.CmdPending
 	}
 
 	return operation
@@ -588,6 +613,7 @@ func (c *Core) validate(msg *pubsub.Message) {
 	go c.runOperation("Validate")
 }
 
+// REPLAY TRANSFER
 func (c *Core) getReplayOperation(msg *pubsub.Message) (*domain.Operation, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
@@ -619,6 +645,7 @@ func (c *Core) setupReplayOperation(originalOp *domain.Operation) *domain.Operat
 	for _, command := range operation.Commands {
 		command.ID = shortid.MustGenerate()
 		command.Transferred = 0
+		command.Status = common.CmdPending
 	}
 
 	return operation
@@ -681,8 +708,7 @@ func (c *Core) runOperation(opName string) {
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		cmdTransferred, err := runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
-
+		cmdTransferred, err := c.runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
 		if err != nil {
 			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
@@ -696,116 +722,162 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
-	// tvshows/Billions/Season 01/banner.s01.jpg
-	//              20 100%    0.00kB/s    0:00:00
-	//              20 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=4/8)
-	// tvshows/Billions/Season 01/billions.s01e01.1080p
-	//          32,768   0%    1.01MB/s    0:02:53
-	//      48,005,120  26%   45.78MB/s    0:00:02
-	//     100,696,064  56%   47.97MB/s    0:00:01
-	//     157,810,688  88%   50.15MB/s    0:00:00
-	//     179,306,496 100%   52.91MB/s    0:00:03 (xfr#2, to-chk=3/8)
-	// tvshows/Billions/Season 01/billions.s01e02.1080p
-	//          32,768   0%  137.34kB/s    0:21:52
-	//      38,305,792  21%   36.35MB/s    0:00:03
-	//     106,397,696  58%   50.58MB/s    0:00:01
-	//     180,355,072 100%   64.83MB/s    0:00:02 (xfr#3, to-chk=2/8)
-	// tvshows/Billions/Season 01/billions.s01e03.1080p
-	//          32,768   0%   49.31kB/s    1:01:18
-	//      41,811,968  23%   39.88MB/s    0:00:03
-	//     157,810,688  86%   75.29MB/s    0:00:00
-	//     181,403,648 100%   79.21MB/s    0:00:02 (xfr#4, to-chk=1/8)
-	// tvshows/Billions/Season 01/billions.s01e04.1080p
-	//          32,768   0%  171.12kB/s    0:17:46
-	//      82,542,592  45%   78.72MB/s    0:00:01
-	//     112,492,544  61%   53.45MB/s    0:00:01
-	//     120,881,152  66%   38.11MB/s    0:00:01
-	//     164,134,912  89%   38.30MB/s    0:00:00
-	//     182,452,224 100%   39.94MB/s    0:00:04 (xfr#5, to-chk=0/8)
-	//
-	// rsync is very particular in how it reports progress: each line shows the total bytes transferred for a
-	// particular file, then starts over with the next file
-	// makes sense for them I guess, but it's a pita to track and get an overall total
-	//
-	// so this is what the following represent:
-	//
-	// - cmdTransferred holds the running total for the current command
-	//
-	// - accumTransferred holds the running total for all the files that have been transferred, not including the
-	// current file, for the current command
-	//
-	// - perFileTransferred holds the running total for the file that is currently being transferred
+func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+	// start rsync command
+	cmd, err := lib.StartRsync(command.Src, mlog.Warning, args...)
+	if err != nil {
+		return 0, err
+	}
 
-	var cmdTransferred, accumTransferred, perFileTransferred int64
+	// give some time for /proc/pid to come alive
+	time.Sleep(500 * time.Millisecond)
 
-	started := time.Now()
-	throttled := false
+	// monitor rsync progress
+	retcode, transferred, err := monitorRsync(operation, command, bus, cmd.Process.Pid)
+	if err != nil {
+		mlog.Warning("command:monitor(%s)", err)
+	}
 
-	// actual shell execution
-	err := lib.ShellEx(func(text string) {
-		line := strings.TrimSpace(text)
+	command.Status = common.CmdCompleted
 
-		if len(line) <= 0 {
-			return
+	// end rsync process
+	exitCode, err := lib.EndRsync(cmd)
+	if err != nil {
+		mlog.Warning("command:end:error(%s)", err)
+		command.Status = common.CmdStopped
+	}
+
+	mlog.Info("command:retcode(%d):exitcode(%d)", retcode, exitCode)
+
+	if exitCode == 23 {
+		err = nil
+		command.Status = common.CmdFlagged
+	}
+
+	return transferred, err
+}
+
+func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, int64, error) {
+	var transferred int64
+	var current string
+	var retcode int
+	var zombie bool
+	var err error
+
+	// started := time.Now()
+	// throttled := false
+
+	pid := strconv.Itoa(procPid)
+
+	procStat := "/proc/" + pid + "/stat"
+	procIo := "/proc/" + pid + "/io"
+	procFd := "/proc/" + pid + "/fd/3"
+
+	for {
+		// isZombie
+		zombie, retcode, err = isZombie(procStat)
+		if err != nil {
+			mlog.Warning("isZombie:err(%s)", err)
+			break
 		}
 
-		match := re.FindStringSubmatch(line)
-
-		// this is a regular output line from rsync
-		if match == nil {
-			// make sure it's available for the front end
-			operation.Line = line
-
-			// log it according to verbosity settings
-			if verbosity == 1 {
-				mlog.Info("%s", line)
-			}
-
-			if !throttled {
-				outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-				bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
-			}
-
-			return
+		// pid finished processing, exit the loop and Wait on the pid, to finish it properly
+		if zombie {
+			break
 		}
 
-		// this is a file transfer progress output line
-		if match[1] == "" {
-			// this happens when the file hasn't finished transferring
-			moved := strings.Replace(match[2], ",", "", -1)
-			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-			cmdTransferred = accumTransferred + perFileTransferred
-		} else {
-			// the file has finished transferring
-			moved := strings.Replace(match[1], ",", "", -1)
-			perFileTransferred, _ = strconv.ParseInt(moved, 10, 64)
-			cmdTransferred = accumTransferred + perFileTransferred
-			accumTransferred += perFileTransferred
+		// throttle both /proc consumption and messaging to the front end
+		time.Sleep(250 * time.Millisecond)
+
+		// getReadBytes
+		transferred, err = getReadBytes(procIo)
+		if err != nil {
+			mlog.Warning("getReadBytes:err(%s):xfer(%d)", err, transferred)
+			break
 		}
 
-		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+cmdTransferred, time.Since(operation.Started))
+		// getCurrentTransfer
+		current, err = getCurrentTransfer(procFd, filepath.Join(command.Src, command.Entry))
+		if err != nil {
+			mlog.Warning("getCurrentTransfer:err(%s)", err)
+			continue
+		}
 
+		// mlog.Info("read(%d)-current(%s)-size(%d)", transferred, current, command.Size)
+
+		// update progress stats
+		transferred = lib.Min(transferred, command.Size)
+
+		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+transferred, time.Since(operation.Started))
+
+		operation.Line = current
 		operation.Completed = percent
 		operation.Speed = speed
 		operation.Remaining = left.String()
-		operation.DeltaTransfer = cmdTransferred
-		command.Transferred = cmdTransferred
+		operation.DeltaTransfer = transferred
+		command.Transferred = transferred
 
-		if !throttled {
-			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
-			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+		bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	}
+
+	return retcode, transferred, nil
+}
+
+func isZombie(proc string) (bool, int, error) {
+	var zombie bool
+	var retcode int
+
+	b, e := ioutil.ReadFile(proc)
+	if e != nil {
+		return false, 0, e
+	}
+
+	fields := strings.Split(string(b), " ")
+	state := fields[2]
+	zombie = state == "Z"
+	if zombie {
+		retcode, _ = strconv.Atoi(fields[51])
+	}
+
+	return zombie, retcode, nil
+}
+
+func getReadBytes(proc string) (int64, error) {
+	var sRead string
+
+	b, e := ioutil.ReadFile(proc)
+	if e != nil {
+		return 0, e
+	}
+
+	lines := strings.Split(string(b), "\n")
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "rchar:") {
+			sRead = line[7:]
+			break
 		}
+	}
 
-		current := time.Now()
-		throttled = current.Sub(started) < 250*time.Millisecond
-		if !throttled {
-			started = current
-		}
+	read, _ := strconv.ParseInt(sRead, 10, 64)
 
-	}, mlog.Warning, command.Src, "rsync", args...)
+	return read, nil
+}
 
-	return cmdTransferred, err
+func getCurrentTransfer(proc, prefix string) (string, error) {
+	var current string
+
+	name, e := os.Readlink(proc)
+	if e != nil {
+		return "", e
+	}
+
+	if strings.HasPrefix(name, prefix) {
+		current = name
+	}
+
+	return current, nil
 }
 
 func (c *Core) commandInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
@@ -845,10 +917,27 @@ func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Com
 
 func handleItemDeletion(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub) {
 	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
+		// the command was flagged due to an error 23, don't delete the source file/folder in these cases
+		if command.Status == common.CmdFlagged {
+			msg := fmt.Sprintf("skipping:deletion:(rsync command was flagged):(%s)", filepath.Join(command.Dst, command.Entry))
+			operation.Line = msg
+
+			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+			mlog.Warning(msg)
+
+			return
+		}
+
 		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
 		if exists {
 			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
+			operation.Line = fmt.Sprintf("Removing source %s", filepath.Join(command.Src, command.Entry))
+
+			outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+			bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 			mlog.Info("removing:(%s)", rmrf)
+
 			err := lib.Shell(rmrf, mlog.Warning, "transferProgress:", "", func(line string) {
 				mlog.Info(line)
 			})
@@ -871,6 +960,11 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 				// in the first 2 cases no "/" is present in parent, so I won't prune them
 				if strings.Contains(parent, "/") {
 					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+					operation.Line = fmt.Sprintf("Pruning parent %s", filepath.Join(command.Src, parent))
+
+					outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
+					bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
 					mlog.Info("pruning:(%s)", rmdir)
 
 					err = lib.Shell(rmdir, mlog.Warning, "transferProgress:", "", func(line string) {
@@ -891,7 +985,7 @@ func handleItemDeletion(operation *domain.Operation, command *domain.Command, bu
 				}
 			}
 		} else {
-			mlog.Warning("Skipping deletion (file/folder not present in destination): %s", filepath.Join(command.Dst, command.Entry))
+			mlog.Warning("skipping:deletion:(file/folder not present in destination):(%s)", filepath.Join(command.Dst, command.Entry))
 		}
 	}
 }
@@ -982,6 +1076,95 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	// c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
 	c.state.Status = common.OpNeutral
 	c.state.Operation = nil
+}
+
+// REMOVE SOURCE SCENARIO
+func getRemoveSourceParams(msg *pubsub.Message) (*domain.Operation, string, error) {
+	data, ok := msg.Payload.(string)
+	if !ok {
+		return nil, "", errors.New("Unable to convert removeSource parameters")
+	}
+
+	var rmsrc dto.RmSrc
+	err := json.Unmarshal([]byte(data), &rmsrc)
+	if err != nil {
+		return nil, "", fmt.Errorf("Unable to bind removeSource parameters: %s", err)
+	}
+
+	return rmsrc.Operation, rmsrc.ID, nil
+}
+
+func (c *Core) removeSource(msg *pubsub.Message) {
+	operation, cmdID, err := getRemoveSourceParams(msg)
+	if err != nil {
+		mlog.Warning("Unable to get rmsrc params: %s", err)
+
+		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		return
+	}
+
+	c.state.Status = operation.OpKind
+	c.state.Operation = operation
+	c.state.Unraid = c.refreshUnraid()
+
+	go c.performRemoveSource(cmdID)
+}
+
+func (c *Core) performRemoveSource(id string) {
+	operation := c.state.Operation
+
+	operation.Line = "Waiting to collect stats ..."
+	outbound := &dto.Packet{Topic: "transferStarted", Payload: operation}
+	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+	// do work
+	// find command
+	// var command *domain.Command
+	for _, command := range operation.Commands {
+		if command.ID != id {
+			continue
+		}
+
+		mlog.Info("Removing source:(%s)", filepath.Join(command.Src, command.Entry))
+
+		// status is cmdFlagged currently, let's change this to cmdSourceRemoval, so that handleItemDeletion works
+		// correctly and the UI can display a proper feedback for this command
+		command.Status = common.CmdSourceRemoval
+
+		handleItemDeletion(operation, command, c.bus)
+
+		command.Status = common.CmdCompleted
+
+		text := "Removal completed"
+		operation.Line = text
+		mlog.Info(text)
+
+		c.state.Unraid = c.refreshUnraid()
+		c.state.History.Items[operation.ID] = operation
+
+		state := &domain.State{
+			Operation: operation,
+			History:   c.state.History,
+			Unraid:    c.state.Unraid,
+		}
+
+		outbound = &dto.Packet{Topic: "transferFinished", Payload: state}
+		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+		// TODO: how to handle this
+		// c.updateHistory(c.state.History, operation)
+		err := c.historyWrite(c.state.History)
+		if err != nil {
+			mlog.Warning("Unable to write history: %s", err)
+		}
+
+		c.state.Status = common.OpNeutral
+		c.state.Operation = nil
+
+		break
+	}
 }
 
 // SETTINGS RELATED
@@ -1206,6 +1389,24 @@ func getError(line string, re *regexp.Regexp, errors map[int]string) string {
 	return msg
 }
 
+func (c *Core) refreshUnraid() *domain.Unraid {
+	unraid := c.state.Unraid
+
+	param := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
+	c.bus.Pub(param, common.IntGetArrayStatus)
+
+	reply := <-param.Reply
+	message := reply.(dto.Message)
+	if message.Error != nil {
+		mlog.Warning("Unable to get storage: %s", message.Error)
+	} else {
+		unraid = message.Data.(*domain.Unraid)
+	}
+
+	return unraid
+}
+
+// HISTORY HANDLERS/CONVERTERS
 func (c *Core) historyRead() (*domain.History, error) {
 	var history domain.History
 
@@ -1279,19 +1480,30 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 	}()
 }
 
-func (c *Core) refreshUnraid() *domain.Unraid {
-	unraid := c.state.Unraid
-
-	param := &pubsub.Message{Reply: make(chan interface{}, common.ChanCapacity)}
-	c.bus.Pub(param, common.IntGetArrayStatus)
-
-	reply := <-param.Reply
-	message := reply.(dto.Message)
-	if message.Error != nil {
-		mlog.Warning("Unable to get storage: %s", message.Error)
-	} else {
-		unraid = message.Data.(*domain.Unraid)
+func runConverters(history *domain.History, converters []converter, version int) *domain.History {
+	// converters is a zero-based array, we're currently at historyversion = 2, so we can do this math to get to
+	// the first converter we need to run
+	base := version - 2
+	toRun := converters[base:]
+	for _, converter := range toRun {
+		history = converter(history)
 	}
 
-	return unraid
+	return history
+}
+
+func convertToV2(history *domain.History) *domain.History {
+	for _, item := range history.Items {
+		for _, command := range item.Commands {
+			if command.Transferred == 0 {
+				command.Status = common.CmdPending
+			} else if command.Transferred != command.Size {
+				command.Status = common.CmdStopped
+			} else {
+				command.Status = common.CmdCompleted
+			}
+		}
+	}
+
+	return history
 }

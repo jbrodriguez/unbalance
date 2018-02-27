@@ -129,6 +129,14 @@ func Max(x, y int64) int64 {
 	return y
 }
 
+// Min -
+func Min(x, y int64) int64 {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 // GetLatestVersion  -
 func GetLatestVersion(url string) (dst string, err error) {
 	resp, err := http.Get(url)

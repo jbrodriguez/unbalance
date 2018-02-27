@@ -8,4 +8,5 @@ type Command struct {
 	Entry       string `json:"entry"`
 	Size        int64  `json:"size"`
 	Transferred int64  `json:"transferred"`
+	Status      int    `json:"status"`
 }

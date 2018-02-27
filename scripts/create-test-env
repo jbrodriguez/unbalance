@@ -26,9 +26,14 @@ dd if=/dev/urandom of=AprilFoolsDay.mkv bs=1M count=250
 echo "aprilfoolsday.jpg" > aprilfoolsday.jpg
 popd
 
+mkdir -p "anime/Apocrypha (2017)"
+pushd "anime/Apocrypha (2017)"
+dd if=/dev/urandom of="Apocrypha - 04 - Episode 5 [1280x720 x264 AAC 2ch].mkv" bs=1M count=374
+popd
+
 mkdir -p "anime/Chaos;Child (2017)"
 pushd "anime/Chaos;Child (2017)"
-dd if=/dev/urandom of="Chaos\;Child\ -\ 07\ -\ Episode\ 7\ \[1280x720\ x264\ AAC\ 2ch\].mkv" bs=1M count=147
+dd if=/dev/urandom of="Chaos;Child - 07 - Episode 7 [1280x720 x264 AAC 2ch].mkv" bs=1M count=147
 popd
 
 popd # out of /mnt/disk/films
