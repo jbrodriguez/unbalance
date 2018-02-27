@@ -111,7 +111,7 @@ rm /tmp/unbalance-chkconf
 # This should run for v5.0.x only
 # If unbalance.conf is present, reset the rsyncArgs flag to the new default
 CONF=/boot/config/plugins/unbalance/unbalance.conf
-[ -f "$CONF" ] && sed -i 's/rsyncArgs.*/rsyncArgs=-X/' /boot/config/plugins/unbalance/unbalance.conf
+[ -f "$CONF" ] && sed -i 's/rsyncArgs.*/rsyncArgs=-X/' "$CONF"
 rm /tmp/unbalance-chkconf2
 ]]>
 </INLINE>
