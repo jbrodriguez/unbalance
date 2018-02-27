@@ -52,6 +52,7 @@ cp plugin/$PROG.png $APP_RELEASE
 cp plugin/$PROG.page $APP_RELEASE
 cp CHANGES $APP_RELEASE
 cp VERSION $APP_RELEASE
+cp PLGVER $APP_RELEASE
 
 pushd release
 tar czvf ./$APP_FILE $PROG
@@ -63,7 +64,11 @@ echo "MD5: ${APP_MD5}"
 
 CHANGES=`cat metadata/changes/${APP_VERSION}.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'`
 
-perl -0777 -pe 's~{{md5}}~'"${APP_MD5}"'~g ; s~{{version}}~'"${APP_VERSION}"'~g ; s~{{appver}}~'"${APP_VERSION}"'~g ;  s~{{changes}}~'"${CHANGES}"'~g' plugin/template.plg > ./$PROG.plg
-rm -rf release
-
-echo "Successfully generated $PROG-$APP_VERSION.tgz"
+perl -0777 -pe 's~{{md5}}~'"${APP_MD5}"'~g ; s~{{version}}~'"${PLG_VERSION}"'~g ; s~{{appver}}~'"${APP_VERSION}"'~g ;  s~{{changes}}~'"${CHANGES}"'~g' plugin/template.plg > ./$PROG.plg
+if [ $? -ne 0 ]; then
+	popd
+	error "Unable to build server. Please check and try again"		
+else		
+	rm -rf release		
+	echo "Succesfully generated $PROG-$APP_VERSION"		
+fi
