@@ -1,3 +1,17 @@
+Version 5.0.0 - 2018-02-27
+- Future proof date based version
+- Enable https support
+- Fix ssl handling
+- Fix floating footer issue
+- Implement /proc based rsync handling
+- Implement history file conversion routine
+- Improve handling of rsync error 23
+- Set new default rsync flags
+- Fix variable usage in template
+- Update docs
+- Use date-based version
+
+
 Version 4.0.2 - 2018-01-12
 - Revert date base plugin version
 
