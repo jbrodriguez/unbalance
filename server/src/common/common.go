@@ -9,7 +9,7 @@ const (
 	HistoryCapacity = 25
 	HistoryFilename = "unbalance.hist"
 	HistoryVersion  = 2
-	RsyncArgs       = "-avPRX"
+	RsyncArgs       = "-avPR"
 )
 
 // OpNeutral -
