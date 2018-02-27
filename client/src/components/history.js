@@ -23,33 +23,36 @@ export default class History extends PureComponent {
 
 		this.state = {
 			showModal: false,
-			whichConfirmation: '',
+			toConfirm: '',
 			id: '',
+			operation: null,
 		}
 	}
 
 	onRequestClose = _ => {
-		this.setState({ showModal: false, whichConfirmation: '', id: '' })
+		this.setState({ showModal: false, toConfirm: '', id: '', operation: null })
 	}
 
-	confirm = (whichConfirmation, id) => _ => {
-		this.setState({ showModal: true, whichConfirmation, id })
+	confirm = (toConfirm, id, operation) => _ => {
+		this.setState({ showModal: true, toConfirm, id, operation })
 	}
 
 	onYes = _ => {
 		const { actions } = this.props.store
 
-		if (this.state.whichConfirmation === 'replay') {
+		if (this.state.toConfirm === 'replay') {
 			actions.replay(this.state.id)
-		} else {
+		} else if (this.state.toConfirm === 'validate') {
 			actions.scatterValidate(this.state.id)
+		} else if (this.state.toConfirm === 'rmsrc') {
+			actions.removeSource(this.state.operation, this.state.id)
 		}
 
-		this.setState({ showModal: false, whichConfirmation: '', id: '' })
+		this.setState({ showModal: false, toConfirm: '', id: '', operation: null })
 	}
 
 	onNo = _ => {
-		this.setState({ showModal: false, whichConfirmation: '', id: '' })
+		this.setState({ showModal: false, toConfirm: '', id: '', operation: null })
 	}
 
 	flipOperation = id => e => {
@@ -81,12 +84,22 @@ export default class History extends PureComponent {
 		const operations = state.core.history.order.map((id, index) => {
 			const op = state.core.history.items[id]
 
-			const status =
-				op.bytesTransferred === op.bytesToTransfer ? (
-					<i className={cx('fa fa-check-circle', 'statusDone')} />
-				) : (
-					<i className={cx('fa fa-times-circle', 'statusInterrupted')} />
-				)
+			// it's safe to validate or replay an operation only when it's the most recent, excluding dry-runs, since
+			// they don't physically alter files
+			if (op.dryRun) dryRuns++
+			const safe = index === 0 || index - dryRuns === 0
+
+			const replay = !op.dryRun && safe
+			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY && safe
+
+			const flagged = op.commands.some(command => command.status === constant.CMD_FLAGGED)
+			const status = flagged ? (
+				<i className={cx('fa fa-check-circle', 'statusFlagged')} />
+			) : op.bytesTransferred === op.bytesToTransfer ? (
+				<i className={cx('fa fa-check-circle', 'statusDone')} />
+			) : (
+				<i className={cx('fa fa-times-circle', 'statusInterrupted')} />
+			)
 
 			const { value, unit } = formatBytes(op.bytesTransferred)
 
@@ -103,17 +116,65 @@ export default class History extends PureComponent {
 				</a>
 			)
 
+			const canBeFlagged =
+				safe && (op.opKind === constant.OP_SCATTER_MOVE || op.opKind === constant.OP_GATHER_MOVE)
+			const warning =
+				canBeFlagged && flagged ? (
+					<section className={cx('row', 'mt2')} key={'w' + op.id}>
+						<div className={cx('flexSection', 'col-xs-12', 'start-xs', 'middle-xs')}>
+							<div>
+								<p className={cx('opWhite')}>
+									One or more commands had an execution warning/error. Check /boot/logs/unbalance.log
+									for additional details.
+								</p>
+								<p className={cx('opWhite')}>
+									Due to this, the plugin hasn't deleted the source files/folders for that/those
+									commands.
+								</p>
+								<p className={cx('opWhite')}>
+									Once you've checked/solved the issue(s), click on the{' '}
+									<span className={cx('statusFlagged')}>rmsrc</span> button to remove the source
+									files/folders, if you wish to do so.
+								</p>
+							</div>
+						</div>
+					</section>
+				) : null
+
 			let commands
 			if (op.open) {
 				const rows = op.commands.map(command => {
 					let status
 
-					if (command.transferred === 0) {
-						status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
-					} else if (command.transferred === command.size) {
-						status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
-					} else {
-						status = <i className={cx('fa fa-times-circle', 'statusInterrupted', 'rspacer')} />
+					switch (command.status) {
+						case constant.CMD_COMPLETE:
+							status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
+							break
+
+						case constant.CMD_PENDING:
+							status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
+							break
+
+						case constant.CMD_SOURCEREMOVAL:
+						case constant.CMD_FLAGGED:
+							status = canBeFlagged ? (
+								<button
+									className={cx('btn', 'btn-warning')}
+									onClick={this.confirm('rmsrc', command.id, op)}
+								>
+									rmsrc
+								</button>
+							) : (
+								<i className={cx('fa fa-check-circle', 'statusFlagged', 'rspacer')} />
+							)
+							break
+
+						case constant.CMD_STOPPED:
+							status = <i className={cx('fa fa-times-circle', 'statusInterrupted', 'rspacer')} />
+							break
+
+						default:
+							status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
 					}
 
 					const percent = percentage(command.transferred / command.size)
@@ -135,31 +196,26 @@ export default class History extends PureComponent {
 				})
 
 				commands = (
-					<section className={cx('row', 'mt2')}>
-						<div className={cx('flexSection', 'col-xs-12', 'center-xs', 'middle-xs')}>
-							<table>
-								<thead>
-									<tr>
-										<th style={{ width: '50px' }} />
-										<th style={{ width: '95px' }}>SOURCE</th>
-										<th>COMMAND</th>
-										<th style={{ width: '350px' }}>PROGRESS</th>
-									</tr>
-								</thead>
-								<tbody>{rows}</tbody>
-							</table>
-						</div>
-					</section>
+					<div>
+						{warning}
+						<section className={cx('row', 'mt2')} key={'c' + op.id}>
+							<div className={cx('flexSection', 'col-xs-12', 'center-xs', 'middle-xs')}>
+								<table>
+									<thead>
+										<tr>
+											<th style={{ width: '75px' }} />
+											<th style={{ width: '95px' }}>SOURCE</th>
+											<th>COMMAND</th>
+											<th style={{ width: '325px' }}>PROGRESS</th>
+										</tr>
+									</thead>
+									<tbody>{rows}</tbody>
+								</table>
+							</div>
+						</section>
+					</div>
 				)
 			}
-
-			// it's safe to validate or replay an operation only when it's the most recent, excluding dry-runs, since
-			// they don't physically alter files
-			if (op.dryRun) dryRuns++
-			const safe = index === 0 || index - dryRuns === 0
-
-			const replay = !op.dryRun && safe
-			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY && safe
 
 			return (
 				<div key={op.id} className={cx('historyItem', 'bottom-spacer-half')}>

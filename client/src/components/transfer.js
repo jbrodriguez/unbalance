@@ -63,18 +63,29 @@ export default class Transfers extends PureComponent {
 
 		const rows = operation.commands.map(command => {
 			let status
-			if (command.transferred === 0) {
-				status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
-			} else if (command.transferred === command.size) {
-				status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
-			} else {
-				const finished = DateTime.fromISO(operation.finished)
-				const started = DateTime.fromISO(operation.started)
-				if (finished.diff(started).toObject().milliseconds < 0) {
-					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
-				} else {
+
+			switch (command.status) {
+				case constant.CMD_COMPLETE:
+					status = <i className={cx('fa fa-check-circle', 'statusDone', 'rspacer')} />
+					break
+
+				case constant.CMD_PENDING:
+					status = <i className={cx('fa fa-minus-circle', 'statusPending', 'rspacer')} />
+					break
+
+				case constant.CMD_FLAGGED:
+					status = <i className={cx('fa fa-check-circle', 'statusFlagged', 'rspacer')} />
+					break
+
+				case constant.CMD_STOPPED:
 					status = <i className={cx('fa fa-times-circle', 'statusInterrupted', 'rspacer')} />
-				}
+					break
+
+				case constant.CMD_SOURCEREMOVAL:
+					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusFlagged', 'rspacer')} />
+
+				default:
+					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
 			}
 
 			const percent = percentage(command.transferred / command.size)

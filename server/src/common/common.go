@@ -8,7 +8,7 @@ const (
 	ChanCapacity    = 3
 	HistoryCapacity = 25
 	HistoryFilename = "unbalance.hist"
-	HistoryVersion  = 1
+	HistoryVersion  = 2
 	RsyncArgs       = "-avPRX"
 )
 
@@ -21,6 +21,15 @@ const (
 	OpScatterValidate = 4
 	OpGatherPlan      = 5
 	OpGatherMove      = 6
+)
+
+// CmdCompleted -
+const (
+	CmdCompleted = iota
+	CmdPending
+	CmdFlagged
+	CmdStopped
+	CmdSourceRemoval
 )
 
 // APIGetConfig -
@@ -69,6 +78,7 @@ const (
 	APIGetUpdate      = "config/get/update"
 	APISetRsyncArgs   = "config/set/rsyncArgs"
 
-	APIValidate = "api/validate"
-	APIReplay   = "api/replay"
+	APIValidate     = "api/validate"
+	APIReplay       = "api/replay"
+	APIRemoveSource = "api/removeSource"
 )

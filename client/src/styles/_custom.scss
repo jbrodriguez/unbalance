@@ -205,6 +205,10 @@ p {
 	color: $unbalance-green;
 }
 
+.statusFlagged {
+	color: $warning-yellow;
+}
+
 .statusInProgress {
 	color: $unbalance-footer;
 }
@@ -293,7 +297,7 @@ p {
 }
 
 .opYellow {
-	color: #cbcb41;
+	color: $warning-yellow;
 }
 
 .opWhite {

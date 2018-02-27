@@ -227,6 +227,17 @@ const replay = ({ state, actions, opts: { ws } }, id) => {
 	return state
 }
 
+const removeSource = ({ state, actions, opts: { ws } }, operation, id) => {
+	actions.setBusy(true)
+	actions.resetState()
+
+	ws.send({ topic: constant.API_REMOVE_SOURCE, payload: { operation, id } })
+
+	state.history.replace({ pathname: '/transfer' })
+
+	return state
+}
+
 export default {
 	getState,
 	gotState,
@@ -249,4 +260,5 @@ export default {
 	flipOperation,
 
 	replay,
+	removeSource,
 }
