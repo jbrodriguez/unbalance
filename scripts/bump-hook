@@ -21,14 +21,14 @@ DATE=$(date +%Y.%m.%d)
 
 if [[ -n $PLG_VERSION ]]; then
 	# second bump on this date, add first incremental letter (a)
-	if [[ $PLG_VERSION == $DATE ]]; then
+	if [[ $PLG_VERSION == "v$DATE" ]]; then
 		DATE=$(date +%Y.%m.%d)a
 	else
 		# there's a previous bump on this date, increment the letter
-		# it will be in the form of 2018.01.09a or b, c, etc
+		# it will be in the form of v2018.01.09a or b, c, etc
 		LEN=${#PLG_VERSION}
-		if [[ $LEN = 11 ]]; then
-			CHAR=${PLG_VERSION:10:1}
+		if [[ $LEN = 12 ]]; then
+			CHAR=${PLG_VERSION:11:1}
 			CHAR=$(echo "$CHAR" | tr "a-z" "b-z_")
 			DATE=$(date +%Y.%m.%d)$CHAR
 		fi 
@@ -36,7 +36,7 @@ if [[ -n $PLG_VERSION ]]; then
 fi
 
 cat <<EOF > PLGVER
-${DATE}
+v${DATE}
 EOF
 
 echo "Plugin Version is $PLG_VERSION"

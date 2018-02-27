@@ -51,6 +51,8 @@ Prepare for installation.
 -->
 <FILE Run="/bin/bash">
 <INLINE>
+running=$(pidof controlr | wc -w)
+
 # Remove emhttp files so we can re-install.
 rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
 
@@ -59,6 +61,11 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&appve
 
 # Install the 'bundle'.
 tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins
+
+# start the plugin if it was running previously
+if [ $running -eq 1 ]; then
+	/usr/local/emhttp/plugins/&name;/scripts/start
+fi
 
 echo ""
 echo "-----------------------------------------------------------"
