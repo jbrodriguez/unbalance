@@ -84,7 +84,7 @@ export default class Settings extends PureComponent {
 
 	_setRsyncDefault = () => {
 		const { setRsyncArgs } = this.props.store.actions
-		setRsyncArgs([''])
+		setRsyncArgs(['-X'])
 	}
 
 	setVerbosity = verbosity => () => {
@@ -230,11 +230,12 @@ export default class Settings extends PureComponent {
 
 							<p>Internally, unBALANCE uses rsync to transfer files across disks.</p>
 							<p>
-								By default, rsync is invoked with <b>-avPRX</b> flags.
+								By default, rsync is invoked with <b>-avPRX</b> flags. Note that the <b>X</b> flag is
+								customizable, so you can remove it if needed.
 							</p>
 							<p>
-								Here you can add custom flags, except for the dry run flag which will be automatically
-								added, if needed.
+								You can add custom flags, except for the dry run flag which will be automatically added,
+								if needed.
 							</p>
 							<p>
 								Be careful with the flags you choose, since it can drastically alter the expected
@@ -258,7 +259,7 @@ export default class Settings extends PureComponent {
 									</button>
 									&nbsp;
 									<button className={cx('btn', 'btn-primary')} onClick={this._setRsyncDefault}>
-										Reset to empty
+										Reset to default
 									</button>
 								</div>
 							</div>

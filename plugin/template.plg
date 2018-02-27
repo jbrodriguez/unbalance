@@ -104,4 +104,17 @@ rm /tmp/unbalance-chkconf
 </INLINE>
 </FILE>
 
+<FILE Name="/tmp/unbalance-chkconf2" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# This should run for v5.0.x only
+# If unbalance.conf is present, reset the rsyncArgs flag to the new default
+CONF=/boot/config/plugins/unbalance/unbalance.conf
+[ -f "$CONF" ] && sed -i 's/rsyncArgs.*/rsyncArgs=-X/' /boot/config/plugins/unbalance/unbalance.conf
+rm /tmp/unbalance-chkconf2
+]]>
+</INLINE>
+</FILE>
+
 </PLUGIN>

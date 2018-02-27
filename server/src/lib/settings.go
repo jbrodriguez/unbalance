@@ -61,7 +61,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	flagset.IntVar(&notifyPlan, "notifyPlan", 0, "notify via email after plan operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flagset.IntVar(&notifyTransfer, "notifyTransfer", 0, "notify via email after transfer operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "deprecated - do not use") // deprecated
-	flagset.StringVar(&rsyncArgs, "rsyncArgs", "", "custom rsync arguments")
+	flagset.StringVar(&rsyncArgs, "rsyncArgs", "-X", "custom rsync arguments")
 	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 	flagset.IntVar(&verbosity, "verbosity", 0, "include rsync output in log files: 0 (default) - include; 1 - do not include")
 	flagset.IntVar(&checkForUpdate, "checkForUpdate", 1, "checkForUpdate: 0 - dont' check; 1 (default) - check")
