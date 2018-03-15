@@ -80,14 +80,20 @@ func (a *Array) SanityCheck(locations []string) error {
 
 // GetCertificate -
 func (a *Array) GetCertificate() string {
+	// get ssl settings
+	ident, err := ini.LoadFile("/boot/config/ident.cfg")
+	if err != nil {
+		return ""
+	}
+
+	usessl, _ := ident.Get("", "USE_SSL")
+	usessl = strings.Replace(usessl, "\"", "", -1)
+
 	// get array status
 	file, err := ini.LoadFile("/var/local/emhttp/var.ini")
 	if err != nil {
 		return ""
 	}
-
-	usessl, _ := file.Get("", "USE_SSL")
-	usessl = strings.Replace(usessl, "\"", "", -1)
 
 	name, _ := file.Get("", "NAME")
 	name = strings.Replace(name, "\"", "", -1)
