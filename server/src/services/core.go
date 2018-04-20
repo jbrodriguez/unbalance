@@ -722,7 +722,7 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (uint64, error) {
 	// start rsync command
 	cmd, err := lib.StartRsync(command.Src, mlog.Warning, args...)
 	if err != nil {
@@ -757,8 +757,8 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 	return transferred, err
 }
 
-func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, int64, error) {
-	var transferred int64
+func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, uint64, error) {
+	var transferred uint64
 	var current string
 	var retcode int
 	var zombie bool
@@ -843,7 +843,7 @@ func isZombie(proc string) (bool, int, error) {
 	return zombie, retcode, nil
 }
 
-func getReadBytes(proc string) (int64, error) {
+func getReadBytes(proc string) (uint64, error) {
 	var sRead string
 
 	b, e := ioutil.ReadFile(proc)
@@ -860,7 +860,7 @@ func getReadBytes(proc string) (int64, error) {
 		}
 	}
 
-	read, _ := strconv.ParseInt(sRead, 10, 64)
+	read, _ := strconv.ParseUint(sRead, 10, 64)
 
 	return read, nil
 }
@@ -880,7 +880,7 @@ func getCurrentTransfer(proc, prefix string) (string, error) {
 	return current, nil
 }
 
-func (c *Core) commandInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred int64, commandsExecuted []string) {
+func (c *Core) commandInterrupted(opName string, operation *domain.Operation, command *domain.Command, cmd string, err error, cmdTransferred uint64, commandsExecuted []string) {
 	operation.Finished = time.Now()
 	elapsed := time.Since(operation.Started)
 
@@ -1250,7 +1250,7 @@ func (c *Core) setReservedSpace(msg *pubsub.Message) {
 		return
 	}
 
-	amount := int64(reserved.Amount)
+	amount := uint64(reserved.Amount)
 	unit := reserved.Unit
 
 	mlog.Info("Setting reservedAmount to (%d)", amount)
@@ -1367,7 +1367,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 	}()
 }
 
-func progress(bytesToTransfer, bytesTransferred int64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
+func progress(bytesToTransfer, bytesTransferred uint64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
 	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
 	speed = bytesPerSec / 1024 / 1024 // MB/s
 

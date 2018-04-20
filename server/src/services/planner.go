@@ -87,7 +87,7 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: common.WsScatterPlanStarted, Payload: "Planning started"}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, p.reItems, p.reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
+	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, state.Unraid.BlockSize, p.reItems, p.reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
 
 	toBeTransferred := make([]*domain.Item, 0)
 
@@ -128,9 +128,9 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 		reserved := p.getReservedAmount(disk.Size)
 
 		ceil := lib.Max(lib.ReservedSpace, reserved)
-		mlog.Info("scatterPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
+		mlog.Info("scatterPlan:ItemsLeft(%d):ReservedSpace(%d):BlockSize(%d)", len(items), ceil, state.Unraid.BlockSize)
 
-		packer := algorithm.NewKnapsack(disk, items, ceil)
+		packer := algorithm.NewKnapsack(disk, items, ceil, state.Unraid.BlockSize)
 		bin := packer.BestFit()
 		if bin != nil {
 			plan.VDisks[disk.Path].Bin = bin
@@ -163,7 +163,7 @@ func (p *Planner) gather(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: common.WsGatherPlanStarted, Payload: "Planning Started"}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, p.reItems, p.reStat, state.Unraid.Disks, plan.ChosenFolders)
+	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, state.Unraid.BlockSize, p.reItems, p.reStat, state.Unraid.Disks, plan.ChosenFolders)
 
 	// no items found, no sense going on, just end this planning
 	if len(items) == 0 {
@@ -202,9 +202,9 @@ func (p *Planner) gather(msg *pubsub.Message) {
 		reserved := p.getReservedAmount(disk.Size)
 
 		ceil := lib.Max(lib.ReservedSpace, reserved)
-		mlog.Info("gatherPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
+		mlog.Info("gatherPlan:ItemsLeft(%d):ReservedSpace(%d):BlockSize(%d)", len(items), ceil, state.Unraid.BlockSize)
 
-		packer := algorithm.NewGreedy(disk, items, ceil)
+		packer := algorithm.NewGreedy(disk, items, ceil, state.Unraid.BlockSize)
 		bin := packer.FitAll()
 		if bin != nil {
 			plan.VDisks[disk.Path].Bin = bin
@@ -290,8 +290,8 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
-	var total int64
+func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, uint64, error) {
+	var total uint64
 	srcFolder := filepath.Join(src, folder)
 
 	var fi os.FileInfo
@@ -301,7 +301,7 @@ func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*do
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}}, fi.Size(), nil
+		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
 	}
 
 	entries, err := ioutil.ReadDir(srcFolder)
@@ -316,23 +316,43 @@ func getItems(status int64, re *regexp.Regexp, src string, folder string) ([]*do
 	}
 
 	items := make([]*domain.Item, 0)
+	cache := make(map[string]*domain.Item)
 
 	cmd := fmt.Sprintf(`find "%s" ! -name . -prune -exec du -bs {} +`, srcFolder+"/.")
 
 	err = lib.Shell2(cmd, func(line string) {
 		result := re.FindStringSubmatch(line)
 
-		size, _ := strconv.ParseInt(result[1], 10, 64)
+		size, _ := strconv.ParseUint(result[1], 10, 64)
 		total += size
 
 		item := &domain.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src}
 		items = append(items, item)
+
+		cache[result[2]] = item
 	})
+
+	if err != nil {
+		return nil, total, err
+	}
+
+	if blockSize > 0 {
+		cmd = fmt.Sprintf(`find "%s" ! -name . -prune -exec du --block-size=%d {} +`, srcFolder+"/.", blockSize)
+
+		err = lib.Shell2(cmd, func(line string) {
+			result := re.FindStringSubmatch(line)
+
+			blocks, _ := strconv.ParseUint(result[1], 10, 64)
+
+			item := cache[result[2]]
+			item.BlocksUsed = blocks
+		})
+	}
 
 	return items, total, err
 }
 
-func (p *Planner) getItemsAndIssues(status int64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
+func (p *Planner) getItemsAndIssues(status int64, blockSize uint64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 	items := make([]*domain.Item, 0)
 
@@ -366,7 +386,7 @@ func (p *Planner) getItemsAndIssues(status int64, reItems, reStat *regexp.Regexp
 			outbound = &dto.Packet{Topic: getTopic(status), Payload: "Getting items ..."}
 			p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			list, total, err := getItems(status, reItems, disk.Path, path)
+			list, total, err := getItems(status, blockSize, reItems, disk.Path, path)
 			if err != nil {
 				mlog.Warning("items:not-available:(%s)", err)
 			} else {
@@ -416,8 +436,8 @@ func (p *Planner) sendMailFeeback(fstarted, ffinished string, elapsed time.Durat
 	}
 }
 
-func (p *Planner) getReservedAmount(size int64) int64 {
-	var reserved int64
+func (p *Planner) getReservedAmount(size uint64) uint64 {
+	var reserved uint64
 
 	switch p.settings.ReservedUnit {
 	case "%":

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"jbrodriguez/unbalance/server/src/common"
@@ -162,20 +163,21 @@ func getArrayData() (*domain.Unraid, error) {
 	}
 
 	// get free/size data
-	free := make(map[string]int64)
-	size := make(map[string]int64)
+	free := make(map[string]uint64)
+	size := make(map[string]uint64)
 
 	err = lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
 		data := strings.Fields(line)
-		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
-		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
+		size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
+		free[data[5]], _ = strconv.ParseUint(data[3], 0, 64)
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	var totalSize, totalFree int64
+	var totalSize, totalFree, blockSize uint64
+	var hasBlockSize bool
 	disks := make([]*domain.Disk, 0)
 
 	for _, section := range file {
@@ -200,6 +202,24 @@ func getArrayData() (*domain.Unraid, error) {
 		disk.Serial = strings.Replace(section["id"], "\"", "", -1) // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
 		disk.Status = diskStatus                                   // DISK_OK
 
+		var stat syscall.Statfs_t
+		e := syscall.Statfs(disk.Path, &stat)
+		if e == nil {
+			disk.BlocksTotal = stat.Blocks
+			disk.BlocksFree = stat.Bavail
+
+			if blockSize != uint64(stat.Bsize) {
+				if !hasBlockSize {
+					blockSize = uint64(stat.Bsize)
+				} else {
+					blockSize = 0
+				}
+
+				hasBlockSize = true
+			}
+		}
+		mlog.Info("name(%s),blocks(%d),size(%d),avail(%d)", disk.Path, disk.BlocksTotal, blockSize, disk.BlocksFree)
+
 		totalSize += disk.Size
 		totalFree += disk.Free
 
@@ -208,6 +228,7 @@ func getArrayData() (*domain.Unraid, error) {
 
 	unraid.Size = totalSize
 	unraid.Free = totalFree
+	unraid.BlockSize = blockSize
 
 	sort.Slice(disks, func(i, j int) bool { return disks[i].ID < disks[j].ID })
 

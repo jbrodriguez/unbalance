@@ -7,14 +7,16 @@ package domain
 
 // Bin -
 type Bin struct {
-	Size  int64
-	Items []*Item
+	Size       uint64
+	Items      []*Item
+	BlocksUsed uint64
 }
 
 // Add -
 func (b *Bin) Add(item *Item) {
 	b.Items = append(b.Items, item)
 	b.Size += item.Size
+	b.BlocksUsed += item.BlocksUsed
 }
 
 // // Print -

@@ -1,8 +1,11 @@
 package algorithm
 
 import (
-	"jbrodriguez/unbalance/server/src/domain"
 	"sort"
+
+	"jbrodriguez/unbalance/server/src/domain"
+
+	"github.com/jbrodriguez/mlog"
 )
 
 // Knapsack -
@@ -13,20 +16,32 @@ type Knapsack struct {
 	list []*domain.Item
 	over []*domain.Item
 
-	buffer int64
+	buffer    uint64
+	blockSize uint64
 }
 
 // NewKnapsack -
-func NewKnapsack(disk *domain.Disk, items []*domain.Item, reserved int64) *Knapsack {
-	p := new(Knapsack)
+func NewKnapsack(disk *domain.Disk, items []*domain.Item, reserved, blockSize uint64) *Knapsack {
+	p := &Knapsack{}
+
 	p.disk = disk
 	p.list = items
 	p.buffer = reserved
+	p.blockSize = blockSize
+
 	return p
 }
 
 // BestFit -
-func (k *Knapsack) BestFit() (bin *domain.Bin) {
+func (k *Knapsack) BestFit() *domain.Bin {
+	if k.blockSize > 0 {
+		return k.fitBlocks()
+	}
+
+	return k.fitBytes()
+}
+
+func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 	sort.Slice(k.list, func(i, j int) bool { return k.list[i].Size > k.list[j].Size })
 
 	// for _, itm := range k.list {
@@ -74,6 +89,49 @@ func (k *Knapsack) BestFit() (bin *domain.Bin) {
 
 	if len(k.Bins) > 0 {
 		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].Size > k.Bins[j].Size })
+		bin = k.Bins[0]
+	}
+
+	return bin
+}
+
+func (k *Knapsack) fitBlocks() (bin *domain.Bin) {
+	mlog.Info("knapsack:blocks")
+	sort.Slice(k.list, func(i, j int) bool { return k.list[i].BlocksUsed > k.list[j].BlocksUsed })
+
+	// how many blocks used by k.buffer bytes
+	buffer := k.buffer / k.blockSize
+
+	for _, item := range k.list {
+		mlog.Info("knapsack:item(%+v):buffer(%d):diskfree(%d)", item, buffer, k.disk.BlocksFree)
+		if item.BlocksUsed > (k.disk.BlocksFree - buffer) {
+			k.over = append(k.over, item)
+		} else {
+			targetBin := -1
+			remainingSpace := k.disk.BlocksFree
+
+			for i, bin := range k.Bins {
+				binSpaceUsed := bin.BlocksUsed
+				binSpaceLeft := k.disk.BlocksFree - binSpaceUsed - item.BlocksUsed
+
+				if binSpaceLeft < remainingSpace && binSpaceLeft >= buffer {
+					remainingSpace = binSpaceLeft
+					targetBin = i
+				}
+			}
+
+			if targetBin >= 0 {
+				k.Bins[targetBin].Add(item)
+			} else {
+				newbin := &domain.Bin{}
+				newbin.Add(item)
+				k.Bins = append(k.Bins, newbin)
+			}
+		}
+	}
+
+	if len(k.Bins) > 0 {
+		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].BlocksUsed > k.Bins[j].BlocksUsed })
 		bin = k.Bins[0]
 	}
 
