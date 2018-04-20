@@ -114,6 +114,7 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 	}
 
 	mlog.Info("scatterPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
+	mlog.Info("scatterPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -128,7 +129,7 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 		reserved := p.getReservedAmount(disk.Size)
 
 		ceil := lib.Max(lib.ReservedSpace, reserved)
-		mlog.Info("scatterPlan:ItemsLeft(%d):ReservedSpace(%d):BlockSize(%d)", len(items), ceil, state.Unraid.BlockSize)
+		mlog.Info("scatterPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
 
 		packer := algorithm.NewKnapsack(disk, items, ceil, state.Unraid.BlockSize)
 		bin := packer.BestFit()
@@ -141,10 +142,6 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 
 			toBeTransferred = append(toBeTransferred, bin.Items...)
 			items = removeItems(items, bin.Items)
-
-			mlog.Info("scatterPlan:disk(%s):allocation=items(%d):currentFree(%s):plannedFree(%s)", disk.Path, len(bin.Items), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
-		} else {
-			mlog.Info("scatterPlan:disk(%s):no-allocation:currentFree(%s)", disk.Path, lib.ByteSize(disk.Free))
 		}
 	}
 
@@ -188,6 +185,7 @@ func (p *Planner) gather(msg *pubsub.Message) {
 	}
 
 	mlog.Info("gatherPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
+	mlog.Info("gatherPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -202,7 +200,7 @@ func (p *Planner) gather(msg *pubsub.Message) {
 		reserved := p.getReservedAmount(disk.Size)
 
 		ceil := lib.Max(lib.ReservedSpace, reserved)
-		mlog.Info("gatherPlan:ItemsLeft(%d):ReservedSpace(%d):BlockSize(%d)", len(items), ceil, state.Unraid.BlockSize)
+		mlog.Info("gatherPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
 
 		packer := algorithm.NewGreedy(disk, items, ceil, state.Unraid.BlockSize)
 		bin := packer.FitAll()
@@ -211,10 +209,6 @@ func (p *Planner) gather(msg *pubsub.Message) {
 			plan.VDisks[disk.Path].PlannedFree -= bin.Size
 
 			plan.BytesToTransfer += bin.Size
-
-			mlog.Info("gatherPlan:disk(%s):allocation=items(%d):currentFree(%s):plannedFree(%s)", disk.Path, len(bin.Items), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
-		} else {
-			mlog.Info("gatherPlan:disk(%s):no-allocation:currentFree(%s)", disk.Path, lib.ByteSize(disk.Free))
 		}
 	}
 
@@ -503,7 +497,7 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 	for _, disk := range disks {
 		if plan.VDisks[disk.Path].Bin != nil {
 			mlog.Info("=========================================================")
-			mlog.Info("disk(%s):items(%d)-(%s):currentFree(%s)-plannedFree(%s)", disk.Path, len(plan.VDisks[disk.Path].Bin.Items), lib.ByteSize(plan.VDisks[disk.Path].Bin.Size), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
+			mlog.Info("disk(%s):fs(%s):items(%d)-(%s):currentFree(%s)-plannedFree(%s)", disk.Path, disk.FsType, len(plan.VDisks[disk.Path].Bin.Items), lib.ByteSize(plan.VDisks[disk.Path].Bin.Size), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
 			mlog.Info("---------------------------------------------------------")
 
 			for _, item := range plan.VDisks[disk.Path].Bin.Items {
@@ -514,7 +508,7 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 			mlog.Info("")
 		} else {
 			mlog.Info("=========================================================")
-			mlog.Info("disk(%s):no-items:currentFree(%s)", disk.Path, lib.ByteSize(disk.Free))
+			mlog.Info("disk(%s):fs(%s):no-items:currentFree(%s)", disk.Path, disk.FsType, lib.ByteSize(disk.Free))
 			mlog.Info("---------------------------------------------------------")
 			mlog.Info("---------------------------------------------------------")
 			mlog.Info("")

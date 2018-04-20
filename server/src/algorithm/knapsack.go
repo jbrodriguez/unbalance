@@ -4,8 +4,6 @@ import (
 	"sort"
 
 	"jbrodriguez/unbalance/server/src/domain"
-
-	"github.com/jbrodriguez/mlog"
 )
 
 // Knapsack -
@@ -96,14 +94,12 @@ func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 }
 
 func (k *Knapsack) fitBlocks() (bin *domain.Bin) {
-	mlog.Info("knapsack:blocks")
 	sort.Slice(k.list, func(i, j int) bool { return k.list[i].BlocksUsed > k.list[j].BlocksUsed })
 
 	// how many blocks used by k.buffer bytes
 	buffer := k.buffer / k.blockSize
 
 	for _, item := range k.list {
-		mlog.Info("knapsack:item(%+v):buffer(%d):diskfree(%d)", item, buffer, k.disk.BlocksFree)
 		if item.BlocksUsed > (k.disk.BlocksFree - buffer) {
 			k.over = append(k.over, item)
 		} else {
