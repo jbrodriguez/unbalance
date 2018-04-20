@@ -10,7 +10,7 @@ import (
 )
 
 // ReservedSpace -
-const ReservedSpace uint64 = 512 * 1000 * 1000 // 512Mb
+const ReservedSpace uint64 = 512 * 1024 * 1024 // 512Mb
 
 // Config -
 type Config struct {
@@ -86,7 +86,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s.DryRun = dryRun
 	s.NotifyPlan = notifyPlan
 	s.NotifyTransfer = notifyTransfer
-	s.ReservedAmount = ReservedSpace / 1000 / 1000
+	s.ReservedAmount = ReservedSpace / 1024 / 1024
 	s.ReservedUnit = "Mb"
 	s.Verbosity = verbosity
 	s.CheckForUpdate = checkForUpdate

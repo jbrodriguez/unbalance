@@ -444,9 +444,9 @@ func (p *Planner) getReservedAmount(size uint64) uint64 {
 		fcalc := size * p.settings.ReservedAmount / 100
 		reserved = fcalc
 	case "Mb":
-		reserved = p.settings.ReservedAmount * 1000 * 1000
+		reserved = p.settings.ReservedAmount * 1024 * 1024
 	case "Gb":
-		reserved = p.settings.ReservedAmount * 1000 * 1000 * 1000
+		reserved = p.settings.ReservedAmount * 1024 * 1024 * 1024
 	default:
 		reserved = lib.ReservedSpace
 	}
