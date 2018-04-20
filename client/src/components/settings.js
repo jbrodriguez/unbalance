@@ -190,7 +190,7 @@ export default class Settings extends PureComponent {
 								unBALANCE uses the threshold defined here as the minimum free space that should be kept
 								available in a target disk, when planning how much the disk can be filled.
 							</p>
-							<p>This threshold cannot be less than 450Mb (hard limit set by this app).</p>
+							<p>This threshold cannot be less than 512Mb (hard limit set by this app).</p>
 
 							<div className={cx('row')}>
 								<div className={cx('col-xs-2')}>

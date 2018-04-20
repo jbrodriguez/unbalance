@@ -2,10 +2,11 @@ package domain
 
 // Item -
 type Item struct {
-	Name     string
-	Size     int64
-	Path     string
-	Location string
+	Name       string
+	Size       uint64
+	Path       string
+	Location   string
+	BlocksUsed uint64
 }
 
 // // BySize -

@@ -45,16 +45,16 @@ const setReservedSpace = ({ state, actions, opts: { api } }, stringAmount, unit)
 			break
 
 		case 'Gb':
-			if (amount < 0.45) {
-				actions.addFeedback('Gb value must be higher than 0.45')
+			if (amount < 0.5) {
+				actions.addFeedback('Gb value must be higher than or equal to 0.5')
 				return state
 			}
 			break
 
 		case 'Mb':
 		default:
-			if (amount < 450) {
-				actions.addFeedback('Mb value must be higher than 450')
+			if (amount < 512) {
+				actions.addFeedback('Mb value must be higher than or equal to 512')
 				return state
 			}
 			break
