@@ -84,7 +84,8 @@ legend {
 
 	max-width: 78em;
 	// min-height: 100vh;
-	height: 100vh;
+	// height: 100vh;
+	height: min-height;
 }
 
 // PANELS
@@ -387,10 +388,10 @@ tr:nth-of-type(even) {
 	// background: blue;
 }
 
-.height100,
-.tree-view {
-	height: calc(100vh - 250px);
-}
+// .height100,
+// .tree-view {
+// 	height: calc(100vh - 250px);
+// }
 
 .scroller {
 	max-height: inherit;

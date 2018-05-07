@@ -18,7 +18,9 @@ export default class GatherSource extends PureComponent {
 	}
 
 	componentDidMount() {
-		const { store: { state, actions } } = this.props
+		const {
+			store: { state, actions },
+		} = this.props
 
 		actions.clearGatherConsole()
 		if (Object.keys(state.gather.chosen).length === 0) {
@@ -37,7 +39,10 @@ export default class GatherSource extends PureComponent {
 	}
 
 	render() {
-		const { match, store: { state } } = this.props
+		const {
+			match,
+			store: { state },
+		} = this.props
 
 		const header = (
 			<section className={cx('row', 'bottom-spacer-half')}>
@@ -59,9 +64,9 @@ export default class GatherSource extends PureComponent {
 		)
 
 		const grid = (
-			<section className={cx('row', 'bottom-spacer-half', 'height100')}>
+			<section className={cx('row', 'bottom-spacer-half')}>
 				<div className={cx('col-xs-12')}>
-					<div className={cx('row', 'height100')}>
+					<div className={cx('row')}>
 						<div className={cx('col-xs-6', 'scroller')}>
 							<TreeMenu
 								expandIconClass="fa fa-chevron-right"
