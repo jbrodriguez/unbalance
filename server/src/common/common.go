@@ -30,6 +30,7 @@ const (
 	CmdFlagged
 	CmdStopped
 	CmdSourceRemoval
+	CmdInProgress
 )
 
 // APIGetConfig -

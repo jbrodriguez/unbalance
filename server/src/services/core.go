@@ -841,6 +841,7 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		operation.Remaining = left.String()
 		operation.DeltaTransfer = transferred
 		command.Transferred = transferred
+		command.Status = common.CmdInProgress
 
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
