@@ -97,6 +97,7 @@ const gotStorage = ({ state }, unraid) => {
 }
 
 const getOperation = ({ state, actions, opts: { api } }) => {
+	// console.log(`getop-state(${JSON.stringify(state)})`)
 	actions.setBusy(true)
 
 	api.getOperation().then(json => {
@@ -238,6 +239,14 @@ const removeSource = ({ state, actions, opts: { ws } }, operation, id) => {
 	return state
 }
 
+const stopCommand = ({ state, actions, opts: { ws } }) => {
+	actions.setBusy(true)
+	ws.send({ topic: constant.API_STOP_COMMAND })
+	actions.setBusy(false)
+
+	return state
+}
+
 export default {
 	getState,
 	gotState,
@@ -261,4 +270,6 @@ export default {
 
 	replay,
 	removeSource,
+
+	stopCommand,
 }

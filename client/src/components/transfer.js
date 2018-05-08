@@ -3,7 +3,6 @@ import { PropTypes } from 'prop-types'
 
 // import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
-import { DateTime } from 'luxon'
 
 import Indicator from './indicator'
 
@@ -17,6 +16,10 @@ const cx = classNames.bind(styles)
 export default class Transfers extends PureComponent {
 	static propTypes = {
 		store: PropTypes.object.isRequired,
+	}
+
+	stop = () => _ => {
+		this.props.store.actions.stopCommand()
 	}
 
 	componentDidMount() {
@@ -83,6 +86,7 @@ export default class Transfers extends PureComponent {
 
 				case constant.CMD_SOURCEREMOVAL:
 					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusFlagged', 'rspacer')} />
+					break
 
 				default:
 					status = <i className={cx('fa fa-circle-o-notch fa-spin', 'statusInProgress', 'rspacer')} />
@@ -134,9 +138,17 @@ export default class Transfers extends PureComponent {
 							</span>
 						</div>
 						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'end-sm')}>
-							<span>
-								{operation.dryRun && <span className={cx('lspacer', 'historyLabel')}>dry</span>}
-							</span>
+							{operation.dryRun ? (
+								<span className={cx('lspacer', 'historyLabel')}>dry</span>
+							) : (
+								<button
+									className={cx('btn', 'btn-primary', 'lspacer')}
+									onClick={this.stop()}
+									disabled={false}
+								>
+									STOP
+								</button>
+							)}
 						</div>
 					</section>
 				</div>

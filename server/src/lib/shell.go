@@ -226,3 +226,8 @@ func EndRsync(cmd *exec.Cmd) (int, error) {
 
 	return exitCode, err
 }
+
+// KillRsync -
+func KillRsync(cmd *exec.Cmd) error {
+	return cmd.Process.Kill()
+}

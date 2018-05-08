@@ -81,4 +81,6 @@ const (
 	APIValidate     = "api/validate"
 	APIReplay       = "api/replay"
 	APIRemoveSource = "api/removeSource"
+
+	APIStopCommand = "api/stopCommand"
 )
