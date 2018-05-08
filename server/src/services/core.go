@@ -48,6 +48,8 @@ type Core struct {
 	rsyncErrors map[int]string
 
 	converters []converter
+
+	stopped bool
 }
 
 // NewCore -
@@ -88,6 +90,7 @@ func NewCore(bus *pubsub.PubSub, settings *lib.Settings) *Core {
 		25: "The --max-delete limit stopped deletions",
 		30: "Timeout in data send/receive",
 		35: "Timeout waiting for daemon connection",
+		99: "Interrupted by the user",
 	}
 
 	return core
@@ -153,6 +156,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APIValidate, c.validate)
 	c.actor.Register(common.APIReplay, c.replay)
 	c.actor.Register(common.APIRemoveSource, c.removeSource)
+	c.actor.Register(common.APIStopCommand, c.stopCommand)
 	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
@@ -723,6 +727,9 @@ func (c *Core) runOperation(opName string) {
 }
 
 func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (uint64, error) {
+	// make sure the command will run
+	c.stopped = false
+
 	// start rsync command
 	cmd, err := lib.StartRsync(command.Src, mlog.Warning, args...)
 	if err != nil {
@@ -733,9 +740,21 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 	time.Sleep(500 * time.Millisecond)
 
 	// monitor rsync progress
-	retcode, transferred, err := monitorRsync(operation, command, bus, cmd.Process.Pid)
+	retcode, transferred, err := c.monitorRsync(operation, command, bus, cmd.Process.Pid)
 	if err != nil {
 		mlog.Warning("command:monitor(%s)", err)
+	}
+
+	// 99 is a magic number meaning the user clicked on the stop operation button
+	if retcode == 99 {
+		mlog.Info("command:received:StopCommand")
+		err = lib.KillRsync(cmd)
+		if err != nil {
+			mlog.Warning("command:kill:error(%s)", err)
+		}
+
+		command.Status = common.CmdStopped
+		return transferred, fmt.Errorf("exit status %d", retcode)
 	}
 
 	command.Status = common.CmdCompleted
@@ -757,7 +776,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 	return transferred, err
 }
 
-func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, uint64, error) {
+func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, uint64, error) {
 	var transferred uint64
 	var current string
 	var retcode int
@@ -774,6 +793,12 @@ func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pub
 	procFd := "/proc/" + pid + "/fd/3"
 
 	for {
+		// c.stopped will be true if the user has stopped the command via the gui
+		if c.stopped {
+			retcode = 99
+			break
+		}
+
 		// isZombie
 		zombie, retcode, err = isZombie(procStat)
 		if err != nil {
@@ -799,7 +824,7 @@ func monitorRsync(operation *domain.Operation, command *domain.Command, bus *pub
 		// getCurrentTransfer
 		current, err = getCurrentTransfer(procFd, filepath.Join(command.Src, command.Entry))
 		if err != nil {
-			mlog.Warning("getCurrentTransfer:err(%s)", err)
+			// mlog.Warning("getCurrentTransfer:err(%s)", err)
 			continue
 		}
 
@@ -1115,7 +1140,7 @@ func (c *Core) removeSource(msg *pubsub.Message) {
 func (c *Core) performRemoveSource(id string) {
 	operation := c.state.Operation
 
-	operation.Line = "Waiting to collect stats ..."
+	operation.Line = "Removing source ..."
 	outbound := &dto.Packet{Topic: "transferStarted", Payload: operation}
 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -1165,6 +1190,11 @@ func (c *Core) performRemoveSource(id string) {
 
 		break
 	}
+}
+
+// STOP COMMAND
+func (c *Core) stopCommand(msg *pubsub.Message) {
+	c.stopped = true
 }
 
 // SETTINGS RELATED

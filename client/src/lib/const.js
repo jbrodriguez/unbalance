@@ -25,6 +25,7 @@ export const API_GET_LOG = 'api/get/log'
 export const API_VALIDATE = 'api/validate'
 export const API_REPLAY = 'api/replay'
 export const API_REMOVE_SOURCE = 'api/removeSource'
+export const API_STOP_COMMAND = 'api/stopCommand'
 
 export const CMD_COMPLETE = 0
 export const CMD_PENDING = 1
