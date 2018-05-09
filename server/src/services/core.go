@@ -783,8 +783,8 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 	var zombie bool
 	var err error
 
-	// started := time.Now()
-	// throttled := false
+	start := time.Now()
+	display := true
 
 	pid := strconv.Itoa(procPid)
 
@@ -829,6 +829,13 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		}
 
 		// mlog.Info("read(%d)-current(%s)-size(%d)", transferred, current, command.Size)
+
+		// on the first loop (and every 10 min after that, arbitrarily), display the file currently being transferred
+		if display {
+			mlog.Info("monitor:transfer:(%s)", current)
+			start = time.Now()
+		}
+		display = time.Since(start) >= time.Minute*10
 
 		// update progress stats
 		transferred = lib.Min(transferred, command.Size)
