@@ -1,0 +1,13 @@
+2018-05-09 - 5.1.0
+
+Available space is now calculated using blocks, if all disks have the same block
+size, otherwise it falls back to the current metric, using bytes.
+
+You can now stop a running operation, but you are responsible for any data clean up.
+
+Additional changes:
+- Fix ssl detection
+- Fix UI issues
+- Increase hard floor to 512Mb
+- Use SI's digital units
+- Improve logging
