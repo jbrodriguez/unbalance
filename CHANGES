@@ -1,3 +1,8 @@
+Version 5.1.1 - 2018-05-11
+- Fix planner issues
+- Add debug logging
+
+
 Version 5.1.0 - 2018-05-09
 - Fix ssl handling
 - Implement block-based space planning
