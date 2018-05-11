@@ -103,6 +103,8 @@ func (a *Array) GetCertificate() string {
 
 	secure := cert != "" && !(usessl == "" || usessl == "no")
 
+	mlog.Info("debug:usessl(%s):name(%s):cert(%s):secure(%t)", usessl, name, cert, secure)
+
 	if secure {
 		return cert
 	}
@@ -310,6 +312,8 @@ func getCertificateName(certDir, name string) string {
 		return ""
 	}
 
+	mlog.Info("debug:exists(%s):(%t)", cert, exists)
+
 	if exists {
 		return cert
 	}
@@ -321,6 +325,8 @@ func getCertificateName(certDir, name string) string {
 		mlog.Warning("unable to check for %s presence:(%s)", cert, err)
 		return ""
 	}
+
+	mlog.Info("debug:exists(%s):(%t)", cert, exists)
 
 	if exists {
 		return cert
