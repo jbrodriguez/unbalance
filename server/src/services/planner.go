@@ -3,11 +3,7 @@ package services
 import (
 	"fmt"
 	"io/ioutil"
-	"jbrodriguez/unbalance/server/src/algorithm"
-	"jbrodriguez/unbalance/server/src/common"
-	"jbrodriguez/unbalance/server/src/domain"
-	"jbrodriguez/unbalance/server/src/dto"
-	"jbrodriguez/unbalance/server/src/lib"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,6 +11,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"jbrodriguez/unbalance/server/src/algorithm"
+	"jbrodriguez/unbalance/server/src/common"
+	"jbrodriguez/unbalance/server/src/domain"
+	"jbrodriguez/unbalance/server/src/dto"
+	"jbrodriguez/unbalance/server/src/lib"
 
 	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"
@@ -285,7 +287,8 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 }
 
 func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, uint64, error) {
-	var total uint64
+	var total, blocks uint64
+	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
 
 	var fi os.FileInfo
@@ -310,7 +313,6 @@ func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, fol
 	}
 
 	items := make([]*domain.Item, 0)
-	cache := make(map[string]*domain.Item)
 
 	cmd := fmt.Sprintf(`find "%s" ! -name . -prune -exec du -bs {} +`, srcFolder+"/.")
 
@@ -320,27 +322,19 @@ func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, fol
 		size, _ := strconv.ParseUint(result[1], 10, 64)
 		total += size
 
-		item := &domain.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src}
+		if blockSize > 0 {
+			blocks = uint64(math.Ceil(float64(size) / fBlockSize))
+		} else {
+			blocks = 0
+		}
+
+		item := &domain.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src, BlocksUsed: blocks}
 		items = append(items, item)
 
-		cache[result[2]] = item
 	})
 
 	if err != nil {
 		return nil, total, err
-	}
-
-	if blockSize > 0 {
-		cmd = fmt.Sprintf(`find "%s" ! -name . -prune -exec du --block-size=%d {} +`, srcFolder+"/.", blockSize)
-
-		err = lib.Shell2(cmd, func(line string) {
-			result := re.FindStringSubmatch(line)
-
-			blocks, _ := strconv.ParseUint(result[1], 10, 64)
-
-			item := cache[result[2]]
-			item.BlocksUsed = blocks
-		})
 	}
 
 	return items, total, err
