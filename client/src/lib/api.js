@@ -104,4 +104,12 @@ export default class Api {
 	checkForUpdate() {
 		return fetch(`${this.hostr}/update`).then(resp => resp.json())
 	}
+
+	setRefreshRate(refreshRate) {
+		return fetch(`${this.hostr}/config/refreshRate`, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ payload: refreshRate }),
+		}).then(resp => resp.json())
+	}
 }

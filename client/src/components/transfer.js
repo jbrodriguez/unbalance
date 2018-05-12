@@ -22,6 +22,12 @@ export default class Transfers extends PureComponent {
 		this.props.store.actions.stopCommand()
 	}
 
+	setRefreshRate = e => {
+		const refreshRate = +e.target.value
+		const { setRefreshRate } = this.props.store.actions
+		setRefreshRate(refreshRate)
+	}
+
 	componentDidMount() {
 		const { actions } = this.props.store
 		actions.getOperation()
@@ -132,12 +138,30 @@ export default class Transfers extends PureComponent {
 			<div>
 				<div className={cx('historyItem', 'bottom-spacer-half')}>
 					<section className={cx('row')}>
-						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'start-sm')}>
+						<div className={cx('col-xs-12', 'col-sm-5', 'center-xs', 'start-sm')}>
 							<span className={cx('historyTitle', constant.opMap[operation.opKind].color)}>
 								{constant.opMap[operation.opKind].name}
 							</span>
 						</div>
-						<div className={cx('col-xs-12', 'col-sm-6', 'center-xs', 'end-sm')}>
+						<div className={cx('col-xs-12', 'col-sm-2', 'center-xs', 'middle-sm')}>
+							<div className={cx('addon')}>
+								<span className={cx('rspacer')}>Refresh</span>
+								<select
+									className={cx('addon-item')}
+									name="rate"
+									value={state.config.refreshRate}
+									onChange={this.setRefreshRate}
+								>
+									<option value="250">0.25 sec</option>
+									<option value="500">0.5 sec</option>
+									<option value="1000">1 sec</option>
+									<option value="5000">5 sec</option>
+									<option value="15000">15 sec</option>
+									<option value="30000">30 sec</option>
+								</select>
+							</div>
+						</div>
+						<div className={cx('col-xs-12', 'col-sm-5', 'center-xs', 'end-sm')}>
 							{operation.dryRun ? (
 								<span className={cx('lspacer', 'historyLabel')}>dry</span>
 							) : (

@@ -112,6 +112,14 @@ const setUpdateCheck = ({ state, actions, opts: { api } }, checkForUpdate) => {
 	return state
 }
 
+const setRefreshRate = ({ state, actions, opts: { api } }, refreshRate) => {
+	if (state.config.refreshRate !== refreshRate) {
+		api.setRefreshRate(refreshRate).then(json => actions.gotConfig(json))
+	}
+
+	return state
+}
+
 export default {
 	getConfig,
 	gotConfig,
@@ -128,4 +136,5 @@ export default {
 
 	setVerbosity,
 	setUpdateCheck,
+	setRefreshRate,
 }

@@ -157,6 +157,7 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APIReplay, c.replay)
 	c.actor.Register(common.APIRemoveSource, c.removeSource)
 	c.actor.Register(common.APIStopCommand, c.stopCommand)
+	c.actor.Register(common.APISetRefreshRate, c.setRefreshRate)
 	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
@@ -812,7 +813,7 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		}
 
 		// throttle both /proc consumption and messaging to the front end
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Duration(c.settings.RefreshRate) * time.Millisecond)
 
 		// getReadBytes
 		transferred, err = getReadBytes(procIo)
@@ -1366,6 +1367,21 @@ func (c *Core) getUpdate(msg *pubsub.Message) {
 	}
 
 	msg.Reply <- newest
+}
+
+func (c *Core) setRefreshRate(msg *pubsub.Message) {
+	frefresh := msg.Payload.(float64)
+	refresh := int(frefresh)
+
+	mlog.Info("Setting refresh rate to (%d)", refresh)
+
+	c.settings.RefreshRate = refresh
+	err := c.settings.Save()
+	if err != nil {
+		mlog.Warning("Unable to save settings: %s", err)
+	}
+
+	msg.Reply <- &c.settings.Config
 }
 
 // HELPERS
