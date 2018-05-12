@@ -97,6 +97,7 @@ func (s *Server) Start() {
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/checkUpdate", s.setCheckUpdate)
+	api.PUT("/config/refreshRate", s.setRefreshRate)
 	api.GET("/update", s.getUpdate)
 	api.POST("/tree", s.getTree)
 	api.POST("/locate", s.locate)
@@ -262,6 +263,23 @@ func (s *Server) setCheckUpdate(c echo.Context) (err error) {
 
 	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
 	s.bus.Pub(msg, common.APISetCheckUpdate)
+
+	reply := <-msg.Reply
+	resp := reply.(*lib.Config)
+
+	return c.JSON(200, &resp)
+}
+
+func (s *Server) setRefreshRate(c echo.Context) (err error) {
+	var packet dto.Packet
+
+	err = c.Bind(&packet)
+	if err != nil {
+		mlog.Warning("error binding: %s", err)
+	}
+
+	msg := &pubsub.Message{Payload: packet.Payload, Reply: make(chan interface{}, common.ChanCapacity)}
+	s.bus.Pub(msg, common.APISetRefreshRate)
 
 	reply := <-msg.Reply
 	resp := reply.(*lib.Config)

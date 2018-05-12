@@ -23,6 +23,7 @@ type Config struct {
 	Version        string   `json:"version"`
 	Verbosity      int      `json:"verbosity"`
 	CheckForUpdate int      `json:"checkForUpdate"`
+	RefreshRate    int      `json:"refreshRate"`
 }
 
 // NotifyPlan/NotifyTransfer possible values
@@ -48,7 +49,7 @@ const defaultConfLocation = "/boot/config/plugins/unbalance"
 func NewSettings(name, version string, locations []string) (*Settings, error) {
 	var port, logDir, folders, rsyncFlags, rsyncArgs, apiFolders string
 	var dryRun bool
-	var notifyCalc, notifyMove, notifyPlan, notifyTransfer, verbosity, checkForUpdate int
+	var notifyCalc, notifyMove, notifyPlan, notifyTransfer, verbosity, checkForUpdate, refreshRate int
 
 	flagset := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
@@ -65,6 +66,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 	flagset.IntVar(&verbosity, "verbosity", 0, "include rsync output in log files: 0 (default) - include; 1 - do not include")
 	flagset.IntVar(&checkForUpdate, "checkForUpdate", 1, "checkForUpdate: 0 - dont' check; 1 (default) - check")
+	flagset.IntVar(&refreshRate, "refreshRate", 250, "how often to refresh the ui while running a command (in milliseconds)")
 
 	location := SearchFile(name, locations)
 	if location != "" {
@@ -90,6 +92,7 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s.ReservedUnit = "Mb"
 	s.Verbosity = verbosity
 	s.CheckForUpdate = checkForUpdate
+	s.RefreshRate = refreshRate
 	s.Version = version
 
 	s.Port = port
@@ -134,6 +137,10 @@ func (s *Settings) Save() (err error) {
 	}
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("verbosity=%d", s.Verbosity)); err != nil {
+		return err
+	}
+
+	if err = WriteLine(tmpFile, fmt.Sprintf("refreshRate=%d", s.RefreshRate)); err != nil {
 		return err
 	}
 
