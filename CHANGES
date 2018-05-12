@@ -1,3 +1,8 @@
+Version 5.2.0 - 2018-05-12
+- Fix ssl cert detection
+- Allow customization of UI refresh rate
+
+
 Version 5.1.1 - 2018-05-11
 - Fix planner issues
 - Add debug logging

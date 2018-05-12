@@ -1,0 +1,6 @@
+2018-05-12 - 5.2.0
+
+This release allows the user to customize the UI's refresh rate, when transferring data.
+
+Also:
+- Fix ssl cert detection
