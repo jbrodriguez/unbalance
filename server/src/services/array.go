@@ -163,20 +163,20 @@ func getArrayData() (*domain.Unraid, error) {
 	}
 
 	// get free/size data
-	free := make(map[string]uint64)
-	size := make(map[string]uint64)
+	free := make(map[string]int64)
+	size := make(map[string]int64)
 
 	err = lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
 		data := strings.Fields(line)
-		size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
-		free[data[5]], _ = strconv.ParseUint(data[3], 0, 64)
+		size[data[5]], _ = strconv.ParseInt(data[1], 10, 64)
+		free[data[5]], _ = strconv.ParseInt(data[3], 0, 64)
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	var totalSize, totalFree, blockSize uint64
+	var totalSize, totalFree, blockSize int64
 	var hasBlockSize bool
 	disks := make([]*domain.Disk, 0)
 
@@ -205,12 +205,12 @@ func getArrayData() (*domain.Unraid, error) {
 		var stat syscall.Statfs_t
 		e := syscall.Statfs(disk.Path, &stat)
 		if e == nil {
-			disk.BlocksTotal = stat.Blocks
-			disk.BlocksFree = stat.Bavail
+			disk.BlocksTotal = int64(stat.Blocks)
+			disk.BlocksFree = int64(stat.Bavail)
 
-			if blockSize != uint64(stat.Bsize) {
+			if blockSize != int64(stat.Bsize) {
 				if !hasBlockSize {
-					blockSize = uint64(stat.Bsize)
+					blockSize = int64(stat.Bsize)
 				} else {
 					blockSize = 0
 				}

@@ -13,8 +13,8 @@ type Unraid struct {
 	Resync       int64     `json:"resync"`
 	ResyncPos    int64     `json:"resyncPos"`
 	State        string    `json:"state"`
-	Size         uint64    `json:"size"`
-	Free         uint64    `json:"free"`
+	Size         int64     `json:"size"`
+	Free         int64     `json:"free"`
 	Disks        []*Disk   `json:"disks"`
-	BlockSize    uint64    `json:"-"`
+	BlockSize    int64     `json:"-"`
 }

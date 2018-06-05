@@ -8,14 +8,14 @@ import (
 type Greedy struct {
 	disk      *domain.Disk
 	entries   []*domain.Item
-	buffer    uint64
-	blockSize uint64
+	buffer    int64
+	blockSize int64
 
 	Bins []*domain.Bin
 }
 
 // NewGreedy -
-func NewGreedy(disk *domain.Disk, entries []*domain.Item, reserved, blockSize uint64) *Greedy {
+func NewGreedy(disk *domain.Disk, entries []*domain.Item, reserved, blockSize int64) *Greedy {
 	g := &Greedy{}
 
 	g.disk = disk

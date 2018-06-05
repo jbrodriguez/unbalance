@@ -14,12 +14,12 @@ type Knapsack struct {
 	list []*domain.Item
 	over []*domain.Item
 
-	buffer    uint64
-	blockSize uint64
+	buffer    int64
+	blockSize int64
 }
 
 // NewKnapsack -
-func NewKnapsack(disk *domain.Disk, items []*domain.Item, reserved, blockSize uint64) *Knapsack {
+func NewKnapsack(disk *domain.Disk, items []*domain.Item, reserved, blockSize int64) *Knapsack {
 	p := &Knapsack{}
 
 	p.disk = disk
@@ -43,19 +43,20 @@ func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 	sort.Slice(k.list, func(i, j int) bool { return k.list[i].Size > k.list[j].Size })
 
 	// for _, itm := range k.list {
-	// 	mlog.Info("disk (%s) > item: %s", k.disk.Path, itm.Path)
+	// 	fmt.Printf("disk(%s):item(%s):size(%d)\n", k.disk.Path, itm.Path, itm.Size)
 	// }
 
 	for _, item := range k.list {
+		// fmt.Printf("loop:size(%d):free(%d)-buffer(%d):resta(%d)\n", item.Size, k.disk.Free, k.buffer, k.disk.Free-k.buffer)
+
 		if item.Size > (k.disk.Free - k.buffer) {
-			// if item.Size > k.disk.Free {
-			// mlog.Info("size: %d, disk: %s, free: %d", item.Size, k.disk.Path, k.disk.Free)
+			// fmt.Printf("size: %d, disk: %s, free: %d\n", item.Size, k.disk.Path, k.disk.Free)
 			k.over = append(k.over, item)
 		} else {
 			targetBin := -1
 			remainingSpace := k.disk.Free
 
-			// mlog.Info("disk(%s)-bins(%d); item(%s)-size(%d); remainingSpace(%d)", k.disk.Name, len(k.Bins), item.Name, item.Size, remainingSpace)
+			// fmt.Printf("else:disk(%s)-bins(%d); item(%s)-size(%d); remainingSpace(%d)\n", k.disk.Name, len(k.Bins), item.Name, item.Size, remainingSpace)
 
 			for i, bin := range k.Bins {
 				binSpaceUsed := bin.Size

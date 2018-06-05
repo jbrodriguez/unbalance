@@ -89,6 +89,8 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: common.WsScatterPlanStarted, Payload: "Planning started"}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	p.printDisks(state.Unraid.Disks, state.Unraid.BlockSize)
+
 	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, state.Unraid.BlockSize, p.reItems, p.reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
 
 	toBeTransferred := make([]*domain.Item, 0)
@@ -116,7 +118,7 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 	}
 
 	mlog.Info("scatterPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
-	mlog.Info("scatterPlan:blockSize(%d)", state.Unraid.BlockSize)
+	// mlog.Info("scatterPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -162,6 +164,8 @@ func (p *Planner) gather(msg *pubsub.Message) {
 	outbound := &dto.Packet{Topic: common.WsGatherPlanStarted, Payload: "Planning Started"}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
+	p.printDisks(state.Unraid.Disks, state.Unraid.BlockSize)
+
 	items, ownerIssue, groupIssue, folderIssue, fileIssue := p.getItemsAndIssues(state.Status, state.Unraid.BlockSize, p.reItems, p.reStat, state.Unraid.Disks, plan.ChosenFolders)
 
 	// no items found, no sense going on, just end this planning
@@ -187,7 +191,7 @@ func (p *Planner) gather(msg *pubsub.Message) {
 	}
 
 	mlog.Info("gatherPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
-	mlog.Info("gatherPlan:blockSize(%d)", state.Unraid.BlockSize)
+	// mlog.Info("gatherPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -286,8 +290,8 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, uint64, error) {
-	var total, blocks uint64
+func getItems(status int64, blockSize int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
+	var total, blocks int64
 	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
 
@@ -298,7 +302,7 @@ func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, fol
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
+		return []*domain.Item{&domain.Item{Name: folder, Size: fi.Size(), Path: folder, Location: src}}, fi.Size(), nil
 	}
 
 	entries, err := ioutil.ReadDir(srcFolder)
@@ -319,11 +323,11 @@ func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, fol
 	err = lib.Shell2(cmd, func(line string) {
 		result := re.FindStringSubmatch(line)
 
-		size, _ := strconv.ParseUint(result[1], 10, 64)
+		size, _ := strconv.ParseInt(result[1], 10, 64)
 		total += size
 
 		if blockSize > 0 {
-			blocks = uint64(math.Ceil(float64(size) / fBlockSize))
+			blocks = int64(math.Ceil(float64(size) / fBlockSize))
 		} else {
 			blocks = 0
 		}
@@ -340,7 +344,7 @@ func getItems(status int64, blockSize uint64, re *regexp.Regexp, src string, fol
 	return items, total, err
 }
 
-func (p *Planner) getItemsAndIssues(status int64, blockSize uint64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
+func (p *Planner) getItemsAndIssues(status, blockSize int64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 	items := make([]*domain.Item, 0)
 
@@ -424,8 +428,8 @@ func (p *Planner) sendMailFeeback(fstarted, ffinished string, elapsed time.Durat
 	}
 }
 
-func (p *Planner) getReservedAmount(size uint64) uint64 {
-	var reserved uint64
+func (p *Planner) getReservedAmount(size int64) int64 {
+	var reserved int64
 
 	switch p.settings.ReservedUnit {
 	case "%":
@@ -491,7 +495,7 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 	for _, disk := range disks {
 		if plan.VDisks[disk.Path].Bin != nil {
 			mlog.Info("=========================================================")
-			mlog.Info("disk(%s):fs(%s):items(%d)-(%s):currentFree(%s)-plannedFree(%s)", disk.Path, disk.FsType, len(plan.VDisks[disk.Path].Bin.Items), lib.ByteSize(plan.VDisks[disk.Path].Bin.Size), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
+			mlog.Info("disk(%s):items(%d)-(%s):currentFree(%s)-plannedFree(%s)", disk.Path, len(plan.VDisks[disk.Path].Bin.Items), lib.ByteSize(plan.VDisks[disk.Path].Bin.Size), lib.ByteSize(disk.Free), lib.ByteSize(plan.VDisks[disk.Path].PlannedFree))
 			mlog.Info("---------------------------------------------------------")
 
 			for _, item := range plan.VDisks[disk.Path].Bin.Items {
@@ -502,7 +506,7 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 			mlog.Info("")
 		} else {
 			mlog.Info("=========================================================")
-			mlog.Info("disk(%s):fs(%s):no-items:currentFree(%s)", disk.Path, disk.FsType, lib.ByteSize(disk.Free))
+			mlog.Info("disk(%s):no-items:currentFree(%s)", disk.Path, lib.ByteSize(disk.Free))
 			mlog.Info("---------------------------------------------------------")
 			mlog.Info("---------------------------------------------------------")
 			mlog.Info("")
@@ -515,6 +519,13 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 
 	outbound := &dto.Packet{Topic: getTopic(status), Payload: "Planning Finished"}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+}
+
+func (p *Planner) printDisks(disks []*domain.Disk, blockSize int64) {
+	mlog.Info("planner:array(%d disks):blockSize(%d)", len(disks), blockSize)
+	for _, disk := range disks {
+		mlog.Info("disk(%s):fs(%s):size(%d):free(%d):blocksTotal(%d):blocksFree(%d)", disk.Path, disk.FsType, disk.Size, disk.Free, disk.BlocksTotal, disk.BlocksFree)
+	}
 }
 
 // HELPER FUNCTIONS

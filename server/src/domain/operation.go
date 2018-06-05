@@ -17,8 +17,8 @@ type Operation struct {
 	Finished time.Time `json:"finished"`
 
 	// transfer section
-	BytesToTransfer  uint64     `json:"bytesToTransfer"`
-	BytesTransferred uint64     `json:"bytesTransferred"`
+	BytesToTransfer  int64      `json:"bytesToTransfer"`
+	BytesTransferred int64      `json:"bytesTransferred"`
 	DryRun           bool       `json:"dryRun"`
 	RsyncArgs        []string   `json:"rsyncArgs"`
 	RsyncStrArgs     string     `json:"rsyncStrArgs"`
@@ -28,6 +28,6 @@ type Operation struct {
 	Completed     float64 `json:"completed"`
 	Speed         float64 `json:"speed"`
 	Remaining     string  `json:"remaining"`
-	DeltaTransfer uint64  `json:"deltaTransfer"`
+	DeltaTransfer int64   `json:"deltaTransfer"`
 	Line          string  `json:"line"`
 }

@@ -8,10 +8,10 @@ type Disk struct {
 	Device      string `json:"device"`
 	Type        string `json:"type"`
 	FsType      string `json:"fsType"`
-	Free        uint64 `json:"free"`
-	Size        uint64 `json:"size"`
+	Free        int64  `json:"free"`
+	Size        int64  `json:"size"`
 	Serial      string `json:"serial"`
 	Status      string `json:"status"`
-	BlocksTotal uint64 `json:"-"`
-	BlocksFree  uint64 `json:"-"`
+	BlocksTotal int64  `json:"-"`
+	BlocksFree  int64  `json:"-"`
 }

@@ -10,14 +10,14 @@ import (
 )
 
 // ReservedSpace -
-const ReservedSpace uint64 = 512 * 1024 * 1024 // 512Mb
+const ReservedSpace int64 = 512 * 1024 * 1024 // 512Mb
 
 // Config -
 type Config struct {
 	DryRun         bool     `json:"dryRun"`
 	NotifyPlan     int      `json:"notifyPlan"`
 	NotifyTransfer int      `json:"notifyTransfer"`
-	ReservedAmount uint64   `json:"reservedAmount"`
+	ReservedAmount int64    `json:"reservedAmount"`
 	ReservedUnit   string   `json:"reservedUnit"`
 	RsyncArgs      []string `json:"rsyncArgs"`
 	Version        string   `json:"version"`
