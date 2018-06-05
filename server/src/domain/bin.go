@@ -7,9 +7,9 @@ package domain
 
 // Bin -
 type Bin struct {
-	Size       uint64
+	Size       int64
 	Items      []*Item
-	BlocksUsed uint64
+	BlocksUsed int64
 }
 
 // Add -

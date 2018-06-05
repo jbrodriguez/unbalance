@@ -79,15 +79,17 @@ export default class History extends PureComponent {
 			)
 		}
 
-		let dryRuns = 0
+		// let dryRuns = 0
 
 		const operations = state.core.history.order.map((id, index) => {
 			const op = state.core.history.items[id]
 
 			// it's safe to validate or replay an operation only when it's the most recent, excluding dry-runs, since
 			// they don't physically alter files
-			if (op.dryRun) dryRuns++
-			const safe = index === 0 || index - dryRuns === 0
+			// if (op.dryRun) dryRuns++
+			// let's remove dryRuns condition
+			// it can be replayed, validated or have a command source removal only if it's the most recent
+			const safe = index === 0
 
 			const replay = !op.dryRun && safe
 			const validate = !op.dryRun && op.opKind === constant.OP_SCATTER_COPY && safe

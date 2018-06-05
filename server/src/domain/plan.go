@@ -25,7 +25,7 @@ type Plan struct {
 	VDisks        map[string]*VDisk `json:"vdisks"`
 
 	// transfer section
-	BytesToTransfer uint64 `json:"bytesToTransfer"`
+	BytesToTransfer int64 `json:"bytesToTransfer"`
 }
 
 // Print -
