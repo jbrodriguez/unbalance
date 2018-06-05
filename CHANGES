@@ -1,3 +1,8 @@
+Version 5.2.1 - 2018-06-05
+- Fix planning stage's calculation of space
+- Fix wrong command icon in history screen
+
+
 Version 5.2.0 - 2018-05-12
 - Fix ssl cert detection
 - Allow customization of UI refresh rate
