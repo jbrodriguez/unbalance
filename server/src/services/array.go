@@ -101,7 +101,7 @@ func (a *Array) GetCertificate() string {
 
 	cert := getCertificateName(certDir, name)
 
-	secure := cert != "" && !(usessl == "" || usessl == "no")
+	secure := cert != "" && !(usessl == "" || usessl == "no" || usessl == "auto")
 
 	if secure {
 		return cert
