@@ -43,6 +43,8 @@ popd
 
 echo "Generating release ..."
 rm -rf release && mkdir -p $APP_RELEASE
+cp -r client/dist/* $APP_RELEASE/app
+cp -r client/dist/index.html $APP_RELEASE
 cp -r dist/* $APP_RELEASE
 cp -r plugin/event $APP_RELEASE
 cp -r plugin/scripts $APP_RELEASE

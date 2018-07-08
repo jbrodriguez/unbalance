@@ -19,6 +19,8 @@ unbalance.plg
 # vendoring
 node_modules
 vendor
+.cache
+dist
 
 # binaries
 server/server
