@@ -1,14 +1,4 @@
 {
-	"presets": [
-		"react",
-		[
-			"env",
-			{
-				"targets": {
-					"browsers": ["last 2 versions"]
-				}
-			}
-		],
-		"stage-2"
-	]
+	presets: ['react', 'env', 'stage-2'],
+	plugins: [['transform-class-properties', { spec: true }]],
 }

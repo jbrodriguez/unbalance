@@ -17,4 +17,6 @@ if [ $TARGET == 'all' ] || [ $TARGET == 'server' ] ; then
 	popd
 fi
 
+rsync -avzP -e "ssh" client/dist/* $SERVER:/usr/local/emhttp/plugins/unbalance/app
+rsync -avzP -e "ssh" client/dist/index.html $SERVER:/usr/local/emhttp/plugins/unbalance
 rsync -avzP -e "ssh" dist/* $SERVER:/usr/local/emhttp/plugins/unbalance/

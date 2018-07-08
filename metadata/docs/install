@@ -1,0 +1,4 @@
+npm i classnames font-awesome history luxon react react-dom react-modal react-router react-router-dom reactorx
+npm i jbrodriguez/react-tree-menu
+
+npm i -D babel-core babel-preset-env babel-preset-react babel-preset-stage-2 babel-plugin-transform-class-properties express http-proxy-middleware parcel-bundler node-sass babel-eslint eslint eslint-plugin-react eslint-plugin-standard standard

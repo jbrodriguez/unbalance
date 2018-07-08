@@ -60,7 +60,7 @@ const actions = combineActions(start, config, env, core, scatter, gather)
 const api = new Api()
 const ws = new WSApi()
 
-const store = createStore(initialState, actions, { api, ws })
+const appStore = createStore(initialState, actions, { api, ws })
 
 class Layout extends PureComponent {
 	static propTypes = {
@@ -68,7 +68,7 @@ class Layout extends PureComponent {
 	}
 
 	render() {
-		const store = this.props.store
+		const { store } = this.props
 
 		// we wait for a valid config and a valid status before rendering the content
 		if (!(store.state && store.state.config)) {
@@ -90,6 +90,6 @@ class Layout extends PureComponent {
 	}
 }
 
-store.subscribe(state => render(<Layout store={state} />, document.getElementById('mnt')))
+appStore.subscribe(state => render(<Layout store={state} />, document.getElementById('app')))
 
-store.actions.start()
+appStore.actions.start()

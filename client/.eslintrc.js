@@ -10,9 +10,9 @@ module.exports = {
 		browser: true,
 	},
 	// https://github.com/feross/standard/blob/master/RULES.md#javascript-standard-style
-	extends: ['standard', 'plugin:react/recommended', 'prettier', 'prettier/react'],
+	extends: ['standard', 'plugin:react/recommended'],
 	// required to lint *.vue files
-	plugins: ['html', 'react'],
+	// plugins: ['html', 'react'],
 	// add your custom rules here
 	rules: {
 		// allow paren-less arrow functions
@@ -22,7 +22,7 @@ module.exports = {
 		// allow debugger during development
 		'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
 		// deviations from Standard
-		// indent: ['error', 'tab', { SwitchCase: 1 }],
+		indent: ['error', 'tab', { SwitchCase: 1 }],
 		'no-tabs': 0,
 		'space-before-function-paren': ['error', 'never'],
 		'comma-dangle': ['error', 'always-multiline'],
