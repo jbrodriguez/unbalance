@@ -13,7 +13,12 @@ $unbalance_version = shell_exec("cat /usr/local/emhttp/plugins/unbalance/VERSION
 ?>
 
 <script type="text/javascript">
-	var url = document.location.protocol + '//' + document.location.hostname + ':' + <?=$unbalance_port;?> + '/';
+	var port = <?=$unbalance_port;?>;
+	if (document.location.protocol === 'https:') {
+		var iport = +port + 1
+		port = iport.toString()
+	}
+	var url = document.location.protocol + '//' + document.location.hostname + ':' + port + '/';
 	var isRunning = <?=$unbalance_running;?> === 1;
 	var version = '<?=$unbalance_version;?>';
 	if (isRunning) {
