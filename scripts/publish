@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm -rf ./dist
+rm -rf ./client/dist
 
 TARGET="${1:-all}"
 SERVER="${2:-wopr}"
