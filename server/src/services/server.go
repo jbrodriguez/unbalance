@@ -2,15 +2,17 @@ package services
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"net/http"
-	// "os"
 	"path/filepath"
+	"strconv"
 
 	"jbrodriguez/unbalance/server/src/common"
 	"jbrodriguez/unbalance/server/src/domain"
 	"jbrodriguez/unbalance/server/src/dto"
 	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/net"
+	"jbrodriguez/unbalance/server/src/ntk"
 
 	"github.com/gorilla/websocket"
 	"github.com/jbrodriguez/actor"
@@ -34,7 +36,28 @@ type Server struct {
 
 	cert string
 
-	pool map[*net.Connection]bool
+	pool map[*ntk.Connection]bool
+}
+
+func redirector(sPort string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req, scheme := c.Request(), c.Scheme()
+			host, _, err := net.SplitHostPort(req.Host)
+			if err != nil {
+				log.Printf("err(%s)", err)
+				return next(c)
+			}
+
+			// log.Printf("host(%s)-port(%s)-scheme(%s)-uri(%s)\n", host, port, scheme, req.RequestURI)
+
+			if scheme != "https" {
+				return c.Redirect(http.StatusMovedPermanently, "https://"+host+sPort+req.RequestURI)
+			}
+
+			return next(c)
+		}
+	}
 }
 
 // NewServer -
@@ -44,7 +67,7 @@ func NewServer(bus *pubsub.PubSub, settings *lib.Settings, cert string) *Server 
 		actor:    actor.NewActor(bus),
 		cert:     cert,
 		settings: settings,
-		pool:     make(map[*net.Connection]bool),
+		pool:     make(map[*ntk.Connection]bool),
 	}
 	return server
 }
@@ -70,12 +93,25 @@ func (s *Server) Start() {
 
 	mlog.Info("Serving files from %s", location)
 
+	port := fmt.Sprintf(":%s", s.settings.Port)
+
+	// port for https is port for http + 1
+	var iPort int
+	var err error
+	if iPort, err = strconv.Atoi(s.settings.Port); err != nil {
+		iPort = 6237
+	}
+	sPort := fmt.Sprintf(":%d", iPort+1)
+
 	s.engine = echo.New()
 
 	s.engine.HideBanner = true
 
 	s.engine.Use(mw.Logger())
 	s.engine.Use(mw.Recover())
+	if s.cert != "" {
+		s.engine.Use(redirector(sPort))
+	}
 
 	s.engine.Static("/", filepath.Join(location, "index.html"))
 	s.engine.Static("/app", filepath.Join(location, "app"))
@@ -104,22 +140,23 @@ func (s *Server) Start() {
 	api.PUT("/config/dryRun", s.toggleDryRun)
 	api.PUT("/config/rsyncArgs", s.setRsyncArgs)
 
-	port := fmt.Sprintf(":%s", s.settings.Port)
+	// Always listen on http port, but based on above setting, we could be redirecting to https
+	go func() {
+		mlog.Info("Server started listening http on %s", port)
 
-	protocol := "http"
+		err := s.engine.Start(port)
+		if err != nil {
+			mlog.Fatalf("Unable to start on http: %s", err)
+		}
+	}()
+
 	if s.cert != "" {
-		protocol = "https"
 		go func() {
-			err := s.engine.StartTLS(port, s.cert, s.cert)
+			mlog.Info("Server started listening https on %s", sPort)
+
+			err := s.engine.StartTLS(sPort, s.cert, s.cert)
 			if err != nil {
 				mlog.Fatalf("Unable to start on https: %s", err)
-			}
-		}()
-	} else {
-		go func() {
-			err := s.engine.Start(port)
-			if err != nil {
-				mlog.Fatalf("Unable to start on http: %s", err)
 			}
 		}()
 	}
@@ -127,7 +164,7 @@ func (s *Server) Start() {
 	s.actor.Register("socket:broadcast", s.broadcast)
 	go s.actor.React()
 
-	mlog.Info("Server started listening %s on %s", protocol, port)
+	// mlog.Info("Server started listening %s on %s", protocol, port)
 }
 
 // Stop -
@@ -364,7 +401,7 @@ func (s *Server) handleWs(c echo.Context) error {
 		return err
 	}
 
-	conn := net.NewConnection(ws, s.onMessage, s.onClose)
+	conn := ntk.NewConnection(ws, s.onMessage, s.onClose)
 	s.pool[conn] = true
 
 	err = conn.Read()
@@ -375,7 +412,7 @@ func (s *Server) onMessage(packet *dto.Packet) {
 	s.bus.Pub(&pubsub.Message{Payload: packet.Payload}, packet.Topic)
 }
 
-func (s *Server) onClose(c *net.Connection, err error) {
+func (s *Server) onClose(c *ntk.Connection, err error) {
 	mlog.Warning("closing socket: %s", err)
 	if _, ok := s.pool[c]; ok {
 		delete(s.pool, c)
