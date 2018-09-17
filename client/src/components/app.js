@@ -17,6 +17,7 @@ const cx = classNames.bind(styles)
 const unbalance = require('../img/unbalance-logo.png')
 const diskmv = require('../img/diskmv.png')
 const unraid = require('../img/unraid.png')
+// const unraid = require('../img/unraid.svg')
 const logo = require('../img/logo-small.png')
 const vm = require('../img/v.png')
 
@@ -227,8 +228,8 @@ class App extends PureComponent {
 								</a>
 								<a
 									className={cx('lspacer')}
-									href="http://lime-technology.com/"
-									title="Lime Technology"
+									href="https://unraid.net/"
+									title="unraid.net"
 									rel="noreferrer noopener"
 									target="_blank"
 								>

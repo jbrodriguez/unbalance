@@ -7,7 +7,7 @@ const https = require('https')
 console.log(process.env.NODE_ENV)
 
 const options = {
-	target: 'https://lucy.apertoire.org:6237/',
+	target: 'https://lucy.apertoire.org:6238/',
 	changeOrigin: true,
 	secure: false,
 	agent: https.globalAgent,
