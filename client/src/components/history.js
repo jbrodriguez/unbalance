@@ -186,7 +186,11 @@ export default class History extends PureComponent {
 							<td>{status}</td>
 							<td>{command.src}</td>
 							<td>
-								rsync {op.rsyncStrArgs} &quot;{command.entry}&quot; &quot;{command.dst}&quot;
+								rsync {op.rsyncStrArgs} &quot;
+								{command.entry}
+								&quot; &quot;
+								{command.dst}
+								&quot;
 							</td>
 							<td>
 								<div className={cx('progress')}>
@@ -256,12 +260,17 @@ export default class History extends PureComponent {
 							</span>{' '}
 							|
 							<span className={cx('lspacer', 'historyTime')}>
-								{elapsed.hours}h, {elapsed.minutes}m, {elapsed.seconds}s
+								{elapsed.hours}
+								h, {elapsed.minutes}
+								m, {Math.round(elapsed.seconds)}s
 							</span>
 						</div>
 						<div className={cx('flexSection', 'col-xs-12', 'col-sm-2', 'center-xs', 'middle-xs', 'end-sm')}>
 							<span className={cx('historyValue')}>{value}</span>
-							<span className={cx('rspacer')}>&nbsp;{unit}</span>
+							<span className={cx('rspacer')}>
+								&nbsp;
+								{unit}
+							</span>
 						</div>
 						<div className={cx('flexSection', 'col-xs-12', 'col-sm-2', 'center-xs', 'middle-xs', 'end-sm')}>
 							{validate && (
