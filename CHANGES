@@ -1,3 +1,8 @@
+Version 5.4.0 - 2018-09-18
+- Remove client/dist folder
+- Create app folder
+
+
 Version 5.3.0 - 2018-09-18
 - Modify logic to determine listening protocol
 - Implement parcel-bundler

@@ -1,0 +1,6 @@
+2018-09-18 - 5.4.0
+
+- Improve handling of protocol (http/https) based on Unraid's SSL settings
+- Change unraid logo
+- Round seconds to prevent display issues in History screen
+- Fix CI issues
