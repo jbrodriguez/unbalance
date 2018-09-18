@@ -22,6 +22,7 @@ fi
 # fi
 
 rm -rf ./dist
+rm -rf ./client/dist
 
 echo "Building client"
 pushd client
@@ -42,7 +43,7 @@ fi
 popd
 
 echo "Generating release ..."
-rm -rf release && mkdir -p $APP_RELEASE
+rm -rf release && mkdir -p $APP_RELEASE/app
 cp -r client/dist/* $APP_RELEASE/app
 cp -r client/dist/index.html $APP_RELEASE
 cp -r dist/* $APP_RELEASE
