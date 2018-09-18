@@ -1,3 +1,12 @@
+Version 5.3.0 - 2018-09-18
+- Modify logic to determine listening protocol
+- Implement parcel-bundler
+- Remove $GOPATH from stack trace
+- Fix protocol handling
+- Change unraid logo
+- Round seconds to prevent precision issues
+
+
 Version 5.2.1 - 2018-06-05
 - Fix planning stage's calculation of space
 - Fix wrong command icon in history screen
