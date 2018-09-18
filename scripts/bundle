@@ -22,6 +22,7 @@ fi
 # fi
 
 rm -rf ./dist
+rm -rf ./client/dist
 
 echo "Building client"
 pushd client
