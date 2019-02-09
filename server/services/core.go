@@ -769,7 +769,9 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 
 	mlog.Info("command:retcode(%d):exitcode(%d)", retcode, exitCode)
 
-	if exitCode == 23 {
+	// 23: "Partial transfer due to error"
+	// 13: "Errors with program diagnostics"
+	if exitCode == 23 || exitCode == 13 {
 		err = nil
 		command.Status = common.CmdFlagged
 	}
