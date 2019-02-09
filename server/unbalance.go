@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"jbrodriguez/unbalance/server/src/app"
+	"unbalance/app"
 )
 
 // Version -

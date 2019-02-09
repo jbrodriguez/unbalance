@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/services"
+	"unbalance/lib"
+	"unbalance/services"
 
 	"github.com/jbrodriguez/mlog"
 	"github.com/jbrodriguez/pubsub"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"jbrodriguez/unbalance/server/src/dto"
+	"unbalance/dto"
 
 	"github.com/gorilla/websocket"
 )

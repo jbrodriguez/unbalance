@@ -16,8 +16,8 @@ import (
 	"fmt"
 	"testing"
 
-	"jbrodriguez/unbalance/server/src/algorithm"
-	"jbrodriguez/unbalance/server/src/domain"
+	"unbalance/algorithm"
+	"unbalance/domain"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,7 +1,7 @@
 package algorithm
 
 import (
-	"jbrodriguez/unbalance/server/src/domain"
+	"unbalance/domain"
 )
 
 // Greedy -
