@@ -953,7 +953,7 @@ func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Com
 
 func handleItemDeletion(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub) {
 	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
-		// the command was flagged due to an error 23, don't delete the source file/folder in these cases
+		// the command was flagged due to an error, don't delete the source file/folder in these cases
 		if command.Status == common.CmdFlagged {
 			msg := fmt.Sprintf("skipping:deletion:(rsync command was flagged):(%s)", filepath.Join(command.Dst, command.Entry))
 			operation.Line = msg
