@@ -47,9 +47,11 @@ const defaultConfLocation = "/boot/config/plugins/unbalance"
 
 // NewSettings -
 func NewSettings(name, version string, locations []string) (*Settings, error) {
-	var port, logDir, folders, rsyncFlags, rsyncArgs, apiFolders string
+	var port, logDir, folders, rsyncArgs, apiFolders string
 	var dryRun bool
-	var notifyCalc, notifyMove, notifyPlan, notifyTransfer, verbosity, checkForUpdate, refreshRate int
+	var notifyPlan, notifyTransfer, verbosity, checkForUpdate, refreshRate int
+	var reservedAmount int64
+	var reservedUnit string
 
 	flagset := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
@@ -57,16 +59,19 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	flagset.StringVar(&logDir, "logdir", "/boot/logs", "pathname where log file will be written to")
 	flagset.StringVar(&folders, "folders", "", "deprecated - do not use")
 	flagset.BoolVar(&dryRun, "dryRun", true, "perform a dry-run rather than actual work")
-	flagset.IntVar(&notifyCalc, "notifyCalc", 0, "deprecated - do not use") // deprecated
-	flagset.IntVar(&notifyMove, "notifyMove", 0, "deprecated - do not use") // deprecated
 	flagset.IntVar(&notifyPlan, "notifyPlan", 0, "notify via email after plan operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
 	flagset.IntVar(&notifyTransfer, "notifyTransfer", 0, "notify via email after transfer operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications")
-	flagset.StringVar(&rsyncFlags, "rsyncFlags", "", "deprecated - do not use") // deprecated
 	flagset.StringVar(&rsyncArgs, "rsyncArgs", "-X", "custom rsync arguments")
 	flagset.StringVar(&apiFolders, "apiFolders", "/var/local/emhttp", "folders to look for api endpoints")
 	flagset.IntVar(&verbosity, "verbosity", 0, "include rsync output in log files: 0 (default) - include; 1 - do not include")
 	flagset.IntVar(&checkForUpdate, "checkForUpdate", 1, "checkForUpdate: 0 - dont' check; 1 (default) - check")
 	flagset.IntVar(&refreshRate, "refreshRate", 250, "how often to refresh the ui while running a command (in milliseconds)")
+
+	// Users can set some value that falls below ReservedSpace, but during planning we force ReservedSpace if
+	// reservation is less than that
+	// Also, if they some unrecognized unit, we will used ReservedSpace (in planning as well)
+	flagset.Int64Var(&reservedAmount, "reservedAmount", ReservedSpace/1024/1024, "Minimun Amount of space to reserve")
+	flagset.StringVar(&reservedUnit, "reservedUnit", "Mb", "Reserved Amount unit: Mb, Gb or %")
 
 	location := SearchFile(name, locations)
 	if location != "" {
@@ -88,8 +93,8 @@ func NewSettings(name, version string, locations []string) (*Settings, error) {
 	s.DryRun = dryRun
 	s.NotifyPlan = notifyPlan
 	s.NotifyTransfer = notifyTransfer
-	s.ReservedAmount = ReservedSpace / 1024 / 1024
-	s.ReservedUnit = "Mb"
+	s.ReservedAmount = reservedAmount
+	s.ReservedUnit = reservedUnit
 	s.Verbosity = verbosity
 	s.CheckForUpdate = checkForUpdate
 	s.RefreshRate = refreshRate
@@ -141,6 +146,14 @@ func (s *Settings) Save() (err error) {
 	}
 
 	if err = WriteLine(tmpFile, fmt.Sprintf("refreshRate=%d", s.RefreshRate)); err != nil {
+		return err
+	}
+
+	if err = WriteLine(tmpFile, fmt.Sprintf("reservedAmount=%d", s.ReservedAmount)); err != nil {
+		return err
+	}
+
+	if err = WriteLine(tmpFile, fmt.Sprintf("reservedUnit=%s", s.ReservedUnit)); err != nil {
 		return err
 	}
 
