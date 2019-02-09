@@ -3,7 +3,7 @@ package algorithm
 import (
 	"sort"
 
-	"jbrodriguez/unbalance/server/src/domain"
+	"unbalance/domain"
 )
 
 // Knapsack -

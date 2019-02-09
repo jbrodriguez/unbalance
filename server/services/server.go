@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"jbrodriguez/unbalance/server/src/common"
-	"jbrodriguez/unbalance/server/src/domain"
-	"jbrodriguez/unbalance/server/src/dto"
-	"jbrodriguez/unbalance/server/src/lib"
-	"jbrodriguez/unbalance/server/src/ntk"
+	"unbalance/common"
+	"unbalance/domain"
+	"unbalance/dto"
+	"unbalance/lib"
+	"unbalance/ntk"
 
 	"github.com/gorilla/websocket"
 	"github.com/jbrodriguez/actor"

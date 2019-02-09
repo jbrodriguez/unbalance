@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"jbrodriguez/unbalance/server/src/common"
-	"jbrodriguez/unbalance/server/src/domain"
-	"jbrodriguez/unbalance/server/src/dto"
-	"jbrodriguez/unbalance/server/src/lib"
+	"unbalance/common"
+	"unbalance/domain"
+	"unbalance/dto"
+	"unbalance/lib"
 
 	"github.com/jbrodriguez/actor"
 	"github.com/jbrodriguez/mlog"

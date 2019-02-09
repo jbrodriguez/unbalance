@@ -9,23 +9,7 @@ function error {
 
 PROG="unbalance"
 
-# current dir is ~/.cix/builds/jbrodriguez/unbalance
-ORIGINAL_DIR=`pwd`
-
-# move two folders up to ~/.cix/builds
-cd ../..
-
-# store current dir, which will become gopath ~/.cix/builds
-CURRENT_DIR=`pwd`
-
-# set golang env: ~/.cix/builds/src/jbrodriguez/unbalance
-rm -rf src
-mkdir -p src/jbrodriguez/unbalance
-mv jbrodriguez/unbalance src/jbrodriguez
-
-# let's go to new starting folder: ~/.cix/builds/src/jbrodriguez/unbalance
-cd src/jbrodriguez/unbalance
-
+# install client dependencies
 pushd client
 npm install
 pushd node_modules/react-tree-menu
@@ -33,25 +17,12 @@ npm install
 popd
 popd
 
-pushd server
-GOPATH="$CURRENT_DIR" dep ensure
-popd
 
-# compile with a temp gopath
-GOPATH="$CURRENT_DIR" scripts/bundle
+# this builds both client and server
+scripts/bundle
 
 if [ $? -ne 0 ]; then
-	cd $CURRENT_DIR
-	mv src/jbrodriguez/unbalance jbrodriguez
-	rm -rf src
-	cd $ORIGINAL_DIR
-
 	error "Unable to create release. Please check and try again"
 fi
-
-cd $CURRENT_DIR
-mv src/jbrodriguez/unbalance jbrodriguez
-rm -rf src
-cd $ORIGINAL_DIR
 
 echo "Successfully generated $PROG unRAID plugin"

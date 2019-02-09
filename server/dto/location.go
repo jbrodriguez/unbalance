@@ -1,6 +1,6 @@
 package dto
 
-import "jbrodriguez/unbalance/server/src/domain"
+import "unbalance/domain"
 
 // Location -
 type Location struct {
