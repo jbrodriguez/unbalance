@@ -290,7 +290,7 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(status int64, blockSize int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
+func getItems(blockSize int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
 	var total, blocks int64
 	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
@@ -378,7 +378,7 @@ func (p *Planner) getItemsAndIssues(status, blockSize int64, reItems, reStat *re
 			outbound = &dto.Packet{Topic: getTopic(status), Payload: "Getting items ..."}
 			p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-			list, total, err := getItems(status, blockSize, reItems, disk.Path, path)
+			list, total, err := getItems(blockSize, reItems, disk.Path, path)
 			if err != nil {
 				mlog.Warning("items:not-available:(%s)", err)
 			} else {
@@ -391,7 +391,7 @@ func (p *Planner) getItemsAndIssues(status, blockSize int64, reItems, reStat *re
 	return items, ownerIssue, groupIssue, folderIssue, fileIssue
 }
 
-func (p *Planner) sendTimeFeedbackToFrontend(topic string, fstarted, ffinished string, elapsed time.Duration) {
+func (p *Planner) sendTimeFeedbackToFrontend(topic string, ffinished string, elapsed time.Duration) {
 	outbound := &dto.Packet{Topic: topic, Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -454,7 +454,7 @@ func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk,
 	ffinished := plan.Finished.Format(timeFormat)
 
 	// Send to frontend console started/ended/elapsed times
-	p.sendTimeFeedbackToFrontend(getTopic(status), fstarted, ffinished, elapsed)
+	p.sendTimeFeedbackToFrontend(getTopic(status), ffinished, elapsed)
 
 	// send to frontend the items that will not be transferred, if any
 	// notTransferred holds a string representation of all the items, separated by a '\n'

@@ -162,5 +162,5 @@ func (s *Settings) Save() (err error) {
 		return err
 	}
 
-	return
+	return err
 }

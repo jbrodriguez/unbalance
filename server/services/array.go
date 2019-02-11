@@ -68,12 +68,12 @@ func (a *Array) Stop() {
 func (a *Array) SanityCheck(locations []string) error {
 	location := lib.SearchFile("var.ini", locations)
 	if location == "" {
-		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
+		return fmt.Errorf("unable to find var.ini (%s)", strings.Join(locations, ", "))
 	}
 
 	location = lib.SearchFile("disks.ini", locations)
 	if location == "" {
-		return fmt.Errorf("Unable to find var.ini (%s)", strings.Join(locations, ", "))
+		return fmt.Errorf("unable to find var.ini (%s)", strings.Join(locations, ", "))
 	}
 
 	return nil
@@ -284,7 +284,7 @@ func (a *Array) getTree(msg *pubsub.Message) {
 	msg.Reply <- entry
 }
 
-func (a *Array) getLog(msg *pubsub.Message) {
+func (a *Array) getLog(_ *pubsub.Message) {
 	cmd := "tail -n 100 /boot/logs/unbalance.log"
 
 	log := make([]string, 0)

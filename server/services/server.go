@@ -414,14 +414,14 @@ func (s *Server) onMessage(packet *dto.Packet) {
 
 func (s *Server) onClose(c *ntk.Connection, err error) {
 	mlog.Warning("closing socket: %s", err)
-	if _, ok := s.pool[c]; ok {
-		delete(s.pool, c)
-	}
+	delete(s.pool, c)
 }
 
 func (s *Server) broadcast(msg *pubsub.Message) {
 	packet := msg.Payload.(*dto.Packet)
 	for conn := range s.pool {
-		conn.Write(packet)
+		if err := conn.Write(packet); err != nil {
+			mlog.Warning("error broadcasting: %s", err)
+		}
 	}
 }
