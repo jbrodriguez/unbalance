@@ -111,7 +111,7 @@ func Round(d, r time.Duration) time.Duration {
 		d = -d
 	}
 	if m := d % r; m+m < r {
-		d = d - m
+		d -= d
 	} else {
 		d = d + r - m
 	}

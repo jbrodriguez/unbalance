@@ -248,7 +248,7 @@ func (c *Core) locate(msg *pubsub.Message) {
 func (c *Core) getScatterPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	payload, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert scatter plan parameters")
+		return nil, errors.New("unable to convert scatter plan parameters")
 	}
 
 	var plan domain.Plan
@@ -325,13 +325,13 @@ func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
 func (c *Core) getGatherPlan(msg *pubsub.Message) (*domain.Plan, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert gather plan parameters")
+		return nil, errors.New("unable to convert gather plan parameters")
 	}
 
 	var plan domain.Plan
 	err := json.Unmarshal([]byte(data), &plan)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to bind gather plan parameters: %s", err)
+		return nil, fmt.Errorf("unable to bind gather plan parameters: %s", err)
 	}
 
 	return &plan, nil
@@ -565,13 +565,13 @@ func (c *Core) gatherMove(msg *pubsub.Message) {
 func (c *Core) getValidateOperation(msg *pubsub.Message) (*domain.Operation, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert validate parameters")
+		return nil, errors.New("unable to convert validate parameters")
 	}
 
 	var operation domain.Operation
 	err := json.Unmarshal([]byte(data), &operation)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to bind validate parameters: %s", err)
+		return nil, fmt.Errorf("unable to bind validate parameters: %s", err)
 	}
 
 	return &operation, nil
@@ -622,13 +622,13 @@ func (c *Core) validate(msg *pubsub.Message) {
 func (c *Core) getReplayOperation(msg *pubsub.Message) (*domain.Operation, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
-		return nil, errors.New("Unable to convert replay parameters")
+		return nil, errors.New("unable to convert replay parameters")
 	}
 
 	var operation domain.Operation
 	err := json.Unmarshal([]byte(data), &operation)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to bind replay parameters: %s", err)
+		return nil, fmt.Errorf("unable to bind replay parameters: %s", err)
 	}
 
 	return &operation, nil
@@ -713,7 +713,7 @@ func (c *Core) runOperation(opName string) {
 		outbound := &dto.Packet{Topic: "transferProgress", Payload: operation}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
-		cmdTransferred, err := c.runCommand(operation, command, c.bus, c.reProgress, args, c.settings.Verbosity)
+		cmdTransferred, err := c.runCommand(operation, command, c.bus, args)
 		if err != nil {
 			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
@@ -727,7 +727,7 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, re *regexp.Regexp, args []string, verbosity int) (int64, error) {
+func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, args []string) (int64, error) {
 	// make sure the command will run
 	c.stopped = false
 
@@ -741,10 +741,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 	time.Sleep(500 * time.Millisecond)
 
 	// monitor rsync progress
-	retcode, transferred, err := c.monitorRsync(operation, command, bus, cmd.Process.Pid)
-	if err != nil {
-		mlog.Warning("command:monitor(%s)", err)
-	}
+	retcode, transferred := c.monitorRsync(operation, command, bus, cmd.Process.Pid)
 
 	// 99 is a magic number meaning the user clicked on the stop operation button
 	if retcode == 99 {
@@ -769,7 +766,9 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 
 	mlog.Info("command:retcode(%d):exitcode(%d)", retcode, exitCode)
 
-	if exitCode == 23 {
+	// 23: "Partial transfer due to error"
+	// 13: "Errors with program diagnostics"
+	if exitCode == 23 || exitCode == 13 {
 		err = nil
 		command.Status = common.CmdFlagged
 	}
@@ -777,7 +776,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, 
 	return transferred, err
 }
 
-func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, int64, error) {
+func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub, procPid int) (int, int64) {
 	var transferred int64
 	var current string
 	var retcode int
@@ -855,7 +854,7 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
 
-	return retcode, transferred, nil
+	return retcode, transferred
 }
 
 func isZombie(proc string) (bool, int, error) {
@@ -951,7 +950,7 @@ func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Com
 
 func handleItemDeletion(operation *domain.Operation, command *domain.Command, bus *pubsub.PubSub) {
 	if !operation.DryRun && (operation.OpKind == common.OpScatterMove || operation.OpKind == common.OpGatherMove) {
-		// the command was flagged due to an error 23, don't delete the source file/folder in these cases
+		// the command was flagged due to an error, don't delete the source file/folder in these cases
 		if command.Status == common.CmdFlagged {
 			msg := fmt.Sprintf("skipping:deletion:(rsync command was flagged):(%s)", filepath.Join(command.Dst, command.Entry))
 			operation.Line = msg
@@ -1116,13 +1115,13 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 func getRemoveSourceParams(msg *pubsub.Message) (*domain.Operation, string, error) {
 	data, ok := msg.Payload.(string)
 	if !ok {
-		return nil, "", errors.New("Unable to convert removeSource parameters")
+		return nil, "", errors.New("unable to convert removeSource parameters")
 	}
 
 	var rmsrc dto.RmSrc
 	err := json.Unmarshal([]byte(data), &rmsrc)
 	if err != nil {
-		return nil, "", fmt.Errorf("Unable to bind removeSource parameters: %s", err)
+		return nil, "", fmt.Errorf("unable to bind removeSource parameters: %s", err)
 	}
 
 	return rmsrc.Operation, rmsrc.ID, nil
@@ -1549,11 +1548,12 @@ func runConverters(history *domain.History, converters []converter, version int)
 func convertToV2(history *domain.History) *domain.History {
 	for _, item := range history.Items {
 		for _, command := range item.Commands {
-			if command.Transferred == 0 {
+			switch {
+			case command.Transferred == 0:
 				command.Status = common.CmdPending
-			} else if command.Transferred != command.Size {
+			case command.Transferred != command.Size:
 				command.Status = common.CmdStopped
-			} else {
+			default:
 				command.Status = common.CmdCompleted
 			}
 		}
