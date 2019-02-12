@@ -1,3 +1,12 @@
+Version 5.5.0 - 2019-02-12
+- Implement Go Modules
+- Allow ReservedAmount/ReservedUnit to be saved to disk
+- Add error 13 as flagged command
+- fixup
+- Fix client reported findings
+- Fix golintci issues
+
+
 Version 5.4.0 - 2018-09-18
 - Remove client/dist folder
 - Create app folder
