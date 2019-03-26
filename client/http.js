@@ -6,13 +6,13 @@ const process = require('process')
 console.log(process.env.NODE_ENV)
 
 const options = {
-	target: 'http://lucy.apertoire.org:6237/',
+	target: 'http://wopr.apertoire.org:6237/',
 	changeOrigin: true,
 }
 
 let bundler = new Bundler('./index.html', { minify: false })
 let app = express()
-let socket = proxy('/api/*', options)
+let socket = proxy('/skt', options)
 
 app.use('/', proxy(options))
 app.use(socket)
