@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"scripts": {
 		"test": "ava --verbose",
-		"build": "parcel build index.html --public-url ./app --no-source-maps"
+		"build": "parcel build index.html --no-source-maps"
 	},
 	"ava": {
 		"babel": "inherit",
