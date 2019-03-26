@@ -130,11 +130,11 @@ export default class History extends PureComponent {
 									for additional details.
 								</p>
 								<p className={cx('opWhite')}>
-									Due to this, the plugin hasn't deleted the source files/folders for that/those
+									Due to this, the plugin hasn&apos;t deleted the source files/folders for that/those
 									commands.
 								</p>
 								<p className={cx('opWhite')}>
-									Once you've checked/solved the issue(s), click on the{' '}
+									Once you&apos;ve checked/solved the issue(s), click on the{' '}
 									<span className={cx('statusFlagged')}>rmsrc</span> button to remove the source
 									files/folders, if you wish to do so.
 								</p>
