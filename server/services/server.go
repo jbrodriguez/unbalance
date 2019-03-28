@@ -113,10 +113,7 @@ func (s *Server) Start() {
 		s.engine.Use(redirector(sPort))
 	}
 
-	s.engine.Static("/", filepath.Join(location, "index.html"))
-	s.engine.Static("/app", filepath.Join(location, "app"))
-	s.engine.Static("/img", filepath.Join(location, "img"))
-	s.engine.Static("/fonts", filepath.Join(location, "fonts"))
+	s.engine.Static("/", filepath.Join(location, "app"))
 
 	s.engine.GET("/skt", s.handleWs)
 
