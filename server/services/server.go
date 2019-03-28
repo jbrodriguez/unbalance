@@ -108,6 +108,7 @@ func (s *Server) Start() {
 	s.engine.HideBanner = true
 
 	s.engine.Use(mw.Logger())
+	s.engine.Use(mw.Gzip())
 	s.engine.Use(mw.Recover())
 	if s.cert != "" {
 		s.engine.Use(redirector(sPort))
