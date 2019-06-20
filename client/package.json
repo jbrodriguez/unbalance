@@ -1,7 +1,7 @@
 {
 	"name": "unbalance",
 	"version": "5.5.0",
-	"description": "unRAID app",
+	"description": "Unraid app",
 	"author": "Juan B. Rodriguez",
 	"license": "MIT",
 	"scripts": {
