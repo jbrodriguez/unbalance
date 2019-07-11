@@ -2,14 +2,14 @@ module unbalance
 
 require (
 	github.com/davecgh/go-spew v1.1.0
-	github.com/dgrijalva/jwt-go v3.1.0+incompatible
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/websocket v1.2.0
 	github.com/jbrodriguez/actor v0.0.0-20170412170600-37e4989b0e3c
 	github.com/jbrodriguez/mlog v0.0.0-20160501155140-006dc6db226a
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
 	github.com/labstack/echo v3.2.3+incompatible
 	github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
-	github.com/mattn/go-colorable v0.0.9
+	github.com/mattn/go-colorable v0.1.2
 	github.com/mattn/go-isatty v0.0.3
 	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
 	github.com/namsral/flag v1.7.4-pre

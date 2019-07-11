@@ -3,6 +3,7 @@ import { PropTypes } from 'prop-types'
 
 // import 'font-awesome-webpack'
 import classNames from 'classnames/bind'
+import { DateTime } from 'luxon'
 
 import Indicator from './indicator'
 
@@ -68,6 +69,10 @@ export default class Transfers extends PureComponent {
 		const totalValue = bytes.value
 		const totalUnit = ' ' + bytes.unit
 
+		const diff = DateTime.local().diff(DateTime.fromISO(operation.started), ['hours', 'minutes', 'seconds'])
+		const elapsed = `${diff.hours > 0 ? diff.hours : ''}${diff.hours > 0 ? 'h' : ''}${
+			diff.minutes > 0 ? diff.minutes : ''
+		}${diff.minutes > 0 ? 'm' : ''}${Math.round(diff.seconds)}s`
 		const remaining = operation.remaining
 
 		const rows = operation.commands.map(command => {
@@ -189,6 +194,9 @@ export default class Transfers extends PureComponent {
 					</div>
 					<div className={cx('col-xs')}>
 						<Indicator label="TOTAL" value={totalValue} unit={totalUnit} />
+					</div>
+					<div className={cx('col-xs')}>
+						<Indicator label="ELAPSED" value={elapsed} unit="" />
 					</div>
 					<div className={cx('col-xs')}>
 						<Indicator label="REMAINING" value={remaining} unit="" />
