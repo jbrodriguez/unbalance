@@ -9,12 +9,12 @@ require (
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
 	github.com/labstack/echo v3.2.3+incompatible
 	github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
-	github.com/mattn/go-colorable v0.0.9
+	github.com/mattn/go-colorable v0.1.2
 	github.com/mattn/go-isatty v0.0.3
 	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
 	github.com/namsral/flag v1.7.4-pre
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/stretchr/testify v1.1.4
+	github.com/stretchr/testify v1.3.0
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
