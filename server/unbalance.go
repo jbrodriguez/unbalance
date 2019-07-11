@@ -8,12 +8,13 @@ import (
 )
 
 // Version -
-var Version string
+var version string
+var plgver string
 
 func main() {
 	app := app.App{}
 
-	settings, err := app.Setup(Version)
+	settings, err := app.Setup(plgver + " (" + version + ")")
 	if err != nil {
 		log.Printf("Unable to start the app: %s", err)
 		os.Exit(1)

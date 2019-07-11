@@ -7,6 +7,7 @@ import { Switch, Route } from 'react-router-dom'
 import GatherSource from './gatherSource'
 import GatherTarget from './gatherTarget'
 import GatherMove from './gatherMove'
+import Notice from './notice'
 import styles from '../styles/core.scss'
 
 const cx = classNames.bind(styles)
@@ -44,6 +45,7 @@ export default class Gather extends PureComponent {
 
 		return (
 			<div>
+				<Notice />
 				<Switch>
 					<Route
 						exact

@@ -5,6 +5,7 @@ import TreeMenu from 'react-tree-menu'
 import classNames from 'classnames/bind'
 
 import ConsolePanel from './consolePanel'
+import Notice from './notice'
 import { humanBytes, percentage } from '../lib/utils'
 import styles from '../styles/core.scss'
 
@@ -43,7 +44,10 @@ export default class Scatter extends PureComponent {
 	}
 
 	checkFrom = path => e => {
-		const { state: { scatter }, actions: { checkFrom } } = this.props.store
+		const {
+			state: { scatter },
+			actions: { checkFrom },
+		} = this.props.store
 
 		if (scatter.plan.vdisks[path].src) {
 			e.preventDefault()
@@ -54,7 +58,10 @@ export default class Scatter extends PureComponent {
 	}
 
 	checkTo = path => e => {
-		const { state: { scatter }, actions: { checkTo } } = this.props.store
+		const {
+			state: { scatter },
+			actions: { checkTo },
+		} = this.props.store
 
 		if (scatter.plan.vdisks[path].src) {
 			e.preventDefault()
@@ -245,7 +252,9 @@ export default class Scatter extends PureComponent {
 								<b>Currently selected</b>
 								<br />
 								<ul>
-									{Object.keys(state.scatter.chosen).map(chosen => <li key={chosen}>- {chosen}</li>)}
+									{Object.keys(state.scatter.chosen).map(chosen => (
+										<li key={chosen}>- {chosen}</li>
+									))}
 								</ul>
 							</td>
 						</tr>,
@@ -295,6 +304,7 @@ export default class Scatter extends PureComponent {
 
 		return (
 			<div>
+				<Notice />
 				{menu}
 				{consolePanel}
 				{grid}
