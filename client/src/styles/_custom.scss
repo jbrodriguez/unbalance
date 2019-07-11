@@ -55,6 +55,19 @@ p {
 	background-color: $headerMenuBackground;
 }
 
+.noticeContent {
+	padding: 0.5em 2em;
+	font-size: 0.75em;
+}
+
+.noticeBg {
+	background-color: $noticeBackground;
+}
+
+.noticeColor {
+	color: $consoleColor;
+}
+
 .routerSection {
 	span,
 	a {
