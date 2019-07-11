@@ -14,6 +14,8 @@ github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe h1:o32lPODiKs/R
 github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe/go.mod h1:ML8/lItWxF5tBxYDd+I6lEyLTOJzU92VR+7L/P/H18c=
 github.com/labstack/echo v3.2.3+incompatible h1:rYSA991573+HuBGF2WSDryz9rAxy9PrYN0lPouuiW6k=
 github.com/labstack/echo v3.2.3+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
+github.com/labstack/echo v3.3.10+incompatible h1:pGRcYk231ExFAyoAjAfD85kQzRJCRI8bbnE7CX5OEgg=
+github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
 github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0 h1:kcJPx2Ug9owxOsVfuXPCludLaIudyI57YQd6ocyrO4o=
 github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0/go.mod h1:/tj9csK2iPSBvn+3NLM9e52usepMtrd5ilFYA+wQNJ4=
 github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRUIY4=
