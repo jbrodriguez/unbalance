@@ -185,7 +185,7 @@ class App extends PureComponent {
 						</ul>
 
 						<ul className={cx('col-xs-12', 'col-sm-4', 'flex', 'center-xs')}>
-							<span className={cx('version')}>unBALANCE v{version}</span>
+							<span className={cx('version')}>unBALANCE {version}</span>
 						</ul>
 
 						<ul className={cx('col-xs-12', 'col-sm-4')}>

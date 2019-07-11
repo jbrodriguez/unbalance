@@ -110,11 +110,11 @@ export default class History extends PureComponent {
 
 			const chevron = op.open ? (
 				<a href="" onClick={this.flipOperation(op.id)}>
-					<i className={cx('fa fa-chevron-circle-up', 'statusInProgress', 'chevron')} />
+					<i className={cx('fa fa-chevron-circle-up', 'opWhite', 'chevron')} />
 				</a>
 			) : (
 				<a href="" onClick={this.flipOperation(op.id)}>
-					<i className={cx('fa fa-chevron-circle-down', 'statusInProgress', 'chevron')} />
+					<i className={cx('fa fa-chevron-circle-down', 'opWhite', 'chevron')} />
 				</a>
 			)
 
@@ -130,11 +130,11 @@ export default class History extends PureComponent {
 									for additional details.
 								</p>
 								<p className={cx('opWhite')}>
-									Due to this, the plugin hasn't deleted the source files/folders for that/those
+									Due to this, the plugin hasn&apos;t deleted the source files/folders for that/those
 									commands.
 								</p>
 								<p className={cx('opWhite')}>
-									Once you've checked/solved the issue(s), click on the{' '}
+									Once you&apos;ve checked/solved the issue(s), click on the{' '}
 									<span className={cx('statusFlagged')}>rmsrc</span> button to remove the source
 									files/folders, if you wish to do so.
 								</p>
