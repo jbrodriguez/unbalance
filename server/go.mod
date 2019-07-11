@@ -7,7 +7,7 @@ require (
 	github.com/jbrodriguez/actor v0.0.0-20170412170600-37e4989b0e3c
 	github.com/jbrodriguez/mlog v0.0.0-20160501155140-006dc6db226a
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
-	github.com/labstack/echo v3.2.3+incompatible
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
 	github.com/mattn/go-colorable v0.1.2
 	github.com/mattn/go-isatty v0.0.3
