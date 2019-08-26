@@ -3,7 +3,7 @@ module unbalance
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/jbrodriguez/actor v0.0.0-20170412170600-37e4989b0e3c
 	github.com/jbrodriguez/mlog v0.0.0-20160501155140-006dc6db226a
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
