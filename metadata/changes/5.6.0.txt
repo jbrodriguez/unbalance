@@ -1,0 +1,13 @@
+2019-09-07 - 5.6.0
+
+This is a minor release with some new features and some optimizations.
+
+Changes:
+
+- Add elapsed time to transfer screen
+- Fix unbalance logo container background color
+- Add contrast to drop down in history screen
+- Decrease binary size
+- Compress server output
+- Modify UI version format
+- Add notice about exclusive access in the UI
