@@ -1,3 +1,31 @@
+Version 5.6.0 - 2019-09-07
+- Add elapsed time to transfer screen
+- Fix unbalance logo container bg color
+- Add contrast to drop down in history screen
+- Decrease binary size
+- Adjust debug endpoints
+- Fix npm issues
+- Fix fontawesome url resolution issues
+- Compress server output
+- Modify UI version format
+- Add workspace
+- Edit copy
+- Run npm audit fix
+- Complete name changes
+- Add notice about exclusive access in the UI
+- Bump github.com/dgrijalva/jwt-go in /server
+- Bump github.com/mattn/go-colorable from 0.0.9 to 0.1.2 in /server
+- Bump github.com/stretchr/testify from 1.1.4 to 1.3.0 in /server
+- Bump github.com/gorilla/websocket from 1.2.0 to 1.4.0 in /server
+- Bump github.com/davecgh/go-spew from 1.1.0 to 1.1.1 in /server
+- Bump github.com/labstack/echo in /server
+- Bump github.com/stretchr/testify from 1.3.0 to 1.4.0 in /server
+- Bump github.com/mattn/go-isatty from 0.0.8 to 0.0.9 in /server
+- Bump github.com/gorilla/websocket from 1.4.0 to 1.4.1 in /server
+- Fix npm audit issues
+- Fix npm audit issues
+
+
 Version 5.5.0 - 2019-02-12
 - Implement Go Modules
 - Allow ReservedAmount/ReservedUnit to be saved to disk
