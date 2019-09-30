@@ -9,7 +9,7 @@ require (
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
-	github.com/mattn/go-colorable v0.1.2
+	github.com/mattn/go-colorable v0.1.4
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
 	github.com/namsral/flag v1.7.4-pre
