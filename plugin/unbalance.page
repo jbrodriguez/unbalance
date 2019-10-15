@@ -59,6 +59,9 @@ $(function(){
 	checkUSER(document.unbalance_settings,'<?=$unbalance_runas;?>');
 });
 
+function isNumber(value) {
+   return typeof value === 'number' && isFinite(value);
+}
 function resetDATA(form) {
 	form.PORT.value = "6237";
 	form.RUNAS.value = "nobody";
