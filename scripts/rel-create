@@ -11,9 +11,9 @@ PROG="unbalance"
 
 # install client dependencies
 pushd client
-npm install
+yarn
 pushd node_modules/react-tree-menu
-npm install
+yarn
 popd
 popd
 
