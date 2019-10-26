@@ -8,4 +8,5 @@ prog="/usr/local/emhttp/plugins/unbalance/unbalance"
 killall unbalance > /dev/null 2>&1
 
 # run the app
-nohup sudo -H -u $RUNAS bash -c "$prog -port $PORT" > /dev/null 2>&1 &
+# nohup sudo -H -u $RUNAS bash -c "$prog -port $PORT" > /dev/null 2>&1 &
+nohup sudo -H bash -c "$prog -port $PORT" > /dev/null 2>&1 &
