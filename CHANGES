@@ -1,3 +1,10 @@
+Version 5.6.1 - 2019-10-26
+- Add missing isNumber function
+- Support 6.8.x
+- Bump github.com/mattn/go-colorable from 0.1.2 to 0.1.4 in /server
+- Bump github.com/mattn/go-isatty from 0.0.9 to 0.0.10 in /server
+
+
 Version 5.6.0 - 2019-09-07
 - Add elapsed time to transfer screen
 - Fix unbalance logo container bg color
