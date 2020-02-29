@@ -34,7 +34,6 @@ func IsEmpty(folder string) (bool, error) {
 		return false, err
 	}
 	defer func() { _ = f.Close() }()
-	// defer f.Close()
 
 	_, err = f.Readdirnames(1) // Or f.Readdir(1)
 	if err == io.EOF {
@@ -67,7 +66,6 @@ func ByteSize(bytes int64) string {
 	i := math.Floor(math.Log(float64(bytes)) / math.Log(k))
 
 	return fmt.Sprintf("%.2f %s", float64(bytes)/math.Pow(k, i), sizes[int64(i)])
-
 }
 
 // WriteLine -
@@ -141,14 +139,12 @@ func Min(x, y int64) int64 {
 func GetLatestVersion(url string) (dst string, err error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		// mlog.Info("Unable to download %s", url)
 		return "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		// mlog.Info("unable to save to %s", dst)
 		return "", err
 	}
 

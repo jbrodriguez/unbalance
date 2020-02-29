@@ -42,35 +42,18 @@ func (k *Knapsack) BestFit() *domain.Bin {
 func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 	sort.Slice(k.list, func(i, j int) bool { return k.list[i].Size > k.list[j].Size })
 
-	// for _, itm := range k.list {
-	// 	fmt.Printf("disk(%s):item(%s):size(%d)\n", k.disk.Path, itm.Path, itm.Size)
-	// }
-
 	for _, item := range k.list {
-		// fmt.Printf("loop:size(%d):free(%d)-buffer(%d):resta(%d)\n", item.Size, k.disk.Free, k.buffer, k.disk.Free-k.buffer)
-
 		if item.Size > (k.disk.Free - k.buffer) {
-			// fmt.Printf("size: %d, disk: %s, free: %d\n", item.Size, k.disk.Path, k.disk.Free)
 			k.over = append(k.over, item)
 		} else {
 			targetBin := -1
 			remainingSpace := k.disk.Free
 
-			// fmt.Printf("else:disk(%s)-bins(%d); item(%s)-size(%d); remainingSpace(%d)\n", k.disk.Name, len(k.Bins), item.Name, item.Size, remainingSpace)
-
 			for i, bin := range k.Bins {
 				binSpaceUsed := bin.Size
 				binSpaceLeft := k.disk.Free - binSpaceUsed - item.Size
 
-				// mlog.Info("su(%d); sl(%d)", binSpaceUsed, binSpaceLeft)
-				// if k.disk.Path == "/mnt/disk8" {
-				// 	mlog.Info("[/mnt/disk/14] Bin: %d ", i)
-				// }
-
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= k.buffer {
-					// mlog.Info("[%s] Used: %d | Left: %d\n", k.disk.Path, binSpaceUsed, binSpaceLeft)
-					// mlog.Info("Disk: %s Folder: %s Bin: %d Used: %d | Left: %d\n", k.disk.Path, item.Name, i, binSpaceUsed, binSpaceLeft)
-
 					remainingSpace = binSpaceLeft
 					targetBin = i
 				}

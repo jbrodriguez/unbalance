@@ -1,18 +1,6 @@
 package main
 
 import (
-	// "github.com/jbrodriguez/mlog"
-	// "github.com/jbrodriguez/pubsub"
-	// "github.com/labstack/echo"
-
-	// "net/http"
-	// "net/http/httptest"
-
-	// "regexp"
-	// "strconv"
-
-	// "io/ioutil"
-
 	"fmt"
 	"testing"
 
@@ -745,8 +733,6 @@ import (
 // }
 
 func TestKnap(t *testing.T) {
-	// mlog.Start(mlog.LevelInfo, "")
-	// mlog.Info("first blood")
 	fmt.Printf("first blood\n")
 
 	disk := &domain.Disk{
@@ -767,12 +753,8 @@ func TestKnap(t *testing.T) {
 		&domain.Item{Name: "asgood", Size: 36570146300, Path: "/mnt/disk1/Movies/asgood"},
 	)
 
-	// assert.Equal(t, 3, len(folders), "there should be 3 folders")
-
 	packer := algorithm.NewKnapsack(disk, folders, 512*1024*1024, 0)
 	bin := packer.BestFit()
 
 	assert.Nil(t, bin)
-
-	// mlog.Stop()
 }
