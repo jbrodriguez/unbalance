@@ -46,7 +46,6 @@ func (c *Connection) Read() (err error) {
 
 		err = json.Unmarshal(p, &packet)
 
-		// err = c.ws.ReadJSON(&packet)
 		if err != nil {
 			errm := fmt.Errorf("unable to Unmarshal: content(%s): err(%s)", p, err)
 			go c.onClose(c, errm)

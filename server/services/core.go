@@ -158,7 +158,6 @@ func (c *Core) Start() (err error) {
 	c.actor.Register(common.APIRemoveSource, c.removeSource)
 	c.actor.Register(common.APIStopCommand, c.stopCommand)
 	c.actor.Register(common.APISetRefreshRate, c.setRefreshRate)
-	// c.actor.Register("getLog", c.getLog)
 
 	go c.actor.React()
 
@@ -312,13 +311,6 @@ func (c *Core) scatterPlanFinished(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WsScatterPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
-
-	// order := make([]string, 0)
-	// for _, disk := range c.state.Unraid.Disks {
-	// 	order = append(order, disk.Path)
-	// }
-
-	// plan.Print(order)
 }
 
 // GATHER PLAN
@@ -389,13 +381,6 @@ func (c *Core) gatherPlanFinished(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WsGatherPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	}
-
-	// order := make([]string, 0)
-	// for _, disk := range c.state.Unraid.Disks {
-	// 	order = append(order, disk.Path)
-	// }
-
-	// plan.Print(order)
 }
 
 // SCATTER TRANSFER
@@ -824,11 +809,8 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		// getCurrentTransfer
 		current, err = getCurrentTransfer(procFd, filepath.Join(command.Src, command.Entry))
 		if err != nil {
-			// mlog.Warning("getCurrentTransfer:err(%s)", err)
 			continue
 		}
-
-		// mlog.Info("read(%d)-current(%s)-size(%d)", transferred, current, command.Size)
 
 		// on the first loop (and every 10 min after that, arbitrarily), display the file currently being transferred
 		if display {
@@ -939,7 +921,6 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Command) {
 	if operation.DryRun && operation.OpKind == common.OpGatherMove {
 		parent := filepath.Dir(command.Entry)
-		// mlog.Info("parent(%s)-src(%s)-dst(%s)-entry(%s)", parent, command.Src, command.Dst, command.Entry)
 		if parent != "." {
 			mlog.Info(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
 		} else {
@@ -1106,7 +1087,6 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	mlog.Info("\n%s\n%s", subject, message)
 
-	// c.bus.Pub(&pubsub.Message{}, common.INT_OPERATION_FINISHED)
 	c.state.Status = common.OpNeutral
 	c.state.Operation = nil
 }
@@ -1317,7 +1297,6 @@ func (c *Core) toggleDryRun(msg *pubsub.Message) {
 }
 
 func (c *Core) setRsyncArgs(msg *pubsub.Message) {
-	// mlog.Warning("payload: %+v", msg.Payload)
 	payload, ok := msg.Payload.(string)
 	if !ok {
 		mlog.Warning("Unable to convert Rsync arguments")
@@ -1336,7 +1315,6 @@ func (c *Core) setRsyncArgs(msg *pubsub.Message) {
 		outbound := &dto.Packet{Topic: "opError", Payload: "Unable to bind rsyncArgs parameters"}
 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		return
-		// mlog.Fatalf(err.Error())
 	}
 
 	mlog.Info("Setting rsyncArgs to (%s)", strings.Join(rsync.Args, " "))
@@ -1396,7 +1374,6 @@ func (c *Core) sendmail(notify int, subject, message string, dryRun bool) (err e
 
 	msg := dry + message
 
-	// strCmd := fmt.Sprintf("-s \"%s\" -m \"%s\"", mailCmd, subject, msg)
 	cmd := exec.Command(mailCmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
 	err = cmd.Run()
 
@@ -1431,10 +1408,10 @@ func progress(bytesToTransfer, bytesTransferred int64, elapsed time.Duration) (p
 	return
 }
 
-func getError(line string, re *regexp.Regexp, errors map[int]string) string {
+func getError(line string, re *regexp.Regexp, ers map[int]string) string {
 	result := re.FindStringSubmatch(line)
 	status, _ := strconv.Atoi(result[1])
-	msg, ok := errors[status]
+	msg, ok := ers[status]
 	if !ok {
 		msg = "unknown error"
 	}
@@ -1533,10 +1510,10 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 	}()
 }
 
-func runConverters(history *domain.History, converters []converter, version int) *domain.History {
+func runConverters(history *domain.History, converters []converter, ver int) *domain.History {
 	// converters is a zero-based array, we're currently at historyversion = 2, so we can do this math to get to
 	// the first converter we need to run
-	base := version - 2
+	base := ver - 2
 	toRun := converters[base:]
 	for _, converter := range toRun {
 		history = converter(history)

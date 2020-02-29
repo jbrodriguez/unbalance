@@ -47,7 +47,6 @@ func (s *Streamer) Write(p []byte) (n int, err error) {
 			return
 		}
 
-		// l.readLines += line
 		s.writer("%s:(%s)", s.prefix, line)
 	}
 
@@ -71,7 +70,6 @@ func Shell(command string, writer StderrWriter, prefix, workDir string, callback
 // args: command arguments
 func shell(writer StderrWriter, prefix, workDir string, callback Callback, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	// cmd.Env = os.Environ()
 	if workDir != "" {
 		cmd.Dir = workDir
 	}
@@ -80,13 +78,11 @@ func shell(writer StderrWriter, prefix, workDir string, callback Callback, name 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
-		//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
 	}
 	scanner := bufio.NewScanner(stdout)
 
 	if err = cmd.Start(); err != nil {
 		return err
-		// log.Fatal("Unable to start command: ", err)
 	}
 
 	for scanner.Scan() {
@@ -98,7 +94,6 @@ func shell(writer StderrWriter, prefix, workDir string, callback Callback, name 
 	if err != nil {
 		writer("%s: waitError: %s", prefix, err)
 		return err
-		// log.Fatal("Unable to wait for process to finish: ", err)
 	}
 
 	return nil
@@ -153,7 +148,6 @@ func ShellEx(callback Callback, writer StderrWriter, workDir, name string, args 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
-		//		log.Fatalf("Unable to stdoutpipe %s: %s", command, err)
 	}
 
 	scanner := bufio.NewScanner(stdout)
@@ -161,7 +155,6 @@ func ShellEx(callback Callback, writer StderrWriter, workDir, name string, args 
 
 	if err = cmd.Start(); err != nil {
 		return err
-		// log.Fatal("Unable to start command: ", err)
 	}
 
 	for scanner.Scan() {
@@ -208,7 +201,8 @@ func StartRsync(workDir string, writer StderrWriter, args ...string) (*exec.Cmd,
 	cmd.Dir = workDir
 	cmd.Stderr = NewStreamer(writer, "flag")
 
-	return cmd, cmd.Start()
+	err := cmd.Start()
+	return cmd, err
 }
 
 // EndRsync -

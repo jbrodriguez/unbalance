@@ -118,7 +118,6 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 	}
 
 	mlog.Info("scatterPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
-	// mlog.Info("scatterPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -128,7 +127,6 @@ func (p *Planner) scatter(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WsScatterPlanProgress, Payload: msg}
 		p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("scatterPlan:%s", msg)
-		// time.Sleep(2 * time.Second)
 
 		reserved := p.getReservedAmount(disk.Size)
 
@@ -191,7 +189,6 @@ func (p *Planner) gather(msg *pubsub.Message) {
 	}
 
 	mlog.Info("gatherPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
-	// mlog.Info("gatherPlan:blockSize(%d)", state.Unraid.BlockSize)
 
 	// Initialize fields
 	plan.BytesToTransfer = 0
@@ -201,7 +198,6 @@ func (p *Planner) gather(msg *pubsub.Message) {
 		outbound = &dto.Packet{Topic: common.WsGatherPlanProgress, Payload: msg}
 		p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 		mlog.Info("gatherPlan:%s", msg)
-		// time.Sleep(2 * time.Second)
 
 		reserved := p.getReservedAmount(disk.Size)
 
@@ -290,7 +286,7 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(blockSize int64, re *regexp.Regexp, src string, folder string) ([]*domain.Item, int64, error) {
+func getItems(blockSize int64, re *regexp.Regexp, src, folder string) ([]*domain.Item, int64, error) {
 	var total, blocks int64
 	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
@@ -334,7 +330,6 @@ func getItems(blockSize int64, re *regexp.Regexp, src string, folder string) ([]
 
 		item := &domain.Item{Name: result[2], Size: size, Path: filepath.Join(folder, filepath.Base(result[2])), Location: src, BlocksUsed: blocks}
 		items = append(items, item)
-
 	})
 
 	if err != nil {
@@ -391,7 +386,7 @@ func (p *Planner) getItemsAndIssues(status, blockSize int64, reItems, reStat *re
 	return items, ownerIssue, groupIssue, folderIssue, fileIssue
 }
 
-func (p *Planner) sendTimeFeedbackToFrontend(topic string, ffinished string, elapsed time.Duration) {
+func (p *Planner) sendTimeFeedbackToFrontend(topic, ffinished string, elapsed time.Duration) {
 	outbound := &dto.Packet{Topic: topic, Payload: fmt.Sprintf("Ended: %s", ffinished)}
 	p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 
@@ -446,7 +441,7 @@ func (p *Planner) getReservedAmount(size int64) int64 {
 	return reserved
 }
 
-func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk, items []*domain.Item, toBeTransferred []*domain.Item) {
+func (p *Planner) endPlan(status int64, plan *domain.Plan, disks []*domain.Disk, items, toBeTransferred []*domain.Item) {
 	plan.Finished = time.Now()
 	elapsed := lib.Round(time.Since(plan.Started), time.Millisecond)
 
@@ -545,7 +540,7 @@ func getTopic(status int64) string {
 	return common.WsGatherPlanProgress
 }
 
-func removeItems(items []*domain.Item, list []*domain.Item) []*domain.Item {
+func removeItems(items, list []*domain.Item) []*domain.Item {
 	w := 0 // write index
 
 loop:

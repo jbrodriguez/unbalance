@@ -218,7 +218,6 @@ func getArrayData() (*domain.Unraid, error) {
 				hasBlockSize = true
 			}
 		}
-		// mlog.Info("name(%s),blocks(%d),size(%d),avail(%d)", disk.Path, disk.BlocksTotal, blockSize, disk.BlocksFree)
 
 		totalSize += disk.Size
 		totalFree += disk.Free

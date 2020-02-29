@@ -49,8 +49,6 @@ func redirector(sPort string) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// log.Printf("host(%s)-port(%s)-scheme(%s)-uri(%s)\n", host, port, scheme, req.RequestURI)
-
 			if scheme != "https" {
 				return c.Redirect(http.StatusMovedPermanently, "https://"+host+sPort+req.RequestURI)
 			}
@@ -161,8 +159,6 @@ func (s *Server) Start() {
 
 	s.actor.Register("socket:broadcast", s.broadcast)
 	go s.actor.React()
-
-	// mlog.Info("Server started listening %s on %s", protocol, port)
 }
 
 // Stop -
