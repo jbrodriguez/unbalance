@@ -12,6 +12,8 @@ github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
 github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/jbrodriguez/actor v0.0.0-20170412170600-37e4989b0e3c h1:kdiDeP5qZYA+PDn8yeTov2PEgpJVwxYeP4p292pSUdA=
 github.com/jbrodriguez/actor v0.0.0-20170412170600-37e4989b0e3c/go.mod h1:Xx6OnHYvZS48XWp1Si8B8iMEArba77JvwVc0m8jQ5gE=
 github.com/jbrodriguez/mlog v0.0.0-20160501155140-006dc6db226a h1:+K+kl0pHXkDTl9Yq4aHZ84BdVkqyUi39E83FM0mDtCA=
