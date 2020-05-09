@@ -59,9 +59,6 @@ $(function(){
 	// checkUSER(document.unbalance_settings,'<?=$unbalance_runas;?>');
 });
 
-function isNumber(value) {
-   return typeof value === 'number' && isFinite(value);
-}
 function resetDATA(form) {
 	form.PORT.value = "6237";
 	// form.RUNAS.value = "nobody";
@@ -100,12 +97,12 @@ function checkRUNNING(form) {
 // }
 
 function verifyDATA(form) {
-	if (isNumber(form.PORT.value)){
+	if (isNaN(form.PORT.value)){
+		form.PORT.value = "6237";
+	} else {
 		if (form.PORT.value < 0 || form.PORT.value > 65535){
 			form.PORT.value = "6237";
 		}
-	} else {
-		form.PORT.value = "6237";
 	}
 	// if (form.RUNAS.value == null || form.RUNAS.value == "" || form.RUNAS.value == "root" ){
 	// 	form.RUNAS.value = "nobody";
