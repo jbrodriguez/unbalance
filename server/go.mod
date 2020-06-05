@@ -14,7 +14,7 @@ require (
 	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
 	github.com/namsral/flag v1.7.4-pre
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
