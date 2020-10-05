@@ -9,8 +9,8 @@ require (
 	github.com/jbrodriguez/pubsub v0.0.0-20170412143034-81ddee5a8bfe
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.0.0-20170925052817-57409ada9da0
-	github.com/mattn/go-colorable v0.1.4
-	github.com/mattn/go-isatty v0.0.10
+	github.com/mattn/go-colorable v0.1.8
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mcuadros/go-version v0.0.0-20161105183618-257f7b9a7d87
 	github.com/namsral/flag v1.7.4-pre
 	github.com/pmezard/go-difflib v1.0.0
@@ -20,7 +20,7 @@ require (
 	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec
 	golang.org/x/crypto v0.0.0-20171023145632-2509b142fb2b
-	golang.org/x/sys v0.0.0-20191008105621-543471e840be
+	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
 )
 
 go 1.13
