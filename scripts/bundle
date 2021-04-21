@@ -26,7 +26,7 @@ rm -rf ./client/dist
 
 echo "Building client"
 pushd client
-npm run build
+yarn build
 if [ $? -ne 0 ]; then
 	popd
 	error "Unable to build client. Please check and try again"
@@ -58,7 +58,10 @@ cp VERSION $APP_RELEASE
 cp PLGVER $APP_RELEASE
 
 pushd release
-tar czvf ./$APP_FILE $PROG
+mkdir -p usr/local/emhttp/plugins
+mv unbalance usr/local/emhttp/plugins/
+chmod -R u=rwx,g=rx,o=rx .
+tar --owner=root --group=root -czvf ./$APP_FILE usr
 mv ./$APP_FILE ..
 popd
 
