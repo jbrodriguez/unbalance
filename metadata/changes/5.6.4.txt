@@ -1,0 +1,4 @@
+2021-04-21 - 5.6.4
+- Implement go linting (golangci)
+- Fix port issue
+- Fix ownership, permissions and paths (Unraid compliance)
