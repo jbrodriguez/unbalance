@@ -219,7 +219,7 @@ class App extends PureComponent {
 									<i className={cx('fa fa-github', 'social')} />
 								</a>
 								<a
-									href="http://lime-technology.com/forum/index.php?topic=36201.0"
+									href="https://forums.unraid.net/topic/34547-diskmv-a-set-of-utilities-to-move-files-between-disks/"
 									title="diskmv"
 									rel="noreferrer noopener"
 									target="_blank"
