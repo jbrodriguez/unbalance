@@ -34,7 +34,7 @@ It's versatile and can serve multiple purposes, based on your needs.
 Some of the use cases are:
 
 -   Empty a disk, in order to change filesystems (read
-    [kizer's example](http://lime-technology.com/forum/index.php?topic=45352.msg435488#msg435488))
+    [kizer's example](https://forums.unraid.net/topic/43651-plug-in-unbalance/page/2/#comment-431428))
 -   Move all seasons of a tv show into a single disk
 -   Move a specific folder from a disk to another disk
 -   Split your movies/tv shows/games folder from a disk to other disks
@@ -79,9 +79,9 @@ Additionally, it will check files/folders permissions, to warn about potential i
 ~~Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/Unraid-diskmv).~~
 
 Internally, it issues a slight variation of
-[this rsync command](https://lime-technology.com/forum/index.php?topic=37490.msg449941#msg449941).
+[this rsync command](https://forums.unraid.net/topic/35815-re-format-xfs-on-replacement-drive-convert-from-rfs-to-xfs-discussion-only/page/12/#comment-445880).
 
-Check [this post](https://lime-technology.com/forum/index.php?topic=45352.msg476018#msg476018) for additional
+Check [this post](https://forums.unraid.net/topic/43651-plug-in-unbalance/page/11/#comment-471957) for additional
 information.
 
 **3 - Validate (optional)** <br/> VALIDATE will only be enabled for a SCATTER / COPY operation. Just click the Validate
@@ -202,10 +202,10 @@ flag.
 ## Credits
 
 ~~This app uses the [diskmv](https://github.com/trinapicot/unraid-diskmv) script (check the
-[forum thread](http://lime-technology.com/forum/index.php?topic=36201.0) for additional information).~~
+[forum thread](https://forums.unraid.net/topic/34547-diskmv-a-set-of-utilities-to-move-files-between-disks/) for additional information).~~
 
 The icon was graciously created by
-[hernandito](http://lime-technology.com/forum/index.php?topic=39707.msg372508#msg372508) (fellow Unraid forums member)
+[hernandito](https://forums.unraid.net/topic/38028-docker-unbalance/#comment-368452) (fellow Unraid forums member)
 
 It was built with:
 
