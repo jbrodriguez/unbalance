@@ -83,28 +83,45 @@ func (k *Knapsack) fitBlocks() (bin *domain.Bin) {
 	// how many blocks used by k.buffer bytes
 	buffer := k.buffer / k.blockSize
 
+	// log.Printf("buffer %d\n", buffer)
+
 	for _, item := range k.list {
+		// log.Printf("item(%+v)\n", item)
 		if item.BlocksUsed > (k.disk.BlocksFree - buffer) {
+			// log.Println("if")
 			k.over = append(k.over, item)
 		} else {
+			// log.Println("else")
 			targetBin := -1
 			remainingSpace := k.disk.BlocksFree
+
+			// log.Printf("remspac %d\n", remainingSpace)
 
 			for i, bin := range k.Bins {
 				binSpaceUsed := bin.BlocksUsed
 				binSpaceLeft := k.disk.BlocksFree - binSpaceUsed - item.BlocksUsed
 
+				// log.Printf("bsu(%d)-bsl(%d)\n", binSpaceUsed, binSpaceLeft)
+				// log.Printf("bsu(%d)-bsl(%d)-rs(%d)-buf(%d)\n", binSpaceUsed, binSpaceLeft, remainingSpace, buffer)
+
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= buffer {
+					// log.Println("ifcabe")
+
 					remainingSpace = binSpaceLeft
 					targetBin = i
+
+					// log.Printf("rs(%d)-tb(%d)\n", remainingSpace, i)
 				}
 			}
 
 			if targetBin >= 0 {
+				// log.Println("ifbin")
 				k.Bins[targetBin].Add(item)
 			} else {
+				// log.Println("elsebin")
 				newbin := &domain.Bin{}
 				newbin.Add(item)
+				// log.Printf("bin(%+v)", newbin)
 				k.Bins = append(k.Bins, newbin)
 			}
 		}

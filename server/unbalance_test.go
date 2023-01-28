@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"math"
 	"testing"
 
 	"unbalance/algorithm"
@@ -733,27 +733,32 @@ import (
 // }
 
 func TestKnap(t *testing.T) {
-	fmt.Printf("first blood\n")
+	blockSize := int64(4096)
+	fBlockSize := float64(blockSize)
 
 	disk := &domain.Disk{
-		ID:     1,
-		Name:   "md1",
-		Path:   "/mnt/disk1",
-		Device: "sdc",
-		Free:   195170000,
-		Size:   45015000000,
-		Serial: "SAMSUNG_HD15",
-		Status: "DISK_OK",
+		ID:          2,
+		Name:        "md2",
+		Path:        "/mnt/disk2",
+		Device:      "sdc",
+		Free:        3498492334080,
+		Size:        7999426170880,
+		BlocksTotal: 1952984905,
+		BlocksFree:  854124105,
+		Serial:      "SAMSUNG_HD15",
+		Status:      "DISK_OK",
 	}
 
-	folders := make([]*domain.Item, 0)
-	folders = append(folders,
-		&domain.Item{Name: "k19", Size: 40059033087, Path: "/mnt/disk1/Movies/k19"},
-		&domain.Item{Name: "almostf", Size: 36752144890, Path: "/mnt/disk1/Movies/almostf"},
-		&domain.Item{Name: "asgood", Size: 36570146300, Path: "/mnt/disk1/Movies/asgood"},
+	items := make([]*domain.Item, 0)
+	items = append(items,
+		&domain.Item{Name: "proxmox-backup-server_1.1-1.iso", Size: 710651904, Path: "/mnt/disk1/isos/proxmox-backup-server_1.1-1.iso", BlocksUsed: int64(math.Ceil(float64(710651904) / fBlockSize))},
+		&domain.Item{Name: "proxmox-mailgateway_6.4-1.iso", Size: 1024268288, Path: "/mnt/disk1/isos/proxmox-mailgateway_6.4-1.iso", BlocksUsed: int64(math.Ceil(float64(1024268288) / fBlockSize))},
+		&domain.Item{Name: "proxmox-ve_6.4-1.iso", Size: 928993280, Path: "/mnt/disk1/isos/proxmox-ve_6.4-1.iso", BlocksUsed: int64(math.Ceil(float64(928993280) / fBlockSize))},
 	)
 
-	packer := algorithm.NewKnapsack(disk, folders, 512*1024*1024, 0)
+	reserved := int64(1073741824)
+
+	packer := algorithm.NewKnapsack(disk, items, reserved, blockSize)
 	bin := packer.BestFit()
 
 	assert.Nil(t, bin)
