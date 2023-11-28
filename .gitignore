@@ -4,8 +4,11 @@ staging/
 log/
 art/
 archive/
+1old/
 
 unbalance.plg
+unbalance.conf
+unbalance.hist
 
 *.tar.gz
 *.tgz
@@ -25,3 +28,4 @@ dist
 # binaries
 server/server
 server/unbalance
+unbalance
