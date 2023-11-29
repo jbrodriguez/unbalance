@@ -2,7 +2,6 @@ import React from "react"
 
 import { Panel, PanelGroup } from "react-resizable-panels"
 import { ResizeHandle } from "~/shared/resize/resize-handle"
-import styles from "~/shared/resize/shared.module.css"
 
 interface PanelsProps {
   type?: "2col" | "3col"
@@ -18,24 +17,24 @@ export const Panels: React.FC<PanelsProps> = ({
   right,
 }) => {
   return (
-    <div className={styles.PanelGroupWrapper}>
-      <PanelGroup className={styles.PanelGroup} direction="horizontal">
+    <div>
+      <PanelGroup direction="horizontal">
         <Panel
-          className={styles.PanelRow}
+          className="flex flex-row"
           defaultSizePercentage={30}
           minSizePercentage={20}
         >
           {left}
         </Panel>
-        <ResizeHandle className={styles.ResizeHandle} />
-        <Panel className={styles.PanelRow} minSizePercentage={30}>
+        <ResizeHandle />
+        <Panel className="flex flex-row" minSizePercentage={30}>
           {middle}
         </Panel>
         {type === "3col" && (
           <>
-            <ResizeHandle className={styles.ResizeHandle} />
+            <ResizeHandle />
             <Panel
-              className={styles.PanelRow}
+              className="flex flex-row"
               defaultSizePercentage={30}
               minSizePercentage={20}
             >
