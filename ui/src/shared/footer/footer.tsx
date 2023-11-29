@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
   // const { data, isLoading } = useSWR("/config", getConfig)
 
   return (
-    <section className="flex flex-row items-center justify-between bg-gray-800 dark:bg-gray-800 text-sky-700 dark:text-slate-300 p-2 mt-4 mb-4">
+    <section className="flex flex-row items-center justify-between bg-gray-800 dark:bg-gray-800 text-sky-700 dark:text-slate-300 p-2 my-4">
       <div>
         <span className="text-slate-500 dark:text-slate-600 mr-1">
           Copyright &copy;

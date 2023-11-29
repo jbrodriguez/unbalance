@@ -16,58 +16,118 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-background-code: #050a15;
+  --color-background-default: #081120;
+  --color-brand: #dcadff;
+  --color-button-background: #2a3343;
+  --color-button-background-hover: #39414d;
+  --color-button-border: #18181a;
+  --color-code: #dcadff;
+  --color-default: #ffffff;
+  --color-dim: #91a0ba;
+  --color-horizontal-rule: #39414d;
+  --color-input: #ffffff;
+  --color-input-background: #18181a;
+  --color-input-border: #39414d;
+  --color-input-border-focused: #dcadff;
+  --color-link: #dcadff;
+  --color-panel-background: #192230;
+  --color-panel-background-alternate: #202124;
+  --color-solid-resize-bar: #39414d;
+  --color-scroll-thumb: #39414d;
+  --color-warning-background: #7400cc;
+
+  --color-logo-background: #2a3343;
+  --color-logo-chip-1: #dcadff;
+  --color-logo-chip-2: #ff79ad;
+  --color-logo-chip-3: #ffdc7a;
+  --color-logo-chip-4: #7ac1ff;
+
+  --token-comment-color: #666;
+  --token-definition-color: #fefefe;
+  --token-local-color: #fefefe;
+  --token-keyword-color: #ff7aad;
+  --token-meta-color: #8237bb;
+  --token-number-color: #ffdc7a;
+  --token-operator-color: #fefefe;
+  --token-propertyName-color: #ff98eb;
+  --token-punctuation-color: #dcadff;
+  --token-string-color: #7ac1ff;
+  --token-string2-color: #7ac1ff;
+  --token-typeName-color: #c67bff;
+  --token-variableName-color: #c67bff;
+  --token-variableName2-color: #c67bff;
 }
 
-/* a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+/* @layer components {
+  .ResizeHandleOuter {
+    flex: 0 0 1.75rem;
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    padding: 0.5rem;
+    outline: none;
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background-color: transparent;
   }
-  a:hover {
-    color: #747bff;
+  .ResizeHandleOuter[data-resize-handle-active],
+  .ResizeHandleInner[data-collapsed] {
+    --background-color: var(--color-solid-resize-bar);
   }
-  button {
-    background-color: #f9f9f9;
+
+  @media (max-width: 500px) {
+    .ResizeHandleOuter {
+      flex: 0 0 2.5rem;
+    }
+  }
+
+  .ResizeHandleInner {
+    flex: 1;
+    border-radius: 0.75rem;
+    background-color: var(--background-color);
+    transition: background-color 0.2s linear;
+    position: relative;
+  }
+
+  .ResizeHandleInner::after {
+    height: 1rem;
+    width: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--color-solid-resize-bar);
+    position: absolute;
+    left: calc(50% - 0.5rem);
+    top: calc(50% - 0.5rem);
+  }
+
+  .HorizontalIcon,
+  .VerticalIcon {
+    color: var(--color-solid-resize-bar);
+    position: absolute;
+    left: calc(50% - 0.5rem);
+    top: calc(50% - 0.5rem);
+  }
+
+  .ResizeHandleOuter[data-panel-group-direction="horizontal"] .HorizontalIcon,
+  .ResizeHandleOuter[data-panel-group-direction="vertical"] .VerticalIcon {
+    display: block;
+  }
+  .ResizeHandleOuter[data-panel-group-direction="vertical"] .HorizontalIcon,
+  .ResizeHandleOuter[data-panel-group-direction="horizontal"] .VerticalIcon {
+    display: none;
+  }
+  .ResizeHandleOuter[data-resize-handle-active] .HorizontalIcon,
+  .ResizeHandleOuter[data-resize-handle-active] .VerticalIcon {
+    display: none;
+  }
+
+  .Icon {
+    flex: 0 0 1rem;
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
   }
 } */

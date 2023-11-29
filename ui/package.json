@@ -14,6 +14,8 @@
     "match-sorter": "^6.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-resizable-panels": "^0.0.63",
+    "react-resize-detector": "^9.1.0",
     "react-router-dom": "^6.20.0",
     "sort-by": "^1.2.0"
   },
