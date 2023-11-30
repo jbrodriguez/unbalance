@@ -1,22 +1,23 @@
-import React from "react"
+import React from 'react';
 
-import AutoSizer from "react-virtualized-auto-sizer"
+import AutoSizer from 'react-virtualized-auto-sizer';
 
-import { Panels } from "~/shared/panels/panels"
-import { Disks } from "./disks"
-import { FileSystem } from "./filesystem"
-import { Targets } from "./targets"
+import { Panels } from '~/shared/panels/panels';
+import { Disks } from './disks';
+import { FileSystem } from './filesystem';
+import { Targets } from './targets';
+import { Navbar } from './navbar';
+import { Pane } from './pane';
+import { Ticker } from './ticker';
 
 export const Scatter: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-red-200">
-        <span>scatter</span>
-      </div>
-      <div className="bg-red-200">
-        <span>scatter</span>
-      </div>
-      <div style={{ flex: "1 1 auto" }}>
+      <Navbar />
+      <Pane>
+        <Ticker />
+      </Pane>
+      <div style={{ flex: '1 1 auto' }}>
         <AutoSizer disableWidth>
           {({ height }) => (
             <Panels
@@ -29,5 +30,5 @@ export const Scatter: React.FC = () => {
         </AutoSizer>
       </div>
     </div>
-  )
-}
+  );
+};
