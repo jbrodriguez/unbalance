@@ -1,9 +1,9 @@
-import React from "react"
+import React from 'react';
 
-import { Icon } from "~/shared/icons/icon"
-import diskmv from "~/assets/diskmv.png"
-import unraid from "~/assets/unraid.png"
-import jb from "~/assets/jb.png"
+import { Icon } from '~/shared/icons/icon';
+import diskmv from '~/assets/diskmv.png';
+import unraid from '~/assets/unraid.png';
+import jb from '~/assets/jb.png';
 
 // import useSWR from "swr"
 
@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
       </div>
       <div className="text-lime-600">
         <>
-          <span>unbalance-ng &nbsp;</span>
+          <span>unbalanced &nbsp;</span>
           <span>v2023.11.23</span>
         </>
 
@@ -120,5 +120,5 @@ export const Footer: React.FC = () => {
         </a>
       </div>
     </section>
-  )
-}
+  );
+};

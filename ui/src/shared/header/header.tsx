@@ -1,11 +1,11 @@
-import React from "react"
+import React from 'react';
 
-import { NavLink } from "react-router-dom"
+import { NavLink } from 'react-router-dom';
 // import debounce from "lodash.debounce"
 
 // import { useOptionsStore, useOptionsActions } from "~/state/options"
 // import Chevron from "~/shared/components/chevron"
-import logo from "~/assets/unbalance-logo.png"
+import logo from '~/assets/unbalance-logo.png';
 
 export const Header: React.FC = () => {
   // const { filterBy, filterByOptions, sortBy, sortByOptions } = useOptionsStore(
@@ -45,7 +45,7 @@ export const Header: React.FC = () => {
       <ul className="col-span-2 py-2 bg-lime-600 dark:bg-lime-600 text-neutral-50">
         <li className="flex items-center justify-center">
           <img src={logo} alt="logo" className="h-8 mr-2" />
-          <span className="text-slate-950 font-medium">unbalance-ng</span>
+          <span className="text-slate-950 font-medium">unbalanced</span>
         </li>
       </ul>
 
@@ -55,8 +55,8 @@ export const Header: React.FC = () => {
             to="/scatter"
             className={({ isActive }) => {
               return isActive
-                ? "ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900"
-                : "ml-4"
+                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
+                : 'ml-4';
             }}
           >
             SCATTER
@@ -66,8 +66,8 @@ export const Header: React.FC = () => {
             to="/gather"
             className={({ isActive }) => {
               return isActive
-                ? "ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900"
-                : "ml-4"
+                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
+                : 'ml-4';
             }}
           >
             GATHER
@@ -77,8 +77,8 @@ export const Header: React.FC = () => {
             to="/history"
             className={({ isActive }) => {
               return isActive
-                ? "ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900"
-                : "ml-4"
+                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
+                : 'ml-4';
             }}
           >
             HISTORY
@@ -88,8 +88,8 @@ export const Header: React.FC = () => {
             to="/settings"
             className={({ isActive }) => {
               return isActive
-                ? "ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900"
-                : "ml-4"
+                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
+                : 'ml-4';
             }}
           >
             SETTINGS
@@ -99,8 +99,8 @@ export const Header: React.FC = () => {
             to="/log"
             className={({ isActive }) => {
               return isActive
-                ? "ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900"
-                : "ml-4"
+                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
+                : 'ml-4';
             }}
           >
             LOG
@@ -108,5 +108,5 @@ export const Header: React.FC = () => {
         </li>
       </ul>
     </nav>
-  )
-}
+  );
+};
