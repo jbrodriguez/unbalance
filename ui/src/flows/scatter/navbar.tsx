@@ -2,11 +2,11 @@ import React from 'react';
 
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
-import { Stepper } from './stepper';
+import { Stepper } from '~/flows/scatter/select/stepper';
 
 const labels = [
-  { title: 'Selection', subtitle: 'Choose data' },
-  { title: 'Planner', subtitle: 'Check plan' },
+  { title: 'Select', subtitle: 'Choose data' },
+  { title: 'Plan', subtitle: 'Verify' },
   { title: 'Transfer', subtitle: 'Run operations' },
 ];
 
@@ -25,6 +25,7 @@ export const Navbar: React.FC = () => {
           disabled={disabled}
         />
       </div>
+
       <div className="flex flex-row flex-1 items-center justify-between">
         <div className="flex flex-row items-center justify-start">
           <span className="mx-2" />
