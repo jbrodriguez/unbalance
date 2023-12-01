@@ -5,9 +5,9 @@ import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
 
 const labels = [
-  { title: 'Select', subtitle: 'Choose data' },
-  { title: 'Plan', subtitle: 'Verify' },
-  { title: 'Transfer', subtitle: 'Run operations' },
+  { title: 'Select', subtitle: 'Choose source' },
+  { title: 'Plan', subtitle: 'Choose destination' },
+  { title: 'Transfer', subtitle: 'Verify and run operation' },
 ];
 
 export const Navbar: React.FC = () => {
@@ -29,14 +29,11 @@ export const Navbar: React.FC = () => {
       <div className="flex flex-row flex-1 items-center justify-between">
         <div className="flex flex-row items-center justify-start">
           <span className="mx-2" />
-          <Stepper steps={3} currentStep={1} labels={labels} />
+          <Stepper steps={3} currentStep={2} labels={labels} />
         </div>
 
         <div className="flex flex-row items-center justify-end">
           <Button label="MOVE" variant="primary" disabled={disabled} />
-          <span className="mx-1">|</span>
-          <Button label="COPY" variant="primary" disabled={disabled} />
-
           <span className="mx-1">|</span>
 
           <div className="flex items-center">

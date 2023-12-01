@@ -5,7 +5,7 @@ import { Description as PlanDescription } from './plan/description';
 import { Description as TransferDescription } from './transfer/description';
 
 export const Ticker: React.FunctionComponent = () => {
-  const step: string = 'select';
+  const step: string = 'plan';
 
   return (
     <>
