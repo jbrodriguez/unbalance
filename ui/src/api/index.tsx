@@ -23,4 +23,18 @@ export class Api {
       };
     }
   }
+
+  static async getUnraid() {
+    console.log('Api.getUnraid() ', Api.host);
+    try {
+      const response = await fetch(`${Api.host}/state`);
+      const unraid = await response.json();
+      return unraid;
+    } catch (e) {
+      console.log('Api.getUnraid() error ', e);
+      return {
+        state: 'stopped',
+      };
+    }
+  }
 }
