@@ -12,6 +12,8 @@ import './index.css';
 import { Scatter } from './flows/scatter/scatter';
 import { Gather } from './flows/gather/gather';
 import { History } from './flows/history/history';
+import { Settings } from './flows/settings/settings';
+import { Notifications } from './flows/settings/notifications';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +32,16 @@ const router = createBrowserRouter([
       {
         path: '/history',
         element: <History />,
+      },
+      {
+        path: '/settings',
+        element: <Settings />,
+        children: [
+          {
+            path: 'notifications',
+            element: <Notifications />,
+          },
+        ],
       },
     ],
   },
