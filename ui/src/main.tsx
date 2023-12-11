@@ -7,7 +7,7 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-import App from './App.tsx';
+import { App } from './App.tsx';
 import './index.css';
 import { Scatter } from './flows/scatter/scatter';
 import { Select as ScatterSelect } from './flows/scatter/select/select';

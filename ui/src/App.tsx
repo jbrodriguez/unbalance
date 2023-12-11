@@ -1,11 +1,18 @@
-// import React from "react";
+import React from 'react';
 
-import { Outlet } from "react-router-dom"
+import { Outlet } from 'react-router-dom';
 
-import { Header } from "./shared/header/header"
-import { Footer } from "./shared/footer/footer"
+import { Header } from './shared/header/header';
+import { Footer } from './shared/footer/footer';
+import { useConfigActions } from './state/config';
 
-function App() {
+export function App() {
+  const { getConfig } = useConfigActions();
+
+  React.useEffect(() => {
+    getConfig();
+  }, [getConfig]);
+
   return (
     <div className="container mx-auto h-screen flex flex-col">
       <header>
@@ -18,7 +25,5 @@ function App() {
         <Footer />
       </footer>
     </div>
-  )
+  );
 }
-
-export default App
