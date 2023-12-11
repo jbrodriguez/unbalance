@@ -9,8 +9,9 @@ import {
 
 import App from './App.tsx';
 import './index.css';
-import { Scatter } from './flows/scatter/scatter.tsx';
-import { Gather } from './flows/gather/gather.tsx';
+import { Scatter } from './flows/scatter/scatter';
+import { Gather } from './flows/gather/gather';
+import { History } from './flows/history/history';
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: '/gather',
         element: <Gather />,
+      },
+      {
+        path: '/history',
+        element: <History />,
       },
     ],
   },
