@@ -14,6 +14,7 @@ import { Gather } from './flows/gather/gather';
 import { History } from './flows/history/history';
 import { Settings } from './flows/settings/settings';
 import { Notifications } from './flows/settings/notifications';
+import { Logs } from './flows/logs/logs';
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
             element: <Notifications />,
           },
         ],
+      },
+      {
+        path: '/logs',
+        element: <Logs />,
       },
     ],
   },

@@ -96,7 +96,7 @@ export const Header: React.FC = () => {
           </NavLink>
 
           <NavLink
-            to="/log"
+            to="/logs"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
