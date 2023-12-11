@@ -4,10 +4,10 @@ import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
 
-const labels = [
-  { title: 'Select', subtitle: 'Choose data' },
-  { title: 'Plan', subtitle: 'Verify' },
-  { title: 'Transfer', subtitle: 'Run operations' },
+const config = [
+  { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
+  { navTo: 'plan', title: 'Plan', subtitle: 'Verify' },
+  { navTo: 'transfer', title: 'Transfer', subtitle: 'Run operations' },
 ];
 
 export const Navbar: React.FC = () => {
@@ -29,7 +29,7 @@ export const Navbar: React.FC = () => {
       <div className="flex flex-row flex-1 items-center justify-between">
         <div className="flex flex-row items-center justify-start">
           <span className="mx-2" />
-          <Stepper steps={3} currentStep={1} labels={labels} />
+          <Stepper steps={3} currentStep={1} config={config} />
         </div>
 
         <div className="flex flex-row items-center justify-end">

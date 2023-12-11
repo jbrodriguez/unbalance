@@ -10,11 +10,16 @@ import {
 import App from './App.tsx';
 import './index.css';
 import { Scatter } from './flows/scatter/scatter';
+import { Select as ScatterSelect } from './flows/scatter/select/select';
+import { Plan as ScatterPlan } from './flows/scatter/plan/plan';
 import { Gather } from './flows/gather/gather';
+import { Select as GatherSelect } from './flows/gather/select/select';
+import { Plan as GatherPlan } from './flows/gather/plan/plan';
 import { History } from './flows/history/history';
 import { Settings } from './flows/settings/settings';
 import { Notifications } from './flows/settings/notifications';
 import { Logs } from './flows/logs/logs';
+import { Transfer } from './shared/transfer/transfer';
 
 const router = createBrowserRouter([
   {
@@ -25,10 +30,39 @@ const router = createBrowserRouter([
       {
         path: '/scatter',
         element: <Scatter />,
+        children: [
+          { index: true, element: <Navigate to="/scatter/select" replace /> },
+          {
+            path: 'select',
+            element: <ScatterSelect />,
+          },
+          {
+            path: 'plan',
+            element: <ScatterPlan />,
+          },
+          {
+            path: 'transfer',
+            element: <Transfer />,
+          },
+        ],
       },
       {
         path: '/gather',
         element: <Gather />,
+        children: [
+          {
+            path: 'select',
+            element: <GatherSelect />,
+          },
+          {
+            path: 'plan',
+            element: <GatherPlan />,
+          },
+          {
+            path: 'transfer',
+            element: <Transfer />,
+          },
+        ],
       },
       {
         path: '/history',
