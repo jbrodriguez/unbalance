@@ -4,14 +4,10 @@ import { Icon } from '~/shared/icons/icon';
 import diskmv from '~/assets/diskmv.png';
 import unraid from '~/assets/unraid.png';
 import jb from '~/assets/jb.png';
-
-// import useSWR from "swr"
-
-// import { getConfig } from "~/api"
-// import { Spinner } from "~/shared/components/spinner"
+import { useConfigVersion } from '~/state/config';
 
 export const Footer: React.FC = () => {
-  // const { data, isLoading } = useSWR("/config", getConfig)
+  const version = useConfigVersion();
 
   return (
     <section className="flex flex-row items-center justify-between bg-gray-800 dark:bg-gray-800 text-sky-700 dark:text-slate-300 p-2 my-4">
@@ -29,38 +25,10 @@ export const Footer: React.FC = () => {
         </a>
       </div>
       <div className="text-lime-600">
-        <>
-          <span>unbalanced &nbsp;</span>
-          <span>v2023.11.23</span>
-        </>
-
-        {/* {isLoading ? (
-          <Spinner />
-        ) : (
-          <>
-            <span>mediaGUI &nbsp;</span>
-            <span>v{data?.version}</span>
-          </>
-        )} */}
+        <span>unbalanced &nbsp;</span>
+        {version !== '' && <span>v{version}</span>}
       </div>
       <div className="flex flex-row items-center">
-        {/* <a
-          className="flex items-center"
-          href="https://www.themoviedb.org/"
-          title="themoviedb.org"
-          target="_blank"
-        >
-          <img src="/img/tmdb.png" alt="Logo for tmdb" className="w-10 mr-4" />
-        </a>
-
-        <a
-          className="flex items-center"
-          href="https://jbrio.net/"
-          title="jbrio.net"
-          target="_blank"
-        >
-          <img src="/img/logo.png" alt="Logo for jbrio.net" className="w-10" />
-        </a> */}
         <a
           href="https://github.com/jbrodriguez/unbalance/blob/main/DONATIONS.md"
           title="Support Fund"

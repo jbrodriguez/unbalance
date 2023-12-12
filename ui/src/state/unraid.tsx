@@ -12,7 +12,10 @@ interface UnraidStore {
 
 export const useUnraidStore = create<UnraidStore>()(
   immer((set) => {
-    const socket = new WebSocket('ws://wopr.lan:7090/ws');
+    const protocol =
+      document.location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+    const socket = new WebSocket(`${protocol}${document.location.host}/ws`);
 
     socket.onopen = function (event) {
       console.log('Socket opened ', event);
@@ -26,15 +29,6 @@ export const useUnraidStore = create<UnraidStore>()(
       console.log('Socket closed ', event);
     };
 
-    // socket.addEventListener('message', function (event) {
-    //   console.log('Message from server ', event.data);
-    //   set((state) => {
-    //     state.state = event.data;
-    //   });
-    // });
-    // socket.addEventListener('close', function (event) {
-    //   console.log('Socket closed ', event);
-    // });
     return {
       array: '',
       actions: {

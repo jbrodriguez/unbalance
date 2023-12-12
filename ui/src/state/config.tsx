@@ -55,3 +55,5 @@ export const useConfigStore = create<ConfigStore>()(
 // export const useConfigActions = useConfigStore.getState().actions;
 
 export const useConfigActions = () => useConfigStore((state) => state.actions);
+
+export const useConfigVersion = () => useConfigStore((state) => state.version);
