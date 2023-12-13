@@ -4,6 +4,8 @@ import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
 import { useUnraidStep } from '~/state/unraid';
+import { stepToIndex } from '~/helpers/steps';
+import { getVariant, getFill } from '~/helpers/styling';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -11,28 +13,21 @@ const config = [
   { navTo: 'transfer', title: 'Transfer', subtitle: 'Run operations' },
 ];
 
-const stepToIndex = {
-  idle: 1,
-  select: 1,
-  plan: 2,
-  transfer: 3,
-};
-
-export const Navbar: React.FC = () => {
+export const Navbar: React.FunctionComponent = () => {
   const step = useUnraidStep();
   const currentStep = stepToIndex[step] || 1;
-  const disabled = false;
-  const variant = disabled ? 'secondary' : 'accent';
-  const fill = disabled ? 'fill-neutral-600' : 'fill-neutral-100';
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
       <div className="flex justify-start">
         <Button
           label="Prev"
-          variant={variant}
-          leftIcon={<Icon name="prev" size={20} fill={`${fill}`} />}
-          disabled={disabled}
+          // variant={`${styles[getStyles(step !== 'select')].variant}`}
+          variant={getVariant(step !== 'select')}
+          leftIcon={
+            <Icon name="prev" size={20} fill={getFill(step !== 'select')} />
+          }
+          disabled={step === 'select'}
         />
       </div>
 
@@ -42,38 +37,42 @@ export const Navbar: React.FC = () => {
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
-        <div className="flex flex-row items-center justify-end">
-          <Button label="MOVE" variant="primary" disabled={disabled} />
-          <span className="mx-1">|</span>
-          <Button label="COPY" variant="primary" disabled={disabled} />
+        {step === 'transfer' && (
+          <div className="flex flex-row items-center justify-end">
+            <Button label="MOVE" variant="primary" />
+            <span className="mx-1">|</span>
+            <Button label="COPY" variant="primary" />
 
-          <span className="mx-1">|</span>
+            <span className="mx-1">|</span>
 
-          <div className="flex items-center">
-            <input
-              checked
-              id="checked-checkbox"
-              type="checkbox"
-              value=""
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <label
-              htmlFor="checked-checkbox"
-              className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-            >
-              dry-run
-            </label>
+            <div className="flex items-center">
+              <input
+                checked
+                id="checked-checkbox"
+                type="checkbox"
+                value=""
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <label
+                htmlFor="checked-checkbox"
+                className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              >
+                dry-run
+              </label>
+            </div>
+            <span className="mx-2" />
           </div>
-          <span className="mx-2" />
-        </div>
+        )}
       </div>
 
       <div className="flex items-center justify-end">
         <Button
           label="Next"
-          variant="accent"
-          rightIcon={<Icon name="next" size={20} fill="fill-neutral-100" />}
-          disabled={disabled}
+          variant={getVariant(step !== 'transfer')}
+          rightIcon={
+            <Icon name="next" size={20} fill={getFill(step !== 'transfer')} />
+          }
+          disabled={step === 'transfer'}
         />
       </div>
     </div>

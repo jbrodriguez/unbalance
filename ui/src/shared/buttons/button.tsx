@@ -1,8 +1,10 @@
 import React from 'react';
 
+import { Variant } from '~/types';
+
 interface Props {
   label: string;
-  variant?: 'primary' | 'secondary' | 'accent';
+  variant?: Variant;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   onClick?: () => void;

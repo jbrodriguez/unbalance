@@ -10,22 +10,7 @@ export enum Op {
 
 export type Step = 'idle' | 'select' | 'plan' | 'transfer';
 
-// export type Step =
-//   | 'idle'
-//   | 'scatter.select'
-//   | 'scatter.plan'
-//   | 'scatter.transfer'
-//   | 'gather.select'
-//   | 'gather.plan'
-//   | 'gather.transfer'
-//   | 'history'
-//   | 'settings.notications'
-//   | 'settings.reserved'
-//   | 'settings.rsync'
-//   | 'settings.verbosity'
-//   | 'settings.update'
-//   | 'settings.refresh'
-//   | 'logs';
+export type Variant = 'primary' | 'secondary' | 'accent';
 
 export interface Config {
   version: string;
