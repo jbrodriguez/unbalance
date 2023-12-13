@@ -25,8 +25,8 @@ export const Footer: React.FC = () => {
         </a>
       </div>
       <div className="text-lime-600">
-        <span>unbalanced &nbsp;</span>
-        {version !== '' && <span>v{version}</span>}
+        <span>unbalanced</span>
+        {version !== '' && <span>&nbsp;v{version}</span>}
       </div>
       <div className="flex flex-row items-center">
         <a

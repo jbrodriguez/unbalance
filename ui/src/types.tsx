@@ -1,3 +1,32 @@
+export enum Op {
+  Neutral = 0,
+  ScatterPlan = 1,
+  ScatterMove = 2,
+  ScatterCopy = 3,
+  ScatterValidate = 4,
+  GatherPlan = 5,
+  GatherMove = 6,
+}
+
+export type Step = 'idle' | 'select' | 'plan' | 'transfer';
+
+// export type Step =
+//   | 'idle'
+//   | 'scatter.select'
+//   | 'scatter.plan'
+//   | 'scatter.transfer'
+//   | 'gather.select'
+//   | 'gather.plan'
+//   | 'gather.transfer'
+//   | 'history'
+//   | 'settings.notications'
+//   | 'settings.reserved'
+//   | 'settings.rsync'
+//   | 'settings.verbosity'
+//   | 'settings.update'
+//   | 'settings.refresh'
+//   | 'logs';
+
 export interface Config {
   version: string;
   dryRun: boolean;
@@ -111,8 +140,8 @@ export interface Plan {
 
 export interface State {
   status: number;
-  unraid: Unraid;
-  operation: Operation;
-  history: History;
-  plan: Plan;
+  unraid: Unraid | null;
+  operation: Operation | null;
+  history: History | null;
+  plan: Plan | null;
 }

@@ -1,3 +1,5 @@
+import { State, Op } from '~/types';
+
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
 
@@ -24,7 +26,7 @@ export class Api {
     }
   }
 
-  static async getUnraid() {
+  static async getUnraid(): Promise<State> {
     console.log('Api.getUnraid() ', Api.host);
     try {
       const response = await fetch(`${Api.host}/state`);
@@ -33,7 +35,11 @@ export class Api {
     } catch (e) {
       console.log('Api.getUnraid() error ', e);
       return {
-        state: 'stopped',
+        status: Op.Neutral,
+        unraid: null,
+        operation: null,
+        history: null,
+        plan: null,
       };
     }
   }
