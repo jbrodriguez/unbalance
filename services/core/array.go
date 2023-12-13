@@ -128,6 +128,11 @@ func getArrayData() (*domain.Unraid, error) {
 	disks := make([]*domain.Disk, 0)
 
 	for _, section := range file.Sections() {
+		// DEFAULT section
+		if section.Key("name").String() == "" {
+			continue
+		}
+
 		diskType := section.Key("type").String()
 		diskName := section.Key("name").String()
 		diskStatus := section.Key("status").String()
