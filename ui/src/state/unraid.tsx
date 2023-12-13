@@ -90,3 +90,4 @@ export const useUnraidLoaded = () => useUnraidStore().loaded;
 export const useUnraidStatus = () => useUnraidStore().status;
 export const useUnraidStep = () => useUnraidStore().step;
 export const useUnraidIsBusy = () => useUnraidStore().status !== Op.Neutral;
+export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];
