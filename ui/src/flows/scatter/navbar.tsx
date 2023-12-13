@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
+import { useUnraidStep } from '~/state/unraid';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -10,7 +11,16 @@ const config = [
   { navTo: 'transfer', title: 'Transfer', subtitle: 'Run operations' },
 ];
 
+const stepToIndex = {
+  idle: 1,
+  select: 1,
+  plan: 2,
+  transfer: 3,
+};
+
 export const Navbar: React.FC = () => {
+  const step = useUnraidStep();
+  const currentStep = stepToIndex[step] || 1;
   const disabled = false;
   const variant = disabled ? 'secondary' : 'accent';
   const fill = disabled ? 'fill-neutral-600' : 'fill-neutral-100';
@@ -29,7 +39,7 @@ export const Navbar: React.FC = () => {
       <div className="flex flex-row flex-1 items-center justify-between">
         <div className="flex flex-row items-center justify-start">
           <span className="mx-2" />
-          <Stepper steps={3} currentStep={1} config={config} />
+          <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
         <div className="flex flex-row items-center justify-end">

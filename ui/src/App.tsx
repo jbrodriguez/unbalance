@@ -16,7 +16,7 @@ import { getRouteFromOp } from './helpers/steps';
 
 export function App() {
   const { getConfig } = useConfigActions();
-  const { getUnraid } = useUnraidActions();
+  const { getUnraid, syncRouteAndStep } = useUnraidActions();
   const isLoaded = useUnraidLoaded();
   const version = useConfigVersion();
   const unraidStatus = useUnraidStatus();
@@ -27,7 +27,8 @@ export function App() {
     // Google Analytics
     // ga('send', 'pageview');
     console.log('App.useEffect() ', location);
-  }, [location]);
+    syncRouteAndStep(location.pathname);
+  }, [location, syncRouteAndStep]);
 
   React.useEffect(() => {
     getConfig();

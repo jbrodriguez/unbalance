@@ -7,7 +7,7 @@ import { convertStatusToStep } from '~/helpers/steps';
 
 interface UnraidStore {
   loaded: boolean;
-  // route: string;
+  route: string;
   status: Op;
   unraid: Unraid | null;
   operation: Operation | null;
@@ -16,11 +16,13 @@ interface UnraidStore {
   step: Step;
   actions: {
     getUnraid: () => Promise<void>;
+    setCurrentStep: (step: Step) => void;
+    syncRouteAndStep: (path: string) => void;
   };
 }
 
 export const useUnraidStore = create<UnraidStore>()(
-  immer((set) => {
+  immer((set, get) => {
     const protocol =
       document.location.protocol === 'https:' ? 'wss://' : 'ws://';
 
@@ -40,7 +42,7 @@ export const useUnraidStore = create<UnraidStore>()(
 
     return {
       loaded: false,
-      // route: '/scatter',
+      route: '/',
       status: Op.Neutral,
       unraid: null,
       operation: null,
@@ -64,6 +66,17 @@ export const useUnraidStore = create<UnraidStore>()(
         setCurrentStep: (step: Step) => {
           set((state) => {
             state.step = step;
+          });
+        },
+        syncRouteAndStep: (path: string) => {
+          const route = get().route;
+          console.log('syncStep ', route, path);
+          if (route.slice(0, 5) === path.slice(0, 5)) {
+            return;
+          }
+          set((state) => {
+            state.route = path;
+            state.step = 'select';
           });
         },
       },
