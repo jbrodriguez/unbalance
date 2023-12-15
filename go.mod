@@ -6,13 +6,14 @@ require (
 	github.com/alecthomas/kong v0.8.1
 	github.com/cskr/pubsub v1.0.2
 	github.com/gookit/color v1.5.4
+	github.com/gorilla/websocket v1.5.1
 	github.com/labstack/echo/v4 v4.11.3
+	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -24,5 +25,4 @@ require (
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 )
