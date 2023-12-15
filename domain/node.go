@@ -1,10 +1,8 @@
 package domain
 
-// {label: 'films', checkbox: true, collapsed: true, collapsible: true, children: [{label: 'bluray'},{label: 'blurip'}]},
+// {title: 'films', key: '/mnt/films', isLeaf: false, children: [{title: 'bluray'},{title: 'blurip'}]},
 type Node struct {
-	Label     string `json:"label"`
-	Checkbox  bool   `json:"checkbox"`
-	Collapsed bool   `json:"collapsed"`
-	Children  []Node `json:"children"`
-	Path      string `json:"path"`
+	Title  string `json:"title"`
+	Key    string `json:"key"`
+	IsLeaf bool   `json:"isLeaf"`
 }

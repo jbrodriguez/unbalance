@@ -43,4 +43,19 @@ export class Api {
       };
     }
   }
+
+  static async getTree(path: string): Promise<Node[]> {
+    const encodedPath = encodeURIComponent(path);
+    // console.log('Api.getTree() ', Api.host, path, encodedPath);
+    try {
+      const url = `${Api.host}/tree/${encodedPath}`;
+      console.log('Api.getTree() url ', url);
+      const response = await fetch(url);
+      const unraid = await response.json();
+      return unraid;
+    } catch (e) {
+      console.log('Api.getTree() error ', e);
+      return [];
+    }
+  }
 }

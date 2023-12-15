@@ -130,3 +130,10 @@ export interface State {
   history: History | null;
   plan: Plan | null;
 }
+
+export interface Node {
+  title: string;
+  key: string;
+  isLeaf: boolean;
+  children?: Node[];
+}

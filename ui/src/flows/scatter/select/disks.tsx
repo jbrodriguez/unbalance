@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useUnraidDisks } from '~/state/unraid';
 import { humanBytes } from '~/helpers/units';
+import { useScatterActions, useScatterSource } from '~/state/scatter';
 
 interface Props {
   height?: number;
@@ -12,7 +13,13 @@ const selectedBackground = (selected: boolean) =>
 
 export const Disks: React.FunctionComponent<Props> = ({ height = 0 }) => {
   const disks = useUnraidDisks();
-  const selected = 'disk1';
+  const selected = useScatterSource();
+  const { setSource } = useScatterActions();
+
+  const onDiskClick = (disk: string) => () => {
+    console.log('onDiskClick ', disk);
+    setSource(disk);
+  };
 
   return (
     <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
@@ -25,6 +32,7 @@ export const Disks: React.FunctionComponent<Props> = ({ height = 0 }) => {
             className={`py-2 px-3 text-blue-800 ${selectedBackground(
               disk.name === selected,
             )}`}
+            onClick={onDiskClick(disk.name)}
           >
             <div>
               <span className="font-bold">{disk.name}</span>

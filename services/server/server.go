@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -62,6 +64,8 @@ func (s *Server) Start() error {
 	api.GET("/storage", s.getStorage)
 	api.GET("/operation", s.getOperation)
 	api.GET("/history", s.getHistory)
+
+	api.GET("/tree/:path", s.getTree)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -161,4 +165,11 @@ func (s *Server) getOperation(c echo.Context) error {
 
 func (s *Server) getHistory(c echo.Context) error {
 	return c.JSON(200, s.core.GetHistory())
+}
+
+func (s *Server) getTree(c echo.Context) error {
+	param := c.Param("path")
+	u, _ := url.Parse(param)
+	path := path.Clean(u.Path)
+	return c.JSON(200, s.core.GetTree(path))
 }
