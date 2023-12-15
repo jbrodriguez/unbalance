@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-interface TreeNode {
+export interface TreeNode {
   id: string;
   label: string;
   value: string;
@@ -12,12 +12,12 @@ interface TreeNode {
   isLoading?: boolean;
 }
 
-interface TreeProps {
+export interface TreeProps {
   data: TreeNode[];
   onCheck: (node: TreeNode) => void;
   onLoad: (node: TreeNode) => Promise<void>;
-  onExpand: (node: TreeNode) => void;
-  onCollapse: (node: TreeNode) => void;
+  onExpand?: (node: TreeNode) => void;
+  onCollapse?: (node: TreeNode) => void;
   spinner: React.ReactElement;
   collapseIcon: React.ReactElement;
   expandIcon: React.ReactElement;
@@ -40,9 +40,9 @@ const TreeNodeComponent: React.FC<TreeProps> = ({
       setExpandedNodes((prevExpanded) =>
         prevExpanded.filter((id) => id !== node.id),
       );
-      onCollapse(node);
+      onCollapse?.(node);
     } else {
-      onExpand(node);
+      onExpand?.(node);
       setExpandedNodes((prevExpanded) => [...prevExpanded, node.id]);
 
       if (node.children && !node.isLoading) {
