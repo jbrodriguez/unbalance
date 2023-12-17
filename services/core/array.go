@@ -189,11 +189,12 @@ func getArrayData() (*domain.Unraid, error) {
 	return unraid, nil
 }
 
-func (c *Core) GetTree(path string) []domain.Node {
+func (c *Core) GetTree(path, id string) domain.Branch {
 	// entry := &dto.Entry{Path: path}
 	fmt.Printf("path %s\n", path)
 
-	nodes := make([]domain.Node, 0)
+	section := make(map[string]domain.Node)
+	order := make([]string, 0)
 
 	elements, _ := os.ReadDir(path)
 	fmt.Printf("elements %s\n", elements)
@@ -201,15 +202,18 @@ func (c *Core) GetTree(path string) []domain.Node {
 		var node domain.Node
 
 		// default values
-		node.Title = element.Name()
-		node.Key = filepath.Join(path, element.Name())
+		node.ID = c.sid.MustGenerate()
+		node.Parent = id
+		node.Label = element.Name()
+		// node.Value = element.Name()
+		// node.Key = filepath.Join(path, element.Name())
 
 		if element.IsDir() {
 			// let's check if the folder is empty
 			// we can still get an i/o error, if that's the case
 			// we assume the folder's empty
 			// otherwise we act accordingly
-			empty, err := lib.IsEmpty(node.Key)
+			empty, err := lib.IsEmpty(filepath.Join(path, element.Name()))
 			if err != nil {
 				// mlog.Warning("GetTree - Unable to determine if folder is empty: %s", folder)
 				node.IsLeaf = true
@@ -224,12 +228,16 @@ func (c *Core) GetTree(path string) []domain.Node {
 			node.IsLeaf = true
 		}
 
-		nodes = append(nodes, node)
+		section[node.ID] = node
+		order = append(order, node.ID)
 	}
 
-	fmt.Printf("nodes %s\n", nodes)
+	// fmt.Printf("nodes %s\n", nodes)
 
-	return nodes
+	return domain.Branch{
+		Nodes: section,
+		Order: order,
+	}
 }
 
 func (c *Core) getLog() []string {
