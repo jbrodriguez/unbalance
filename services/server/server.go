@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -65,7 +66,7 @@ func (s *Server) Start() error {
 	api.GET("/operation", s.getOperation)
 	api.GET("/history", s.getHistory)
 
-	api.GET("/tree/:path", s.getTree)
+	api.GET("/tree/:route", s.getTree)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -167,9 +168,22 @@ func (s *Server) getHistory(c echo.Context) error {
 	return c.JSON(200, s.core.GetHistory())
 }
 
+type QueryPath struct {
+	Path string `json:"param:path"`
+	ID   string `json:"query:id"`
+}
+
 func (s *Server) getTree(c echo.Context) error {
-	param := c.Param("path")
-	u, _ := url.Parse(param)
-	path := path.Clean(u.Path)
-	return c.JSON(200, s.core.GetTree(path))
+	param := c.Param("route")
+	u, err := url.Parse(param)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join("/", "mnt", path.Clean(u.Path))
+	id := c.QueryParam("id")
+
+	fmt.Printf("query %s %s\n", path, id)
+
+	return c.JSON(200, s.core.GetTree(path, id))
 }

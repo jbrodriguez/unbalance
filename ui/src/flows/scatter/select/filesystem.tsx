@@ -5,8 +5,8 @@ import React from 'react';
 
 import { Tree, Nodes } from '~/shared/tree/tree2';
 // import { Icon } from '~/shared/icons/icon';
-// import { Api } from '~/api';
-// import { useScatterSource } from '~/state/scatter';
+import { Api } from '~/api';
+import { useScatterSource } from '~/state/scatter';
 // import { findNode } from '~/helpers/bfs';
 
 interface Props {
@@ -34,11 +34,10 @@ interface Props {
 //   | { checked: React.Key[]; halfChecked: React.Key[] }
 //   | React.Key[];
 
-const initialData: Nodes = {
-  '1': {
-    id: '1',
-    key: '/',
-    label: 'mnt',
+const initialData = {
+  root: {
+    id: 'root',
+    label: '/',
     leaf: false,
     parent: '',
     children: [],
@@ -51,7 +50,7 @@ const initialData: Nodes = {
 export function FileSystem({ height }: Props) {
   const [data] = React.useState<Nodes>(initialData);
   // const [checked, setChecked] = React.useState<CheckedKeysType>([]);
-  // const source = useScatterSource();
+  const source = useScatterSource();
 
   // React.useEffect(() => {
   //   if (source === '') {
@@ -100,10 +99,12 @@ export function FileSystem({ height }: Props) {
   //   // // }
   // };
 
-  const onLoad = async (nodes: Nodes, id: string) => {
-    console.log('onLoad ', nodes, id);
-    // const loaded = await Api.getTree(id);
-    // console.log('loaded ', loaded);
+  const onLoad = async (path: string, id: string) => {
+    console.log('onLoad ', path, id);
+    const fullPath = `${source}/${path}`;
+    console.log('fullPath ', fullPath);
+    const tmp = await Api.getTree(fullPath, id);
+    console.log('loaded ', tmp);
     await new Promise((r) => setTimeout(r, 3000));
 
     const loaded = {

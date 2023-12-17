@@ -44,11 +44,12 @@ export class Api {
     }
   }
 
-  static async getTree(path: string): Promise<Node[]> {
+  static async getTree(path: string, id: string): Promise<Node[]> {
     const encodedPath = encodeURIComponent(path);
+    const encodedId = encodeURIComponent(id);
     // console.log('Api.getTree() ', Api.host, path, encodedPath);
     try {
-      const url = `${Api.host}/tree/${encodedPath}`;
+      const url = `${Api.host}/tree/${encodedPath}?id=${encodedId}`;
       console.log('Api.getTree() url ', url);
       const response = await fetch(url);
       const unraid = await response.json();

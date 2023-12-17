@@ -7,6 +7,8 @@ import (
 	"unbalance/common"
 	"unbalance/domain"
 	"unbalance/logger"
+
+	"github.com/teris-io/shortid"
 )
 
 const certDir = "/boot/config/ssl/certs"
@@ -45,6 +47,7 @@ type Core struct {
 	ctx *domain.Context
 
 	state *domain.State
+	sid   *shortid.Shortid
 }
 
 func Create(ctx *domain.Context) *Core {
@@ -69,6 +72,13 @@ func (c *Core) Start() error {
 	}
 
 	c.state.Unraid = unraid
+
+	sid, err := shortid.New(1, shortid.DefaultABC, 2342)
+	if err != nil {
+		return err
+	}
+
+	c.sid = sid
 
 	return nil
 }
