@@ -190,14 +190,10 @@ func getArrayData() (*domain.Unraid, error) {
 }
 
 func (c *Core) GetTree(path, id string) domain.Branch {
-	// entry := &dto.Entry{Path: path}
-	fmt.Printf("path %s\n", path)
-
 	section := make(map[string]domain.Node)
 	order := make([]string, 0)
 
 	elements, _ := os.ReadDir(path)
-	fmt.Printf("elements %s\n", elements)
 	for _, element := range elements {
 		var node domain.Node
 
@@ -205,8 +201,6 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 		node.ID = c.sid.MustGenerate()
 		node.Parent = id
 		node.Label = element.Name()
-		// node.Value = element.Name()
-		// node.Key = filepath.Join(path, element.Name())
 
 		if element.IsDir() {
 			// let's check if the folder is empty
@@ -231,8 +225,6 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 		section[node.ID] = node
 		order = append(order, node.ID)
 	}
-
-	// fmt.Printf("nodes %s\n", nodes)
 
 	return domain.Branch{
 		Nodes: section,

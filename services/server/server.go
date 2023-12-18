@@ -183,7 +183,5 @@ func (s *Server) getTree(c echo.Context) error {
 	path := filepath.Join("/", "mnt", path.Clean(u.Path))
 	id := c.QueryParam("id")
 
-	fmt.Printf("query %s %s\n", path, id)
-
 	return c.JSON(200, s.core.GetTree(path, id))
 }
