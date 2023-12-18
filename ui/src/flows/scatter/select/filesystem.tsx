@@ -97,14 +97,14 @@ export function FileSystem({ height }: Props) {
             <Icon
               name="minus"
               size={20}
-              fill="fill-slate-500 dark:fill-slate-500"
+              fill="fill-slate-500 dark:fill-gray-700"
             />
           }
           expandIcon={
             <Icon
               name="plus"
               size={20}
-              fill="fill-slate-500 dark:fill-slate-500"
+              fill="fill-slate-500 dark:fill-gray-700"
             />
           }
           checkedIcon={
