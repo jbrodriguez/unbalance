@@ -1,5 +1,3 @@
-import { Nodes } from './shared/tree/tree2';
-
 export enum Op {
   Neutral = 0,
   ScatterPlan = 1,
@@ -134,10 +132,27 @@ export interface State {
 }
 
 export interface Node {
-  title: string;
-  key: string;
-  isLeaf: boolean;
-  children?: Node[];
+  id: string;
+  label: string;
+  leaf: boolean;
+  parent: string;
+  checked?: boolean;
+  expanded?: boolean;
+  loading?: boolean;
+  children: string[];
+}
+
+export type Nodes = Record<string, Node>;
+
+export interface Icons {
+  collapseIcon: React.ReactElement;
+  expandIcon: React.ReactElement;
+  checkedIcon: React.ReactElement;
+  uncheckedIcon: React.ReactElement;
+  parentIcon: React.ReactElement;
+  leafIcon: React.ReactElement;
+  hiddenIcon: React.ReactElement;
+  loadingIcon: React.ReactElement;
 }
 
 export interface Branch {

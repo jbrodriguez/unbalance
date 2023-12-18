@@ -31,6 +31,6 @@ const icons: { [key: string]: string } = {
   folder:
     'M20 18H4V8h16m0-2h-8l-2-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2',
   file: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5z',
-  placeholder: 'M3 3h18v18H3zm2 2v14h14V5z',
+  square: 'M3 3h18v18H3zm2 2v14h14V5z',
   loading: 'M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8',
 };

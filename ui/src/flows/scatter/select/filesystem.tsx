@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { Tree, Nodes, ITreeNode } from '~/shared/tree/tree2';
+import { CheckboxTree } from '~/shared/tree/checkbox-tree';
+import { Nodes, Node } from '~/types';
 import { decorateNode } from '~/shared/tree/utils';
 import { Icon } from '~/shared/icons/icon';
 import { Api } from '~/api';
@@ -8,36 +9,33 @@ import { useScatterSource } from '~/state/scatter';
 
 interface Props {
   height?: number;
+  width?: number;
 }
 
-const initialNodes = {
-  root: {
-    id: 'root',
-    label: '/',
-    leaf: false,
-    parent: '',
-    children: [],
-    loading: false,
-  },
+const rootNode = {
+  id: 'root',
+  label: '/',
+  leaf: false,
+  parent: '',
 };
 
 export function FileSystem({ height }: Props) {
-  const [nodes, setNodes] = React.useState<Nodes>(initialNodes);
   const source = useScatterSource();
+  const [nodes, setNodes] = React.useState<Nodes>({});
 
-  // React.useEffect(() => {
-  //   if (source === '') {
-  //     return;
-  //   }
+  React.useEffect(() => {
+    if (source === '') {
+      return;
+    }
 
-  //   // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  //   setData([{ id: '1', label: source, value: `/mnt/${source}` }]);
-  // }, [source]);
+    const root = decorateNode(rootNode as Node);
+    setNodes({ root } as Nodes);
+  }, [source]);
 
   const isParent = (id: string) =>
     Object.values(nodes).some((n) => n.parent === id);
 
-  const getAbsolutePath = (node: ITreeNode): string => {
+  const getAbsolutePath = (node: Node): string => {
     const parent = nodes[node.parent];
     if (!parent) {
       return node.label;
@@ -45,7 +43,7 @@ export function FileSystem({ height }: Props) {
     return `${getAbsolutePath(parent)}/${node.label}`;
   };
 
-  const onLoad = async (node: ITreeNode) => {
+  const onLoad = async (node: Node) => {
     nodes[node.id].expanded = !nodes[node.id].expanded;
 
     if (isParent(node.id)) {
@@ -71,7 +69,7 @@ export function FileSystem({ height }: Props) {
     console.log('route ', route);
     const branch = await Api.getTree(route, node.id);
     console.log('loaded ', branch);
-    await new Promise((r) => setTimeout(r, 1000));
+    // await new Promise((r) => setTimeout(r, 1000));
     for (const key in branch.nodes) {
       decorateNode(branch.nodes[key]);
     }
@@ -80,7 +78,7 @@ export function FileSystem({ height }: Props) {
     setNodes({ ...draft, ...branch.nodes });
   };
 
-  const onCheck = (node: ITreeNode) => {
+  const onCheck = (node: Node) => {
     const draft = { ...nodes };
     draft[node.id].checked = !draft[node.id].checked;
     setNodes(draft);
@@ -88,67 +86,72 @@ export function FileSystem({ height }: Props) {
 
   return (
     <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
-      <div className="overflow-y-auto p-4" style={{ height: `${height}px` }}>
-        <Tree
+      <div
+        className="overflow-y-auto overflow-x-auto p-4 w-full"
+        style={{ height: `${height}px` }}
+      >
+        <CheckboxTree
           nodes={nodes}
           onLoad={onLoad}
           onCheck={onCheck}
-          collapseIcon={
-            <Icon
-              name="minus"
-              size={20}
-              fill="fill-slate-500 dark:fill-gray-700"
-            />
-          }
-          expandIcon={
-            <Icon
-              name="plus"
-              size={20}
-              fill="fill-slate-500 dark:fill-gray-700"
-            />
-          }
-          checkedIcon={
-            <Icon
-              name="checked"
-              size={20}
-              fill="fill-slate-700 dark:fill-slate-200"
-            />
-          }
-          uncheckedIcon={
-            <Icon
-              name="unchecked"
-              size={20}
-              fill="fill-slate-700 dark:fill-slate-200"
-            />
-          }
-          leafIcon={
-            <Icon
-              name="file"
-              size={20}
-              fill="fill-blue-400 dark:fill-blue-700"
-            />
-          }
-          parentIcon={
-            <Icon
-              name="folder"
-              size={20}
-              fill="fill-orange-400 dark:fill-yellow-300"
-            />
-          }
-          placeholderIcon={
-            <Icon
-              name="placeholder"
-              size={20}
-              fill="fill-neutral-200 dark:fill-gray-950"
-            />
-          }
-          loadingIcon={
-            <Icon
-              name="loading"
-              size={20}
-              fill="animate-spin fill-slate-700 dark:fill-slate-700"
-            />
-          }
+          icons={{
+            collapseIcon: (
+              <Icon
+                name="minus"
+                size={20}
+                fill="fill-slate-500 dark:fill-gray-700"
+              />
+            ),
+            expandIcon: (
+              <Icon
+                name="plus"
+                size={20}
+                fill="fill-slate-500 dark:fill-gray-700"
+              />
+            ),
+            checkedIcon: (
+              <Icon
+                name="checked"
+                size={20}
+                fill="fill-slate-700 dark:fill-slate-200"
+              />
+            ),
+            uncheckedIcon: (
+              <Icon
+                name="unchecked"
+                size={20}
+                fill="fill-slate-700 dark:fill-slate-200"
+              />
+            ),
+            leafIcon: (
+              <Icon
+                name="file"
+                size={20}
+                fill="fill-blue-400 dark:fill-blue-700"
+              />
+            ),
+            parentIcon: (
+              <Icon
+                name="folder"
+                size={20}
+                fill="fill-orange-400 dark:fill-yellow-300"
+              />
+            ),
+            hiddenIcon: (
+              <Icon
+                name="square"
+                size={20}
+                fill="fill-neutral-200 dark:fill-gray-950"
+              />
+            ),
+            loadingIcon: (
+              <Icon
+                name="loading"
+                size={20}
+                fill="animate-spin fill-slate-700 dark:fill-slate-700"
+              />
+            ),
+          }}
         />
       </div>
     </div>

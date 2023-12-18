@@ -1,21 +1,14 @@
 import React from 'react';
 
-import { ITreeNode } from './tree2';
+import { Node, Icons } from '~/types';
 
 interface TreeNodeProps {
-  node: ITreeNode;
-  getChildNodes: (node: ITreeNode) => ITreeNode[];
-  onExpandCollapse: (node: ITreeNode) => void;
-  onCheckUncheck: (node: ITreeNode) => void;
+  node: Node;
+  getChildNodes: (node: Node) => Node[];
+  onExpandCollapse: (node: Node) => void;
+  onCheckUncheck: (node: Node) => void;
+  icons: Icons;
   level: number;
-  collapseIcon: React.ReactElement;
-  expandIcon: React.ReactElement;
-  checkedIcon: React.ReactElement;
-  uncheckedIcon: React.ReactElement;
-  parentIcon: React.ReactElement;
-  leafIcon: React.ReactElement;
-  placeholderIcon: React.ReactElement;
-  loadingIcon: React.ReactElement;
 }
 
 export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
@@ -23,21 +16,14 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
   getChildNodes,
   onExpandCollapse,
   onCheckUncheck,
+  icons,
   level,
-  collapseIcon,
-  expandIcon,
-  checkedIcon,
-  uncheckedIcon,
-  parentIcon,
-  leafIcon,
-  placeholderIcon,
-  loadingIcon,
 }) => {
-  const renderNode = (node: ITreeNode) => {
+  const renderNode = (node: Node) => {
     if (node.loading) {
       return (
         <>
-          <span className="ml-1">{loadingIcon}</span>
+          <span className="ml-1">{icons.loadingIcon}</span>
           <span className="ml-1">{node.label}</span>
         </>
       );
@@ -47,17 +33,19 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
       <>
         {!node.leaf ? (
           <span onClick={() => onExpandCollapse(node)}>
-            {node.expanded ? collapseIcon : expandIcon}
+            {node.expanded ? icons.collapseIcon : icons.expandIcon}
           </span>
         ) : (
-          <span>{placeholderIcon}</span>
+          <span>{icons.hiddenIcon}</span>
         )}
 
         <span className="ml-1" onClick={() => onCheckUncheck(node)}>
-          {node.checked ? checkedIcon : uncheckedIcon}
+          {node.checked ? icons.checkedIcon : icons.uncheckedIcon}
         </span>
 
-        <span className="ml-1">{node.leaf ? leafIcon : parentIcon}</span>
+        <span className="ml-1">
+          {node.leaf ? icons.leafIcon : icons.parentIcon}
+        </span>
 
         <span className="ml-1">{node.label}</span>
       </>
@@ -68,7 +56,7 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
     <>
       <div
         style={{ paddingLeft: `${level * 24}px` }}
-        className="flex flex-row items-center"
+        className="flex flex-1 flex-row items-center whitespace-nowrap"
       >
         {renderNode(node)}
       </div>
@@ -80,14 +68,7 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
             onExpandCollapse={onExpandCollapse}
             onCheckUncheck={onCheckUncheck}
             level={level + 1}
-            collapseIcon={collapseIcon}
-            expandIcon={expandIcon}
-            checkedIcon={checkedIcon}
-            uncheckedIcon={uncheckedIcon}
-            parentIcon={parentIcon}
-            leafIcon={leafIcon}
-            placeholderIcon={placeholderIcon}
-            loadingIcon={loadingIcon}
+            icons={icons}
           />
         ))}
     </>

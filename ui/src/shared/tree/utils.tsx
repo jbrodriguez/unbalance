@@ -1,7 +1,9 @@
-import { ITreeNode } from './tree2';
+import { Node } from '~/types';
 
-export function decorateNode(node: ITreeNode) {
-  node.checked = false;
-  node.expanded = false;
-  node.loading = false;
-}
+export const decorateNode = (node: Node): Node => ({
+  ...node,
+  checked: false,
+  expanded: false,
+  loading: false,
+  children: [],
+});
