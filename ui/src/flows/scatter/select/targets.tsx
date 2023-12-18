@@ -1,16 +1,47 @@
-import React from "react"
+import React from 'react';
+
+import { useUnraidDisks } from '~/state/unraid';
+import {
+  useScatterSource,
+  useScatterTargets,
+  useScatterActions,
+} from '~/state/scatter';
+import { Disk } from '~/shared/disk/disk';
+import { Disk as IDisk, Targets as ITargets } from '~/types';
 
 interface Props {
-  height?: number
+  height?: number;
 }
 
+const isChecked = (name: string, targets: ITargets) => targets[name] || false;
+
 export const Targets: React.FC<Props> = ({ height = 0 }) => {
+  const disks = useUnraidDisks();
+  const source = useScatterSource();
+  const targets = useScatterTargets();
+  const { toggleTarget } = useScatterActions();
+
+  const visible = source !== '';
+  const elegible = disks.filter((disk) => disk.name !== source);
+
+  const onCheck = (disk: IDisk) => () => toggleTarget(disk.name);
+
   return (
     <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
-      <div className={`overflow-y-auto`} style={{ height: `${height}px` }}>
-        {/* Your component code here */}
-        <h1>target disks</h1>
+      <div
+        className="overflow-y-auto px-2 pt-2"
+        style={{ height: `${height}px` }}
+      >
+        {visible &&
+          elegible.map((disk) => (
+            <Disk
+              disk={disk}
+              checkable
+              checked={isChecked(disk.name, targets)}
+              onCheck={onCheck(disk)}
+            />
+          ))}
       </div>
     </div>
-  )
-}
+  );
+};

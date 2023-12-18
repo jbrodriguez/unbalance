@@ -159,3 +159,6 @@ export interface Branch {
   nodes: Nodes;
   order: string[];
 }
+
+export type Chosen = Record<string, boolean>;
+export type Targets = Record<string, boolean>;
