@@ -33,14 +33,6 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
   placeholderIcon,
   loadingIcon,
 }) => {
-  // const [expanded, setExpanded] = React.useState<boolean>(false);
-
-  const handleToggle = () => {
-    // setExpanded(!expanded);
-  };
-
-  // console.log('rendering node ', node);
-
   const renderNode = (node: ITreeNode) => {
     if (node.loading) {
       return (
@@ -65,9 +57,7 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
           {node.checked ? checkedIcon : uncheckedIcon}
         </span>
 
-        <span className="ml-1" onClick={handleToggle}>
-          {node.leaf ? leafIcon : parentIcon}
-        </span>
+        <span className="ml-1">{node.leaf ? leafIcon : parentIcon}</span>
 
         <span className="ml-1">{node.label}</span>
       </>
