@@ -31,7 +31,7 @@ export const Targets: React.FC<Props> = ({ height = 0 }) => {
   return (
     <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
       <div
-        className="overflow-y-auto px-2 pt-2"
+        className="flex flex-1 flex-col overflow-y-auto px-2 pt-2"
         style={{ height: `${height}px` }}
       >
         {visible &&
