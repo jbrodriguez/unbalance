@@ -1,8 +1,10 @@
 package domain
 
-// {title: 'films', key: '/mnt/films', isLeaf: false, children: [{title: 'bluray'},{title: 'blurip'}]},
+// {label: 'films', value: 'films', isLeaf: false, children: [{label: 'bluray'},{label: 'blurip'}]},
 type Node struct {
-	Title  string `json:"title"`
-	Key    string `json:"key"`
-	IsLeaf bool   `json:"isLeaf"`
+	ID     string `json:"id"`
+	Label  string `json:"label"`
+	Parent string `json:"parent"`
+	// Value  string `json:"value"`
+	Leaf bool `json:"leaf"`
 }

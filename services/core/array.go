@@ -216,16 +216,16 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 			empty, err := lib.IsEmpty(filepath.Join(path, element.Name()))
 			if err != nil {
 				// mlog.Warning("GetTree - Unable to determine if folder is empty: %s", folder)
-				node.IsLeaf = true
+				node.Leaf = true
 			} else {
 				if empty {
-					node.IsLeaf = true
+					node.Leaf = true
 				} else {
-					node.IsLeaf = false
+					node.Leaf = false
 				}
 			}
 		} else {
-			node.IsLeaf = true
+			node.Leaf = true
 		}
 
 		section[node.ID] = node

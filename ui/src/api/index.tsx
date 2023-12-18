@@ -1,4 +1,4 @@
-import { State, Op } from '~/types';
+import { State, Op, Branch } from '~/types';
 
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
@@ -44,7 +44,7 @@ export class Api {
     }
   }
 
-  static async getTree(path: string, id: string): Promise<Node[]> {
+  static async getTree(path: string, id: string): Promise<Branch> {
     const encodedPath = encodeURIComponent(path);
     const encodedId = encodeURIComponent(id);
     // console.log('Api.getTree() ', Api.host, path, encodedPath);
@@ -52,11 +52,14 @@ export class Api {
       const url = `${Api.host}/tree/${encodedPath}?id=${encodedId}`;
       console.log('Api.getTree() url ', url);
       const response = await fetch(url);
-      const unraid = await response.json();
-      return unraid;
+      const branch = await response.json();
+      return branch;
     } catch (e) {
       console.log('Api.getTree() error ', e);
-      return [];
+      return {
+        nodes: {},
+        order: [],
+      };
     }
   }
 }

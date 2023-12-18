@@ -1,3 +1,5 @@
+import { Nodes } from './shared/tree/tree2';
+
 export enum Op {
   Neutral = 0,
   ScatterPlan = 1,
@@ -136,4 +138,9 @@ export interface Node {
   key: string;
   isLeaf: boolean;
   children?: Node[];
+}
+
+export interface Branch {
+  nodes: Nodes;
+  order: string[];
 }
