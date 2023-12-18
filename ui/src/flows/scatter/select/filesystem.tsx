@@ -1,12 +1,10 @@
-import React from 'react';
+// import React from 'react';
 
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { CheckboxTree } from '~/shared/tree/checkbox-tree';
-import { Nodes, Node } from '~/types';
-// import { decorateNode } from '~/shared/tree/utils';
+import { Node } from '~/types';
 import { Icon } from '~/shared/icons/icon';
-// import { Api } from '~/api';
 import { useScatterTree, useScatterActions } from '~/state/scatter';
 
 interface Props {
@@ -14,79 +12,17 @@ interface Props {
   width?: number;
 }
 
-// const rootNode = {
-//   id: 'root',
-//   label: '/',
-//   leaf: false,
-//   parent: '',
-// };
-
 export function FileSystem({ height }: Props) {
-  // const source = useScatterSource();
   const tree = useScatterTree();
-  const { loadBranch } = useScatterActions();
-  const [nodes, setNodes] = React.useState<Nodes>({});
-
-  // React.useEffect(() => {
-  //   if (source === '') {
-  //     return;
-  //   }
-
-  //   const root = decorateNode(rootNode as Node);
-  //   setNodes({ root } as Nodes);
-  // }, [source]);
-
-  // const isParent = (id: string) =>
-  //   Object.values(nodes).some((n) => n.parent === id);
-
-  // const getAbsolutePath = (node: Node): string => {
-  //   const parent = nodes[node.parent];
-  //   if (!parent) {
-  //     return node.label;
-  //   }
-  //   return `${getAbsolutePath(parent)}/${node.label}`;
-  // };
+  const { loadBranch, toggleSelected } = useScatterActions();
+  // const [nodes, setNodes] = React.useState<Nodes>({});
 
   const onLoad = async (node: Node) => {
     await loadBranch(node);
-    // nodes[node.id].expanded = !nodes[node.id].expanded;
-
-    // if (isParent(node.id)) {
-    //   setNodes({ ...nodes });
-    //   return;
-    // }
-
-    // const draft = { ...nodes };
-    // draft.loader = {
-    //   id: 'loader',
-    //   label: 'loading ...',
-    //   leaf: false,
-    //   parent: node.id,
-    //   children: [],
-    //   checked: false,
-    //   expanded: false,
-    //   loading: true,
-    // };
-    // draft[node.id].children = ['loader'];
-    // setNodes(draft);
-
-    // const route = `${source}/${getAbsolutePath(node)}`;
-    // console.log('route ', route);
-    // const branch = await Api.getTree(route, node.id);
-    // console.log('loaded ', branch);
-    // // await new Promise((r) => setTimeout(r, 1000));
-    // for (const key in branch.nodes) {
-    //   decorateNode(branch.nodes[key]);
-    // }
-    // delete draft.loader;
-    // draft[node.id].children = branch.order;
-    // setNodes({ ...draft, ...branch.nodes });
   };
 
   const onCheck = (node: Node) => {
-    const draft = { ...nodes };
-    draft[node.id].checked = !draft[node.id].checked;
-    setNodes(draft);
+    toggleSelected(node);
   };
 
   return (
@@ -120,7 +56,7 @@ export function FileSystem({ height }: Props) {
                   <Icon
                     name="checked"
                     size={20}
-                    fill="fill-slate-700 dark:fill-slate-200"
+                    fill="fill-slate-700 dark:fill-lime-600"
                   />
                 ),
                 uncheckedIcon: (
@@ -134,14 +70,14 @@ export function FileSystem({ height }: Props) {
                   <Icon
                     name="file"
                     size={20}
-                    fill="fill-blue-400 dark:fill-blue-700"
+                    fill="fill-blue-400 dark:fill-gray-700"
                   />
                 ),
                 parentIcon: (
                   <Icon
                     name="folder"
                     size={20}
-                    fill="fill-orange-400 dark:fill-yellow-300"
+                    fill="fill-orange-400 dark:fill-gray-700"
                   />
                 ),
                 hiddenIcon: (

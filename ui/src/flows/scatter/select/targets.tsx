@@ -3,6 +3,7 @@ import React from 'react';
 import { useUnraidDisks } from '~/state/unraid';
 import {
   useScatterSource,
+  useScatterSelected,
   useScatterTargets,
   useScatterActions,
 } from '~/state/scatter';
@@ -18,10 +19,11 @@ const isChecked = (name: string, targets: ITargets) => targets[name] || false;
 export const Targets: React.FC<Props> = ({ height = 0 }) => {
   const disks = useUnraidDisks();
   const source = useScatterSource();
+  const selected = useScatterSelected();
   const targets = useScatterTargets();
   const { toggleTarget } = useScatterActions();
 
-  const visible = source !== '';
+  const visible = source !== '' && selected.length > 0;
   const elegible = disks.filter((disk) => disk.name !== source);
 
   const onCheck = (disk: IDisk) => () => toggleTarget(disk.name);

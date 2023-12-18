@@ -42,7 +42,7 @@ export const Disk: React.FunctionComponent<DiskProps> = ({
             <Icon
               name="checked"
               size={20}
-              fill="fill-slate-700 dark:fill-slate-200"
+              fill="fill-slate-700 dark:fill-lime-600"
             />
           ) : (
             <Icon

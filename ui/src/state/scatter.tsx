@@ -13,7 +13,7 @@ interface ScatterStore {
   actions: {
     setSource: (source: string) => void;
     loadBranch: (node: Node) => Promise<void>;
-    toggleSelected: (id: string) => void;
+    toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
   };
 }
@@ -36,7 +36,7 @@ const getAbsolutePath = (node: Node, nodes: Nodes): string => {
   return `${getAbsolutePath(parent, nodes)}/${node.label}`;
 };
 
-export const useConfigStore = create<ScatterStore>()(
+export const useScatterStore = create<ScatterStore>()(
   immer((set, get) => ({
     source: '',
     selected: [],
@@ -57,43 +57,12 @@ export const useConfigStore = create<ScatterStore>()(
           state.tree[node.id].expanded = !state.tree[node.id].expanded;
         });
 
-        const draft = get();
-
-        if (isParent(node.id, draft.tree)) {
+        if (isParent(node.id, get().tree)) {
           set((state) => {
-            state.tree = { ...draft.tree };
+            state.tree = { ...state.tree };
           });
           return;
         }
-
-        // draft = {
-        //   ...draft,
-        //   loader: {
-        //     id: 'loader',
-        //     label: 'loading ...',
-        //     leaf: false,
-        //     parent: node.id,
-        //     children: [],
-        //     checked: false,
-        //     expanded: false,
-        //     loading: true,
-        //   },
-        //   [node.id]: {
-        //     ...node,
-        //     children: ['loader'],
-        //   },
-        // };
-        // draft[node.id].children = ['loader'];
-        // draft.tree.loader = {
-        //   id: 'loader',
-        //   label: 'loading ...',
-        //   leaf: false,
-        //   parent: node.id,
-        //   children: [],
-        //   checked: false,
-        //   expanded: false,
-        //   loading: true,
-        // };
 
         set((state) => {
           state.tree.loader = {
@@ -109,13 +78,10 @@ export const useConfigStore = create<ScatterStore>()(
           state.tree[node.id].children = ['loader'];
         });
 
-        console.log('draft ', draft);
-
-        const route = `${draft.source}/${getAbsolutePath(node, draft.tree)}`;
+        const route = `${get().source}/${getAbsolutePath(node, get().tree)}`;
         console.log('route ', route);
         const branch = await Api.getTree(route, node.id);
-        // console.log('loaded ', branch);
-        // // await new Promise((r) => setTimeout(r, 1000));
+        // await new Promise((r) => setTimeout(r, 5000));
         for (const key in branch.nodes) {
           decorateNode(branch.nodes[key]);
         }
@@ -125,39 +91,16 @@ export const useConfigStore = create<ScatterStore>()(
           state.tree = { ...state.tree, ...branch.nodes };
           state.tree[node.id].children = branch.order;
         });
-
-        // delete draft.tree.loader;
-        // draft[node.id].children = branch.order;
-        // set((state) => {
-        //   state.tree = {
-        //     ...draft,
-        //     [node.id]: { ...node, children: branch.order },
-        //     ...branch.nodes,
-        //   };
-        // });
       },
-
-      // const onLoad = async (node: Node) => {
-
-      //   const route = `${source}/${getAbsolutePath(node)}`;
-      //   console.log('route ', route);
-      //   const branch = await Api.getTree(route, node.id);
-      //   console.log('loaded ', branch);
-      //   // await new Promise((r) => setTimeout(r, 1000));
-      //   for (const key in branch.nodes) {
-      //     decorateNode(branch.nodes[key]);
-      //   }
-      //   delete draft.loader;
-      //   draft[node.id].children = branch.order;
-      //   setNodes({ ...draft, ...branch.nodes });
-      // };
-
-      toggleSelected: (id: string) => {
+      toggleSelected: (node: Node) => {
         set((state) => {
-          state.tree[id].checked = !state.tree[id].checked;
-          const index = state.selected.indexOf(id);
+          console.log('toggleSelected ', node);
+          state.tree[node.id].checked = !state.tree[node.id].checked;
+          console.log('node.id ', state.tree[node.id]);
+          const fullPath = getAbsolutePath(node, state.tree);
+          const index = state.selected.indexOf(fullPath);
           if (index === -1) {
-            state.selected.push(id);
+            state.selected.push(fullPath);
           } else {
             state.selected.splice(index, 1);
           }
@@ -172,8 +115,12 @@ export const useConfigStore = create<ScatterStore>()(
   })),
 );
 
-export const useScatterActions = () => useConfigStore((state) => state.actions);
+export const useScatterActions = () =>
+  useScatterStore((state) => state.actions);
 
-export const useScatterSource = () => useConfigStore((state) => state.source);
-export const useScatterTree = () => useConfigStore((state) => state.tree);
-export const useScatterTargets = () => useConfigStore((state) => state.targets);
+export const useScatterSource = () => useScatterStore((state) => state.source);
+export const useScatterTree = () => useScatterStore((state) => state.tree);
+export const useScatterSelected = () =>
+  useScatterStore((state) => state.selected);
+export const useScatterTargets = () =>
+  useScatterStore((state) => state.targets);
