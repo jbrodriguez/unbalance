@@ -17,7 +17,9 @@ export const CheckboxTree: React.FunctionComponent<CheckboxTreeProps> = ({
   icons,
 }) => {
   const getRootNodes = (list: Nodes) =>
-    Object.values(list).filter((node) => node.parent === '');
+    list.root?.children?.length > 0
+      ? list.root.children.map((id) => list[id])
+      : [];
 
   const getChildNodes = (node: Node) =>
     node.children ? node.children.map((id) => nodes[id]) : [];

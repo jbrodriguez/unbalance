@@ -5,7 +5,11 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { CheckboxTree } from '~/shared/tree/checkbox-tree';
 import { Node } from '~/types';
 import { Icon } from '~/shared/icons/icon';
-import { useScatterTree, useScatterActions } from '~/state/scatter';
+import {
+  // useScatterRoots,
+  useScatterTree,
+  useScatterActions,
+} from '~/state/scatter';
 
 interface Props {
   height?: number;

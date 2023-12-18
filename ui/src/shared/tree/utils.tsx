@@ -1,9 +1,10 @@
 import { Node } from '~/types';
 
-export const decorateNode = (node: Node): Node => ({
-  ...node,
-  checked: false,
-  expanded: false,
-  loading: false,
-  children: [],
-});
+export const decorateNode = (node: Node): Node => {
+  node.checked = false;
+  node.expanded = false;
+  node.loading = false;
+  node.children = [];
+
+  return node;
+};

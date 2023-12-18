@@ -11,7 +11,7 @@ interface ScatterStore {
   targets: Targets;
   tree: Nodes;
   actions: {
-    setSource: (source: string) => void;
+    setSource: (source: string) => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
@@ -23,6 +23,13 @@ const rootNode = {
   label: '/',
   leaf: false,
   parent: '',
+};
+
+const loaderNode = {
+  id: 'loader',
+  label: 'loading ...',
+  leaf: false,
+  parent: 'root',
 };
 
 const isParent = (id: string, nodes: Nodes) =>
@@ -41,15 +48,35 @@ export const useScatterStore = create<ScatterStore>()(
     source: '',
     selected: [],
     targets: {},
-    tree: {},
+    tree: { root: decorateNode(rootNode as Node) },
 
     actions: {
-      setSource: (source: string) => {
+      setSource: async (source: string) => {
+        const loader = decorateNode({ ...loaderNode } as Node);
+        loader.loading = true;
+
         set((state) => {
           state.source = source;
           state.targets = {};
-          state.tree = { root: rootNode as Node };
           state.selected = [];
+          state.tree.root.children = ['loader'];
+          state.tree = { ...state.tree, loader };
+        });
+
+        const route = `${get().source}/`;
+        console.log('route ', route);
+        const branch = await Api.getTree(route, 'root');
+        // await new Promise((r) => setTimeout(r, 5000));
+        for (const key in branch.nodes) {
+          decorateNode(branch.nodes[key]);
+        }
+
+        console.log('decorated ', branch.nodes);
+
+        set((state) => {
+          delete state.tree.loader;
+          state.tree = { ...state.tree, ...branch.nodes };
+          state.tree.root.children = branch.order;
         });
       },
       loadBranch: async (node: Node) => {
@@ -119,6 +146,8 @@ export const useScatterActions = () =>
   useScatterStore((state) => state.actions);
 
 export const useScatterSource = () => useScatterStore((state) => state.source);
+// export const useScatterRoots = () =>
+//   useScatterStore((state) => state.roots.map((root) => state.tree[root]));
 export const useScatterTree = () => useScatterStore((state) => state.tree);
 export const useScatterSelected = () =>
   useScatterStore((state) => state.selected);
