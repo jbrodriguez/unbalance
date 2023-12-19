@@ -1,11 +1,29 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { NavigateFunction } from 'react-router-dom';
 
 import { Api } from '~/api';
-import { Unraid, Operation, History, Plan, Op, Step } from '~/types';
-import { convertStatusToStep } from '~/helpers/steps';
+import {
+  Unraid,
+  Operation,
+  History,
+  Plan,
+  Op,
+  Step,
+  Packet,
+  Topic,
+} from '~/types';
+// import { convertStatusToStep } from '~/helpers/steps';
+import { useScatterStore } from '~/state/scatter';
+// import {
+//   CommandScatterPlanStart,
+//   EventScatterPlanStarted,
+//   EventScatterPlanProgress,
+//   EventScatterPlanEnded,
+// } from '~/constants';
 
 interface UnraidStore {
+  socket: WebSocket;
   loaded: boolean;
   route: string;
   status: Op;
@@ -16,10 +34,37 @@ interface UnraidStore {
   step: Step;
   actions: {
     getUnraid: () => Promise<void>;
-    setCurrentStep: (step: Step) => void;
+    // setCurrentStep: (step: Step) => void;
     syncRouteAndStep: (path: string) => void;
+    transition: (navigate: NavigateFunction) => void;
+    scatterProgress: (payload: string) => void;
+    scatterPlanEnded: (payload: string) => void;
   };
 }
+
+const getNextStep = (step: Step) => {
+  switch (step) {
+    case 'select':
+      return 'plan';
+    case 'plan':
+      return 'transfer';
+    case 'transfer':
+      return 'idle';
+    default:
+      return 'idle';
+  }
+};
+
+const mapEventToAction: { [x: string]: string } = {
+  [Topic.EventScatterPlanStarted]: 'scatterProgress',
+  [Topic.EventScatterPlanProgress]: 'scatterProgress',
+  [Topic.EventScatterPlanEnded]: 'scatterPlanEnded',
+  // 'scatter:plan:started': 'scatterProgress',
+  // 'scatter:plan:progress': 'scatterProgress',
+  // 'scatter:plan:ended': 'scatterProgress',
+  // [`${EventScatterPlanProgress}`]: 'scatterProgress',
+  // [`${EventScatterPlanEnded}`]: 'scatterProgress',
+};
 
 export const useUnraidStore = create<UnraidStore>()(
   immer((set, get) => {
@@ -33,7 +78,14 @@ export const useUnraidStore = create<UnraidStore>()(
     };
 
     socket.onmessage = function (event) {
-      console.log('Socket message ', event);
+      // console.log('Socket message ', event);
+      const packet: Packet = JSON.parse(event.data);
+      const action = mapEventToAction[packet.topic];
+      if (!action) {
+        return;
+      }
+      // @ts-expect-error -- TSCONVERSION
+      get().actions[action](packet.payload);
     };
 
     socket.onclose = function (event) {
@@ -41,6 +93,7 @@ export const useUnraidStore = create<UnraidStore>()(
     };
 
     return {
+      socket,
       loaded: false,
       route: '/',
       status: Op.Neutral,
@@ -60,24 +113,59 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = array.operation;
             state.history = array.history;
             state.plan = array.plan;
-            state.step = convertStatusToStep(array.status);
+            // state.step = convertStatusToStep(array.status);
           });
         },
-        setCurrentStep: (step: Step) => {
-          set((state) => {
-            state.step = step;
-          });
-        },
+        // setCurrentStep: (step: Step) => {
+        //   set((state) => {
+        //     state.step = step;
+        //   });
+        // },
         syncRouteAndStep: (path: string) => {
           const route = get().route;
-          console.log('syncStep ', route, path);
-          if (route.slice(0, 5) === path.slice(0, 5)) {
+          // if (route.slice(0, 5) === path.slice(0, 5)) {
+          //   return;
+          // }
+          if (route === path) {
             return;
           }
+
+          console.log('syncStep ', route, path);
+
           set((state) => {
             state.route = path;
-            state.step = 'select';
+            // state.step = 'select';
           });
+        },
+        transition: (navigate: NavigateFunction) => {
+          const next = getNextStep(get().step);
+          set((state) => {
+            state.status = Op.ScatterPlanning;
+            state.step = next;
+          });
+          navigate(next);
+
+          const scatter = useScatterStore.getState();
+          const config = {
+            source: scatter.source,
+            targets: Object.keys(scatter.targets),
+            selected: scatter.selected,
+          };
+
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandScatterPlanStart,
+              payload: config,
+            }),
+          );
+        },
+        scatterProgress: (payload: string) => {
+          // console.log('scatterProgress ', payload);
+          useScatterStore.getState().actions.addLine(payload);
+        },
+        scatterPlanEnded: (payload: string) => {
+          console.log('scatterPlanEnded ', payload);
+          get().actions.getUnraid();
         },
       },
     };
@@ -89,5 +177,9 @@ export const useUnraidActions = () => useUnraidStore().actions;
 export const useUnraidLoaded = () => useUnraidStore().loaded;
 export const useUnraidStatus = () => useUnraidStore().status;
 export const useUnraidStep = () => useUnraidStore().step;
-export const useUnraidIsBusy = () => useUnraidStore().status !== Op.Neutral;
+export const useUnraidRoute = () => useUnraidStore().route;
+export const useUnraidIsBusy = () =>
+  ![Op.Neutral, Op.ScatterPlan, Op.GatherPlan].includes(
+    useUnraidStore().status,
+  );
 export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];

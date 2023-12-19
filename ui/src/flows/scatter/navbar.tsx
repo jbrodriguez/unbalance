@@ -3,9 +3,14 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import { useUnraidStep } from '~/state/unraid';
-import { stepToIndex } from '~/helpers/steps';
+import {
+  useUnraidRoute,
+  useUnraidStep,
+  useUnraidActions,
+} from '~/state/unraid';
+import { routeToIndex } from '~/helpers/steps';
 import { getVariant, getFill } from '~/helpers/styling';
+import { useNavigate } from 'react-router-dom';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -15,7 +20,30 @@ const config = [
 
 export const Navbar: React.FunctionComponent = () => {
   const step = useUnraidStep();
-  const currentStep = stepToIndex[step] || 1;
+  // const currentStep = stepToIndex[step] || 1;
+  const route = useUnraidRoute();
+  const currentStep = routeToIndex[route] || 1;
+  const { transition } = useUnraidActions();
+  const navigate = useNavigate();
+
+  const onNext = () => {
+    transition(navigate);
+    // console.log('onNext');
+    // switch (step) {
+    //   case 'select':
+    //     console.log('select');
+    //     navigate('plan');
+    //     break;
+    //   case 'plan':
+    //     console.log('plan');
+    //     break;
+    //   case 'transfer':
+    //     console.log('transfer');
+    //     break;
+    //   default:
+    //     console.log('default');
+    // }
+  };
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -73,6 +101,7 @@ export const Navbar: React.FunctionComponent = () => {
             <Icon name="next" size={20} fill={getFill(step !== 'transfer')} />
           }
           disabled={step === 'transfer'}
+          onClick={onNext}
         />
       </div>
     </div>

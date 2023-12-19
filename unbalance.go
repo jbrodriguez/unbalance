@@ -10,12 +10,13 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"unbalance/cmd"
+	"unbalance/common"
 	"unbalance/domain"
 )
 
 var Version string
 
-const ReservedSpace int64 = 512 * 1024 * 1024 // 512Mb
+// const ReservedSpace int64 = 512 * 1024 * 1024 // 512Mb
 
 var cli struct {
 	Port    string `default:"6237" help:"port to listen on"`
@@ -25,7 +26,7 @@ var cli struct {
 	DryRun         bool     `env:"DRY_RUN" default:"true" help:"perform a dry-run rather than actual work"`
 	NotifyPlan     int      `env:"NOTIFY_PLAN" default:"0" help:"notify via email after plan operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
 	NotifyTransfer int      `env:"NOTIFY_TRANSFER" default:"0" help:"notify via email after transfer operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
-	ReservedAmount int64    `env:"RESERVED_AMOUNT" default:"${reserved_amount}" help:"Minimun Amount of space to reserve"`
+	ReservedAmount uint64   `env:"RESERVED_AMOUNT" default:"${reserved_amount}" help:"Minimun Amount of space to reserve"`
 	ReservedUnit   string   `env:"RESERVED_UNIT" default:"Mb" help:"Reserved Amount unit: Mb, Gb or %"`
 	RsyncArgs      []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
 	Verbosity      int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
@@ -40,7 +41,7 @@ func main() {
 	// reservation is less than that
 	// Also, if they enter some unrecognized unit, we will used ReservedSpace (in planning as well)
 	ctx := kong.Parse(&cli, kong.Vars{
-		"reserved_amount": strconv.FormatInt(ReservedSpace/1024/1024, 10),
+		"reserved_amount": strconv.FormatUint(common.ReservedSpace/1024/1024, 10),
 	})
 
 	log.SetOutput(&lumberjack.Logger{

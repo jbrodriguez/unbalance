@@ -11,12 +11,28 @@ const (
 	RsyncArgs       = "-avPR"
 )
 
+const ReservedSpace uint64 = 512 * 1024 * 1024 // 512Mb
+
 const (
 	OpNeutral         = 0
-	OpScatterPlan     = 1
-	OpScatterMove     = 2
-	OpScatterCopy     = 3
-	OpScatterValidate = 4
-	OpGatherPlan      = 5
-	OpGatherMove      = 6
+	OpScatterPlanning = 1
+	OpScatterPlan     = 2
+	OpScatterMove     = 3
+	OpScatterCopy     = 4
+	OpScatterValidate = 5
+	OpGatherPlanning  = 6
+	OpGatherPlan      = 7
+	OpGatherMove      = 8
+)
+
+const (
+	CommandScatterPlanStart  = "scatter:plan:start"
+	EventScatterPlanStarted  = "scatter:plan:started"
+	EventScatterPlanProgress = "scatter:plan:progress"
+	EventScatterPlanEnded    = "scatter:plan:ended"
+
+	CommandGatherPlanStart  = "gather:plan:start"
+	EventGatherPlanStarted  = "gather:plan:started"
+	EventGatherPlanProgress = "gather:plan:progress"
+	EventGatherPlanEnded    = "gather:plan:ended"
 )

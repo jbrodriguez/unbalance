@@ -36,8 +36,9 @@ type Server struct {
 
 func Create(ctx *domain.Context, core *core.Core) *Server {
 	return &Server{
-		ctx:  ctx,
-		core: core,
+		ctx:           ctx,
+		core:          core,
+		broadcastChan: ctx.Hub.Sub("socket:broadcast"),
 	}
 }
 
@@ -76,6 +77,8 @@ func (s *Server) Start() error {
 			os.Exit(1)
 		}
 	}()
+
+	go s.onBroadcast()
 
 	logger.Blue("started service server (listening http on %s) ...", port)
 
@@ -120,6 +123,8 @@ func (s *Server) wsRead() (err error) {
 			return err
 		}
 
+		logger.Green("packet %+v", packet)
+
 		s.ctx.Hub.Pub(packet.Payload, packet.Topic)
 	}
 }
@@ -136,12 +141,12 @@ func (s *Server) onBroadcast() {
 	for msg := range s.broadcastChan {
 		message := msg.(*domain.Packet)
 
-		packet := &domain.Packet{
-			Topic:   message.Topic,
-			Payload: message.Payload,
-		}
+		// packet := &domain.Packet{
+		// 	Topic:   message.Topic,
+		// 	Payload: message.Payload,
+		// }
 
-		err := s.wsWrite(packet)
+		err := s.wsWrite(message)
 		if err != nil {
 			logger.Red("unable to write websocket message: %s", err)
 		}

@@ -21,8 +21,10 @@ export function getRouteFromOp(status: Op): string {
   switch (status) {
     case Op.Neutral:
       return '/scatter/select';
+    case Op.ScatterPlanning:
     case Op.ScatterPlan:
       return '/scatter/plan';
+    case Op.GatherPlanning:
     case Op.GatherPlan:
       return '/gather/plan';
     case Op.ScatterMove:
@@ -41,4 +43,11 @@ export const stepToIndex = {
   select: 1,
   plan: 2,
   transfer: 3,
+};
+
+export const routeToIndex: { [x: string]: number } = {
+  '/': 1,
+  '/scatter/select': 1,
+  '/scatter/plan': 2,
+  '/scatter/transfer': 3,
 };

@@ -79,3 +79,26 @@ func scanLinesEx(data []byte, atEOF bool) (advance int, token []byte, err error)
 	// Request more data.
 	return 0, nil, nil
 }
+
+func Shell2(command string, callback Callback) error {
+	args := append([]string{"-c"}, command)
+	cmd := exec.Command("/bin/sh", args...)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	scanner := bufio.NewScanner(stdout)
+
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+
+	for scanner.Scan() {
+		callback(scanner.Text())
+	}
+
+	// Wait for the result of the command; also closes our end of the pipe
+	return cmd.Wait()
+}

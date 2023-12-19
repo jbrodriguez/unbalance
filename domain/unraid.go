@@ -16,5 +16,5 @@ type Unraid struct {
 	Size         uint64    `json:"size"`
 	Free         uint64    `json:"free"`
 	Disks        []*Disk   `json:"disks"`
-	BlockSize    int64     `json:"-"`
+	BlockSize    uint64    `json:"-"`
 }

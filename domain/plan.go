@@ -13,8 +13,8 @@ import (
 // OpScatterPlan
 // OpGatherPlan
 type Plan struct {
-	Started  time.Time `json:"started"`
-	Finished time.Time `json:"finished"`
+	Started time.Time `json:"started"`
+	Ended   time.Time `json:"ended"`
 
 	// plan section
 	ChosenFolders []string          `json:"chosenFolders"`
@@ -25,7 +25,7 @@ type Plan struct {
 	VDisks        map[string]*VDisk `json:"vdisks"`
 
 	// transfer section
-	BytesToTransfer int64 `json:"bytesToTransfer"`
+	BytesToTransfer uint64 `json:"bytesToTransfer"`
 }
 
 // Print -
@@ -47,6 +47,6 @@ func (p *Plan) Print(order []string) {
 		vdisks += fmt.Sprintf("vdisk:path(%s):plannedFree(%d):src(%t):dst(%t):bin(%t)%s\n", vdisk.Path, vdisk.PlannedFree, vdisk.Src, vdisk.Dst, vdisk.Bin != nil, items)
 	}
 
-	logger.Blue("\nPlan\nStarted: %s\nFinished: %s\nChosenFolders: %v\nOwnerIssues: %d\nGroupIssues: %d\nFolderIssues: %d\nFileIssues: %d\nBytesToTransfer: %d\n%s",
-		p.Started, p.Finished, p.ChosenFolders, p.OwnerIssue, p.GroupIssue, p.FolderIssue, p.FileIssue, p.BytesToTransfer, vdisks)
+	logger.Blue("\nPlan\nStarted: %s\nEnded: %s\nChosenFolders: %v\nOwnerIssues: %d\nGroupIssues: %d\nFolderIssues: %d\nFileIssues: %d\nBytesToTransfer: %d\n%s",
+		p.Started, p.Ended, p.ChosenFolders, p.OwnerIssue, p.GroupIssue, p.FolderIssue, p.FileIssue, p.BytesToTransfer, vdisks)
 }

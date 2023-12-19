@@ -66,6 +66,18 @@ func (c *Core) getStatus() (*domain.Unraid, error) {
 	return getArrayData()
 }
 
+func (c *Core) refreshUnraid() *domain.Unraid {
+	unraid := c.state.Unraid
+
+	newunraid, err := getArrayData()
+	if err != nil {
+		logger.Yellow("Unable to get storage: %s", err)
+		return unraid
+	}
+
+	return newunraid
+}
+
 func getArrayData() (*domain.Unraid, error) {
 	unraid := &domain.Unraid{}
 
@@ -122,8 +134,7 @@ func getArrayData() (*domain.Unraid, error) {
 		return nil, fmt.Errorf("unable to get free/size data: %w", err)
 	}
 
-	var blockSize int64
-	var totalSize, totalFree uint64
+	var blockSize, totalSize, totalFree uint64
 	var hasBlockSize bool
 	disks := make([]*domain.Disk, 0)
 
@@ -161,9 +172,9 @@ func getArrayData() (*domain.Unraid, error) {
 			disk.BlocksFree = stat.Bavail
 
 			//
-			if blockSize != stat.Bsize {
+			if int64(blockSize) != stat.Bsize {
 				if !hasBlockSize {
-					blockSize = stat.Bsize
+					blockSize = uint64(stat.Bsize)
 				} else {
 					blockSize = 0
 				}

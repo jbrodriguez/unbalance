@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+// import { useLocation, Outlet } from 'react-router-dom';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
@@ -26,7 +27,7 @@ export function App() {
   React.useEffect(() => {
     // Google Analytics
     // ga('send', 'pageview');
-    console.log('App.useEffect() ', location);
+    console.log('App.useEffect().synclocation ', location);
     syncRouteAndStep(location.pathname);
   }, [location, syncRouteAndStep]);
 
@@ -36,10 +37,13 @@ export function App() {
   }, [getConfig, getUnraid]);
 
   React.useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
     const route = getRouteFromOp(unraidStatus);
     console.log('routing ', unraidStatus, route);
     navigate(route);
-  }, [unraidStatus, navigate]);
+  }, [unraidStatus, isLoaded, navigate]);
 
   // React.useEffect(() => {
   //   if (array === 'stopped') {
@@ -50,11 +54,13 @@ export function App() {
   // if (unraidStatus === OpStopped) {
   //   return null;
   // }
-  console.log('App() ', isLoaded, version);
+  // console.log('App() ', isLoaded, version);
 
   if (!(isLoaded && version !== '')) {
     return null;
   }
+
+  console.log('rendering App() ', unraidStatus);
 
   return (
     <div className="container mx-auto h-screen flex flex-col">

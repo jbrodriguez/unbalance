@@ -10,11 +10,13 @@ interface ScatterStore {
   selected: Array<string>;
   targets: Targets;
   tree: Nodes;
+  logs: Array<string>;
   actions: {
     setSource: (source: string) => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
+    addLine: (line: string) => void;
   };
 }
 
@@ -37,7 +39,7 @@ const isParent = (id: string, nodes: Nodes) =>
 
 const getAbsolutePath = (node: Node, nodes: Nodes): string => {
   const parent = nodes[node.parent];
-  if (!parent) {
+  if (parent.id === 'root') {
     return node.label;
   }
   return `${getAbsolutePath(parent, nodes)}/${node.label}`;
@@ -49,7 +51,7 @@ export const useScatterStore = create<ScatterStore>()(
     selected: [],
     targets: {},
     tree: { root: decorateNode(rootNode as Node) },
-
+    logs: [],
     actions: {
       setSource: async (source: string) => {
         const loader = decorateNode({ ...loaderNode } as Node);
@@ -138,6 +140,11 @@ export const useScatterStore = create<ScatterStore>()(
           state.targets[name] = !state.targets[name];
         });
       },
+      addLine: (line: string) => {
+        set((state) => {
+          state.logs.push(line);
+        });
+      },
     },
   })),
 );
@@ -153,3 +160,4 @@ export const useScatterSelected = () =>
   useScatterStore((state) => state.selected);
 export const useScatterTargets = () =>
   useScatterStore((state) => state.targets);
+export const useScatterLogs = () => useScatterStore((state) => state.logs);

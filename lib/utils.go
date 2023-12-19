@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -56,7 +57,7 @@ func SearchFile(name string, locations []string) string {
 var sizes = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
 
 // ByteSize -
-func ByteSize(bytes int64) string {
+func ByteSize(bytes uint64) string {
 	if bytes == 0 {
 		return "0B"
 	}
@@ -119,7 +120,7 @@ func Round(d, r time.Duration) time.Duration {
 }
 
 // Max -
-func Max(x, y int64) int64 {
+func Max(x, y uint64) uint64 {
 	if x > y {
 		return x
 	}
@@ -127,7 +128,7 @@ func Max(x, y int64) int64 {
 }
 
 // Min -
-func Min(x, y int64) int64 {
+func Min(x, y uint64) uint64 {
 	if x < y {
 		return x
 	}
@@ -167,4 +168,19 @@ func Sendmail(cmd string, notify int, subject, message string, dryRun bool) (err
 	err = send.Run()
 
 	return
+}
+
+func Bind(content any, data any) error {
+	m := content.(map[string]interface{})
+	s, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(s, &data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

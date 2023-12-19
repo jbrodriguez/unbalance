@@ -1,11 +1,13 @@
 export enum Op {
   Neutral = 0,
-  ScatterPlan = 1,
-  ScatterMove = 2,
-  ScatterCopy = 3,
-  ScatterValidate = 4,
-  GatherPlan = 5,
-  GatherMove = 6,
+  ScatterPlanning = 1,
+  ScatterPlan = 2,
+  ScatterMove = 3,
+  ScatterCopy = 4,
+  ScatterValidate = 5,
+  GatherPlanning = 6,
+  GatherPlan = 7,
+  GatherMove = 8,
 }
 
 export type Step = 'idle' | 'select' | 'plan' | 'transfer';
@@ -162,3 +164,26 @@ export interface Branch {
 
 export type Chosen = Record<string, boolean>;
 export type Targets = Record<string, boolean>;
+
+export type TTopic =
+  | 'scatter:plan:start'
+  | 'scatter:plan:started'
+  | 'scatter:plan:progress'
+  | 'scatter:plan:ended';
+
+export enum Topic {
+  CommandScatterPlanStart = 'scatter:plan:start',
+  EventScatterPlanStarted = 'scatter:plan:started',
+  EventScatterPlanProgress = 'scatter:plan:progress',
+  EventScatterPlanEnded = 'scatter:plan:ended',
+}
+
+// export const CommandScatterPlanStart = 'scatter:plan:start';
+// export const EventScatterPlanStarted = 'scatter:plan:started';
+// export const EventScatterPlanProgress = 'scatter:plan:progress';
+// export const EventScatterPlanEnded = 'scatter:plan:ended';
+
+export interface Packet {
+  topic: Topic;
+  payload: string;
+}

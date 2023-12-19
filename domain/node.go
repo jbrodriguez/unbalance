@@ -4,7 +4,6 @@ package domain
 type Node struct {
 	ID     string `json:"id"`
 	Label  string `json:"label"`
+	Leaf   bool   `json:"leaf"`
 	Parent string `json:"parent"`
-	// Value  string `json:"value"`
-	Leaf bool `json:"leaf"`
 }

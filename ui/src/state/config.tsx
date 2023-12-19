@@ -34,7 +34,7 @@ export const useConfigStore = create<ConfigStore>()(
     actions: {
       getConfig: async () => {
         const config = await Api.getConfig();
-        console.log('useConfigStore.getConfig() ', config);
+        // console.log('useConfigStore.getConfig() ', config);
         set((state) => {
           state.version = config.version;
           state.dryRun = config.dryRun;

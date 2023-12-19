@@ -11,12 +11,18 @@ import (
 	"github.com/teris-io/shortid"
 )
 
-const certDir = "/boot/config/ssl/certs"
+const (
+	certDir    = "/boot/config/ssl/certs"
+	mailCmd    = "/usr/local/emhttp/webGui/scripts/notify"
+	timeFormat = "Jan _2, 2006 15:04:05"
+)
 
 var (
 	reFreeSpace = regexp.MustCompile(`(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s+(.*?)$`)
 	reRsync     = regexp.MustCompile(`exit status (\d+)`)
 	reProgress  = regexp.MustCompile(`(?s)^([\d,]+).*?\(.*?\)$|^([\d,]+).*?$`)
+	reItems     = regexp.MustCompile(`(\d+)\s+(.*?)$`)
+	reStat      = regexp.MustCompile(`[-dclpsbD]([-rwxsS]{3})([-rwxsS]{3})([-rwxtT]{3})\|(.*?)\:(.*?)\|(.*?)\|(.*)`)
 )
 
 var rsyncErrors = map[int]string{
@@ -48,6 +54,8 @@ type Core struct {
 
 	state *domain.State
 	sid   *shortid.Shortid
+
+	scatterPlanChan chan any
 }
 
 func Create(ctx *domain.Context) *Core {
@@ -55,8 +63,11 @@ func Create(ctx *domain.Context) *Core {
 	return &Core{
 		ctx: ctx,
 		state: &domain.State{
-			Status: common.OpNeutral,
+			// Status: common.OpScatterPlan,
+			Status: common.OpScatterMove,
+			// Status: common.OpNeutral,
 		},
+		scatterPlanChan: ctx.Hub.Sub(common.CommandScatterPlanStart),
 	}
 }
 
@@ -79,6 +90,8 @@ func (c *Core) Start() error {
 	}
 
 	c.sid = sid
+
+	go c.scatterPlanHandler()
 
 	return nil
 }
