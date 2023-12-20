@@ -40,6 +40,11 @@ export const Navbar: React.FunctionComponent = () => {
     // }
   };
 
+  // const isSelect =
+  //   route === '/scatter/select' ||
+  //   route === '/scatter/select/log' ||
+  //   route === '/scatter/select/validation';
+
   return (
     <div className="flex flex-row items-center justify-between mb-4">
       <div className="flex justify-start">

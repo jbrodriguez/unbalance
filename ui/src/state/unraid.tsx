@@ -4,7 +4,11 @@ import { immer } from 'zustand/middleware/immer';
 
 import { Api } from '~/api';
 import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
-import { getNextRoute, getRouteFromStatus } from '~/helpers/routes';
+import {
+  getNextRoute,
+  getRouteFromStatus,
+  getBaseRoute,
+} from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
 // import {
 //   CommandScatterPlanStart,
@@ -102,11 +106,22 @@ export const useUnraidStore = create<UnraidStore>()(
           }
 
           const next = getNextRoute(path);
-          if (next === path) {
+          console.log('next, route, path', next, route, path);
+          if (next === route) {
             return;
           }
 
-          console.log('syncStep ', route, next, path);
+          // don't sync if we're going to the same route
+          console.log(
+            'base-route, base-path',
+            getBaseRoute(route),
+            getBaseRoute(next),
+          );
+          if (getBaseRoute(route) === getBaseRoute(next)) {
+            return;
+          }
+
+          console.log('new route ', next);
 
           set((state) => {
             state.route = next;

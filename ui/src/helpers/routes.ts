@@ -22,8 +22,9 @@ export function getRouteFromStatus(status: Op): string {
     case Op.Neutral:
       return '/scatter/select';
     case Op.ScatterPlanning:
+      return '/scatter/plan/log';
     case Op.ScatterPlan:
-      return '/scatter/plan';
+      return '/scatter/plan/validation';
     case Op.GatherPlanning:
     case Op.GatherPlan:
       return '/gather/plan';
@@ -54,8 +55,8 @@ export const routeToStep = (route: string): number => {
     case '/gather/select':
       return 1;
     case '/scatter/plan':
-    case '/scatter/plan/logs':
-    case '/scatter/plan/results':
+    case '/scatter/plan/log':
+    case '/scatter/plan/validation':
     case '/gather/plan':
       return 2;
     case '/scatter/transfer':
@@ -73,11 +74,17 @@ export const getNextRoute = (route: string) => {
     case '/scatter':
       return '/scatter/select';
     case '/scatter/select':
-      return '/scatter/plan';
+      return '/scatter/plan/log';
+    case '/scatter/plan':
+    case '/scatter/plan/log':
+    case '/scatter/plan/validation':
+      return '/scatter/transfer';
     case '/gather':
       return '/gather/select';
     case '/gather/select':
       return '/gather/plan';
+    case '/gather/plan':
+      return '/gather/transfer';
     case '/history':
       return '/history';
     case '/settings':
@@ -87,4 +94,15 @@ export const getNextRoute = (route: string) => {
     default:
       return '/scatter/select';
   }
+};
+
+export const getBaseRoute = (path: string) => {
+  // Split the path using '/' as the delimiter
+  const parts = path.split('/');
+
+  // Extract the first non-empty part
+  const firstLevel = parts.find((part) => part !== '');
+
+  // Return the first level with the leading '/'
+  return '/' + firstLevel;
 };

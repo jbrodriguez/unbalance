@@ -9,17 +9,19 @@ import {
 
 import { App } from './App.tsx';
 import './index.css';
-import { Scatter } from './flows/scatter/scatter';
-import { Select as ScatterSelect } from './flows/scatter/select/select';
-import { Plan as ScatterPlan } from './flows/scatter/plan/plan';
-import { Gather } from './flows/gather/gather';
-import { Select as GatherSelect } from './flows/gather/select/select';
-import { Plan as GatherPlan } from './flows/gather/plan/plan';
-import { History } from './flows/history/history';
-import { Settings } from './flows/settings/settings';
-import { Notifications } from './flows/settings/notifications';
-import { Logs } from './flows/logs/logs';
-import { Transfer } from './shared/transfer/transfer';
+import { Scatter } from '~/flows/scatter/scatter';
+import { Select as ScatterSelect } from '~/flows/scatter/select/select';
+import { Plan as ScatterPlan } from '~/flows/scatter/plan/plan';
+import { Validation as ScatterValidation } from '~/flows/scatter/plan/validation';
+import { Log as ScatterLog } from '~/shared/log/log';
+import { Gather } from '~/flows/gather/gather';
+import { Select as GatherSelect } from '~/flows/gather/select/select';
+import { Plan as GatherPlan } from '~/flows/gather/plan/plan';
+import { History } from '~/flows/history/history';
+import { Settings } from '~/flows/settings/settings';
+import { Notifications } from '~/flows/settings/notifications';
+import { Logs } from '~/flows/logs/logs';
+import { Transfer } from '~/shared/transfer/transfer';
 
 const router = createBrowserRouter([
   {
@@ -39,6 +41,17 @@ const router = createBrowserRouter([
           {
             path: 'plan',
             element: <ScatterPlan />,
+            children: [
+              // { index: true, element: <Navigate to="/scatter/plan/destination" replace /> },
+              {
+                path: 'validation',
+                element: <ScatterValidation />,
+              },
+              {
+                path: 'log',
+                element: <ScatterLog />,
+              },
+            ],
           },
           {
             path: 'transfer',
