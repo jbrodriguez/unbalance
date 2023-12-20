@@ -3,14 +3,11 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import {
-  useUnraidRoute,
-  useUnraidStep,
-  useUnraidActions,
-} from '~/state/unraid';
-import { routeToIndex } from '~/helpers/steps';
+import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
+import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
-import { useNavigate } from 'react-router-dom';
+// import { getNextRoute } from '~/helpers/routes';
+// import { useNavigate } from 'react-router-dom';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -19,15 +16,13 @@ const config = [
 ];
 
 export const Navbar: React.FunctionComponent = () => {
-  const step = useUnraidStep();
-  // const currentStep = stepToIndex[step] || 1;
   const route = useUnraidRoute();
-  const currentStep = routeToIndex[route] || 1;
+  const currentStep = routeToStep(route);
   const { transition } = useUnraidActions();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const onNext = () => {
-    transition(navigate);
+    transition(route);
     // console.log('onNext');
     // switch (step) {
     //   case 'select':
@@ -51,11 +46,15 @@ export const Navbar: React.FunctionComponent = () => {
         <Button
           label="Prev"
           // variant={`${styles[getStyles(step !== 'select')].variant}`}
-          variant={getVariant(step !== 'select')}
+          variant={getVariant(route !== '/scatter/select')}
           leftIcon={
-            <Icon name="prev" size={20} fill={getFill(step !== 'select')} />
+            <Icon
+              name="prev"
+              size={20}
+              fill={getFill(route !== '/scatter/select')}
+            />
           }
-          disabled={step === 'select'}
+          disabled={route === '/scatter/select'}
         />
       </div>
 
@@ -65,7 +64,7 @@ export const Navbar: React.FunctionComponent = () => {
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
-        {step === 'transfer' && (
+        {route === '/scatter/transfer' && (
           <div className="flex flex-row items-center justify-end">
             <Button label="MOVE" variant="primary" />
             <span className="mx-1">|</span>
@@ -96,11 +95,15 @@ export const Navbar: React.FunctionComponent = () => {
       <div className="flex items-center justify-end">
         <Button
           label="Next"
-          variant={getVariant(step !== 'transfer')}
+          variant={getVariant(route !== '/scatter/transfer')}
           rightIcon={
-            <Icon name="next" size={20} fill={getFill(step !== 'transfer')} />
+            <Icon
+              name="next"
+              size={20}
+              fill={getFill(route !== '/scatter/transfer')}
+            />
           }
-          disabled={step === 'transfer'}
+          disabled={route === '/scatter/transfer'}
           onClick={onNext}
         />
       </div>

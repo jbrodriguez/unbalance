@@ -9,18 +9,18 @@ import { useConfigActions, useConfigVersion } from './state/config';
 import {
   useUnraidActions,
   useUnraidLoaded,
-  useUnraidStatus,
+  useUnraidRoute,
 } from './state/unraid';
-import { getRouteFromOp } from './helpers/steps';
+// import { getRouteFromStatus } from './helpers/routes';
 // import { useUnraidStatus } from './state/unraid';
 // import { getCurrentStep, getRoute } from './helpers/steps';
 
 export function App() {
   const { getConfig } = useConfigActions();
-  const { getUnraid, syncRouteAndStep } = useUnraidActions();
+  const { getUnraid, syncRoute } = useUnraidActions();
   const isLoaded = useUnraidLoaded();
   const version = useConfigVersion();
-  const unraidStatus = useUnraidStatus();
+  const route = useUnraidRoute();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,8 +28,8 @@ export function App() {
     // Google Analytics
     // ga('send', 'pageview');
     console.log('App.useEffect().synclocation ', location);
-    syncRouteAndStep(location.pathname);
-  }, [location, syncRouteAndStep]);
+    syncRoute(location.pathname);
+  }, [location, syncRoute]);
 
   React.useEffect(() => {
     getConfig();
@@ -40,10 +40,10 @@ export function App() {
     if (!isLoaded) {
       return;
     }
-    const route = getRouteFromOp(unraidStatus);
-    console.log('routing ', unraidStatus, route);
+    // const route = getRouteFromStatus(unraidStatus);
+    console.log('routing ', route);
     navigate(route);
-  }, [unraidStatus, isLoaded, navigate]);
+  }, [route, isLoaded, navigate]);
 
   // React.useEffect(() => {
   //   if (array === 'stopped') {
@@ -60,7 +60,7 @@ export function App() {
     return null;
   }
 
-  console.log('rendering App() ', unraidStatus);
+  console.log('rendering App() ', route);
 
   return (
     <div className="container mx-auto h-screen flex flex-col">

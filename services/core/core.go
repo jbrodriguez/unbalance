@@ -63,9 +63,7 @@ func Create(ctx *domain.Context) *Core {
 	return &Core{
 		ctx: ctx,
 		state: &domain.State{
-			// Status: common.OpScatterPlan,
-			Status: common.OpScatterMove,
-			// Status: common.OpNeutral,
+			Status: common.OpNeutral,
 		},
 		scatterPlanChan: ctx.Hub.Sub(common.CommandScatterPlanStart),
 	}

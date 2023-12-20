@@ -3,8 +3,8 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import { useUnraidStep } from '~/state/unraid';
-import { stepToIndex } from '~/helpers/steps';
+import { useUnraidRoute } from '~/state/unraid';
+import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 
 const config = [
@@ -18,19 +18,23 @@ const config = [
 ];
 
 export const Navbar: React.FC = () => {
-  const step = useUnraidStep();
-  const currentStep = stepToIndex[step] || 1;
+  const route = useUnraidRoute();
+  const currentStep = routeToStep(route);
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
       <div className="flex justify-start">
         <Button
           label="Prev"
-          variant={getVariant(step !== 'select')}
+          variant={getVariant(route !== '/gather/select')}
           leftIcon={
-            <Icon name="prev" size={20} fill={getFill(step !== 'select')} />
+            <Icon
+              name="prev"
+              size={20}
+              fill={getFill(route !== '/gather/select')}
+            />
           }
-          disabled={step === 'select'}
+          disabled={route === '/gather/select'}
         />
       </div>
 
@@ -40,7 +44,7 @@ export const Navbar: React.FC = () => {
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
-        {step === 'transfer' && (
+        {route === '/gather/transfer' && (
           <div className="flex flex-row items-center justify-end">
             <Button label="MOVE" variant="primary" />
             <span className="mx-1">|</span>
@@ -68,11 +72,15 @@ export const Navbar: React.FC = () => {
       <div className="flex items-center justify-end">
         <Button
           label="Next"
-          variant={getVariant(step !== 'transfer')}
+          variant={getVariant(route !== '/gather/transfer')}
           rightIcon={
-            <Icon name="next" size={20} fill={getFill(step !== 'transfer')} />
+            <Icon
+              name="next"
+              size={20}
+              fill={getFill(route !== '/gather/transfer')}
+            />
           }
-          disabled={step === 'transfer'}
+          disabled={route === '/gather/transfer'}
         />
       </div>
     </div>

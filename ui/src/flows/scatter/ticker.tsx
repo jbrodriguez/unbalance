@@ -1,18 +1,20 @@
 import React from 'react';
 
-import { useUnraidStep } from '~/state/unraid';
+import { useUnraidRoute } from '~/state/unraid';
 import { Description as SelectDescription } from './select/description';
 import { Description as PlanDescription } from './plan/description';
 import { Description as TransferDescription } from './transfer/description';
 
 export const Ticker: React.FunctionComponent = () => {
-  const step = useUnraidStep();
+  const route = useUnraidRoute();
 
   return (
     <>
-      {(step === 'select' || step === 'idle') && <SelectDescription />}
-      {step === 'plan' && <PlanDescription />}
-      {step === 'transfer' && <TransferDescription />}
+      {(route === '/scatter/select' || route === '/scatter') && (
+        <SelectDescription />
+      )}
+      {route.startsWith('/scatter/plan') && <PlanDescription />}
+      {route === '/scatter/transfer' && <TransferDescription />}
     </>
   );
 };

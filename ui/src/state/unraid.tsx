@@ -1,19 +1,10 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { NavigateFunction } from 'react-router-dom';
+// import { NavigateFunction } from 'react-router-dom';
 
 import { Api } from '~/api';
-import {
-  Unraid,
-  Operation,
-  History,
-  Plan,
-  Op,
-  Step,
-  Packet,
-  Topic,
-} from '~/types';
-// import { convertStatusToStep } from '~/helpers/steps';
+import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
+import { getNextRoute, getRouteFromStatus } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
 // import {
 //   CommandScatterPlanStart,
@@ -31,29 +22,14 @@ interface UnraidStore {
   operation: Operation | null;
   history: History | null;
   plan: Plan | null;
-  step: Step;
   actions: {
     getUnraid: () => Promise<void>;
-    // setCurrentStep: (step: Step) => void;
-    syncRouteAndStep: (path: string) => void;
-    transition: (navigate: NavigateFunction) => void;
+    syncRoute: (path: string) => void;
+    transition: (from: string) => void;
     scatterProgress: (payload: string) => void;
     scatterPlanEnded: (payload: string) => void;
   };
 }
-
-const getNextStep = (step: Step) => {
-  switch (step) {
-    case 'select':
-      return 'plan';
-    case 'plan':
-      return 'transfer';
-    case 'transfer':
-      return 'idle';
-    default:
-      return 'idle';
-  }
-};
 
 const mapEventToAction: { [x: string]: string } = {
   [Topic.EventScatterPlanStarted]: 'scatterProgress',
@@ -101,7 +77,6 @@ export const useUnraidStore = create<UnraidStore>()(
       operation: null,
       history: null,
       plan: null,
-      step: 'idle',
       actions: {
         getUnraid: async () => {
           const array = await Api.getUnraid();
@@ -113,15 +88,11 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = array.operation;
             state.history = array.history;
             state.plan = array.plan;
+            state.route = getRouteFromStatus(array.status);
             // state.step = convertStatusToStep(array.status);
           });
         },
-        // setCurrentStep: (step: Step) => {
-        //   set((state) => {
-        //     state.step = step;
-        //   });
-        // },
-        syncRouteAndStep: (path: string) => {
+        syncRoute: (path: string) => {
           const route = get().route;
           // if (route.slice(0, 5) === path.slice(0, 5)) {
           //   return;
@@ -130,34 +101,41 @@ export const useUnraidStore = create<UnraidStore>()(
             return;
           }
 
-          console.log('syncStep ', route, path);
+          const next = getNextRoute(path);
+          if (next === path) {
+            return;
+          }
+
+          console.log('syncStep ', route, next, path);
 
           set((state) => {
-            state.route = path;
+            state.route = next;
             // state.step = 'select';
           });
         },
-        transition: (navigate: NavigateFunction) => {
-          const next = getNextStep(get().step);
+        transition: (from: string) => {
+          const next = getNextRoute(get().route);
           set((state) => {
-            state.status = Op.ScatterPlanning;
-            state.step = next;
+            // state.status = Op.ScatterPlanning;
+            state.route = next;
           });
-          navigate(next);
+          // navigate(next);
 
-          const scatter = useScatterStore.getState();
-          const config = {
-            source: scatter.source,
-            targets: Object.keys(scatter.targets),
-            selected: scatter.selected,
-          };
+          if (from === '/scatter/select') {
+            const scatter = useScatterStore.getState();
+            const config = {
+              source: scatter.source,
+              targets: Object.keys(scatter.targets),
+              selected: scatter.selected,
+            };
 
-          socket.send(
-            JSON.stringify({
-              topic: Topic.CommandScatterPlanStart,
-              payload: config,
-            }),
-          );
+            socket.send(
+              JSON.stringify({
+                topic: Topic.CommandScatterPlanStart,
+                payload: config,
+              }),
+            );
+          }
         },
         scatterProgress: (payload: string) => {
           // console.log('scatterProgress ', payload);
@@ -176,7 +154,6 @@ export const useUnraidActions = () => useUnraidStore().actions;
 
 export const useUnraidLoaded = () => useUnraidStore().loaded;
 export const useUnraidStatus = () => useUnraidStore().status;
-export const useUnraidStep = () => useUnraidStore().step;
 export const useUnraidRoute = () => useUnraidStore().route;
 export const useUnraidIsBusy = () =>
   ![Op.Neutral, Op.ScatterPlan, Op.GatherPlan].includes(
