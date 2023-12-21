@@ -6,5 +6,5 @@ type State struct {
 	Unraid    *Unraid    `json:"unraid"`
 	Operation *Operation `json:"operation"`
 	History   *History   `json:"history"`
-	Plan      *Plan      `json:"-"`
+	Plan      *Plan      `json:"plan"`
 }
