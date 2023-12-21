@@ -18,6 +18,7 @@ export const Validation: React.FunctionComponent = () => {
               left={<Origin height={height} />}
               middle={<Destination height={height} />}
               right={<Bin height={height} />}
+              dimensions={{ left: 30, middle: 30 }}
             />
           </>
         )}
