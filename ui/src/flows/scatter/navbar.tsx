@@ -6,8 +6,6 @@ import { Stepper } from '~/shared/stepper/stepper';
 import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
-// import { getNextRoute } from '~/helpers/routes';
-// import { useNavigate } from 'react-router-dom';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -19,38 +17,14 @@ export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
   const { transition } = useUnraidActions();
-  // const navigate = useNavigate();
 
-  const onNext = () => {
-    transition('next');
-    // console.log('onNext');
-    // switch (step) {
-    //   case 'select':
-    //     console.log('select');
-    //     navigate('plan');
-    //     break;
-    //   case 'plan':
-    //     console.log('plan');
-    //     break;
-    //   case 'transfer':
-    //     console.log('transfer');
-    //     break;
-    //   default:
-    //     console.log('default');
-    // }
-  };
-
-  // const isSelect =
-  //   route === '/scatter/select' ||
-  //   route === '/scatter/select/log' ||
-  //   route === '/scatter/select/validation';
+  const onNext = () => transition('next');
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
       <div className="flex justify-start">
         <Button
           label="Prev"
-          // variant={`${styles[getStyles(step !== 'select')].variant}`}
           variant={getVariant(route !== '/scatter/select')}
           leftIcon={
             <Icon

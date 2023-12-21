@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
-// import { useLocation, Outlet } from 'react-router-dom';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
@@ -11,9 +10,6 @@ import {
   useUnraidLoaded,
   useUnraidRoute,
 } from './state/unraid';
-// import { getRouteFromStatus } from './helpers/routes';
-// import { useUnraidStatus } from './state/unraid';
-// import { getCurrentStep, getRoute } from './helpers/steps';
 
 export function App() {
   const { getConfig } = useConfigActions();
@@ -30,9 +26,7 @@ export function App() {
   }, [setNavigate, navigate]);
 
   React.useEffect(() => {
-    // Google Analytics
-    // ga('send', 'pageview');
-    console.log('sync location >>>>>>>>>>>>> ', location);
+    // console.log('sync location >>>>>>>>>>>>> ', location);
     syncRoute(location.pathname);
   }, [location, syncRoute]);
 
@@ -40,39 +34,6 @@ export function App() {
     getConfig();
     getUnraid();
   }, [getConfig, getUnraid]);
-
-  // React.useEffect(() => {
-  //   if (!isLoaded) {
-  //     return;
-  //   }
-  //   if (location.pathname === route) {
-  //     return;
-  //   }
-
-  //   // const route = getRouteFromStatus(unraidStatus);
-  //   console.log('routing ', route);
-  //   navigate(route);
-  // }, [route, location, isLoaded, navigate]);
-  // React.useEffect(() => {
-  //   if (!isLoaded) {
-  //     return;
-  //   }
-
-  //   // const route = getRouteFromStatus(unraidStatus);
-  //   console.log('routing ', route);
-  //   navigate(route);
-  // }, [route, isLoaded, navigate]);
-
-  // React.useEffect(() => {
-  //   if (array === 'stopped') {
-  //     navigate('/scatter');
-  //   }
-  // }, [navigate, unraidStatus]);
-
-  // if (unraidStatus === OpStopped) {
-  //   return null;
-  // }
-  // console.log('App() ', isLoaded, version);
 
   if (!(isLoaded && version !== '')) {
     return null;

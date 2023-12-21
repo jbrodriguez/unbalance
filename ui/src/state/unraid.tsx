@@ -4,20 +4,9 @@ import { NavigateFunction } from 'react-router-dom';
 
 import { Api } from '~/api';
 import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
-import {
-  // getNextRoute,
-  getRouteFromStatus,
-  // getBaseRoute,
-} from '~/helpers/routes';
+import { getRouteFromStatus } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
 import { createMachine, StateMachine } from '~/helpers/sm';
-// import { scattergather } from './machine';
-// import {
-//   CommandScatterPlanStart,
-//   EventScatterPlanStarted,
-//   EventScatterPlanProgress,
-//   EventScatterPlanEnded,
-// } from '~/constants';
 
 interface UnraidStore {
   socket: WebSocket;
@@ -64,7 +53,6 @@ export const useUnraidStore = create<UnraidStore>()(
     };
 
     socket.onmessage = function (event) {
-      // console.log('Socket message ', event);
       const packet: Packet = JSON.parse(event.data);
       const action = mapEventToAction[packet.topic];
       if (!action) {
@@ -139,8 +127,6 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = array.operation;
             state.history = array.history;
             state.plan = array.plan;
-            // state.route = getRouteFromStatus(array.status);
-            // state.step = convertStatusToStep(array.status);
           });
 
           if (array.status === Op.Neutral) {
@@ -151,72 +137,13 @@ export const useUnraidStore = create<UnraidStore>()(
           get().navigate?.(getRouteFromStatus(array.status));
         },
         syncRoute: (path: string) => {
-          // if (!get().loaded) {
-          //   return;
-          // }
-
-          // set((state) => {
-          //   state.route = path;
-          //   // state.step = 'select';
-          // });
           set({ route: path });
-
-          // const route = get().route;
-          // // if (route.slice(0, 5) === path.slice(0, 5)) {
-          // //   return;
-          // // }
-          // if (route === path) {
-          //   return;
-          // }
-
-          // const next = getNextRoute(path);
-          // console.log('next, route, path', next, route, path);
-          // if (next === route) {
-          //   return;
-          // }
-
-          // // don't sync if we're going to the same route
-          // console.log(
-          //   'base-route, base-path',
-          //   getBaseRoute(route),
-          //   getBaseRoute(next),
-          // );
-          // if (getBaseRoute(route) === getBaseRoute(next)) {
-          //   return;
-          // }
-
-          // console.log('new route ', next);
-          // set((state) => {
-          //   state.route = next;
-          //   // state.step = 'select';
-          // });
         },
         transition: (event: string) => {
-          // const next = getNextRoute(get().route);
           const machine = get().machine;
           const route = machine.transition(get().route, event);
-          console.log('unraid.transition ', get().route, event, route);
-          // set((state) => {
-          //   // state.status = Op.ScatterPlanning;
-          //   state.route = next;
-          // });
+          // console.log('unraid.transition ', get().route, event, route);
           get().navigate?.(route);
-
-          // if (from === '/scatter/select') {
-          //   const scatter = useScatterStore.getState();
-          //   const config = {
-          //     source: scatter.source,
-          //     targets: Object.keys(scatter.targets),
-          //     selected: scatter.selected,
-          //   };
-
-          //   socket.send(
-          //     JSON.stringify({
-          //       topic: Topic.CommandScatterPlanStart,
-          //       payload: config,
-          //     }),
-          //   );
-          // }
         },
         scatterPlan: () => {
           console.log('running scatter plan');
@@ -257,3 +184,4 @@ export const useUnraidIsBusy = () =>
     useUnraidStore().status,
   );
 export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];
+export const useUnraidPlan = () => useUnraidStore().plan;

@@ -1,25 +1,24 @@
 import React from 'react';
 
 import { useUnraidDisks } from '~/state/unraid';
-import { humanBytes } from '~/helpers/units';
+import { Disk as IDisk } from '~/types';
 import { useScatterActions, useScatterSource } from '~/state/scatter';
+import { Selectable } from '~/shared/disk/selectable-disk';
+import { Disk } from '~/shared/disk/base-disk';
 
 interface Props {
   height?: number;
 }
 
-const selectedBackground = (selected: boolean) =>
-  selected ? 'rounded dark:bg-gray-900 bg-neutral-300' : '';
+// const selectedBackground = (selected: boolean) =>
+//   selected ? 'rounded dark:bg-gray-900 bg-neutral-300' : '';
 
 export const Disks: React.FunctionComponent<Props> = ({ height = 0 }) => {
   const disks = useUnraidDisks();
   const selected = useScatterSource();
   const { setSource } = useScatterActions();
 
-  const onDiskClick = (disk: string) => () => {
-    console.log('onDiskClick ', disk);
-    setSource(disk);
-  };
+  const onDiskClick = (disk: IDisk) => setSource(disk.name);
 
   return (
     <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
@@ -28,28 +27,13 @@ export const Disks: React.FunctionComponent<Props> = ({ height = 0 }) => {
         style={{ height: `${height}px` }}
       >
         {disks.map((disk) => (
-          <div
-            className={`py-2 px-3 text-blue-800 ${selectedBackground(
-              disk.name === selected,
-            )}`}
-            onClick={onDiskClick(disk.name)}
+          <Selectable
+            disk={disk}
+            onSelectDisk={onDiskClick}
+            selected={disk.name === selected}
           >
-            <div>
-              <span className="font-bold">{disk.name}</span>
-              <span className="dark:text-slate-700 text-slate-500 text-sm">
-                &nbsp;({disk.fsType})
-              </span>{' '}
-              <span className="dark:text-gray-900 text-neutral-400">-</span>{' '}
-              <span className="dark:text-slate-700 text-slate-500 text-sm">
-                {humanBytes(disk.free)}{' '}
-                <span className="dark:text-gray-900 text-neutral-400">/</span>{' '}
-                {humanBytes(disk.size)}
-              </span>
-            </div>
-            <p className="dark:text-indigo-500 text-indigo-500 text-sm">
-              {disk.serial}
-            </p>
-          </div>
+            <Disk disk={disk} />
+          </Selectable>
         ))}
       </div>
     </div>

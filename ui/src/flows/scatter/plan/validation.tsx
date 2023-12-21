@@ -5,6 +5,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { Panels } from '~/shared/panels/panels';
 import { Origin } from './origin';
 import { Destination } from './destination';
+import { Bin } from './bin';
 
 export const Validation: React.FunctionComponent = () => {
   return (
@@ -13,9 +14,10 @@ export const Validation: React.FunctionComponent = () => {
         {({ height }) => (
           <>
             <Panels
-              type="2col"
+              type="3col"
               left={<Origin height={height} />}
               middle={<Destination height={height} />}
+              right={<Bin height={height} />}
             />
           </>
         )}

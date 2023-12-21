@@ -107,6 +107,7 @@ export interface Bin {
 
 export interface VDisk {
   path: string;
+  currentFree: number;
   plannedFree: number;
   bin: Bin;
   src: boolean;
@@ -121,7 +122,7 @@ export interface Plan {
   groupIssue: number;
   folderIssue: number;
   fileIssue: number;
-  vDisks: { [key: string]: VDisk };
+  vdisks: { [key: string]: VDisk };
   bytesToTransfer: number;
 }
 
@@ -165,23 +166,12 @@ export interface Branch {
 export type Chosen = Record<string, boolean>;
 export type Targets = Record<string, boolean>;
 
-export type TTopic =
-  | 'scatter:plan:start'
-  | 'scatter:plan:started'
-  | 'scatter:plan:progress'
-  | 'scatter:plan:ended';
-
 export enum Topic {
   CommandScatterPlanStart = 'scatter:plan:start',
   EventScatterPlanStarted = 'scatter:plan:started',
   EventScatterPlanProgress = 'scatter:plan:progress',
   EventScatterPlanEnded = 'scatter:plan:ended',
 }
-
-// export const CommandScatterPlanStart = 'scatter:plan:start';
-// export const EventScatterPlanStarted = 'scatter:plan:started';
-// export const EventScatterPlanProgress = 'scatter:plan:progress';
-// export const EventScatterPlanEnded = 'scatter:plan:ended';
 
 export interface Packet {
   topic: Topic;
