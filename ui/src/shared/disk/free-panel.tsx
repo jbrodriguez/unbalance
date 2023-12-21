@@ -20,36 +20,36 @@ export const FreePanel: React.FunctionComponent<FreePanelProps> = ({
     <>
       <span className="pt-2"></span>
 
-      <div className="flex flex-row font-mono text-sky-700 dark:text-slate-500">
+      <div className="flex flex-row item-center font-mono text-xs text-sky-700 dark:text-slate-500">
         <span
-          className="text-xs rounded leading-none bg-slate-700 text-slate-300 dark:bg-sky-900 dark:text-sky-500 py-0.5 px-1"
+          className="leading-none bg-slate-700 text-slate-300 dark:bg-gray-900 dark:text-gray-600 py-0.5 px-1"
           style={{ writingMode: 'vertical-lr', textOrientation: 'upright' }}
         >
           free
         </span>
         <span className="pr-2" />
         <div className="flex flex-1 flex-col justify-around">
-          <div className="grid grid-cols-12 gap-1 items-center">
-            <span className="col-span-8 text-xs">
+          <div className="flex flex-1 items-center">
+            <span className="pr-2">
               current {`${current}% (${humanBytes(currentFree)})`}
             </span>
-            <div className="col-span-4">
+            <div className="flex flex-1">
               <div className="w-full bg-gray-300 rounded dark:bg-gray-800">
                 <div
-                  className="text-xs text-center p-0.5 leading-none rounded bg-red-900 "
+                  className="p-0.5 leading-none rounded bg-red-900 "
                   style={{ width: `${current}%` }}
                 ></div>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-12 gap-1 items-center">
-            <span className="col-span-8 text-xs">
+          <div className="flex flex-1 items-center">
+            <span className="pr-2">
               planned {`${planned}% (${humanBytes(plannedFree)})`}
             </span>
-            <div className="col-span-4">
+            <div className="flex flex-1">
               <div className="w-full bg-gray-300 rounded dark:bg-gray-800">
                 <div
-                  className="text-xs text-center p-0.5 leading-none rounded bg-green-900 "
+                  className="p-0.5 leading-none rounded bg-green-900 "
                   style={{ width: `${planned}%` }}
                 ></div>
               </div>
