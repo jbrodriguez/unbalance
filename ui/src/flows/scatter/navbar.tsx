@@ -22,7 +22,7 @@ export const Navbar: React.FunctionComponent = () => {
   // const navigate = useNavigate();
 
   const onNext = () => {
-    transition(route);
+    transition('next');
     // console.log('onNext');
     // switch (step) {
     //   case 'select':

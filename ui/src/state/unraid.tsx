@@ -5,11 +5,13 @@ import { NavigateFunction } from 'react-router-dom';
 import { Api } from '~/api';
 import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
 import {
-  getNextRoute,
+  // getNextRoute,
   getRouteFromStatus,
   // getBaseRoute,
 } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
+import { createMachine, StateMachine } from '~/helpers/sm';
+// import { scattergather } from './machine';
 // import {
 //   CommandScatterPlanStart,
 //   EventScatterPlanStarted,
@@ -20,6 +22,7 @@ import { useScatterStore } from '~/state/scatter';
 interface UnraidStore {
   socket: WebSocket;
   navigate: NavigateFunction | null;
+  machine: StateMachine;
   loaded: boolean;
   route: string;
   status: Op;
@@ -31,7 +34,8 @@ interface UnraidStore {
     setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
     syncRoute: (path: string) => void;
-    transition: (from: string) => void;
+    transition: (event: string) => void;
+    scatterPlan: () => void;
     scatterProgress: (payload: string) => void;
     scatterPlanEnded: (payload: string) => void;
   };
@@ -74,9 +78,43 @@ export const useUnraidStore = create<UnraidStore>()(
       console.log('Socket closed ', event);
     };
 
+    const machine = {
+      initialState: '/',
+      '/scatter/select': {
+        next: {
+          target: '/scatter/plan/log',
+          action() {
+            console.log(
+              'transition action for "next" in "/scatter/select" state',
+            );
+            get().actions.scatterPlan();
+          },
+        },
+      },
+      '/scatter/plan/log': {
+        next: {
+          target: '/scatter/transfer',
+          action() {
+            console.log('transition action for "next" in "/scatter/log" state');
+          },
+        },
+      },
+      '/scatter/plan/validation': {
+        next: {
+          target: '/scatter/transfer',
+          action() {
+            console.log(
+              'transition action for "next" in "/scatter/validation" state',
+            );
+          },
+        },
+      },
+    };
+
     return {
       socket,
       navigate: null,
+      machine: createMachine(machine),
       loaded: false,
       route: '/',
       status: Op.Neutral,
@@ -113,9 +151,9 @@ export const useUnraidStore = create<UnraidStore>()(
           get().navigate?.(getRouteFromStatus(array.status));
         },
         syncRoute: (path: string) => {
-          if (!get().loaded) {
-            return;
-          }
+          // if (!get().loaded) {
+          //   return;
+          // }
 
           // set((state) => {
           //   state.route = path;
@@ -153,29 +191,48 @@ export const useUnraidStore = create<UnraidStore>()(
           //   // state.step = 'select';
           // });
         },
-        transition: (from: string) => {
-          const next = getNextRoute(get().route);
-          set((state) => {
-            // state.status = Op.ScatterPlanning;
-            state.route = next;
-          });
-          // navigate(next);
+        transition: (event: string) => {
+          // const next = getNextRoute(get().route);
+          const machine = get().machine;
+          const route = machine.transition(get().route, event);
+          console.log('unraid.transition ', get().route, event, route);
+          // set((state) => {
+          //   // state.status = Op.ScatterPlanning;
+          //   state.route = next;
+          // });
+          get().navigate?.(route);
 
-          if (from === '/scatter/select') {
-            const scatter = useScatterStore.getState();
-            const config = {
-              source: scatter.source,
-              targets: Object.keys(scatter.targets),
-              selected: scatter.selected,
-            };
+          // if (from === '/scatter/select') {
+          //   const scatter = useScatterStore.getState();
+          //   const config = {
+          //     source: scatter.source,
+          //     targets: Object.keys(scatter.targets),
+          //     selected: scatter.selected,
+          //   };
 
-            socket.send(
-              JSON.stringify({
-                topic: Topic.CommandScatterPlanStart,
-                payload: config,
-              }),
-            );
-          }
+          //   socket.send(
+          //     JSON.stringify({
+          //       topic: Topic.CommandScatterPlanStart,
+          //       payload: config,
+          //     }),
+          //   );
+          // }
+        },
+        scatterPlan: () => {
+          console.log('running scatter plan');
+          const scatter = useScatterStore.getState();
+          const config = {
+            source: scatter.source,
+            targets: Object.keys(scatter.targets),
+            selected: scatter.selected,
+          };
+
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandScatterPlanStart,
+              payload: config,
+            }),
+          );
         },
         scatterProgress: (payload: string) => {
           // console.log('scatterProgress ', payload);
