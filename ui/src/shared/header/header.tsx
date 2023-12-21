@@ -42,7 +42,7 @@ export const Header: React.FC = () => {
 
   return (
     <nav className="grid grid-cols-12 gap-2 my-4">
-      <ul className="col-span-2 py-2 bg-lime-600 dark:bg-lime-600 text-neutral-50">
+      <ul className="col-span-2 py-2 bg-lime-400 dark:bg-lime-600 text-neutral-50">
         <li className="flex items-center justify-center">
           <img src={logo} alt="logo" className="h-8 mr-2" />
           <span className="text-slate-950 font-medium">unbalanced</span>

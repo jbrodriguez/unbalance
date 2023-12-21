@@ -122,11 +122,11 @@ export const Settings: React.FunctionComponent = () => {
                   </ul>
                   <div
                     id="dropdown-cta"
-                    className="p-4 mt-6 rounded-lg bg-blue-50 dark:bg-blue-900"
+                    className="p-4 mt-6 rounded-lg bg-blue-200 dark:bg-blue-900"
                     role="alert"
                   >
                     <div className="flex items-center mb-3">
-                      <span className="bg-orange-100 text-orange-800 text-sm font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-orange-200 dark:text-orange-900">
+                      <span className="bg-green-500 text-green-100 text-sm font-semibold me-2 px-2.5 py-0.5 rounded dark:bg-green-800 dark:text-green-200">
                         Promo
                       </span>
                       <button
@@ -155,14 +155,14 @@ export const Settings: React.FunctionComponent = () => {
                     </div>
                     <p className="mb-3 text-sm text-blue-800 dark:text-blue-400">
                       For a limited time only, donate to unbalance support fund
-                      to make sure a cold beverage is enjoyed by the developers
-                      ! 😂 🚀.
+                      to make sure a cold beverage is enjoyed by the developer !
+                      😂 🚀
                     </p>
                     <a
                       className="text-sm text-blue-800 underline font-medium hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       href="#"
                     >
-                      Contribute to the cause
+                      Contribute
                     </a>
                   </div>
                 </div>
