@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import {
   createBrowserRouter,
   RouterProvider,
-  // Navigate,
+  Navigate,
 } from 'react-router-dom';
 
 import { App } from './App.tsx';
@@ -28,12 +28,12 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      // { index: true, element: <Navigate to="/scatter" replace /> },
+      { index: true, element: <Navigate to="/scatter" replace /> },
       {
         path: '/scatter',
         element: <Scatter />,
         children: [
-          // { index: true, element: <Navigate to="/scatter/select" replace /> },
+          { index: true, element: <Navigate to="/scatter/select" replace /> },
           {
             path: 'select',
             element: <ScatterSelect />,
@@ -42,7 +42,10 @@ const router = createBrowserRouter([
             path: 'plan',
             element: <ScatterPlan />,
             children: [
-              // { index: true, element: <Navigate to="/scatter/plan/destination" replace /> },
+              // {
+              //   index: true,
+              //   element: <Navigate to="/scatter/plan/log" replace />,
+              // },
               {
                 path: 'validation',
                 element: <ScatterValidation />,
@@ -63,7 +66,7 @@ const router = createBrowserRouter([
         path: '/gather',
         element: <Gather />,
         children: [
-          // { index: true, element: <Navigate to="/gather/select" replace /> },
+          { index: true, element: <Navigate to="/gather/select" replace /> },
           {
             path: 'select',
             element: <GatherSelect />,

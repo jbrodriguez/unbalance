@@ -17,7 +17,7 @@ import {
 
 export function App() {
   const { getConfig } = useConfigActions();
-  const { getUnraid, syncRoute } = useUnraidActions();
+  const { setNavigate, getUnraid, syncRoute } = useUnraidActions();
   const isLoaded = useUnraidLoaded();
   const version = useConfigVersion();
   const route = useUnraidRoute();
@@ -25,9 +25,14 @@ export function App() {
   const location = useLocation();
 
   React.useEffect(() => {
+    console.log('setting navigation.,... ');
+    setNavigate(navigate);
+  }, [setNavigate, navigate]);
+
+  React.useEffect(() => {
     // Google Analytics
     // ga('send', 'pageview');
-    console.log('App.useEffect().synclocation ', location);
+    console.log('sync location >>>>>>>>>>>>> ', location);
     syncRoute(location.pathname);
   }, [location, syncRoute]);
 
@@ -36,14 +41,27 @@ export function App() {
     getUnraid();
   }, [getConfig, getUnraid]);
 
-  React.useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
-    // const route = getRouteFromStatus(unraidStatus);
-    console.log('routing ', route);
-    navigate(route);
-  }, [route, isLoaded, navigate]);
+  // React.useEffect(() => {
+  //   if (!isLoaded) {
+  //     return;
+  //   }
+  //   if (location.pathname === route) {
+  //     return;
+  //   }
+
+  //   // const route = getRouteFromStatus(unraidStatus);
+  //   console.log('routing ', route);
+  //   navigate(route);
+  // }, [route, location, isLoaded, navigate]);
+  // React.useEffect(() => {
+  //   if (!isLoaded) {
+  //     return;
+  //   }
+
+  //   // const route = getRouteFromStatus(unraidStatus);
+  //   console.log('routing ', route);
+  //   navigate(route);
+  // }, [route, isLoaded, navigate]);
 
   // React.useEffect(() => {
   //   if (array === 'stopped') {

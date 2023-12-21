@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-// import { NavigateFunction } from 'react-router-dom';
+import { NavigateFunction } from 'react-router-dom';
 
 import { Api } from '~/api';
 import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
 import {
   getNextRoute,
   getRouteFromStatus,
-  getBaseRoute,
+  // getBaseRoute,
 } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
 // import {
@@ -19,6 +19,7 @@ import { useScatterStore } from '~/state/scatter';
 
 interface UnraidStore {
   socket: WebSocket;
+  navigate: NavigateFunction | null;
   loaded: boolean;
   route: string;
   status: Op;
@@ -27,6 +28,7 @@ interface UnraidStore {
   history: History | null;
   plan: Plan | null;
   actions: {
+    setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
     syncRoute: (path: string) => void;
     transition: (from: string) => void;
@@ -74,6 +76,7 @@ export const useUnraidStore = create<UnraidStore>()(
 
     return {
       socket,
+      navigate: null,
       loaded: false,
       route: '/',
       status: Op.Neutral,
@@ -82,8 +85,14 @@ export const useUnraidStore = create<UnraidStore>()(
       history: null,
       plan: null,
       actions: {
+        setNavigate: (navigate: NavigateFunction) => {
+          set((state) => {
+            state.navigate = navigate;
+          });
+        },
         getUnraid: async () => {
           const array = await Api.getUnraid();
+
           console.log('useUnraidStore.getUnraid() ', array);
           set((state) => {
             state.loaded = true;
@@ -92,41 +101,57 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = array.operation;
             state.history = array.history;
             state.plan = array.plan;
-            state.route = getRouteFromStatus(array.status);
+            // state.route = getRouteFromStatus(array.status);
             // state.step = convertStatusToStep(array.status);
           });
+
+          if (array.status === Op.Neutral) {
+            return;
+          }
+
+          console.log('navigating to ', getRouteFromStatus(array.status));
+          get().navigate?.(getRouteFromStatus(array.status));
         },
         syncRoute: (path: string) => {
-          const route = get().route;
-          // if (route.slice(0, 5) === path.slice(0, 5)) {
+          if (!get().loaded) {
+            return;
+          }
+
+          // set((state) => {
+          //   state.route = path;
+          //   // state.step = 'select';
+          // });
+          set({ route: path });
+
+          // const route = get().route;
+          // // if (route.slice(0, 5) === path.slice(0, 5)) {
+          // //   return;
+          // // }
+          // if (route === path) {
           //   return;
           // }
-          if (route === path) {
-            return;
-          }
 
-          const next = getNextRoute(path);
-          console.log('next, route, path', next, route, path);
-          if (next === route) {
-            return;
-          }
+          // const next = getNextRoute(path);
+          // console.log('next, route, path', next, route, path);
+          // if (next === route) {
+          //   return;
+          // }
 
-          // don't sync if we're going to the same route
-          console.log(
-            'base-route, base-path',
-            getBaseRoute(route),
-            getBaseRoute(next),
-          );
-          if (getBaseRoute(route) === getBaseRoute(next)) {
-            return;
-          }
+          // // don't sync if we're going to the same route
+          // console.log(
+          //   'base-route, base-path',
+          //   getBaseRoute(route),
+          //   getBaseRoute(next),
+          // );
+          // if (getBaseRoute(route) === getBaseRoute(next)) {
+          //   return;
+          // }
 
-          console.log('new route ', next);
-
-          set((state) => {
-            state.route = next;
-            // state.step = 'select';
-          });
+          // console.log('new route ', next);
+          // set((state) => {
+          //   state.route = next;
+          //   // state.step = 'select';
+          // });
         },
         transition: (from: string) => {
           const next = getNextRoute(get().route);
