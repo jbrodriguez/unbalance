@@ -41,20 +41,6 @@ const router = createBrowserRouter([
           {
             path: 'plan',
             element: <ScatterPlan />,
-            // children: [
-            //   // {
-            //   //   index: true,
-            //   //   element: <Navigate to="/scatter/plan/log" replace />,
-            //   // },
-            //   {
-            //     path: 'validation',
-            //     element: <ScatterValidation />,
-            //   },
-            //   {
-            //     path: 'log',
-            //     element: <ScatterLog />,
-            //   },
-            // ],
           },
           {
             path: 'transfer',

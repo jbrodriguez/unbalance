@@ -34,7 +34,7 @@ export function FileSystem({ height }: Props) {
       <AutoSizer disableHeight>
         {({ width }) => (
           <div
-            className="overflow-y-auto overflow-x-auto p-4"
+            className="overflow-y-auto overflow-x-auto p-2"
             style={{ height: `${height}px`, width: `${width}px` }}
           >
             <CheckboxTree

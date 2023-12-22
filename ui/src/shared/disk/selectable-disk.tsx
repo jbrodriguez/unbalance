@@ -22,8 +22,7 @@ export const Selectable: React.FunctionComponent<DiskProps> = ({
 }) => {
   const onClick = (disk: IDisk) => () => {
     console.log('onSelectClick ', disk);
-    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-    onSelectDisk(disk);
+    onSelectDisk?.(disk);
   };
 
   return (
