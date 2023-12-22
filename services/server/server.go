@@ -125,7 +125,7 @@ func (s *Server) wsRead() (err error) {
 
 		logger.Green("packet %+v", packet)
 
-		s.ctx.Hub.Pub(packet.Payload, packet.Topic)
+		s.ctx.Hub.Pub(packet, packet.Topic)
 	}
 }
 

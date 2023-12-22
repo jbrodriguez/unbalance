@@ -6,6 +6,7 @@ import (
 
 	"unbalance/common"
 	"unbalance/domain"
+	"unbalance/lib"
 	"unbalance/logger"
 
 	"github.com/teris-io/shortid"
@@ -55,7 +56,7 @@ type Core struct {
 	state *domain.State
 	sid   *shortid.Shortid
 
-	scatterPlanChan chan any
+	mailbox chan any
 }
 
 func Create(ctx *domain.Context) *Core {
@@ -65,7 +66,7 @@ func Create(ctx *domain.Context) *Core {
 		state: &domain.State{
 			Status: common.OpNeutral,
 		},
-		scatterPlanChan: ctx.Hub.Sub(common.CommandScatterPlanStart),
+		mailbox: ctx.Hub.Sub(common.CommandScatterPlanStart, common.CommandGatherPlanStart),
 	}
 }
 
@@ -89,7 +90,7 @@ func (c *Core) Start() error {
 
 	c.sid = sid
 
-	go c.scatterPlanHandler()
+	go c.mailboxHandler()
 
 	return nil
 }
@@ -124,4 +125,20 @@ func (c *Core) GetOperation() *domain.Operation {
 func (c *Core) GetHistory() *domain.History {
 	c.state.History.LastChecked = time.Now()
 	return c.state.History
+}
+
+func (c *Core) mailboxHandler() {
+	for p := range c.mailbox {
+		packet := p.(domain.Packet)
+		switch packet.Topic {
+		case common.CommandScatterPlanStart:
+			var setup domain.ScatterSetup
+			err := lib.Bind(packet.Payload, &setup)
+			if err != nil {
+				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				continue
+			}
+			go c.scatterPlanPrepare(setup)
+		}
+	}
 }

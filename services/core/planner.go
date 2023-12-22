@@ -87,58 +87,49 @@ import (
 // }
 
 // SCATTER PLANNER
-func (c *Core) scatterPlanHandler() {
-	for payload := range c.scatterPlanChan {
-		now := time.Now()
+func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
+	now := time.Now()
 
-		if c.state.Status != common.OpNeutral {
-			logger.Yellow("unbalance is busy: %d", c.state.Status)
-			continue
-		}
-
-		var setup domain.ScatterSetup
-		err := lib.Bind(payload, &setup)
-		if err != nil {
-			logger.Red("unable to unmarshal packet: %+v (%s)", payload, err)
-			continue
-		}
-
-		c.state.Status = common.OpScatterPlanning
-		c.state.Unraid = c.refreshUnraid()
-
-		c.state.Plan = &domain.Plan{
-			Started:       now,
-			ChosenFolders: setup.Selected,
-			VDisks:        make(map[string]*domain.VDisk),
-		}
-
-		targets := make([]string, 0)
-		for _, target := range setup.Targets {
-			targets = append(targets, filepath.Join("/", "mnt", target))
-		}
-
-		for _, disk := range c.state.Unraid.Disks {
-			c.state.Plan.VDisks[disk.Path] = &domain.VDisk{
-				Path:        disk.Path,
-				CurrentFree: disk.Free,
-				PlannedFree: disk.Free,
-				Bin:         nil,
-				Src:         filepath.Join("/", "mnt", setup.Source) == disk.Path,
-				Dst:         slices.Contains(targets, disk.Path),
-			}
-		}
-
-		// logger.Green("%+v", c.state.Plan)
-		// for _, disk := range c.state.Unraid.Disks {
-		// 	logger.Green("%+v", c.state.Plan.VDisks[disk.Path])
-		// }
-
-		// c.bus.Pub(&pubsub.Message{Payload: c.state.Plan}, common.IntScatterPlanStarted)
-		// c.bus.Pub(&pubsub.Message{Payload: c.state}, common.IntScatterPlanStarted)
-
-		// c.actor.Tell(common.IntScatterPlan, c.state)
-		go c.scatterPlan()
+	if c.state.Status != common.OpNeutral {
+		logger.Yellow("unbalance is busy: %d", c.state.Status)
+		return
 	}
+
+	c.state.Status = common.OpScatterPlanning
+	c.state.Unraid = c.refreshUnraid()
+
+	c.state.Plan = &domain.Plan{
+		Started:       now,
+		ChosenFolders: setup.Selected,
+		VDisks:        make(map[string]*domain.VDisk),
+	}
+
+	targets := make([]string, 0)
+	for _, target := range setup.Targets {
+		targets = append(targets, filepath.Join("/", "mnt", target))
+	}
+
+	for _, disk := range c.state.Unraid.Disks {
+		c.state.Plan.VDisks[disk.Path] = &domain.VDisk{
+			Path:        disk.Path,
+			CurrentFree: disk.Free,
+			PlannedFree: disk.Free,
+			Bin:         nil,
+			Src:         filepath.Join("/", "mnt", setup.Source) == disk.Path,
+			Dst:         slices.Contains(targets, disk.Path),
+		}
+	}
+
+	// logger.Green("%+v", c.state.Plan)
+	// for _, disk := range c.state.Unraid.Disks {
+	// 	logger.Green("%+v", c.state.Plan.VDisks[disk.Path])
+	// }
+
+	// c.bus.Pub(&pubsub.Message{Payload: c.state.Plan}, common.IntScatterPlanStarted)
+	// c.bus.Pub(&pubsub.Message{Payload: c.state}, common.IntScatterPlanStarted)
+
+	// c.actor.Tell(common.IntScatterPlan, c.state)
+	go c.scatterPlan()
 }
 
 func (c *Core) scatterPlan() {
