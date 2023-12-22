@@ -9,8 +9,8 @@ import { getVariant, getFill } from '~/helpers/styling';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
-  { navTo: 'plan', title: 'Plan', subtitle: 'Verify' },
-  { navTo: 'transfer', title: 'Transfer', subtitle: 'Run operations' },
+  { navTo: 'plan', title: 'Plan', subtitle: 'Monitor' },
+  { navTo: 'transfer', title: 'Transfer', subtitle: 'Validate & Run' },
 ];
 
 export const Navbar: React.FunctionComponent = () => {
@@ -43,7 +43,7 @@ export const Navbar: React.FunctionComponent = () => {
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
-        {route === '/scatter/transfer' && (
+        {route === '/scatter/transfer/validation' && (
           <div className="flex flex-row items-center justify-end">
             <Button label="MOVE" variant="primary" />
             <span className="mx-1">|</span>
@@ -74,15 +74,15 @@ export const Navbar: React.FunctionComponent = () => {
       <div className="flex items-center justify-end">
         <Button
           label="Next"
-          variant={getVariant(route !== '/scatter/transfer')}
+          variant={getVariant(route !== '/scatter/transfer/validation')}
           rightIcon={
             <Icon
               name="next"
               size={20}
-              fill={getFill(route !== '/scatter/transfer')}
+              fill={getFill(route !== '/scatter/transfer/validation')}
             />
           }
-          disabled={route === '/scatter/transfer'}
+          disabled={route === '/scatter/transfer/validation'}
           onClick={onNext}
         />
       </div>

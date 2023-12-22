@@ -13,8 +13,8 @@ export const Ticker: React.FunctionComponent = () => {
       {(route === '/scatter/select' || route === '/scatter') && (
         <SelectDescription />
       )}
-      {route.startsWith('/scatter/plan') && <PlanDescription />}
-      {route === '/scatter/transfer' && <TransferDescription />}
+      {route === '/scatter/plan' && <PlanDescription />}
+      {route === '/scatter/transfer/validation' && <TransferDescription />}
     </>
   );
 };

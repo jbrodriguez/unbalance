@@ -22,6 +22,7 @@ interface UnraidStore {
   actions: {
     setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
+    refreshUnraid: () => Promise<void>;
     syncRoute: (path: string) => void;
     transition: (event: string) => void;
     scatterPlan: () => void;
@@ -70,7 +71,7 @@ export const useUnraidStore = create<UnraidStore>()(
       initialState: '/',
       '/scatter/select': {
         next: {
-          target: '/scatter/plan/log',
+          target: '/scatter/plan',
           action() {
             console.log(
               'transition action for "next" in "/scatter/select" state',
@@ -79,20 +80,23 @@ export const useUnraidStore = create<UnraidStore>()(
           },
         },
       },
-      '/scatter/plan/log': {
+      '/scatter/plan': {
         next: {
-          target: '/scatter/transfer',
+          target: '/scatter/transfer/validation',
           action() {
-            console.log('transition action for "next" in "/scatter/log" state');
+            console.log(
+              'transition action for "next" in "/scatter/plan" state',
+            );
+            get().actions.refreshUnraid();
           },
         },
       },
-      '/scatter/plan/validation': {
+      '/scatter/transfer/validation': {
         next: {
-          target: '/scatter/transfer',
+          target: '/scatter/transfer/operation',
           action() {
             console.log(
-              'transition action for "next" in "/scatter/validation" state',
+              'transition action for "next" in "/scatter/transfer/validation" state',
             );
           },
         },
@@ -136,6 +140,18 @@ export const useUnraidStore = create<UnraidStore>()(
           console.log('navigating to ', getRouteFromStatus(array.status));
           get().navigate?.(getRouteFromStatus(array.status));
         },
+        refreshUnraid: async () => {
+          const array = await Api.getUnraid();
+
+          console.log('refreshUnraid ... ', array);
+          set((state) => {
+            state.status = array.status;
+            state.unraid = array.unraid;
+            state.operation = array.operation;
+            state.history = array.history;
+            state.plan = array.plan;
+          });
+        },
         syncRoute: (path: string) => {
           set({ route: path });
         },
@@ -167,7 +183,7 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         scatterPlanEnded: (payload: string) => {
           console.log('scatterPlanEnded ', payload);
-          get().actions.getUnraid();
+          // get().actions.getUnraid();
         },
       },
     };
