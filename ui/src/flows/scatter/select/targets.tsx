@@ -7,7 +7,6 @@ import {
   useScatterTargets,
   useScatterActions,
 } from '~/state/scatter';
-// import { Selectable } from '~/shared/disk/selectable-disk';
 import { Checkbox } from '~/shared/checkbox/checkbox';
 import { Disk } from '~/shared/disk/base-disk';
 import { Disk as IDisk, Targets as ITargets } from '~/types';
@@ -38,11 +37,6 @@ export const Targets: React.FC<Props> = ({ height = 0 }) => {
       >
         {visible &&
           elegible.map((disk) => (
-            // <Selectable
-            //   disk={disk}
-            //   // selected={disk.path === binDisk}
-            //   // onSelectDisk={onSelectDisk}
-            // >
             <div className="flex flex-row items-center">
               <Checkbox
                 checked={isChecked(disk.name, targets)}
@@ -51,13 +45,6 @@ export const Targets: React.FC<Props> = ({ height = 0 }) => {
               <span className="pr-2" />
               <Disk disk={disk} />
             </div>
-            // </Selectable>
-            // <Disk
-            //   disk={disk}
-            //   checkable
-            //   checked={isChecked(disk.name, targets)}
-            //   onCheck={onCheck(disk)}
-            // />
           ))}
       </div>
     </div>

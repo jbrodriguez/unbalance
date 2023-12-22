@@ -17,7 +17,7 @@ const config = [
   },
 ];
 
-export const Navbar: React.FC = () => {
+export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
 

@@ -5,29 +5,19 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { CheckboxTree } from '~/shared/tree/checkbox-tree';
 import { Node } from '~/types';
 import { Icon } from '~/shared/icons/icon';
-import {
-  // useScatterRoots,
-  useScatterTree,
-  useScatterActions,
-} from '~/state/scatter';
+import { useScatterTree, useScatterActions } from '~/state/scatter';
 
 interface Props {
   height?: number;
   width?: number;
 }
 
-export function FileSystem({ height }: Props) {
+export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
   const tree = useScatterTree();
   const { loadBranch, toggleSelected } = useScatterActions();
-  // const [nodes, setNodes] = React.useState<Nodes>({});
 
-  const onLoad = async (node: Node) => {
-    await loadBranch(node);
-  };
-
-  const onCheck = (node: Node) => {
-    toggleSelected(node);
-  };
+  const onLoad = async (node: Node) => await loadBranch(node);
+  const onCheck = (node: Node) => toggleSelected(node);
 
   return (
     <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
@@ -105,4 +95,4 @@ export function FileSystem({ height }: Props) {
       </AutoSizer>
     </div>
   );
-}
+};

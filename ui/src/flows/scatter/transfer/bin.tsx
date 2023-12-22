@@ -12,7 +12,6 @@ interface BinProps {
 
 export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
   const plan = useUnraidPlan();
-  // const bin = useUnraidBin();
   const binDisk = useScatterBinDisk();
 
   if (!plan || binDisk === '') {
@@ -25,9 +24,6 @@ export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
     );
   }
 
-  console.log('binDisk', binDisk);
-  console.log('plan.vdisks', plan.vdisks);
-
   const bin = plan.vdisks[binDisk].bin;
 
   return (
@@ -39,7 +35,6 @@ export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
             style={{
               height: `${height}px`,
               width: `${width}px`,
-              // textWrap: 'nowrap',
             }}
           >
             {bin.items.map((item) => (

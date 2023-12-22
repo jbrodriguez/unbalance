@@ -7,7 +7,7 @@ import { Disks } from './disks';
 import { FileSystem } from './filesystem';
 import { Targets } from './targets';
 
-export const Select: React.FC = () => {
+export const Select: React.FunctionComponent = () => {
   return (
     <div style={{ flex: '1 1 auto' }}>
       <AutoSizer disableWidth>

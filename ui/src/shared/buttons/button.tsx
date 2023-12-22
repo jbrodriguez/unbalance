@@ -20,7 +20,7 @@ const variants = {
     'text-white bg-green-700 hover:bg-green-800 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800',
 };
 
-export const Button: React.FC<Props> = ({
+export const Button: React.FunctionComponent<Props> = ({
   label = 'Ok',
   variant = 'primary',
   leftIcon = null,

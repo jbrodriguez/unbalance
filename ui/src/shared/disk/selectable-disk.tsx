@@ -1,8 +1,6 @@
 import React from 'react';
 
 import { Disk as IDisk } from '~/types';
-// import { humanBytes } from '~/helpers/units';
-// import { Icon } from '~/shared/icons/icon';
 
 type DiskProps = {
   disk: IDisk;
@@ -20,10 +18,7 @@ export const Selectable: React.FunctionComponent<DiskProps> = ({
   selected = false,
   children,
 }) => {
-  const onClick = (disk: IDisk) => () => {
-    console.log('onSelectClick ', disk);
-    onSelectDisk?.(disk);
-  };
+  const onClick = (disk: IDisk) => () => onSelectDisk?.(disk);
 
   return (
     <div
@@ -31,24 +26,6 @@ export const Selectable: React.FunctionComponent<DiskProps> = ({
       onClick={onClick(disk)}
     >
       {children}
-      {/* 
-      <div className="flex flex-col">
-        <div>
-          <span className="font-bold">{disk.name}</span>
-          <span className="dark:text-slate-700 text-slate-500 text-sm">
-            &nbsp;({disk.fsType})
-          </span>{' '}
-          <span className="dark:text-gray-900 text-neutral-400">-</span>{' '}
-          <span className="dark:text-slate-700 text-slate-500 text-sm">
-            {humanBytes(disk.free)}{' '}
-            <span className="dark:text-gray-900 text-neutral-400">/</span>{' '}
-            {humanBytes(disk.size)}
-          </span>
-        </div>
-        <p className="dark:text-indigo-500 text-indigo-500 text-sm">
-          {disk.serial}
-        </p>
-      </div> */}
     </div>
   );
 };

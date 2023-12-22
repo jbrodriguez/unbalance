@@ -11,12 +11,7 @@ interface PanelsProps {
   dimensions?: { left: number; middle?: number; right?: number };
 }
 
-// const dimensions = {
-//   left: 30,
-//   right: 30,
-// };
-
-export const Panels: React.FC<PanelsProps> = ({
+export const Panels: React.FunctionComponent<PanelsProps> = ({
   type = '3col',
   left,
   middle,

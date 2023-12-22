@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Dashboard: React.FC = () => {
+export const Dashboard: React.FunctionComponent = () => {
   return (
     <div className="grid grid-cols-5 gap-6 text-blue-600 ">
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">

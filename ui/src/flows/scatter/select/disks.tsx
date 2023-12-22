@@ -10,9 +10,6 @@ interface Props {
   height?: number;
 }
 
-// const selectedBackground = (selected: boolean) =>
-//   selected ? 'rounded dark:bg-gray-900 bg-neutral-300' : '';
-
 export const Disks: React.FunctionComponent<Props> = ({ height = 0 }) => {
   const disks = useUnraidDisks();
   const selected = useScatterSource();

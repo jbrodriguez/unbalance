@@ -6,7 +6,7 @@ import unraid from '~/assets/unraid.png';
 import jb from '~/assets/jb.png';
 import { useConfigVersion } from '~/state/config';
 
-export const Footer: React.FC = () => {
+export const Footer: React.FunctionComponent = () => {
   const version = useConfigVersion();
 
   return (

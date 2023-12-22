@@ -72,12 +72,7 @@ export const getNextRoute = (route: string) => {
 };
 
 export const getBaseRoute = (path: string) => {
-  // Split the path using '/' as the delimiter
   const parts = path.split('/');
-
-  // Extract the first non-empty part
   const firstLevel = parts.find((part) => part !== '');
-
-  // Return the first level with the leading '/'
   return '/' + firstLevel;
 };

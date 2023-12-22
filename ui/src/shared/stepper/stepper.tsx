@@ -19,7 +19,11 @@ const styles = {
 
 const getStyles = (isActive: boolean) => (isActive ? 'on' : 'off');
 
-export const Stepper: React.FC<Props> = ({ steps, currentStep, config }) => {
+export const Stepper: React.FunctionComponent<Props> = ({
+  steps,
+  currentStep,
+  config,
+}) => {
   return (
     <div>
       <ol className="items-center w-full space-y-4 sm:flex sm:space-x-8 sm:space-y-0 rtl:space-x-reverse">

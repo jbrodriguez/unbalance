@@ -1,45 +1,10 @@
 import React from 'react';
 
 import { NavLink } from 'react-router-dom';
-// import debounce from "lodash.debounce"
 
-// import { useOptionsStore, useOptionsActions } from "~/state/options"
-// import Chevron from "~/shared/components/chevron"
 import logo from '~/assets/unbalance-logo.png';
 
-export const Header: React.FC = () => {
-  // const { filterBy, filterByOptions, sortBy, sortByOptions } = useOptionsStore(
-  //   (state) => ({
-  //     filterBy: state.filterBy,
-  //     sortBy: state.sortBy,
-  //     filterByOptions: state.filterByOptions,
-  //     sortByOptions: state.sortByOptions,
-  //   })
-  // )
-  // const { setFilterBy, setSortBy, setQuery } = useOptionsActions()
-
-  // const onFilterByChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-  //   setFilterBy(e.target.value)
-
-  // const onSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-  //   setSortBy(e.target.value)
-
-  // const updateQuery = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
-  //   // console.log("search", e.target.value);
-  //   setQuery(e.target.value)
-  // }, 750)
-
-  //   <NavLink
-  //   to="/scatter"
-  //   className={({ isActive }) => {
-  //     return isActive
-  //       ? "ml-4 bg-lime-600 dark:bg-lime-600 text-neutral-50"
-  //       : "ml-4"
-  //   }}
-  // >
-  //   SCATTER
-  // </NavLink>
-
+export const Header: React.FunctionComponent = () => {
   return (
     <nav className="grid grid-cols-12 gap-2 my-4">
       <ul className="col-span-2 py-2 bg-lime-400 dark:bg-lime-600 text-neutral-50">

@@ -4,7 +4,7 @@ interface Props {
   height?: number;
 }
 
-export const Operations: React.FC<Props> = ({ height = 0 }) => {
+export const Operations: React.FunctionComponent<Props> = ({ height = 0 }) => {
   return (
     <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
       <div className={`overflow-y-auto`} style={{ height: `${height}px` }}>

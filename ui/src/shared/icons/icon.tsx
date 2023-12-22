@@ -6,7 +6,11 @@ interface IconProps {
   fill?: string;
 }
 
-export const Icon: React.FC<IconProps> = ({ name, size = 24, fill = '' }) => {
+export const Icon: React.FunctionComponent<IconProps> = ({
+  name,
+  size = 24,
+  fill = '',
+}) => {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={`${fill}`}>
       <path d={icons[name]} />
