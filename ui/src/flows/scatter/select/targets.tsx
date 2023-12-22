@@ -9,7 +9,7 @@ import {
 } from '~/state/scatter';
 // import { Selectable } from '~/shared/disk/selectable-disk';
 import { Checkbox } from '~/shared/checkbox/checkbox';
-import { Disk } from '~/shared/disk/disk';
+import { Disk } from '~/shared/disk/base-disk';
 import { Disk as IDisk, Targets as ITargets } from '~/types';
 
 interface Props {
@@ -48,7 +48,7 @@ export const Targets: React.FC<Props> = ({ height = 0 }) => {
                 checked={isChecked(disk.name, targets)}
                 onCheck={onCheck(disk)}
               />
-              <span className="pr-1" />
+              <span className="pr-2" />
               <Disk disk={disk} />
             </div>
             // </Selectable>
