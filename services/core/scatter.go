@@ -1,0 +1,250 @@
+package core
+
+import (
+	"fmt"
+	"path/filepath"
+	"slices"
+	"sort"
+	"time"
+
+	"unbalance/algorithm"
+	"unbalance/common"
+	"unbalance/domain"
+	"unbalance/lib"
+	"unbalance/logger"
+)
+
+// SCATTER PLANNER
+func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
+	now := time.Now()
+
+	if c.state.Status != common.OpNeutral {
+		logger.Yellow("unbalance is busy: %d", c.state.Status)
+		return
+	}
+
+	c.state.Status = common.OpScatterPlanning
+	c.state.Unraid = c.refreshUnraid()
+
+	c.state.Plan = &domain.Plan{
+		Started:       now,
+		ChosenFolders: setup.Selected,
+		VDisks:        make(map[string]*domain.VDisk),
+	}
+
+	targets := make([]string, 0)
+	for _, target := range setup.Targets {
+		targets = append(targets, filepath.Join("/", "mnt", target))
+	}
+
+	for _, disk := range c.state.Unraid.Disks {
+		c.state.Plan.VDisks[disk.Path] = &domain.VDisk{
+			Path:        disk.Path,
+			CurrentFree: disk.Free,
+			PlannedFree: disk.Free,
+			Bin:         nil,
+			Src:         filepath.Join("/", "mnt", setup.Source) == disk.Path,
+			Dst:         slices.Contains(targets, disk.Path),
+		}
+	}
+
+	// logger.Green("%+v", c.state.Plan)
+	// for _, disk := range c.state.Unraid.Disks {
+	// 	logger.Green("%+v", c.state.Plan.VDisks[disk.Path])
+	// }
+
+	// c.bus.Pub(&pubsub.Message{Payload: c.state.Plan}, common.IntScatterPlanStarted)
+	// c.bus.Pub(&pubsub.Message{Payload: c.state}, common.IntScatterPlanStarted)
+
+	// c.actor.Tell(common.IntScatterPlan, c.state)
+	go c.scatterPlan()
+}
+
+func (c *Core) scatterPlan() {
+	c.scatterPlanStart()
+	c.scatterPlanEnd()
+}
+
+func (c *Core) scatterPlanStart() {
+	logger.Blue("Running scatter planner ...")
+
+	// plan := c.state.Plan
+	// c.state.Plan.Started = time.Now()
+
+	// create two slices
+	// one of source disks, the other of destinations disks
+	// in scatter srcDisks will contain only one element
+	srcDisk, dstDisks := getSourceAndDestinationDisks(c.state.Unraid.Disks, c.state.Plan)
+
+	// get dest disks with more free space to the top
+	sort.Slice(dstDisks, func(i, j int) bool { return dstDisks[i].Free < dstDisks[j].Free })
+
+	// some logging
+	logger.Blue("scatterPlan:source:(%+v)", srcDisk)
+	for _, disk := range dstDisks {
+		logger.Blue("scatterPlan:dest:(%+v)", disk)
+	}
+
+	// outbound := &dto.Packet{Topic: common.WsScatterPlanStarted, Payload: "Planning started"}
+	// p.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	packet := &domain.Packet{Topic: common.EventScatterPlanStarted, Payload: "Planning started"}
+	c.ctx.Hub.Pub(packet, "socket:broadcast")
+
+	c.printDisks(c.state.Unraid.Disks, c.state.Unraid.BlockSize)
+
+	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, []*domain.Disk{srcDisk}, c.state.Plan.ChosenFolders)
+
+	toBeTransferred := make([]*domain.Item, 0)
+
+	// // no items found, no sense going on, just end this planning
+	// if len(items) == 0 {
+	// 	p.endPlan(state.Status, plan, state.Unraid.Disks, items, toBeTransferred)
+	// 	p.bus.Pub(&pubsub.Message{Payload: plan}, common.IntScatterPlanFinished)
+	// 	return
+	// }
+
+	c.state.Plan.OwnerIssue = ownerIssue
+	c.state.Plan.GroupIssue = groupIssue
+	c.state.Plan.FolderIssue = folderIssue
+	c.state.Plan.FileIssue = fileIssue
+
+	logger.Blue("scatterPlan:items(%d)", len(items))
+
+	for _, item := range items {
+		logger.Blue("scatterPlan:found(%s):size(%d)", filepath.Join(item.Location, item.Path), item.Size)
+
+		msg := fmt.Sprintf("Found %s (%s)", filepath.Join(item.Location, item.Path), lib.ByteSize(item.Size))
+		packet = &domain.Packet{Topic: common.EventScatterPlanProgress, Payload: msg}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+	}
+
+	logger.Blue("scatterPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", c.state.Plan.OwnerIssue, c.state.Plan.GroupIssue, c.state.Plan.FolderIssue, c.state.Plan.FileIssue)
+
+	// Initialize fields
+	c.state.Plan.BytesToTransfer = 0
+
+	for _, disk := range dstDisks {
+		msg := fmt.Sprintf("Trying to allocate items to %s ...", disk.Name)
+		packet = &domain.Packet{Topic: common.EventScatterPlanProgress, Payload: msg}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+		logger.Blue("scatterPlan:%s", msg)
+
+		reserved := c.getReservedAmount(disk.Size)
+
+		ceil := lib.Max(common.ReservedSpace, reserved)
+		logger.Blue("scatterPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
+
+		packer := algorithm.NewKnapsack(disk, items, ceil, c.state.Unraid.BlockSize)
+		bin := packer.BestFit()
+		if bin != nil {
+			c.state.Plan.VDisks[disk.Path].Bin = bin
+			c.state.Plan.VDisks[disk.Path].PlannedFree -= bin.Size
+			c.state.Plan.VDisks[srcDisk.Path].PlannedFree += bin.Size
+
+			c.state.Plan.BytesToTransfer += bin.Size
+
+			toBeTransferred = append(toBeTransferred, bin.Items...)
+			items = removeItems(items, bin.Items)
+		}
+	}
+
+	c.endPlan(c.state.Status, c.state.Plan, c.state.Unraid.Disks, items, toBeTransferred)
+	// p.bus.Pub(&pubsub.Message{Payload: plan}, common.IntScatterPlanFinished)
+	c.scatterPlanEnd()
+}
+
+func (c *Core) scatterPlanEnd() {
+	c.state.Status = common.OpScatterPlan
+
+	packet := &domain.Packet{Topic: common.EventScatterPlanEnded, Payload: "Planning ended"}
+	c.ctx.Hub.Pub(packet, "socket:broadcast")
+}
+
+// // SCATTER TRANSFER
+// func (c *Core) scatterMove(msg *pubsub.Message) {
+// 	c.state.Status = common.OpScatterMove
+// 	c.state.Unraid = c.refreshUnraid()
+
+// 	plan, err := c.getScatterPlan(msg)
+// 	if err != nil {
+// 		mlog.Warning("Unable to get scatter plan: %s", err.Error())
+
+// 		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 		return
+// 	}
+
+// 	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+
+// 	go c.runOperation("Move")
+// }
+
+// func (c *Core) scatterCopy(msg *pubsub.Message) {
+// 	c.state.Status = common.OpScatterCopy
+// 	c.state.Unraid = c.refreshUnraid()
+
+// 	plan, err := c.getScatterPlan(msg)
+// 	if err != nil {
+// 		mlog.Warning("Unable to get scatter plan: %s", err)
+
+// 		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
+// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+
+// 		return
+// 	}
+
+// 	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+
+// 	go c.runOperation("Copy")
+// }
+
+// func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk, plan *domain.Plan) *domain.Operation {
+// 	operation := &domain.Operation{
+// 		ID:              shortid.MustGenerate(),
+// 		OpKind:          status,
+// 		BytesToTransfer: plan.BytesToTransfer,
+// 		DryRun:          c.settings.DryRun,
+// 	}
+
+// 	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.settings.RsyncArgs...)
+
+// 	// user may have changed dry-run setting, adjust for it
+// 	if operation.DryRun {
+// 		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
+// 	}
+// 	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
+
+// 	operation.Commands = make([]*domain.Command, 0)
+
+// 	for _, disk := range disks {
+// 		vdisk := plan.VDisks[disk.Path]
+
+// 		if vdisk.Bin == nil || vdisk.Src {
+// 			continue
+// 		}
+
+// 		for _, item := range vdisk.Bin.Items {
+// 			var entry string
+
+// 			// this a double check. item.Path should be in the form of films/bluray or tvshows/Billions
+// 			// if for some reason it starts with a "/", we strip it
+// 			if item.Path[0] == filepath.Separator {
+// 				entry = item.Path[1:]
+// 			} else {
+// 				entry = item.Path
+// 			}
+
+// 			operation.Commands = append(operation.Commands, &domain.Command{
+// 				ID:     shortid.MustGenerate(),
+// 				Src:    item.Location,
+// 				Dst:    vdisk.Path + string(filepath.Separator),
+// 				Entry:  entry,
+// 				Size:   item.Size,
+// 				Status: common.CmdPending,
+// 			})
+// 		}
+// 	}
+
+// 	return operation
+// }

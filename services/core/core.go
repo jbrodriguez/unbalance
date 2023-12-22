@@ -129,6 +129,11 @@ func (c *Core) GetHistory() *domain.History {
 
 func (c *Core) mailboxHandler() {
 	for p := range c.mailbox {
+		if c.state.Status != common.OpNeutral {
+			logger.Yellow("unbalance is busy: %d", c.state.Status)
+			continue
+		}
+
 		packet := p.(domain.Packet)
 		switch packet.Topic {
 		case common.CommandScatterPlanStart:
