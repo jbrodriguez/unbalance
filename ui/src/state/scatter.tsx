@@ -11,12 +11,14 @@ interface ScatterStore {
   targets: Targets;
   tree: Nodes;
   logs: Array<string>;
+  binDisk: string;
   actions: {
     setSource: (source: string) => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
     addLine: (line: string) => void;
+    setBinDisk: (binDisk: string) => void;
   };
 }
 
@@ -52,6 +54,7 @@ export const useScatterStore = create<ScatterStore>()(
     targets: {},
     tree: { root: decorateNode(rootNode as Node) },
     logs: [],
+    binDisk: '',
     actions: {
       setSource: async (source: string) => {
         const loader = decorateNode({ ...loaderNode } as Node);
@@ -145,6 +148,11 @@ export const useScatterStore = create<ScatterStore>()(
           state.logs.push(line);
         });
       },
+      setBinDisk: (binDisk: string) => {
+        set((state) => {
+          state.binDisk = binDisk;
+        });
+      },
     },
   })),
 );
@@ -161,3 +169,5 @@ export const useScatterSelected = () =>
 export const useScatterTargets = () =>
   useScatterStore((state) => state.targets);
 export const useScatterLogs = () => useScatterStore((state) => state.logs);
+export const useScatterBinDisk = () =>
+  useScatterStore((state) => state.binDisk);

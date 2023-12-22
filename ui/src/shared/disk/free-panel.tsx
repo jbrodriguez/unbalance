@@ -34,7 +34,7 @@ export const FreePanel: React.FunctionComponent<FreePanelProps> = ({
               current {`${current}% (${humanBytes(currentFree)})`}
             </span>
             <div className="flex flex-1">
-              <div className="w-full bg-gray-300 rounded dark:bg-gray-800">
+              <div className="w-full rounded bg-gray-400 dark:bg-gray-800">
                 <div
                   className="p-0.5 leading-none rounded bg-red-900 "
                   style={{ width: `${current}%` }}
@@ -47,7 +47,7 @@ export const FreePanel: React.FunctionComponent<FreePanelProps> = ({
               planned {`${planned}% (${humanBytes(plannedFree)})`}
             </span>
             <div className="flex flex-1">
-              <div className="w-full bg-gray-300 rounded dark:bg-gray-800">
+              <div className="w-full rounded bg-gray-400 dark:bg-gray-800">
                 <div
                   className="p-0.5 leading-none rounded bg-green-900 "
                   style={{ width: `${planned}%` }}

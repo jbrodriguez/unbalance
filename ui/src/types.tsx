@@ -92,17 +92,17 @@ export interface History {
 }
 
 export interface Item {
-  Name: string;
-  Size: number;
-  Path: string;
-  Location: string;
-  BlocksUsed: number;
+  name: string;
+  size: number;
+  path: string;
+  location: string;
+  blocksUsed: number;
 }
 
 export interface Bin {
-  Size: number;
-  Items: Item[];
-  BlocksUsed: number;
+  size: number;
+  items: Item[];
+  blocksUsed: number;
 }
 
 export interface VDisk {

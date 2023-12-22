@@ -4,6 +4,8 @@ import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
 import { Selectable } from '~/shared/disk/selectable-disk';
 import { Disk } from '~/shared/disk/base-disk';
 import { FreePanel } from '~/shared/disk/free-panel';
+import { useScatterBinDisk, useScatterActions } from '~/state/scatter';
+import { Disk as IDisk } from '~/types';
 
 interface Props {
   height?: number;
@@ -12,6 +14,10 @@ interface Props {
 export const Destination: React.FunctionComponent<Props> = ({ height = 0 }) => {
   const plan = useUnraidPlan();
   const disks = useUnraidDisks();
+  const binDisk = useScatterBinDisk();
+  const { setBinDisk } = useScatterActions();
+
+  const onSelectDisk = (disk: IDisk) => setBinDisk(disk.path);
 
   if (!plan) {
     return (
@@ -29,7 +35,11 @@ export const Destination: React.FunctionComponent<Props> = ({ height = 0 }) => {
     <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
       <div className="p-2 overflow-y-auto" style={{ height: `${height}px` }}>
         {items.map((disk) => (
-          <Selectable disk={disk}>
+          <Selectable
+            disk={disk}
+            selected={disk.path === binDisk}
+            onSelectDisk={onSelectDisk}
+          >
             <div className="flex flex-col">
               <Disk disk={disk} />
               <FreePanel

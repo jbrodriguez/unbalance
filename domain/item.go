@@ -2,11 +2,11 @@ package domain
 
 // Item -
 type Item struct {
-	Name       string
-	Size       uint64
-	Path       string
-	Location   string
-	BlocksUsed uint64
+	Name       string `json:"name"`
+	Size       uint64 `json:"size"`
+	Path       string `json:"path"`
+	Location   string `json:"location"`
+	BlocksUsed uint64 `json:"blocksUsed"`
 }
 
 // // BySize -
