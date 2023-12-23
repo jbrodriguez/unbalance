@@ -26,6 +26,18 @@ export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
 
   const bin = plan.vdisks[binDisk].bin;
 
+  if (!bin) {
+    return (
+      <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
+        <div className="p-2 overflow-y-auto" style={{ height: `${height}px` }}>
+          <span className="text-gray-500 dark:text-gray-700 text-sm">
+            No items in the bin.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
       <AutoSizer disableHeight>

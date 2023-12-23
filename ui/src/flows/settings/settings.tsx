@@ -154,9 +154,9 @@ export const Settings: React.FunctionComponent = () => {
                       </button>
                     </div>
                     <p className="mb-3 text-sm text-blue-800 dark:text-blue-400">
-                      For a limited time only, donate to unbalance support fund
-                      to make sure a cold beverage is enjoyed by the developer !
-                      😂 🚀
+                      For a limited time only, make a donation to unbalance and
+                      receive eternal gratitude from the developer ! <br />
+                      🙌
                     </p>
                     <a
                       className="text-sm text-blue-800 underline font-medium hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
