@@ -12,13 +12,13 @@ import (
 // OpGatherMove
 type Operation struct {
 	ID       string    `json:"id"`
-	OpKind   int64     `json:"opKind"`
+	OpKind   uint64    `json:"opKind"`
 	Started  time.Time `json:"started"`
 	Finished time.Time `json:"finished"`
 
 	// transfer section
-	BytesToTransfer  int64      `json:"bytesToTransfer"`
-	BytesTransferred int64      `json:"bytesTransferred"`
+	BytesToTransfer  uint64     `json:"bytesToTransfer"`
+	BytesTransferred uint64     `json:"bytesTransferred"`
 	DryRun           bool       `json:"dryRun"`
 	RsyncArgs        []string   `json:"rsyncArgs"`
 	RsyncStrArgs     string     `json:"rsyncStrArgs"`

@@ -5,7 +5,10 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"time"
+
+	"github.com/teris-io/shortid"
 
 	"unbalance/algorithm"
 	"unbalance/common"
@@ -161,90 +164,68 @@ func (c *Core) scatterPlanEnd() {
 }
 
 // // SCATTER TRANSFER
-// func (c *Core) scatterMove(msg *pubsub.Message) {
-// 	c.state.Status = common.OpScatterMove
-// 	c.state.Unraid = c.refreshUnraid()
+func (c *Core) scatterMove(plan domain.Plan) {
+	c.state.Status = common.OpScatterMove
+	c.state.Unraid = c.refreshUnraid()
+	c.state.Operation = c.createScatterOperation(plan)
 
-// 	plan, err := c.getScatterPlan(msg)
-// 	if err != nil {
-// 		mlog.Warning("Unable to get scatter plan: %s", err.Error())
+	// go c.runOperation("Move")
+}
 
-// 		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+func (c *Core) scatterCopy(plan domain.Plan) {
+	c.state.Status = common.OpScatterCopy
+	c.state.Unraid = c.refreshUnraid()
+	c.state.Operation = c.createScatterOperation(plan)
 
-// 		return
-// 	}
+	// go c.runOperation("Copy")
+}
 
-// 	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {
+	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
+		OpKind:          c.state.Status,
+		BytesToTransfer: plan.BytesToTransfer,
+		DryRun:          c.ctx.DryRun,
+	}
 
-// 	go c.runOperation("Move")
-// }
+	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.ctx.RsyncArgs...)
 
-// func (c *Core) scatterCopy(msg *pubsub.Message) {
-// 	c.state.Status = common.OpScatterCopy
-// 	c.state.Unraid = c.refreshUnraid()
+	// user may have changed dry-run setting, adjust for it
+	if operation.DryRun {
+		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
+	}
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
-// 	plan, err := c.getScatterPlan(msg)
-// 	if err != nil {
-// 		mlog.Warning("Unable to get scatter plan: %s", err)
+	operation.Commands = make([]*domain.Command, 0)
 
-// 		outbound := &dto.Packet{Topic: "opError", Payload: err.Error()}
-// 		c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	for _, disk := range c.state.Unraid.Disks {
+		vdisk := plan.VDisks[disk.Path]
 
-// 		return
-// 	}
+		if vdisk.Bin == nil || vdisk.Src {
+			continue
+		}
 
-// 	c.state.Operation = c.setupScatterTransferOperation(c.state.Status, c.state.Unraid.Disks, plan)
+		for _, item := range vdisk.Bin.Items {
+			var entry string
 
-// 	go c.runOperation("Copy")
-// }
+			// this a double check. item.Path should be in the form of films/bluray or tvshows/Billions
+			// if for some reason it starts with a "/", we strip it
+			if item.Path[0] == filepath.Separator {
+				entry = item.Path[1:]
+			} else {
+				entry = item.Path
+			}
 
-// func (c *Core) setupScatterTransferOperation(status int64, disks []*domain.Disk, plan *domain.Plan) *domain.Operation {
-// 	operation := &domain.Operation{
-// 		ID:              shortid.MustGenerate(),
-// 		OpKind:          status,
-// 		BytesToTransfer: plan.BytesToTransfer,
-// 		DryRun:          c.settings.DryRun,
-// 	}
+			operation.Commands = append(operation.Commands, &domain.Command{
+				ID:     shortid.MustGenerate(),
+				Src:    item.Location,
+				Dst:    vdisk.Path + string(filepath.Separator),
+				Entry:  entry,
+				Size:   item.Size,
+				Status: common.CmdPending,
+			})
+		}
+	}
 
-// 	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.settings.RsyncArgs...)
-
-// 	// user may have changed dry-run setting, adjust for it
-// 	if operation.DryRun {
-// 		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
-// 	}
-// 	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
-
-// 	operation.Commands = make([]*domain.Command, 0)
-
-// 	for _, disk := range disks {
-// 		vdisk := plan.VDisks[disk.Path]
-
-// 		if vdisk.Bin == nil || vdisk.Src {
-// 			continue
-// 		}
-
-// 		for _, item := range vdisk.Bin.Items {
-// 			var entry string
-
-// 			// this a double check. item.Path should be in the form of films/bluray or tvshows/Billions
-// 			// if for some reason it starts with a "/", we strip it
-// 			if item.Path[0] == filepath.Separator {
-// 				entry = item.Path[1:]
-// 			} else {
-// 				entry = item.Path
-// 			}
-
-// 			operation.Commands = append(operation.Commands, &domain.Command{
-// 				ID:     shortid.MustGenerate(),
-// 				Src:    item.Location,
-// 				Dst:    vdisk.Path + string(filepath.Separator),
-// 				Entry:  entry,
-// 				Size:   item.Size,
-// 				Status: common.CmdPending,
-// 			})
-// 		}
-// 	}
-
-// 	return operation
-// }
+	return operation
+}

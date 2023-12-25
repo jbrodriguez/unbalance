@@ -30,9 +30,20 @@ const (
 	EventScatterPlanStarted  = "scatter:plan:started"
 	EventScatterPlanProgress = "scatter:plan:progress"
 	EventScatterPlanEnded    = "scatter:plan:ended"
+	CommandScatterMove       = "scatter:move"
+	CommandScatterCopy       = "scatter:copy"
 
 	CommandGatherPlanStart  = "gather:plan:start"
 	EventGatherPlanStarted  = "gather:plan:started"
 	EventGatherPlanProgress = "gather:plan:progress"
 	EventGatherPlanEnded    = "gather:plan:ended"
+)
+
+const (
+	CmdCompleted = iota
+	CmdPending
+	CmdFlagged
+	CmdStopped
+	CmdSourceRemoval
+	CmdInProgress
 )
