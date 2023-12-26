@@ -35,7 +35,7 @@ export class Api {
         unraid: null,
         operation: null,
         history: null,
-        plan: null,
+        // plan: null,
       };
     }
   }

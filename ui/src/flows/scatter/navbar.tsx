@@ -6,6 +6,7 @@ import { Stepper } from '~/shared/stepper/stepper';
 import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
+import { Topic } from '~/types';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -16,9 +17,11 @@ const config = [
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
-  const { transition } = useUnraidActions();
+  const { transition, scatterOperation } = useUnraidActions();
 
   const onNext = () => transition('next');
+  const onMove = () => scatterOperation(Topic.CommandScatterMove);
+  const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -45,9 +48,9 @@ export const Navbar: React.FunctionComponent = () => {
 
         {route === '/scatter/transfer/validation' && (
           <div className="flex flex-row items-center justify-end">
-            <Button label="MOVE" variant="primary" />
+            <Button label="MOVE" variant="primary" onClick={onMove} />
             <span className="mx-1">|</span>
-            <Button label="COPY" variant="primary" />
+            <Button label="COPY" variant="primary" onClick={onCopy} />
 
             <span className="mx-1">|</span>
 

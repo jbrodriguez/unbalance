@@ -169,6 +169,19 @@ export enum Topic {
   EventScatterPlanStarted = 'scatter:plan:started',
   EventScatterPlanProgress = 'scatter:plan:progress',
   EventScatterPlanEnded = 'scatter:plan:ended',
+  CommandScatterMove = 'scatter:move',
+  CommandScatterCopy = 'scatter:copy',
+
+  CommandGatherPlanStart = 'gather:plan:start',
+  EventGatherPlanStarted = 'gather:plan:started',
+  EventGatherPlanProgress = 'gather:plan:progress',
+  EventGatherPlanEnded = 'gather:plan:ended',
+
+  EventTransferStarted = 'transfer:started',
+  EventTransferProgress = 'transfer:progress',
+  EventTransferEnded = 'transfer:ended',
+
+  EventOperationError = 'operation:error',
 }
 
 export interface Packet {

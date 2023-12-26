@@ -158,7 +158,8 @@ func (c *Core) mailboxHandler() {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			go c.scatterMove(plan)
+			logger.Olive("%+v", plan)
+			// go c.scatterMove(plan)
 		case common.CommandScatterCopy:
 			var plan domain.Plan
 			err := lib.Bind(packet.Payload, &plan)

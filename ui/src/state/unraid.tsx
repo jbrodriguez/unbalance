@@ -28,6 +28,9 @@ interface UnraidStore {
     scatterPlan: () => void;
     scatterProgress: (payload: string) => void;
     scatterPlanEnded: (payload: Plan) => void;
+    scatterOperation: (
+      command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
+    ) => void;
   };
 }
 
@@ -87,7 +90,7 @@ export const useUnraidStore = create<UnraidStore>()(
             console.log(
               'transition action for "next" in "/scatter/plan" state',
             );
-            get().actions.refreshUnraid();
+            // get().actions.refreshUnraid();
           },
         },
       },
@@ -187,6 +190,22 @@ export const useUnraidStore = create<UnraidStore>()(
             state.plan = payload;
           });
           // get().actions.getUnraid();
+        },
+        scatterOperation: (
+          command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
+        ) => {
+          const machine = get().machine;
+          const route = machine.transition(get().route, 'next');
+          // console.log('unraid.transition ', get().route, event, route);
+          const socket = get().socket;
+          const plan = get().plan;
+          socket.send(
+            JSON.stringify({
+              topic: command,
+              payload: plan,
+            }),
+          );
+          get().navigate?.(route);
         },
       },
     };
