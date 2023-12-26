@@ -42,7 +42,7 @@ const numberFormat = (
 const k = 1000;
 const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
-const formatBytes = (bytes: number) => {
+export const formatBytes = (bytes: number) => {
   if (bytes === 0) return { value: '0', unit: 'Byte' };
 
   let base = bytes ? Math.floor(Math.log(bytes) / Math.log(k)) : 0;
@@ -72,4 +72,27 @@ const formatBytes = (bytes: number) => {
 export const humanBytes = (bytes: number) => {
   const { value, unit } = formatBytes(bytes);
   return `${value} ${unit}`;
+};
+
+export const formatTime = (time: number) => {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time - hours * 3600) / 60);
+  const seconds = time - hours * 3600 - minutes * 60;
+
+  // Now you can use these variables to display the elapsed time conditionally
+  let elapsed = '';
+
+  if (hours > 0) {
+    elapsed += `${hours}h`;
+  }
+
+  if (minutes > 0) {
+    elapsed += `${elapsed.length > 0 ? ' ' : ''}${minutes}m`;
+  }
+
+  if (seconds > 0) {
+    elapsed += `${elapsed.length > 0 ? ' ' : ''}${seconds}s`;
+  }
+
+  return elapsed;
 };

@@ -31,6 +31,7 @@ interface UnraidStore {
     scatterOperation: (
       command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
     ) => void;
+    transferProgress: (payload: Operation) => void;
   };
 }
 
@@ -38,6 +39,9 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventScatterPlanStarted]: 'scatterProgress',
   [Topic.EventScatterPlanProgress]: 'scatterProgress',
   [Topic.EventScatterPlanEnded]: 'scatterPlanEnded',
+  [Topic.EventTransferStarted]: 'transferProgress',
+  [Topic.EventTransferProgress]: 'transferProgress',
+  [Topic.EventTransferEnded]: 'transferProgress',
   // 'scatter:plan:started': 'scatterProgress',
   // 'scatter:plan:progress': 'scatterProgress',
   // 'scatter:plan:ended': 'scatterProgress',
@@ -207,6 +211,12 @@ export const useUnraidStore = create<UnraidStore>()(
           );
           get().navigate?.(route);
         },
+        transferProgress: (payload: Operation) => {
+          // console.log('transferProgress ', payload);
+          set((state) => {
+            state.operation = payload;
+          });
+        },
       },
     };
   }),
@@ -223,3 +233,4 @@ export const useUnraidIsBusy = () =>
   );
 export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];
 export const useUnraidPlan = () => useUnraidStore().plan;
+export const useUnraidOperation = () => useUnraidStore().operation;

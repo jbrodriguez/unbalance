@@ -22,6 +22,7 @@ import { History } from '~/flows/history/history';
 import { Settings } from '~/flows/settings/settings';
 import { Notifications } from '~/flows/settings/notifications';
 import { Logs } from '~/flows/logs/logs';
+import { Transfer as SharedTransfer } from '~/shared/transfer/transfer';
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
               {
                 path: 'validation',
                 element: <ScatterValidation />,
+              },
+              {
+                path: 'operation',
+                element: <SharedTransfer />,
               },
             ],
           },
