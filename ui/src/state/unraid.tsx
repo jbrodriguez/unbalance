@@ -27,7 +27,7 @@ interface UnraidStore {
     transition: (event: string) => void;
     scatterPlan: () => void;
     scatterProgress: (payload: string) => void;
-    scatterPlanEnded: (payload: string) => void;
+    scatterPlanEnded: (payload: Plan) => void;
   };
 }
 
@@ -130,7 +130,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.unraid = array.unraid;
             state.operation = array.operation;
             state.history = array.history;
-            state.plan = array.plan;
+            // state.plan = array.plan;
           });
 
           if (array.status === Op.Neutral) {
@@ -149,7 +149,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.unraid = array.unraid;
             state.operation = array.operation;
             state.history = array.history;
-            state.plan = array.plan;
+            // state.plan = array.plan;
           });
         },
         syncRoute: (path: string) => {
@@ -181,8 +181,11 @@ export const useUnraidStore = create<UnraidStore>()(
           // console.log('scatterProgress ', payload);
           useScatterStore.getState().actions.addLine(payload);
         },
-        scatterPlanEnded: (payload: string) => {
+        scatterPlanEnded: (payload: Plan) => {
           console.log('scatterPlanEnded ', payload);
+          set((state) => {
+            state.plan = payload;
+          });
           // get().actions.getUnraid();
         },
       },

@@ -5,7 +5,10 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"syscall"
 )
+
+const cRsyncBin = "/usr/bin/rsync"
 
 // Callback -
 type Callback func(line string)
@@ -101,4 +104,35 @@ func Shell2(command string, callback Callback) error {
 
 	// Wait for the result of the command; also closes our end of the pipe
 	return cmd.Wait()
+}
+
+// StartRsync -
+func StartRsync(workDir string, args ...string) (*exec.Cmd, error) {
+	cmd := exec.Command(cRsyncBin, args...)
+	cmd.Dir = workDir
+	cmd.Stderr = os.Stdout
+
+	err := cmd.Start()
+	return cmd, err
+}
+
+// EndRsync -
+func EndRsync(cmd *exec.Cmd) (int, error) {
+	exitCode := 0
+
+	err := cmd.Wait()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if waitStatus, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+				exitCode = waitStatus.ExitStatus()
+			}
+		}
+	}
+
+	return exitCode, err
+}
+
+// KillRsync -
+func KillRsync(cmd *exec.Cmd) error {
+	return cmd.Process.Kill()
 }

@@ -1,13 +1,11 @@
 export enum Op {
   Neutral = 0,
-  ScatterPlanning = 1,
-  ScatterPlan = 2,
-  ScatterMove = 3,
-  ScatterCopy = 4,
-  ScatterValidate = 5,
-  GatherPlanning = 6,
-  GatherPlan = 7,
-  GatherMove = 8,
+  ScatterPlan = 1,
+  ScatterMove = 2,
+  ScatterCopy = 3,
+  ScatterValidate = 4,
+  GatherPlan = 5,
+  GatherMove = 6,
 }
 
 export type Step = 'idle' | 'select' | 'plan' | 'transfer';
@@ -131,7 +129,7 @@ export interface State {
   unraid: Unraid | null;
   operation: Operation | null;
   history: History | null;
-  plan: Plan | null;
+  // plan: Plan | null;
 }
 
 export interface Node {

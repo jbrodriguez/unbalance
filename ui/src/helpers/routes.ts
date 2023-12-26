@@ -4,11 +4,10 @@ export function getRouteFromStatus(status: Op): string {
   switch (status) {
     case Op.Neutral:
       return '/scatter/select';
-    case Op.ScatterPlanning:
-      return '/scatter/plan';
     case Op.ScatterPlan:
-      return '/scatter/transfer/validation';
-    case Op.GatherPlanning:
+      return '/scatter/plan';
+    // case Op.ScatterPlan:
+    //   return '/scatter/transfer/validation';
     case Op.GatherPlan:
       return '/gather/plan';
     case Op.ScatterMove:

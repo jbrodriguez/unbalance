@@ -57,6 +57,8 @@ type Core struct {
 	sid   *shortid.Shortid
 
 	mailbox chan any
+
+	stopped bool
 }
 
 func Create(ctx *domain.Context) *Core {
@@ -66,7 +68,12 @@ func Create(ctx *domain.Context) *Core {
 		state: &domain.State{
 			Status: common.OpNeutral,
 		},
-		mailbox: ctx.Hub.Sub(common.CommandScatterPlanStart, common.CommandScatterMove, common.CommandGatherPlanStart),
+		mailbox: ctx.Hub.Sub(
+			common.CommandScatterPlanStart,
+			common.CommandScatterMove,
+			common.CommandScatterCopy,
+			common.CommandGatherPlanStart,
+		),
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -255,7 +256,7 @@ func (c *Core) endPlan(status uint64, plan *domain.Plan, disks []*domain.Disk, i
 	// notTransferred holds a string representation of all the items, separated by a '\n'
 	notTransferred := ""
 
-	if status == common.OpScatterPlan || status == common.OpScatterPlanning {
+	if status == common.OpScatterPlan {
 		// some logging
 		if len(toBeTransferred) == 0 {
 			logger.Blue("%s:No items can be transferred.", getName(status))
@@ -325,7 +326,7 @@ func (c *Core) printDisks(disks []*domain.Disk, blockSize uint64) {
 
 // HELPER FUNCTIONS
 func getName(status uint64) string {
-	if status == common.OpScatterPlan || status == common.OpScatterPlanning {
+	if status == common.OpScatterPlan {
 		return "scatterPlan"
 	}
 
@@ -333,7 +334,7 @@ func getName(status uint64) string {
 }
 
 func getTopic(status uint64) string {
-	if status == common.OpScatterPlan || status == common.OpScatterPlanning {
+	if status == common.OpScatterPlan {
 		return common.EventScatterPlanProgress
 	}
 
@@ -355,4 +356,128 @@ loop:
 	}
 
 	return items[:w]
+}
+
+func isZombie(proc string) (bool, int, error) {
+	var zombie bool
+	var retcode int
+
+	b, e := os.ReadFile(proc)
+	if e != nil {
+		return false, 0, e
+	}
+
+	fields := strings.Split(string(b), " ")
+	state := fields[2]
+	zombie = state == "Z"
+	if zombie {
+		retcode, _ = strconv.Atoi(fields[51])
+	}
+
+	return zombie, retcode, nil
+}
+
+func getReadBytes(proc string) (uint64, error) {
+	var sRead string
+
+	b, e := os.ReadFile(proc)
+	if e != nil {
+		return 0, e
+	}
+
+	lines := strings.Split(string(b), "\n")
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "rchar:") {
+			sRead = line[7:]
+			break
+		}
+	}
+
+	read, _ := strconv.ParseUint(sRead, 10, 64)
+
+	return read, nil
+}
+
+func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
+	message := "\n\nThe following commands will be executed:\n\n"
+
+	for _, command := range operation.Commands {
+		cmd := fmt.Sprintf(`(src: %s) rsync %s %s %s`, command.Src, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+		message += cmd + "\n"
+	}
+
+	subject := fmt.Sprintf("unbalance - %s operation STARTED", strings.ToUpper(opName))
+
+	go func() {
+		if sendErr := sendmail(c.ctx.NotifyTransfer, subject, message, c.ctx.DryRun); sendErr != nil {
+			logger.Red("%s", sendErr)
+		}
+	}()
+}
+
+func progress(bytesToTransfer, bytesTransferred uint64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
+	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
+	speed = bytesPerSec / 1024 / 1024 // MB/s
+
+	percent = (float64(bytesTransferred) / float64(bytesToTransfer)) * 100 // %
+
+	left = time.Duration(float64(bytesToTransfer-bytesTransferred)/bytesPerSec) * time.Second
+
+	return
+}
+
+func getCurrentTransfer(proc, prefix string) (string, error) {
+	var current string
+
+	name, e := os.Readlink(proc)
+	if e != nil {
+		return "", e
+	}
+
+	if strings.HasPrefix(name, prefix) {
+		current = name
+	}
+
+	return current, nil
+}
+
+func getError(line string, re *regexp.Regexp, ers map[int]string) string {
+	result := re.FindStringSubmatch(line)
+	status, _ := strconv.Atoi(result[1])
+	msg, ok := ers[status]
+	if !ok {
+		msg = "unknown error"
+	}
+
+	return msg
+}
+
+func sendmail(notify int, subject, message string, dryRun bool) (err error) {
+	if notify == 0 {
+		return nil
+	}
+
+	dry := ""
+	if dryRun {
+		dry = "-------\nDRY RUN\n-------\n"
+	}
+
+	msg := dry + message
+
+	cmd := exec.Command(mailCmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	err = cmd.Run()
+
+	return
+}
+
+func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Command) {
+	if operation.DryRun && operation.OpKind == common.OpGatherMove {
+		parent := filepath.Dir(command.Entry)
+		if parent != "." {
+			logger.Blue(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
+		} else {
+			logger.Blue(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+		}
+	}
 }
