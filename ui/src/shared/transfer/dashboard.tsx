@@ -79,7 +79,7 @@ export const Dashboard: React.FunctionComponent = () => {
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
           <span className="text-3xl">{totalValue}</span>
-          <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+          <span className="text-sm font-medium dark:text-slate-400 text-slate-600">
             {totalUnit}
           </span>
         </div>
