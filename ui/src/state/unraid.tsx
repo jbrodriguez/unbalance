@@ -3,7 +3,16 @@ import { immer } from 'zustand/middleware/immer';
 import { NavigateFunction } from 'react-router-dom';
 
 import { Api } from '~/api';
-import { Unraid, Operation, History, Plan, Op, Packet, Topic } from '~/types';
+import {
+  Unraid,
+  Operation,
+  History,
+  Plan,
+  Op,
+  Packet,
+  Topic,
+  State,
+} from '~/types';
 import { getRouteFromStatus } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
 import { createMachine, StateMachine } from '~/helpers/sm';
@@ -32,6 +41,7 @@ interface UnraidStore {
       command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
     ) => void;
     transferProgress: (payload: Operation) => void;
+    transferEnded: (payload: State) => void;
   };
 }
 
@@ -41,7 +51,7 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventScatterPlanEnded]: 'scatterPlanEnded',
   [Topic.EventTransferStarted]: 'transferProgress',
   [Topic.EventTransferProgress]: 'transferProgress',
-  [Topic.EventTransferEnded]: 'transferProgress',
+  [Topic.EventTransferEnded]: 'transferEnded',
   // 'scatter:plan:started': 'scatterProgress',
   // 'scatter:plan:progress': 'scatterProgress',
   // 'scatter:plan:ended': 'scatterProgress',
@@ -215,6 +225,15 @@ export const useUnraidStore = create<UnraidStore>()(
           // console.log('transferProgress ', payload);
           set((state) => {
             state.operation = payload;
+          });
+        },
+        transferEnded: (payload: State) => {
+          // console.log('transferProgress ', payload);
+          set((state) => {
+            state.status = payload.status;
+            state.unraid = payload.unraid;
+            state.operation = payload.operation;
+            state.history = payload.history;
           });
         },
       },

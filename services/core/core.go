@@ -159,7 +159,7 @@ func (c *Core) mailboxHandler() {
 				continue
 			}
 			logger.Olive("%+v", plan)
-			// go c.scatterMove(plan)
+			go c.scatterMove(plan)
 		case common.CommandScatterCopy:
 			var plan domain.Plan
 			err := lib.Bind(packet.Payload, &plan)

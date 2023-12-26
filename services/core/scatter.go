@@ -177,7 +177,7 @@ func (c *Core) scatterCopy(plan domain.Plan) {
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createScatterOperation(plan)
 
-	// go c.runOperation("Copy")
+	go c.runOperation("Copy")
 }
 
 func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {

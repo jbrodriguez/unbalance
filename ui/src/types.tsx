@@ -54,6 +54,15 @@ export interface Disk {
   blocksFree: number;
 }
 
+export enum CommandStatus {
+  Complete = 0,
+  Pending = 1,
+  Flagged = 2,
+  Stopped = 3,
+  SourceRemoval = 4,
+  InProgress = 5,
+}
+
 export interface Command {
   id: string;
   src: string;
@@ -61,7 +70,7 @@ export interface Command {
   entry: string;
   size: number;
   transferred: number;
-  status: number;
+  status: CommandStatus;
 }
 
 export interface Operation {
