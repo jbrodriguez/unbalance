@@ -18,6 +18,7 @@ import { Validation as ScatterValidation } from '~/flows/scatter/transfer/valida
 import { Gather } from '~/flows/gather/gather';
 import { Select as GatherSelect } from '~/flows/gather/select/select';
 import { Plan as GatherPlan } from '~/flows/gather/plan/plan';
+import { Targets } from '~/flows/gather/transfer/targets';
 import { History } from '~/flows/history/history';
 import { Settings } from '~/flows/settings/settings';
 import { Notifications } from '~/flows/settings/notifications';
@@ -75,6 +76,16 @@ const router = createBrowserRouter([
           {
             path: 'transfer',
             element: <Transfer />,
+            children: [
+              {
+                path: 'targets',
+                element: <Targets />,
+              },
+              {
+                path: 'operation',
+                element: <SharedTransfer />,
+              },
+            ],
           },
         ],
       },

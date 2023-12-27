@@ -243,6 +243,32 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 	}
 }
 
+func (c *Core) Locate(path string) []string {
+	logger.Olive("path %s", path)
+	locations := make([]string, 0)
+
+	for _, disk := range c.state.Unraid.Disks {
+		name := strings.Replace(path, "/mnt/user", "", 1)
+		entry := filepath.Join(disk.Path, name)
+
+		logger.Olive("name %s", name)
+		logger.Olive("entry %s", entry)
+
+		exists := true
+		if _, err := os.Stat(entry); err != nil {
+			exists = !os.IsNotExist(err)
+		}
+
+		if !exists {
+			continue
+		}
+
+		locations = append(locations, disk.Name)
+	}
+
+	return locations
+}
+
 func (c *Core) getLog() []string {
 	cmd := "tail -n 100 /boot/logs/unbalance.log"
 

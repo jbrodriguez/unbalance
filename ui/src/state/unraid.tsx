@@ -15,6 +15,7 @@ import {
 } from '~/types';
 import { getRouteFromStatus } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
+import { useGatherStore } from '~/state/gather';
 import { createMachine, StateMachine } from '~/helpers/sm';
 
 interface UnraidStore {
@@ -42,6 +43,7 @@ interface UnraidStore {
     ) => void;
     transferProgress: (payload: Operation) => void;
     transferEnded: (payload: State) => void;
+    gatherPlan: () => void;
   };
 }
 
@@ -52,6 +54,9 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventTransferStarted]: 'transferProgress',
   [Topic.EventTransferProgress]: 'transferProgress',
   [Topic.EventTransferEnded]: 'transferEnded',
+  [Topic.EventGatherPlanStarted]: 'gatherProgress',
+  [Topic.EventGatherPlanProgress]: 'gatherProgress',
+  [Topic.EventGatherPlanEnded]: 'gatherPlanEnded',
   // 'scatter:plan:started': 'scatterProgress',
   // 'scatter:plan:progress': 'scatterProgress',
   // 'scatter:plan:ended': 'scatterProgress',
@@ -115,6 +120,26 @@ export const useUnraidStore = create<UnraidStore>()(
             console.log(
               'transition action for "next" in "/scatter/transfer/validation" state',
             );
+          },
+        },
+      },
+      '/gather/select': {
+        next: {
+          target: '/gather/plan',
+          action() {
+            console.log(
+              'transition action for "next" in "/gather/select" state',
+            );
+            get().actions.gatherPlan();
+          },
+        },
+      },
+      '/gather/plan': {
+        next: {
+          target: '/gather/transfer/targets',
+          action() {
+            console.log('transition action for "next" in "/gather/plan" state');
+            // get().actions.refreshUnraid();
           },
         },
       },
@@ -236,6 +261,31 @@ export const useUnraidStore = create<UnraidStore>()(
             state.history = payload.history;
           });
         },
+        gatherPlan: () => {
+          console.log('running gather plan');
+          const gather = useGatherStore.getState();
+          const config = {
+            selected: Object.values(gather.selected),
+          };
+
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandGatherPlanStart,
+              payload: config,
+            }),
+          );
+        },
+        gatherProgress: (payload: string) => {
+          // console.log('scatterProgress ', payload);
+          useGatherStore.getState().actions.addLine(payload);
+        },
+        gatherPlanEnded: (payload: Plan) => {
+          console.log('gatherPlanEnded ', payload);
+          set((state) => {
+            state.plan = payload;
+          });
+          // get().actions.getUnraid();
+        },
       },
     };
   }),
@@ -246,10 +296,7 @@ export const useUnraidActions = () => useUnraidStore().actions;
 export const useUnraidLoaded = () => useUnraidStore().loaded;
 export const useUnraidStatus = () => useUnraidStore().status;
 export const useUnraidRoute = () => useUnraidStore().route;
-export const useUnraidIsBusy = () =>
-  ![Op.Neutral, Op.ScatterPlan, Op.GatherPlan].includes(
-    useUnraidStore().status,
-  );
+export const useUnraidIsBusy = () => useUnraidStore().status !== Op.Neutral;
 export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];
 export const useUnraidPlan = () => useUnraidStore().plan;
 export const useUnraidOperation = () => useUnraidStore().operation;

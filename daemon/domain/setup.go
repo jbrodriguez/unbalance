@@ -5,3 +5,7 @@ type ScatterSetup struct {
 	Targets  []string `json:"targets"`
 	Selected []string `json:"selected"`
 }
+
+type GatherSetup struct {
+	Selected []string `json:"selected"`
+}

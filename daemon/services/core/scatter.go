@@ -161,6 +161,14 @@ func (c *Core) scatterPlanEnd(plan *domain.Plan) {
 
 	packet := &domain.Packet{Topic: common.EventScatterPlanEnded, Payload: plan}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
+
+	// TODO: finish implementation
+	// // only send the perm issue msg if there's actually some work to do (BytesToTransfer > 0)
+	// // and there actually perm issues
+	// if plan.BytesToTransfer > 0 && (plan.OwnerIssue+plan.GroupIssue+plan.FolderIssue+plan.FileIssue > 0) {
+	// 	outbound = &dto.Packet{Topic: common.WsScatterPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
+	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
+	// }
 }
 
 // // SCATTER TRANSFER

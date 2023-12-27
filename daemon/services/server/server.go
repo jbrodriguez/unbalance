@@ -68,6 +68,7 @@ func (s *Server) Start() error {
 	api.GET("/history", s.getHistory)
 
 	api.GET("/tree/:route", s.getTree)
+	api.GET("/locate/:route", s.locate)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -189,4 +190,16 @@ func (s *Server) getTree(c echo.Context) error {
 	id := c.QueryParam("id")
 
 	return c.JSON(200, s.core.GetTree(path, id))
+}
+
+func (s *Server) locate(c echo.Context) error {
+	param := c.Param("route")
+	u, err := url.Parse(param)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join("/", "mnt", "user", path.Clean(u.Path))
+
+	return c.JSON(200, s.core.Locate(path))
 }

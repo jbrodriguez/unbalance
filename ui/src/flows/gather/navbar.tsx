@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import { useUnraidRoute } from '~/state/unraid';
+import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 
@@ -20,6 +20,9 @@ const config = [
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
+  const { transition } = useUnraidActions();
+
+  const onNext = () => transition('next');
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -81,6 +84,7 @@ export const Navbar: React.FunctionComponent = () => {
             />
           }
           disabled={route === '/gather/transfer'}
+          onClick={onNext}
         />
       </div>
     </div>
