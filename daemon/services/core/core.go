@@ -177,6 +177,15 @@ func (c *Core) mailboxHandler() {
 				continue
 			}
 			go c.gatherPlanPrepare(setup)
+		case common.CommandGatherMove:
+			var plan domain.Plan
+			err := lib.Bind(packet.Payload, &plan)
+			if err != nil {
+				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				continue
+			}
+			go c.gatherMove(plan)
 		}
+
 	}
 }

@@ -131,6 +131,7 @@ export interface Plan {
   fileIssue: number;
   vdisks: { [key: string]: VDisk };
   bytesToTransfer: number;
+  target: string; // used for gather operations
 }
 
 export interface State {
@@ -185,6 +186,7 @@ export enum Topic {
   EventGatherPlanStarted = 'gather:plan:started',
   EventGatherPlanProgress = 'gather:plan:progress',
   EventGatherPlanEnded = 'gather:plan:ended',
+  CommandGatherMove = 'gather:move',
 
   EventTransferStarted = 'transfer:started',
   EventTransferProgress = 'transfer:progress',

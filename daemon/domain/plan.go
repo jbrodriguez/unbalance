@@ -23,6 +23,7 @@ type Plan struct {
 	FolderIssue   int64             `json:"folderIssue"`
 	FileIssue     int64             `json:"fileIssue"`
 	VDisks        map[string]*VDisk `json:"vdisks"`
+	Target        string            `json:"target"`
 
 	// transfer section
 	BytesToTransfer uint64 `json:"bytesToTransfer"`

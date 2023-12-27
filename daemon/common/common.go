@@ -35,6 +35,7 @@ const (
 	EventGatherPlanStarted  = "gather:plan:started"
 	EventGatherPlanProgress = "gather:plan:progress"
 	EventGatherPlanEnded    = "gather:plan:ended"
+	CommandGatherMove       = "gather:move"
 
 	EventTransferStarted  = "transfer:started"
 	EventTransferProgress = "transfer:progress"

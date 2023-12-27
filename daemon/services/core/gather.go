@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/teris-io/shortid"
+
 	"unbalance/daemon/algorithm"
 	"unbalance/daemon/common"
 	"unbalance/daemon/domain"
@@ -122,4 +124,61 @@ func (c *Core) gatherPlanEnd(plan *domain.Plan) {
 	// 	outbound = &dto.Packet{Topic: common.WsGatherPlanIssues, Payload: fmt.Sprintf("%d|%d|%d|%d", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)}
 	// 	c.bus.Pub(&pubsub.Message{Payload: outbound}, "socket:broadcast")
 	// }
+}
+
+// // GATHER TRANSFER
+func (c *Core) gatherMove(plan domain.Plan) {
+	c.state.Status = common.OpGatherMove
+	c.state.Unraid = c.refreshUnraid()
+	c.state.Operation = c.createGatherOperation(plan)
+	// go c.runOperation("Move")
+}
+
+func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
+	operation := &domain.Operation{
+		ID:     shortid.MustGenerate(),
+		OpKind: c.state.Status,
+		DryRun: c.ctx.DryRun,
+	}
+
+	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.ctx.RsyncArgs...)
+
+	operation.Commands = make([]*domain.Command, 0)
+
+	for _, disk := range c.state.Unraid.Disks {
+		vdisk := plan.VDisks[disk.Path]
+
+		// only one disk will be destination (target)
+		if vdisk.Path != plan.Target {
+			continue
+		}
+
+		// user chose a target disk, adjust bytestotransfer to the size of its bin, since
+		// that's the amount of data we need to transfer. Also remove bin from all other disks,
+		operation.BytesToTransfer = vdisk.Bin.Size
+
+		for _, item := range vdisk.Bin.Items {
+			var entry string
+
+			// this a double check. item.Path should be in the form of films/bluray or tvshows/Billions
+			// if for some reason it starts with a "/", we strip it
+			if item.Path[0] == filepath.Separator {
+				entry = item.Path[1:]
+			} else {
+				entry = item.Path
+			}
+
+			operation.Commands = append(operation.Commands, &domain.Command{
+				ID:     shortid.MustGenerate(),
+				Src:    item.Location,
+				Dst:    vdisk.Path + string(filepath.Separator),
+				Entry:  entry,
+				Size:   item.Size,
+				Status: common.CmdPending,
+			})
+		}
+	}
+
+	return operation
+
 }

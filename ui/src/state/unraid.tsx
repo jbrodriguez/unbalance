@@ -44,6 +44,9 @@ interface UnraidStore {
     transferProgress: (payload: Operation) => void;
     transferEnded: (payload: State) => void;
     gatherPlan: () => void;
+    gatherProgress: (payload: string) => void;
+    gatherPlanEnded: (payload: Plan) => void;
+    gatherMove: () => void;
   };
 }
 
@@ -285,6 +288,27 @@ export const useUnraidStore = create<UnraidStore>()(
             state.plan = payload;
           });
           // get().actions.getUnraid();
+        },
+        gatherMove: () => {
+          const machine = get().machine;
+          const route = machine.transition(get().route, 'next');
+          // console.log('unraid.transition ', get().route, event, route);
+          const socket = get().socket;
+          const plan = get().plan;
+
+          if (!plan) {
+            return;
+          }
+
+          const target = useGatherStore.getState().target;
+
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandGatherMove,
+              payload: { ...plan, target },
+            }),
+          );
+          get().navigate?.(route);
         },
       },
     };
