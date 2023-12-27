@@ -4,16 +4,17 @@ import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
 import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
+import { useGatherTarget } from '~/state/gather';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose source' },
-  { navTo: 'plan', title: 'Plan', subtitle: 'Choose destination' },
+  { navTo: 'plan', title: 'Plan', subtitle: 'Monitor' },
   {
     navTo: 'transfer',
     title: 'Transfer',
-    subtitle: 'Verify and run operation',
+    subtitle: 'Choose target & Move',
   },
 ];
 
@@ -21,6 +22,7 @@ export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
   const { transition } = useUnraidActions();
+  const target = useGatherTarget();
 
   const onNext = () => transition('next');
 
@@ -47,7 +49,7 @@ export const Navbar: React.FunctionComponent = () => {
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
 
-        {route === '/gather/transfer' && (
+        {route === '/gather/transfer/targets' && target !== '' && (
           <div className="flex flex-row items-center justify-end">
             <Button label="MOVE" variant="primary" />
             <span className="mx-1">|</span>
@@ -75,15 +77,15 @@ export const Navbar: React.FunctionComponent = () => {
       <div className="flex items-center justify-end">
         <Button
           label="Next"
-          variant={getVariant(route !== '/gather/transfer')}
+          variant={getVariant(route !== '/gather/transfer/targets')}
           rightIcon={
             <Icon
               name="next"
               size={20}
-              fill={getFill(route !== '/gather/transfer')}
+              fill={getFill(route !== '/gather/transfer/targets')}
             />
           }
-          disabled={route === '/gather/transfer'}
+          disabled={route === '/gather/transfer/targets'}
           onClick={onNext}
         />
       </div>

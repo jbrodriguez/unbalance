@@ -3,18 +3,20 @@ import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { useUnraidPlan } from '~/state/unraid';
-import { useScatterBinDisk } from '~/state/scatter';
 import { humanBytes } from '~/helpers/units';
 
 interface BinProps {
   height?: number;
+  disk: string;
 }
 
-export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
+export const Bin: React.FunctionComponent<BinProps> = ({
+  height,
+  disk = '',
+}) => {
   const plan = useUnraidPlan();
-  const binDisk = useScatterBinDisk();
 
-  if (!plan || binDisk === '') {
+  if (!plan || disk === '') {
     return (
       <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
         <div className="p-2 overflow-y-auto" style={{ height: `${height}px` }}>
@@ -24,7 +26,9 @@ export const Bin: React.FunctionComponent<BinProps> = ({ height }) => {
     );
   }
 
-  const bin = plan.vdisks[binDisk].bin;
+  console.log('disk, vdisk ########## ', disk, plan.vdisks);
+
+  const bin = plan.vdisks[disk].bin;
 
   if (!bin) {
     return (

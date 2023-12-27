@@ -8,17 +8,16 @@ import { isParent, getAbsolutePath } from '~/helpers/tree';
 
 interface GatherStore {
   source: string;
-  // selected: Array<string>;
-  // targets: Targets;
   tree: Nodes;
   selected: Record<string, string>;
   location: Record<string, Array<string>>;
   logs: Array<string>;
+  target: string;
   actions: {
     loadShares: () => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => Promise<void>;
-    // setSource: (source: string) => Promise<void>;
+    setTarget: (target: string) => void;
     // loadBranch: (node: Node) => Promise<void>;
     // toggleSelected: (node: Node) => void;
     // toggleTarget: (name: string) => void;
@@ -49,6 +48,7 @@ export const useGatherStore = create<GatherStore>()(
     selected: {},
     location: {},
     logs: [],
+    target: '',
 
     actions: {
       loadShares: async () => {
@@ -135,6 +135,11 @@ export const useGatherStore = create<GatherStore>()(
           state.logs.push(line);
         });
       },
+      setTarget: (target: string) => {
+        set((state) => {
+          state.target = target;
+        });
+      },
     },
   })),
 );
@@ -147,3 +152,4 @@ export const useGatherSelected = () =>
 export const useGatherLocation = () =>
   useGatherStore((state) => state.location);
 export const useGatherLogs = () => useGatherStore((state) => state.logs);
+export const useGatherTarget = () => useGatherStore((state) => state.target);

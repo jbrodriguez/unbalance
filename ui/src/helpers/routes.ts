@@ -34,7 +34,8 @@ export const routeToStep = (route: string): number => {
       return 2;
     case '/scatter/transfer/validation':
     case '/scatter/transfer/operation':
-    case '/gather/transfer':
+    case '/gather/transfer/targets':
+    case '/gather/transfer/operation':
       return 3;
     default:
       return 1;
