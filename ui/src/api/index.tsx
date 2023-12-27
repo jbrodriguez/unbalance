@@ -55,4 +55,16 @@ export class Api {
       };
     }
   }
+
+  static async locate(path: string): Promise<Array<string>> {
+    const encodedPath = encodeURIComponent(path);
+    try {
+      const url = `${Api.host}/locate/${encodedPath}`;
+      const response = await fetch(url);
+      const location = await response.json();
+      return location;
+    } catch (e) {
+      return [];
+    }
+  }
 }

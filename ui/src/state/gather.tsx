@@ -8,13 +8,15 @@ import { isParent, getAbsolutePath } from '~/helpers/tree';
 
 interface GatherStore {
   source: string;
-  selected: Array<string>;
+  // selected: Array<string>;
   // targets: Targets;
   tree: Nodes;
+  selected: Record<string, string>;
+  location: Record<string, Array<string>>;
   actions: {
     loadShares: () => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
-    toggleSelected: (node: Node) => void;
+    toggleSelected: (node: Node) => Promise<void>;
     // setSource: (source: string) => Promise<void>;
     // loadBranch: (node: Node) => Promise<void>;
     // toggleSelected: (node: Node) => void;
@@ -39,10 +41,13 @@ const rootNode = {
 
 export const useGatherStore = create<GatherStore>()(
   immer((set, get) => ({
-    source: '/user',
-    selected: [],
+    source: 'user',
+    // selected: [],
     // targets: {},
     tree: { root: decorateNode(rootNode as Node) },
+    selected: {},
+    location: {},
+
     actions: {
       loadShares: async () => {
         const actions = get().actions;
@@ -89,23 +94,48 @@ export const useGatherStore = create<GatherStore>()(
           state.tree[node.id].children = branch.order;
         });
       },
-      toggleSelected: (node: Node) => {
+      toggleSelected: async (node: Node) => {
         set((state) => {
-          console.log('toggleSelected ', node);
           state.tree[node.id].checked = !state.tree[node.id].checked;
-          console.log('node.id ', state.tree[node.id]);
-          const fullPath = getAbsolutePath(node, state.tree);
-          const index = state.selected.indexOf(fullPath);
-          if (index === -1) {
-            state.selected.push(fullPath);
-          } else {
-            state.selected.splice(index, 1);
-          }
         });
+
+        const fullPath = getAbsolutePath(node, get().tree);
+        console.log('fullPath ', fullPath);
+
+        // const selected = get().selected;
+        if (get().selected[node.id]) {
+          set((state) => {
+            delete state.selected[node.id];
+            delete state.location[node.id];
+            state.selected = { ...state.selected };
+            state.location = { ...state.location };
+          });
+          return;
+        }
+
+        const location = await Api.locate(fullPath);
+        console.log('location ', location);
+
+        set((state) => {
+          state.selected[node.id] = fullPath;
+          state.location[node.id] = location;
+        });
+        // get().location[fullPath] = location;
+
+        // const fullPath = getAbsolutePath(node, get().tree);
+        // const branch = await Api.locate(fullPath, node.id);
+        // for (const key in branch.nodes) {
+        //   decorateNode(branch.nodes[key]);
+        // }
       },
     },
   })),
 );
 
 export const useGatherActions = () => useGatherStore((state) => state.actions);
+
 export const useGatherTree = () => useGatherStore((state) => state.tree);
+export const useGatherSelected = () =>
+  useGatherStore((state) => state.selected);
+export const useGatherLocation = () =>
+  useGatherStore((state) => state.location);

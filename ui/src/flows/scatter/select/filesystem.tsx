@@ -50,7 +50,7 @@ export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
                   <Icon
                     name="checked"
                     size={20}
-                    fill="fill-slate-700 dark:fill-lime-600"
+                    fill="fill-green-700 dark:fill-lime-600"
                   />
                 ),
                 uncheckedIcon: (
