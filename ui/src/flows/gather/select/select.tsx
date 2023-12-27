@@ -16,6 +16,7 @@ export const Select: React.FunctionComponent = () => {
               type="2col"
               left={<Shares height={height} />}
               middle={<Presence height={height} />}
+              dimensions={{ left: 60 }}
             />
           </>
         )}

@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { Targets, Nodes, Node } from '~/types';
 import { Api } from '~/api';
 import { decorateNode } from '~/shared/tree/utils';
+import { isParent, getAbsolutePath } from '~/helpers/tree';
 
 interface ScatterStore {
   source: string;
@@ -34,17 +35,6 @@ const loaderNode = {
   label: 'loading ...',
   leaf: false,
   parent: 'root',
-};
-
-const isParent = (id: string, nodes: Nodes) =>
-  Object.values(nodes).some((n) => n.parent === id);
-
-const getAbsolutePath = (node: Node, nodes: Nodes): string => {
-  const parent = nodes[node.parent];
-  if (parent.id === 'root') {
-    return node.label;
-  }
-  return `${getAbsolutePath(parent, nodes)}/${node.label}`;
 };
 
 export const useScatterStore = create<ScatterStore>()(
@@ -90,6 +80,7 @@ export const useScatterStore = create<ScatterStore>()(
         });
 
         if (isParent(node.id, get().tree)) {
+          // change reference to force re-render and show expanded/non-expanded state
           set((state) => {
             state.tree = { ...state.tree };
           });
