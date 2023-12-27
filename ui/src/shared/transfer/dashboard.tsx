@@ -12,21 +12,18 @@ export const Dashboard: React.FunctionComponent = () => {
     return null;
   }
 
-  console.log('operation --- ', operation);
-
   const completion = Math.round(operation.completed * 100) / 100;
-  console.log('completion --- ', completion);
   const completed = isNaN(completion) ? '0' : completion.toFixed(2);
   const velocity = Math.round(operation.speed * 100) / 100;
   const speed = isNaN(velocity) ? '0' : velocity.toFixed(2);
 
   let bytes = formatBytes(operation.bytesTransferred + operation.deltaTransfer);
   const transferredValue = bytes.value;
-  const transferredUnit = ' ' + bytes.unit;
+  const transferredUnit = bytes.unit;
 
   bytes = formatBytes(operation.bytesToTransfer);
   const totalValue = bytes.value;
-  const totalUnit = ' ' + bytes.unit;
+  const totalUnit = bytes.unit;
 
   const started = dayjs(operation.started);
   const diff = dayjs().diff(started, 'second');
