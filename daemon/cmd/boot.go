@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"unbalance/domain"
-	"unbalance/services"
+	"unbalance/daemon/domain"
+	"unbalance/daemon/services"
 )
 
 type Boot struct {

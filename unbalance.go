@@ -9,9 +9,9 @@ import (
 	"github.com/cskr/pubsub"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"unbalance/cmd"
-	"unbalance/common"
-	"unbalance/domain"
+	"unbalance/daemon/cmd"
+	"unbalance/daemon/common"
+	"unbalance/daemon/domain"
 )
 
 var Version string

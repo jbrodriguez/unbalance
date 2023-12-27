@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"unbalance/logger"
+	"unbalance/daemon/logger"
 )
 
 // Plan - represents the different types of operation planning in the app
