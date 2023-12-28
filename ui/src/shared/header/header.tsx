@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 import logo from '~/assets/unbalance-logo.png';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export const Header: React.FunctionComponent = () => {
   return (
@@ -16,7 +17,7 @@ export const Header: React.FunctionComponent = () => {
         </li>
       </ul>
 
-      <ul className="col-span-10 items-center justify-center py-2 bg-neutral-100 dark:bg-gray-800 text-sky-700 dark:text-slate-400">
+      <ul className="col-span-10 flex flex-row items-center justify-between py-2 bg-neutral-100 dark:bg-gray-800 text-sky-700 dark:text-slate-400">
         <li>
           <NavLink
             to="/scatter"
@@ -72,6 +73,10 @@ export const Header: React.FunctionComponent = () => {
           >
             LOG
           </NavLink>
+        </li>
+        <li>
+          <ModeToggle />
+          <span className="pl-2" />
         </li>
       </ul>
     </nav>
