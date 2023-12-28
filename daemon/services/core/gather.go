@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/teris-io/shortid"
@@ -143,6 +144,12 @@ func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
 	}
 
 	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.ctx.RsyncArgs...)
+
+	// user may have changed dry-run setting, adjust for it
+	if operation.DryRun {
+		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
+	}
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
 	operation.Commands = make([]*domain.Command, 0)
 

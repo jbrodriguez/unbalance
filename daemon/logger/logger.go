@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gookit/color"
@@ -46,11 +47,11 @@ func LightBlue(format string, args ...interface{}) {
 func printer(fn color.Color, format string, args ...interface{}) {
 	line := fmt.Sprintf(format, args...)
 	fn.Printf("%s %s\n", time.Now().Format("15:04"), line)
-	// log.Println(line)
+	log.Println(line)
 }
 
 func printer2(fn *color.Style256, format string, args ...interface{}) {
 	line := fmt.Sprintf(format, args...)
 	fn.Printf("%s %s\n", time.Now().Format("15:04"), line)
-	// log.Println(line)
+	log.Println(line)
 }

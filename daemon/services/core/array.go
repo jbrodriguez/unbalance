@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	"gopkg.in/ini.v1"
+
 	"unbalance/daemon/domain"
 	"unbalance/daemon/lib"
 	"unbalance/daemon/logger"
-
-	"gopkg.in/ini.v1"
 )
 
 func (c *Core) sanityCheck() error {

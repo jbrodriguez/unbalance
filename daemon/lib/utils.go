@@ -9,7 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
+
+	"gopkg.in/ini.v1"
+
+	"unbalance/daemon/domain"
 )
 
 // Exists - Check if File / Directory Exists
@@ -181,6 +187,52 @@ func Bind(content any, data any) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func LoadEnv(location string, config *domain.Config) error {
+	// load file
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	// fill data
+	config.DryRun, _ = file.Section("").Key("DRY_RUN").Bool()
+	config.NotifyPlan, _ = file.Section("").Key("NOTIFY_PLAN").Int()
+	config.NotifyTransfer, _ = file.Section("").Key("NOTIFY_TRANSFER").Int()
+	config.ReservedAmount, _ = file.Section("").Key("RESERVED_AMOUNT").Uint64()
+	config.ReservedUnit = file.Section("").Key("RESERVED_UNIT").String()
+	config.RsyncArgs = file.Section("").Key("RSYNC_ARGS").Strings(",")
+	config.Verbosity, _ = file.Section("").Key("VERBOSITY").Int()
+	config.CheckForUpdate, _ = file.Section("").Key("CHECK_FOR_UPDATE").Int()
+	config.RefreshRate, _ = file.Section("").Key("REFRESH_RATE").Int()
+
+	return nil
+}
+
+func SaveEnv(location string, config domain.Config) error {
+	// load file
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	ini.PrettyFormat = false
+
+	// fill data
+	file.Section("").Key("DRY_RUN").SetValue(strconv.FormatBool(config.DryRun))
+	file.Section("").Key("NOTIFY_PLAN").SetValue(strconv.Itoa(config.NotifyPlan))
+	file.Section("").Key("NOTIFY_TRANSFER").SetValue(strconv.Itoa(config.NotifyTransfer))
+	file.Section("").Key("RESERVED_AMOUNT").SetValue(strconv.FormatUint(config.ReservedAmount, 10))
+	file.Section("").Key("RESERVED_UNIT").SetValue(config.ReservedUnit)
+	file.Section("").Key("RSYNC_ARGS").SetValue(strings.Join(config.RsyncArgs, ","))
+	file.Section("").Key("VERBOSITY").SetValue(strconv.Itoa(config.Verbosity))
+	file.Section("").Key("CHECK_FOR_UPDATE").SetValue(strconv.Itoa(config.CheckForUpdate))
+	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
+
+	file.SaveTo(location)
 
 	return nil
 }

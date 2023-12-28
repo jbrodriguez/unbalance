@@ -69,6 +69,7 @@ func (s *Server) Start() error {
 
 	api.GET("/tree/:route", s.getTree)
 	api.GET("/locate/:route", s.locate)
+	api.PUT("/config/dryRun", s.toggleDryRun)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -202,4 +203,8 @@ func (s *Server) locate(c echo.Context) error {
 	path := filepath.Join("/", "mnt", "user", path.Clean(u.Path))
 
 	return c.JSON(200, s.core.Locate(path))
+}
+
+func (s *Server) toggleDryRun(c echo.Context) error {
+	return c.JSON(200, s.core.ToggleDryRun())
 }

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -16,6 +17,7 @@ const (
 	certDir    = "/boot/config/ssl/certs"
 	mailCmd    = "/usr/local/emhttp/webGui/scripts/notify"
 	timeFormat = "Jan _2, 2006 15:04:05"
+	settings   = "/boot/config/plugins/unbalance"
 )
 
 var (
@@ -107,34 +109,6 @@ func (c *Core) Stop() error {
 	return nil
 }
 
-func (c *Core) GetConfig() *domain.Config {
-	return &c.ctx.Config
-}
-
-func (c *Core) GetState() *domain.State {
-	return c.state
-}
-
-func (c *Core) GetStorage() *domain.Unraid {
-	unraid, err := c.getStatus()
-	if err != nil {
-		logger.Yellow("unable to get storage: %s", err)
-	} else {
-		c.state.Unraid = unraid
-	}
-
-	return c.state.Unraid
-}
-
-func (c *Core) GetOperation() *domain.Operation {
-	return c.state.Operation
-}
-
-func (c *Core) GetHistory() *domain.History {
-	c.state.History.LastChecked = time.Now()
-	return c.state.History
-}
-
 func (c *Core) mailboxHandler() {
 	for p := range c.mailbox {
 		if c.state.Status != common.OpNeutral {
@@ -189,4 +163,43 @@ func (c *Core) mailboxHandler() {
 		}
 
 	}
+}
+
+func (c *Core) GetConfig() *domain.Config {
+	return &c.ctx.Config
+}
+
+func (c *Core) GetState() *domain.State {
+	return c.state
+}
+
+func (c *Core) GetStorage() *domain.Unraid {
+	unraid, err := c.getStatus()
+	if err != nil {
+		logger.Yellow("unable to get storage: %s", err)
+	} else {
+		c.state.Unraid = unraid
+	}
+
+	return c.state.Unraid
+}
+
+func (c *Core) GetOperation() *domain.Operation {
+	return c.state.Operation
+}
+
+func (c *Core) GetHistory() *domain.History {
+	c.state.History.LastChecked = time.Now()
+	return c.state.History
+}
+
+func (c *Core) ToggleDryRun() bool {
+	c.ctx.Config.DryRun = !c.ctx.Config.DryRun
+	c.saveSettings()
+	return c.ctx.Config.DryRun
+}
+
+func (c *Core) saveSettings() error {
+	location := filepath.Join(settings, "unbalance.env")
+	return lib.SaveEnv(location, c.ctx.Config)
 }
