@@ -7,9 +7,9 @@
   line-height: 1.75;
   font-weight: 400;
 
-  color-scheme: light dark;
+  /* color-scheme: light dark; */
   /* color: rgba(255, 255, 255, 0.87);
-  background-color: #242424; */
+  /* background-color: #242424; */
   /* background-color: @apply bg-gray-900 dark:bg-gray-100; */
 
   font-synthesis: none;
@@ -18,7 +18,34 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* resizable-panel css variables */
-  --color-solid-resize-bar: #39414d;
+  /* --color-solid-resize-bar: #39414d; */
+  --primary: transparent;
+  --secondary: #39414d;
+}
+
+@layer base {
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary) var(--primary);
+  }
+
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    @apply bg-transparent dark:bg-transparent rounded;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply bg-slate-400 dark:bg-gray-600 border-2 rounded-xl border-white;
+  }
+
+  body {
+    @apply bg-white dark:bg-gray-900;
+  }
 }
 
 /* @layer components {

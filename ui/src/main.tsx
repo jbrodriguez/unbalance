@@ -24,6 +24,7 @@ import { Settings } from '~/flows/settings/settings';
 import { Notifications } from '~/flows/settings/notifications';
 import { Logs } from '~/flows/logs/logs';
 import { Transfer as SharedTransfer } from '~/shared/transfer/transfer';
+// import { Feedback } from '~/shared/feedback/feedback';
 
 const router = createBrowserRouter([
   {

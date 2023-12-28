@@ -7,10 +7,10 @@ import logo from '~/assets/unbalance-logo.png';
 export const Header: React.FunctionComponent = () => {
   return (
     <nav className="grid grid-cols-12 gap-2 my-4">
-      <ul className="col-span-2 py-2 border border-lime-600 dark:border-lime-600">
+      <ul className="col-span-2 py-2 border bg-lime-400 dark:bg-lime-600 border-lime-300 dark:border-lime-500">
         <li className="flex items-center justify-center">
           <img src={logo} alt="logo" className="h-8 mr-2" />
-          <span className="text-lime-600 dark:text-lime-600 font-medium">
+          <span className="text-slate-900 dark:text-slate-900 font-medium">
             unbalanced
           </span>
         </li>

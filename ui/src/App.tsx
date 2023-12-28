@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { ThemeProvider } from '@/components/theme-provider';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
@@ -42,16 +43,18 @@ export function App() {
   console.log('rendering App() ', route);
 
   return (
-    <div className="container mx-auto h-screen flex flex-col">
-      <header>
-        <Header />
-      </header>
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <footer>
-        <Footer />
-      </footer>
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <div className="container mx-auto h-screen flex flex-col">
+        <header>
+          <Header />
+        </header>
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <footer>
+          <Footer />
+        </footer>
+      </div>
+    </ThemeProvider>
   );
 }
