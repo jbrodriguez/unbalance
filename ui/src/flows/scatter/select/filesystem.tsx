@@ -7,12 +7,7 @@ import { Node } from '~/types';
 import { Icon } from '~/shared/icons/icon';
 import { useScatterTree, useScatterActions } from '~/state/scatter';
 
-interface Props {
-  height?: number;
-  width?: number;
-}
-
-export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
+export const FileSystem: React.FunctionComponent = () => {
   const tree = useScatterTree();
   const { loadBranch, toggleSelected } = useScatterActions();
 
@@ -20,12 +15,12 @@ export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
   const onCheck = (node: Node) => toggleSelected(node);
 
   return (
-    <div className="flex flex-1 bg-neutral-200 dark:bg-gray-950">
-      <AutoSizer disableHeight>
-        {({ width }) => (
+    <AutoSizer disableWidth>
+      {({ height }) => (
+        <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
           <div
             className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300 "
-            style={{ height: `${height}px`, width: `${width}px` }}
+            style={{ height: `${height}px` }}
           >
             <CheckboxTree
               nodes={tree}
@@ -91,8 +86,8 @@ export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
               }}
             />
           </div>
-        )}
-      </AutoSizer>
-    </div>
+        </div>
+      )}
+    </AutoSizer>
   );
 };

@@ -1,27 +1,31 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 
-import { Panels } from '~/shared/panels/panels';
 import { Disks } from './disks';
 import { FileSystem } from './filesystem';
 import { Targets } from './targets';
 
 export const Select: React.FunctionComponent = () => {
   return (
-    <div style={{ flex: '1 1 auto' }}>
-      <AutoSizer disableWidth>
-        {({ height }) => (
-          <>
-            <Panels
-              type="3col"
-              left={<Disks height={height} />}
-              middle={<FileSystem height={height} />}
-              right={<Targets height={height} />}
-            />
-          </>
-        )}
-      </AutoSizer>
+    <div className="flex flex-1">
+      <ResizablePanelGroup direction="horizontal" className="flex flex-1">
+        <ResizablePanel defaultSizePercentage={30}>
+          <Disks />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSizePercentage={40}>
+          <FileSystem />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSizePercentage={30}>
+          <Targets />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
