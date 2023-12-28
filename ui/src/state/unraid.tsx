@@ -146,6 +146,16 @@ export const useUnraidStore = create<UnraidStore>()(
           },
         },
       },
+      '/gather/transfer/targets': {
+        next: {
+          target: '/gather/transfer/operation',
+          action() {
+            console.log(
+              'transition action for "next" in "/gather/transfer/targets" state',
+            );
+          },
+        },
+      },
     };
 
     return {

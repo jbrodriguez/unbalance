@@ -21,10 +21,11 @@ const config = [
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
-  const { transition } = useUnraidActions();
+  const { transition, gatherMove } = useUnraidActions();
   const target = useGatherTarget();
 
   const onNext = () => transition('next');
+  const onMove = () => gatherMove();
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -51,7 +52,7 @@ export const Navbar: React.FunctionComponent = () => {
 
         {route === '/gather/transfer/targets' && target !== '' && (
           <div className="flex flex-row items-center justify-end">
-            <Button label="MOVE" variant="primary" />
+            <Button label="MOVE" variant="primary" onClick={onMove} />
             <span className="mx-1">|</span>
 
             <div className="flex items-center">

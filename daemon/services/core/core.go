@@ -73,6 +73,7 @@ func Create(ctx *domain.Context) *Core {
 			common.CommandScatterMove,
 			common.CommandScatterCopy,
 			common.CommandGatherPlanStart,
+			common.CommandGatherMove,
 		),
 	}
 }

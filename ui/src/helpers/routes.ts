@@ -15,7 +15,7 @@ export function getRouteFromStatus(status: Op): string {
     case Op.ScatterValidate:
       return '/scatter/transfer/operation';
     case Op.GatherMove:
-      return '/gather/transfer';
+      return '/gather/transfer/operation';
     default:
       return '/scatter/select';
   }

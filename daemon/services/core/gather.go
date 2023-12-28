@@ -131,7 +131,8 @@ func (c *Core) gatherMove(plan domain.Plan) {
 	c.state.Status = common.OpGatherMove
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createGatherOperation(plan)
-	// go c.runOperation("Move")
+
+	go c.runOperation("Move")
 }
 
 func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
@@ -180,5 +181,4 @@ func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
 	}
 
 	return operation
-
 }
