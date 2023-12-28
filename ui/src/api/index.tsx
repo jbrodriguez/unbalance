@@ -11,7 +11,7 @@ export class Api {
     } catch (e) {
       return {
         version: '0.0.1',
-        dryRun: false,
+        dryRun: true,
         notifyPlan: 0,
         notifyTransfer: 0,
         reservedAmount: BigInt(0),
@@ -35,7 +35,6 @@ export class Api {
         unraid: null,
         operation: null,
         history: null,
-        // plan: null,
       };
     }
   }
@@ -65,6 +64,19 @@ export class Api {
       return location;
     } catch (e) {
       return [];
+    }
+  }
+
+  static async toggleDryRun(): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    };
+    try {
+      const url = `${Api.host}/config/dryRun`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('toggleDryRun() error: ', e);
     }
   }
 }

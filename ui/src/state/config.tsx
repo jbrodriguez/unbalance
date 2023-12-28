@@ -16,13 +16,14 @@ interface ConfigStore {
   refreshRate: number;
   actions: {
     getConfig: () => Promise<void>;
+    toggleDryRun: () => Promise<void>;
   };
 }
 
 export const useConfigStore = create<ConfigStore>()(
   immer((set) => ({
     version: '',
-    dryRun: false,
+    dryRun: true,
     notifyPlan: 0,
     notifyTransfer: 0,
     reservedAmount: BigInt(0),
@@ -48,6 +49,12 @@ export const useConfigStore = create<ConfigStore>()(
           state.refreshRate = config.refreshRate;
         });
       },
+      toggleDryRun: async () => {
+        set((state) => {
+          state.dryRun = !state.dryRun;
+        });
+        await Api.toggleDryRun();
+      },
     },
   })),
 );
@@ -57,3 +64,4 @@ export const useConfigStore = create<ConfigStore>()(
 export const useConfigActions = () => useConfigStore((state) => state.actions);
 
 export const useConfigVersion = () => useConfigStore((state) => state.version);
+export const useConfigDryRun = () => useConfigStore((state) => state.dryRun);
