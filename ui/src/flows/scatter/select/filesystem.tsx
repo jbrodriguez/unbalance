@@ -17,7 +17,7 @@ export const FileSystem: React.FunctionComponent = () => {
   return (
     <AutoSizer disableWidth>
       {({ height }) => (
-        <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
+        <div className="flex flex-1 flex-col bg-neutral-100 dark:bg-gray-950">
           <div
             className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300 "
             style={{ height: `${height}px` }}
@@ -73,7 +73,7 @@ export const FileSystem: React.FunctionComponent = () => {
                   <Icon
                     name="square"
                     size={20}
-                    fill="fill-neutral-200 dark:fill-gray-950"
+                    fill="fill-neutral-100 dark:fill-gray-950"
                   />
                 ),
                 loadingIcon: (

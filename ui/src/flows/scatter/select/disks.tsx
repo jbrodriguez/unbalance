@@ -18,7 +18,7 @@ export const Disks: React.FunctionComponent = () => {
   return (
     <AutoSizer disableWidth>
       {({ height }) => (
-        <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
+        <div className="flex flex-1 flex-col bg-neutral-100 dark:bg-gray-950">
           <div
             className="overflow-y-auto px-2 pt-2"
             style={{ height: `${height}px` }}
