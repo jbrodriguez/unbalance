@@ -1,9 +1,7 @@
 import React from 'react';
 
-import { Log } from '~/shared/log/log';
-import { useScatterLogs } from '~/state/scatter';
+import { Feedback } from '~/shared/feedback/feedback';
 
 export const Plan: React.FunctionComponent = () => {
-  const logs = useScatterLogs();
-  return <Log logs={logs} />;
+  return <Feedback />;
 };

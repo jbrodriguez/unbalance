@@ -11,7 +11,6 @@ interface GatherStore {
   tree: Nodes;
   selected: Record<string, string>;
   location: Record<string, Array<string>>;
-  logs: Array<string>;
   target: string;
   actions: {
     loadShares: () => Promise<void>;
@@ -21,7 +20,6 @@ interface GatherStore {
     // loadBranch: (node: Node) => Promise<void>;
     // toggleSelected: (node: Node) => void;
     // toggleTarget: (name: string) => void;
-    addLine: (line: string) => void;
   };
 }
 
@@ -47,7 +45,6 @@ export const useGatherStore = create<GatherStore>()(
     tree: { root: decorateNode(rootNode as Node) },
     selected: {},
     location: {},
-    logs: [],
     target: '',
 
     actions: {
@@ -130,11 +127,6 @@ export const useGatherStore = create<GatherStore>()(
         //   decorateNode(branch.nodes[key]);
         // }
       },
-      addLine: (line: string) => {
-        set((state) => {
-          state.logs.push(line);
-        });
-      },
       setTarget: (target: string) => {
         set((state) => {
           state.target = target;
@@ -151,5 +143,4 @@ export const useGatherSelected = () =>
   useGatherStore((state) => state.selected);
 export const useGatherLocation = () =>
   useGatherStore((state) => state.location);
-export const useGatherLogs = () => useGatherStore((state) => state.logs);
 export const useGatherTarget = () => useGatherStore((state) => state.target);

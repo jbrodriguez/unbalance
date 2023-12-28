@@ -24,7 +24,7 @@ export const FileSystem: React.FunctionComponent<Props> = ({ height }) => {
       <AutoSizer disableHeight>
         {({ width }) => (
           <div
-            className="overflow-y-auto overflow-x-auto p-2"
+            className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300 "
             style={{ height: `${height}px`, width: `${width}px` }}
           >
             <CheckboxTree

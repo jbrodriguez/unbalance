@@ -29,6 +29,7 @@ interface UnraidStore {
   operation: Operation | null;
   history: History | null;
   plan: Plan | null;
+  logs: Array<string>;
   actions: {
     setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
@@ -47,6 +48,7 @@ interface UnraidStore {
     gatherProgress: (payload: string) => void;
     gatherPlanEnded: (payload: Plan) => void;
     gatherMove: () => void;
+    // addLine: (line: string) => void;
   };
 }
 
@@ -60,11 +62,6 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventGatherPlanStarted]: 'gatherProgress',
   [Topic.EventGatherPlanProgress]: 'gatherProgress',
   [Topic.EventGatherPlanEnded]: 'gatherPlanEnded',
-  // 'scatter:plan:started': 'scatterProgress',
-  // 'scatter:plan:progress': 'scatterProgress',
-  // 'scatter:plan:ended': 'scatterProgress',
-  // [`${EventScatterPlanProgress}`]: 'scatterProgress',
-  // [`${EventScatterPlanEnded}`]: 'scatterProgress',
 };
 
 export const useUnraidStore = create<UnraidStore>()(
@@ -169,6 +166,7 @@ export const useUnraidStore = create<UnraidStore>()(
       operation: null,
       history: null,
       plan: null,
+      logs: [],
       actions: {
         setNavigate: (navigate: NavigateFunction) => {
           set((state) => {
@@ -185,7 +183,6 @@ export const useUnraidStore = create<UnraidStore>()(
             state.unraid = array.unraid;
             state.operation = array.operation;
             state.history = array.history;
-            // state.plan = array.plan;
           });
 
           if (array.status === Op.Neutral) {
@@ -218,6 +215,12 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         scatterPlan: () => {
           console.log('running scatter plan');
+          set((state) => {
+            state.status = Op.ScatterPlan;
+            state.logs = [];
+            state.plan = null;
+          });
+
           const scatter = useScatterStore.getState();
           const config = {
             source: scatter.source,
@@ -234,11 +237,15 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         scatterProgress: (payload: string) => {
           // console.log('scatterProgress ', payload);
-          useScatterStore.getState().actions.addLine(payload);
+          // useScatterStore.getState().actions.addLine(payload);
+          set((state) => {
+            state.logs.push(payload);
+          });
         },
         scatterPlanEnded: (payload: Plan) => {
           console.log('scatterPlanEnded ', payload);
           set((state) => {
+            state.status = Op.Neutral;
             state.plan = payload;
           });
           // get().actions.getUnraid();
@@ -276,6 +283,12 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         gatherPlan: () => {
           console.log('running gather plan');
+          set((state) => {
+            state.status = Op.GatherPlan;
+            state.logs = [];
+            state.plan = null;
+          });
+
           const gather = useGatherStore.getState();
           const config = {
             selected: Object.values(gather.selected),
@@ -290,11 +303,15 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         gatherProgress: (payload: string) => {
           // console.log('scatterProgress ', payload);
-          useGatherStore.getState().actions.addLine(payload);
+          // useGatherStore.getState().actions.addLine(payload);
+          set((state) => {
+            state.logs.push(payload);
+          });
         },
         gatherPlanEnded: (payload: Plan) => {
           console.log('gatherPlanEnded ', payload);
           set((state) => {
+            state.status = Op.Neutral;
             state.plan = payload;
           });
           // get().actions.getUnraid();
@@ -325,12 +342,16 @@ export const useUnraidStore = create<UnraidStore>()(
   }),
 );
 
-export const useUnraidActions = () => useUnraidStore().actions;
+export const useUnraidActions = () => useUnraidStore((state) => state.actions);
 
-export const useUnraidLoaded = () => useUnraidStore().loaded;
-export const useUnraidStatus = () => useUnraidStore().status;
-export const useUnraidRoute = () => useUnraidStore().route;
-export const useUnraidIsBusy = () => useUnraidStore().status !== Op.Neutral;
-export const useUnraidDisks = () => useUnraidStore().unraid?.disks ?? [];
-export const useUnraidPlan = () => useUnraidStore().plan;
-export const useUnraidOperation = () => useUnraidStore().operation;
+export const useUnraidLoaded = () => useUnraidStore((state) => state.loaded);
+export const useUnraidStatus = () => useUnraidStore((state) => state.status);
+export const useUnraidRoute = () => useUnraidStore((state) => state.route);
+export const useUnraidIsBusy = () =>
+  useUnraidStore((state) => state.status !== Op.Neutral);
+export const useUnraidDisks = () =>
+  useUnraidStore((state) => state.unraid?.disks ?? []);
+export const useUnraidPlan = () => useUnraidStore((state) => state.plan);
+export const useUnraidOperation = () =>
+  useUnraidStore((state) => state.operation);
+export const useUnraidLogs = () => useUnraidStore((state) => state.logs);

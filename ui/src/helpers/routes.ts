@@ -6,8 +6,6 @@ export function getRouteFromStatus(status: Op): string {
       return '/scatter/select';
     case Op.ScatterPlan:
       return '/scatter/plan';
-    // case Op.ScatterPlan:
-    //   return '/scatter/transfer/validation';
     case Op.GatherPlan:
       return '/gather/plan';
     case Op.ScatterMove:
