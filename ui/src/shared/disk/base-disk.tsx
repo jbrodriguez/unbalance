@@ -9,7 +9,7 @@ type DiskProps = {
 
 export const Disk: React.FunctionComponent<DiskProps> = ({ disk }) => {
   return (
-    <div className="flex flex-col text-blue-800">
+    <div className="flex flex-1 flex-col text-blue-800">
       <div className="flex flex-1 flex-row items-center justify-between">
         <div className="flex flex-1 flex-row items-center">
           <span className="font-bold">{disk.name}</span>

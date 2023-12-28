@@ -42,7 +42,7 @@ export const Targets: React.FunctionComponent = () => {
                     checked={isChecked(disk.name, targets)}
                     onCheck={onCheck(disk)}
                   />
-                  <span className="pr-2" />
+                  <div className="pr-4" />
                   <Disk disk={disk} />
                 </div>
               ))}
