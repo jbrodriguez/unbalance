@@ -20,7 +20,7 @@ export const Targets: React.FunctionComponent = () => {
               type="3col"
               left={<Shares height={height} />}
               middle={<Target height={height} />}
-              right={<Bin height={height} disk={disk} />}
+              right={<Bin disk={disk} />}
               dimensions={{ left: 20, middle: 50, right: 30 }}
             />
           </>

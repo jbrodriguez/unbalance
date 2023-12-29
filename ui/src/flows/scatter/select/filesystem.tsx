@@ -15,21 +15,16 @@ export const FileSystem: React.FunctionComponent = () => {
   const onCheck = (node: Node) => toggleSelected(node);
 
   return (
-    <div className="h-full bg-neutral-100 dark:bg-gray-950">
+    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
       <div className="flex flex-col pt-2 px-2">
         <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
           Folders/Files
         </h1>
         <hr className="border-slate-300 dark:border-gray-700" />
       </div>
-      {/* <div className="flex flex-col pt-2 px-2">
-        <span className="text-lg px-2 bg-slate-200 dark:bg-gray-800 text-slate-500 dark:text-gray-950">
-          Folders/Files
-        </span>
-      </div> */}
-      <AutoSizer disableWidth>
-        {({ height }) => (
-          <div className="flex flex-1 flex-col">
+      <div className="flex-auto">
+        <AutoSizer disableWidth>
+          {({ height }) => (
             <div
               className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300 "
               style={{ height: `${height}px` }}
@@ -98,9 +93,9 @@ export const FileSystem: React.FunctionComponent = () => {
                 }}
               />
             </div>
-          </div>
-        )}
-      </AutoSizer>
+          )}
+        </AutoSizer>
+      </div>
     </div>
   );
 };

@@ -16,18 +16,18 @@ export const Disks: React.FunctionComponent = () => {
   const onDiskClick = (disk: IDisk) => setSource(disk.name);
 
   return (
-    <div className="h-full bg-neutral-100 dark:bg-gray-950">
+    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
       <div className="flex flex-col p-2">
         <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
           Source Disk
         </h1>
         <hr className="border-slate-300 dark:border-gray-700" />
       </div>
-      <AutoSizer disableWidth>
-        {({ height }) => (
-          <div className="flex flex-1 flex-col">
+      <div className="flex-auto">
+        <AutoSizer disableWidth>
+          {({ height }) => (
             <div
-              className="overflow-y-auto px-2 pt-2"
+              className="overflow-y-auto p-2"
               style={{ height: `${height}px` }}
             >
               {disks.map((disk) => (
@@ -40,9 +40,9 @@ export const Disks: React.FunctionComponent = () => {
                 </Selectable>
               ))}
             </div>
-          </div>
-        )}
-      </AutoSizer>
+          )}
+        </AutoSizer>
+      </div>
     </div>
   );
 };

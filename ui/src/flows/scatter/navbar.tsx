@@ -7,6 +7,7 @@ import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 import { Topic } from '~/types';
+import { useConfigActions, useConfigDryRun } from '~/state/config';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -18,10 +19,13 @@ export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
   const currentStep = routeToStep(route);
   const { transition, scatterOperation } = useUnraidActions();
+  const { toggleDryRun } = useConfigActions();
+  const dryRun = useConfigDryRun();
 
   const onNext = () => transition('next');
   const onMove = () => scatterOperation(Topic.CommandScatterMove);
   const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
+  const onDryRun = () => toggleDryRun();
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -56,11 +60,12 @@ export const Navbar: React.FunctionComponent = () => {
 
             <div className="flex items-center">
               <input
-                checked
+                checked={dryRun}
                 id="checked-checkbox"
                 type="checkbox"
                 value=""
                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                onChange={onDryRun}
               />
               <label
                 htmlFor="checked-checkbox"

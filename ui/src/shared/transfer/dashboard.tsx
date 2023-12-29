@@ -36,71 +36,83 @@ export const Dashboard: React.FunctionComponent = () => {
       : operation.remaining;
 
   return (
-    <div className="grid grid-cols-6 gap-4 text-blue-600 ">
+    <div className="grid grid-cols-6 gap-4 text-blue-600">
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{completed}</span>
-          <span className="text-sm font-medium dark:text-slate-400 text-slate-600">
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {completed}
+          </span>
+          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
             %
           </span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Completed
         </span>
       </div>
 
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{speed}</span>
-          <span className="text-sm font-medium dark:text-slate-400 text-slate-600">
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {speed}
+          </span>
+          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
             MB/s
           </span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Speed
         </span>
       </div>
 
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{transferredValue}</span>
-          <span className="text-sm font-medium dark:text-slate-400 text-slate-600">
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {transferredValue}
+          </span>
+          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
             {transferredUnit}
           </span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Transferred
         </span>
       </div>
 
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{totalValue}</span>
-          <span className="text-sm font-medium dark:text-slate-400 text-slate-600">
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {totalValue}
+          </span>
+          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
             {totalUnit}
           </span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Total
         </span>
       </div>
 
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{elapsed}</span>
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {elapsed}
+          </span>
           <span></span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Elapsed
         </span>
       </div>
 
       <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex justify-between items-center">
-          <span className="text-3xl">{remaining}</span>
+          <span className="text-3xl dark:text-slate-400 text-slate-600">
+            {remaining}
+          </span>
           <span></span>
         </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-600">
+        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
           Remaining
         </span>
       </div>
