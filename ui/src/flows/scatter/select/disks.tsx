@@ -18,10 +18,10 @@ export const Disks: React.FunctionComponent = () => {
   return (
     <div className="h-full bg-neutral-100 dark:bg-gray-950">
       <div className="flex flex-col p-2">
-        <span className="text-lg font-bold text-slate-500 dark:text-gray-500">
+        <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
           Source Disk
-        </span>
-        <span className="border-b pt-2 px-2 border-slate-300 dark:border-gray-700" />
+        </h1>
+        <hr className="border-slate-300 dark:border-gray-700" />
       </div>
       <AutoSizer disableWidth>
         {({ height }) => (
