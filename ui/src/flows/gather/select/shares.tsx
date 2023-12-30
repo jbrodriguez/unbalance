@@ -38,56 +38,56 @@ export const Shares: React.FunctionComponent<Props> = ({ height = 0 }) => {
                   <Icon
                     name="minus"
                     size={20}
-                    fill="fill-slate-500 dark:fill-gray-700"
+                    style="fill-slate-500 dark:fill-gray-700"
                   />
                 ),
                 expandIcon: (
                   <Icon
                     name="plus"
                     size={20}
-                    fill="fill-slate-500 dark:fill-gray-700"
+                    style="fill-slate-500 dark:fill-gray-700"
                   />
                 ),
                 checkedIcon: (
                   <Icon
                     name="checked"
                     size={20}
-                    fill="fill-green-700 dark:fill-lime-600"
+                    style="fill-green-700 dark:fill-lime-600"
                   />
                 ),
                 uncheckedIcon: (
                   <Icon
                     name="unchecked"
                     size={20}
-                    fill="fill-slate-700 dark:fill-slate-200"
+                    style="fill-slate-700 dark:fill-slate-200"
                   />
                 ),
                 leafIcon: (
                   <Icon
                     name="file"
                     size={20}
-                    fill="fill-blue-400 dark:fill-gray-700"
+                    style="fill-blue-400 dark:fill-gray-700"
                   />
                 ),
                 parentIcon: (
                   <Icon
                     name="folder"
                     size={20}
-                    fill="fill-orange-400 dark:fill-gray-700"
+                    style="fill-orange-400 dark:fill-gray-700"
                   />
                 ),
                 hiddenIcon: (
                   <Icon
                     name="square"
                     size={20}
-                    fill="fill-neutral-200 dark:fill-gray-950"
+                    style="fill-neutral-200 dark:fill-gray-950"
                   />
                 ),
                 loadingIcon: (
                   <Icon
                     name="loading"
                     size={20}
-                    fill="animate-spin fill-slate-700 dark:fill-slate-700"
+                    style="animate-spin fill-slate-700 dark:fill-slate-700"
                   />
                 ),
               }}

@@ -17,13 +17,13 @@ export const Checkbox: React.FunctionComponent<Props> = ({
         <Icon
           name="checked"
           size={20}
-          fill="fill-slate-700 dark:fill-lime-600"
+          style="fill-slate-700 dark:fill-lime-600"
         />
       ) : (
         <Icon
           name="unchecked"
           size={20}
-          fill="fill-slate-700 dark:fill-slate-200"
+          style="fill-slate-700 dark:fill-slate-200"
         />
       )}
     </span>

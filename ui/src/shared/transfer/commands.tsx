@@ -13,7 +13,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="check-circle"
           size={14}
-          fill="fill-green-600 dark:fill-green-600"
+          style="fill-green-600 dark:fill-green-600"
         />
       );
     case CommandStatus.Pending:
@@ -21,7 +21,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="minus-circle"
           size={14}
-          fill="fill-blue-600 dark:fill-blue-600"
+          style="fill-blue-600 dark:fill-blue-600"
         />
       );
     case CommandStatus.Flagged:
@@ -29,7 +29,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="check-circle"
           size={14}
-          fill="fill-yellow-600 dark:fill-yellow-600"
+          style="fill-yellow-600 dark:fill-yellow-600"
         />
       );
     case CommandStatus.Stopped:
@@ -37,7 +37,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="minus-circle"
           size={14}
-          fill="fill-red-600 dark:fill-red-600"
+          style="fill-red-600 dark:fill-red-600"
         />
       );
     case CommandStatus.SourceRemoval:
@@ -45,7 +45,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="loading"
           size={14}
-          fill="fill-yellow-600 dark:fill-yellow-600 animate-spin"
+          style="fill-yellow-600 dark:fill-yellow-600 animate-spin"
         />
       );
     default:
@@ -53,7 +53,7 @@ const getCommandStatus = (status: CommandStatus): React.ReactNode => {
         <Icon
           name="loading"
           size={14}
-          fill="fill-slate-600 dark:fill-slate-600 animate-spin"
+          style="fill-slate-600 dark:fill-slate-600 animate-spin"
         />
       );
   }
@@ -74,7 +74,7 @@ export const Commands: React.FunctionComponent = () => {
             <Icon
               name="loading"
               size={14}
-              fill="fill-neutral-100 dark:fill-gray-950"
+              style="fill-neutral-100 dark:fill-gray-950"
             />
             <span className="px-2" />
             Source

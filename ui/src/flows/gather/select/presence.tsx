@@ -22,7 +22,7 @@ export const Presence: React.FunctionComponent<Props> = ({ height = 0 }) => {
                   <Icon
                     name="file"
                     size={20}
-                    fill="fill-blue-400 dark:fill-gray-700"
+                    style="fill-blue-400 dark:fill-gray-700"
                   />
                   <span className="pr-2" />
                   <div className="font-bold text-slate-700 dark:text-slate-200">

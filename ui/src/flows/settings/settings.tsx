@@ -26,7 +26,7 @@ export const Settings: React.FunctionComponent = () => {
                         to="notifications"
                         className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                       >
-                        <Icon name="bell" size={24} fill="fill-gray-500" />
+                        <Icon name="bell" size={24} style="fill-gray-500" />
                         <span className="ms-3">Notifications</span>
                       </NavLink>
                     </li>
@@ -35,7 +35,7 @@ export const Settings: React.FunctionComponent = () => {
                         href="#"
                         className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                       >
-                        <Icon name="lifebuoy" size={24} fill="fill-gray-500" />
+                        <Icon name="lifebuoy" size={24} style="fill-gray-500" />
                         <span className="flex-1 ms-3 whitespace-nowrap">
                           Reserved Space
                         </span>
@@ -49,7 +49,7 @@ export const Settings: React.FunctionComponent = () => {
                         href="#"
                         className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                       >
-                        <Icon name="flag" size={24} fill="fill-gray-500" />
+                        <Icon name="flag" size={24} style="fill-gray-500" />
                         <span className="flex-1 ms-3 whitespace-nowrap">
                           Rsync Flags
                         </span>
@@ -63,7 +63,7 @@ export const Settings: React.FunctionComponent = () => {
                         href="#"
                         className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                       >
-                        <Icon name="log" size={24} fill="fill-gray-500" />
+                        <Icon name="log" size={24} style="fill-gray-500" />
                         <span className="flex-1 ms-3 whitespace-nowrap">
                           Log Verbosity
                         </span>
@@ -74,7 +74,7 @@ export const Settings: React.FunctionComponent = () => {
                         href="#"
                         className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                       >
-                        <Icon name="update" size={24} fill="fill-gray-500" />
+                        <Icon name="update" size={24} style="fill-gray-500" />
                         <span className="flex-1 ms-3 whitespace-nowrap">
                           Updates
                         </span>

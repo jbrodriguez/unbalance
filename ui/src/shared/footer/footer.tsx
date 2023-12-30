@@ -35,7 +35,7 @@ export const Footer: React.FunctionComponent = () => {
           rel="noreferrer noopener"
           target="_blank"
         >
-          <Icon name="gift" size={24} fill="fill-lime-600" />
+          <Icon name="gift" size={24} style="fill-lime-600" />
         </a>
 
         <a
@@ -45,7 +45,7 @@ export const Footer: React.FunctionComponent = () => {
           target="_blank"
           className="ml-2"
         >
-          <Icon name="x" size={20} fill="fill-neutral-300" />
+          <Icon name="x" size={20} style="fill-neutral-300" />
         </a>
 
         <a
@@ -55,7 +55,7 @@ export const Footer: React.FunctionComponent = () => {
           target="_blank"
           className="ml-2"
         >
-          <Icon name="github" size={24} fill="fill-neutral-300" />
+          <Icon name="github" size={24} style="fill-neutral-300" />
         </a>
 
         <a

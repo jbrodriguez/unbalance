@@ -3,16 +3,16 @@ import React from 'react';
 interface IconProps {
   name: string;
   size?: number;
-  fill?: string;
+  style?: string;
 }
 
 export const Icon: React.FunctionComponent<IconProps> = ({
   name,
   size = 24,
-  fill = '',
+  style = '',
 }) => {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={`${fill}`}>
+    <svg width={size} height={size} viewBox="0 0 24 24" className={`${style}`}>
       <path d={icons[name]} />
     </svg>
   );

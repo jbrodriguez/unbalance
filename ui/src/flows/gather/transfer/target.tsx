@@ -76,7 +76,7 @@ export const Target: React.FunctionComponent<Props> = ({ height = 0 }) => {
               selected={disk.path === target}
             >
               <div className="flex flex-row items-center justify-between">
-                <Icon name="star" size={20} fill={fill} />
+                <Icon name="star" size={20} style={fill} />
                 <span className="pr-4" />
                 <span>
                   {humanBytes(disk.free - plan.vdisks[disk.path].plannedFree)}

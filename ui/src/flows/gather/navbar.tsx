@@ -44,7 +44,7 @@ export const Navbar: React.FunctionComponent = () => {
             <Icon
               name="prev"
               size={20}
-              fill={getFill(route !== '/gather/select')}
+              style={getFill(route !== '/gather/select')}
             />
           }
           disabled={route === '/gather/select'}
@@ -91,7 +91,7 @@ export const Navbar: React.FunctionComponent = () => {
             <Icon
               name="next"
               size={20}
-              fill={getFill(route !== '/gather/transfer/targets')}
+              style={getFill(route !== '/gather/transfer/targets')}
             />
           }
           disabled={route === '/gather/transfer/targets'}
