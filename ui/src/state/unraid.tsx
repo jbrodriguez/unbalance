@@ -355,3 +355,10 @@ export const useUnraidPlan = () => useUnraidStore((state) => state.plan);
 export const useUnraidOperation = () =>
   useUnraidStore((state) => state.operation);
 export const useUnraidLogs = () => useUnraidStore((state) => state.logs);
+export const useUnraidHistory = () =>
+  useUnraidStore((state) =>
+    state.history
+      ? // @ts-expect-error -- TSCONVERSION
+        state.history.order.map((id) => state.history.items[id])
+      : [],
+  );
