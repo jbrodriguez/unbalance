@@ -1,8 +1,11 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 
-import { Panels } from '~/shared/panels/panels';
 import { Shares } from './shares';
 import { Target } from './target';
 import { Bin } from '~/shared/bin/bin';
@@ -12,20 +15,20 @@ export const Targets: React.FunctionComponent = () => {
   const disk = useGatherTarget();
 
   return (
-    <div style={{ flex: '1 1 auto' }}>
-      <AutoSizer disableWidth>
-        {({ height }) => (
-          <>
-            <Panels
-              type="3col"
-              left={<Shares height={height} />}
-              middle={<Target height={height} />}
-              right={<Bin disk={disk} />}
-              dimensions={{ left: 20, middle: 50, right: 30 }}
-            />
-          </>
-        )}
-      </AutoSizer>
+    <div className="flex flex-1">
+      <ResizablePanelGroup direction="horizontal" className="flex flex-1">
+        <ResizablePanel defaultSizePercentage={20}>
+          <Shares />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSizePercentage={50}>
+          <Target />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSizePercentage={30}>
+          <Bin disk={disk} />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };

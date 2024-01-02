@@ -1,26 +1,26 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 
-import { Panels } from '~/shared/panels/panels';
 import { Shares } from './shares';
 import { Presence } from './presence';
 
 export const Select: React.FunctionComponent = () => {
   return (
-    <div style={{ flex: '1 1 auto' }}>
-      <AutoSizer disableWidth>
-        {({ height }) => (
-          <>
-            <Panels
-              type="2col"
-              left={<Shares height={height} />}
-              middle={<Presence height={height} />}
-              dimensions={{ left: 60 }}
-            />
-          </>
-        )}
-      </AutoSizer>
+    <div className="flex flex-1">
+      <ResizablePanelGroup direction="horizontal" className="flex flex-1">
+        <ResizablePanel defaultSizePercentage={50}>
+          <Shares />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSizePercentage={50}>
+          <Presence />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };

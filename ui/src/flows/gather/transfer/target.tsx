@@ -1,5 +1,7 @@
 import React from 'react';
 
+import AutoSizer from 'react-virtualized-auto-sizer';
+
 import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
 import { useGatherLocation } from '~/state/gather';
 import { Selectable } from '~/shared/disk/selectable-disk';
@@ -10,10 +12,6 @@ import { humanBytes } from '~/helpers/units';
 import { useGatherTarget, useGatherActions } from '~/state/gather';
 import { Disk as IDisk } from '~/types';
 
-interface Props {
-  height?: number;
-}
-
 const getPresence = (location: Record<string, string[]>, id: string) => {
   for (const key in location) {
     if (location[key].includes(id)) {
@@ -23,7 +21,7 @@ const getPresence = (location: Record<string, string[]>, id: string) => {
   return false;
 };
 
-export const Target: React.FunctionComponent<Props> = ({ height = 0 }) => {
+export const Target: React.FunctionComponent = () => {
   const plan = useUnraidPlan();
   const disks = useUnraidDisks();
   const location = useGatherLocation();
@@ -32,10 +30,14 @@ export const Target: React.FunctionComponent<Props> = ({ height = 0 }) => {
 
   if (!plan) {
     return (
-      <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
-        <div className="p-2 overflow-y-auto" style={{ height: `${height}px` }}>
-          <h1>no plan</h1>
+      <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
+        <div className="flex flex-col p-2">
+          <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
+            Origin
+          </h1>
+          <hr className="border-slate-300 dark:border-gray-700" />
         </div>
+        <h1>no plan</h1>
       </div>
     );
   }
@@ -62,39 +64,59 @@ export const Target: React.FunctionComponent<Props> = ({ height = 0 }) => {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
-      <div className="p-2 overflow-y-auto" style={{ height: `${height}px` }}>
-        {targets.map((disk) => {
-          const present = getPresence(location, disk.name);
-          const fill = present
-            ? 'fill-green-600 dark:fill-green-600'
-            : 'fill-neutral-200 dark:fill-gray-950';
-          return (
-            <Selectable
-              disk={disk}
-              onSelectDisk={onDiskClick}
-              selected={disk.path === target}
+    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
+      <div className="flex flex-col p-2">
+        <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
+          Target
+        </h1>
+        <hr className="border-slate-300 dark:border-gray-700" />
+      </div>
+      <div className="flex-auto">
+        <AutoSizer disableWidth>
+          {({ height }) => (
+            <div
+              className="p-2 overflow-y-auto"
+              style={{ height: `${height}px` }}
             >
-              <div className="flex flex-row items-center justify-between">
-                <Icon name="star" size={20} style={fill} />
-                <span className="pr-4" />
-                <span>
-                  {humanBytes(disk.free - plan.vdisks[disk.path].plannedFree)}
-                </span>
-                <span className="pr-4" />
-                <Disk disk={disk} />
-                <span className="pr-4" />
-                <div className="flex flex-col flex-1">
-                  <FreePanel
-                    size={disk.size}
-                    currentFree={plan.vdisks[disk.path].currentFree}
-                    plannedFree={plan.vdisks[disk.path].plannedFree}
-                  />
-                </div>
-              </div>
-            </Selectable>
-          );
-        })}
+              {targets.map((disk) => {
+                const present = getPresence(location, disk.name);
+                const fill = present
+                  ? 'fill-green-600 dark:fill-green-600'
+                  : 'fill-neutral-200 dark:fill-gray-950';
+                return (
+                  <Selectable
+                    disk={disk}
+                    onSelectDisk={onDiskClick}
+                    selected={disk.path === target}
+                  >
+                    <div className="grid grid-cols-12 gap-1 items-center">
+                      <div className="col-span-2 flex flex-row items-center">
+                        <Icon name="star" size={20} style={fill} />
+                        <span className="pr-2" />
+                        <span className="text-slate-500 dark:text-gray-500">
+                          {humanBytes(
+                            disk.free - plan.vdisks[disk.path].plannedFree,
+                          )}
+                        </span>
+                      </div>
+                      <div className="col-span-5 flex flex-row items-center">
+                        <Disk disk={disk} />
+                        <div className="pr-2" />
+                      </div>
+                      <div className="col-span-5">
+                        <FreePanel
+                          size={disk.size}
+                          currentFree={plan.vdisks[disk.path].currentFree}
+                          plannedFree={plan.vdisks[disk.path].plannedFree}
+                        />
+                      </div>
+                    </div>
+                  </Selectable>
+                );
+              })}
+            </div>
+          )}
+        </AutoSizer>
       </div>
     </div>
   );
