@@ -1,6 +1,7 @@
 package common
 
 const (
+	PluginName      = "unbalance"
 	APIEndpoint     = "/api"
 	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify" // MailCmd - location of notify command
 	PluginLocation  = "/boot/config/plugins/unbalance"          // PluginLocation - plugin's base config path

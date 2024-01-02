@@ -1,6 +1,8 @@
 package core
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -91,7 +93,15 @@ func (c *Core) Start() error {
 		return err
 	}
 
+	c.state.Status = common.OpNeutral
 	c.state.Unraid = unraid
+
+	history, err := c.historyRead()
+	if err != nil {
+		logger.Yellow("Unable to read history: %s", err)
+	}
+
+	c.state.History = history
 
 	sid, err := shortid.New(1, shortid.DefaultABC, 2342)
 	if err != nil {
@@ -190,6 +200,14 @@ func (c *Core) GetOperation() *domain.Operation {
 
 func (c *Core) GetHistory() *domain.History {
 	c.state.History.LastChecked = time.Now()
+
+	go func() {
+		err := c.historyWrite(c.state.History)
+		if err != nil {
+			logger.Yellow("Unable to write history: %s", err)
+		}
+	}()
+
 	return c.state.History
 }
 
@@ -202,4 +220,76 @@ func (c *Core) ToggleDryRun() bool {
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalance.env")
 	return lib.SaveEnv(location, c.ctx.Config)
+}
+
+// HISTORY HANDLERS
+func (c *Core) historyRead() (*domain.History, error) {
+	var history domain.History
+
+	fileName := filepath.Join(common.PluginLocation, common.HistoryFilename)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		empty := &domain.History{
+			Version: common.HistoryVersion,
+			Items:   make(map[string]*domain.Operation),
+			Order:   make([]string, 0),
+		}
+
+		return empty, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&history)
+	if err != nil {
+		empty := &domain.History{
+			Version: common.HistoryVersion,
+			Items:   make(map[string]*domain.Operation),
+			Order:   make([]string, 0),
+		}
+
+		return empty, err
+	}
+
+	return &history, nil
+}
+
+func (c *Core) historyWrite(history *domain.History) error {
+	tmpName := filepath.Join(common.PluginLocation, common.HistoryFilename+"."+shortid.MustGenerate())
+
+	file, err := os.Create(tmpName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(history)
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(tmpName, filepath.Join(common.PluginLocation, common.HistoryFilename))
+}
+
+func (c *Core) updateHistory(history *domain.History, operation *domain.Operation) {
+	count := len(history.Order)
+	if count == common.HistoryCapacity {
+		delete(history.Items, history.Order[count-1])
+		// prepend item, remove oldest item
+		history.Order = append([]string{c.state.Operation.ID}, history.Order[:count-1]...)
+	} else {
+		// prepend item
+		history.Order = append([]string{c.state.Operation.ID}, history.Order...)
+	}
+
+	history.Items[operation.ID] = operation
+
+	go func() {
+		err := c.historyWrite(history)
+		if err != nil {
+			logger.Yellow("Unable to write history: %s", err)
+		}
+	}()
 }
