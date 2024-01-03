@@ -31,7 +31,7 @@ export const Command: React.FunctionComponent<Props> = ({
         ) : (
           getCommandStatus(command.status)
         )}
-        <span className="px-2" />
+        <span className="pr-2" />
         {command.src}
       </div>
       <div className="col-span-8">
