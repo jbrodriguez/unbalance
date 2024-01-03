@@ -19,6 +19,7 @@ import { Targets } from '~/flows/gather/transfer/targets';
 import { History } from '~/flows/history/history';
 import { Settings } from '~/flows/settings/settings';
 import { Notifications } from '~/flows/settings/notifications';
+import { Reserved } from '~/flows/settings/reserved';
 import { Logs } from '~/flows/logs/logs';
 import { Transfer } from '~/shared/transfer/transfer';
 import { Feedback } from '~/shared/feedback/feedback';
@@ -98,6 +99,10 @@ const router = createBrowserRouter([
           {
             path: 'notifications',
             element: <Notifications />,
+          },
+          {
+            path: 'reserved',
+            element: <Reserved />,
           },
         ],
       },
