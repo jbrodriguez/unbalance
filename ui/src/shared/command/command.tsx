@@ -6,17 +6,32 @@ import { getCommandStatus } from '~/helpers/operation';
 interface Props {
   command: ICommand;
   rsyncStrArgs: string;
+  canBeFlagged?: boolean;
+  onFlag?: (command: ICommand) => void;
 }
 
 export const Command: React.FunctionComponent<Props> = ({
   command,
   rsyncStrArgs,
+  canBeFlagged = false,
+  onFlag,
 }) => {
   const progress = ((command.transferred / command.size) * 100).toFixed(0);
+  const onClick = (command: ICommand) => () => onFlag?.(command);
+
   return (
     <div className="grid grid-cols-12 gap-1 items-center text-sm text-gray-700 dark:text-gray-500 p-2 border-b border-slate-300 dark:border-gray-700 ">
       <div className="col-span-2 flex items-center">
-        {getCommandStatus(command.status)}
+        {canBeFlagged ? (
+          <span
+            className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300"
+            onClick={onClick(command)}
+          >
+            rmsrc
+          </span>
+        ) : (
+          getCommandStatus(command.status)
+        )}
         <span className="px-2" />
         {command.src}
       </div>

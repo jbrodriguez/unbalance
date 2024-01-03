@@ -3,7 +3,13 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 
-import { Operation as IOperation, Op, CommandStatus } from '~/types';
+import {
+  Operation as IOperation,
+  Op,
+  CommandStatus,
+  ConfirmationParams,
+  ConfirmationKind,
+} from '~/types';
 import { Icon } from '~/shared/icons/icon';
 import { operationKindToName } from '~/helpers/operation';
 import { formatTime } from '~/helpers/units';
@@ -11,11 +17,13 @@ import { formatTime } from '~/helpers/units';
 interface Props {
   operation: IOperation;
   first: boolean;
+  onConfirm: (params: ConfirmationParams) => void;
 }
 
 export const OperationHeader: React.FunctionComponent<Props> = ({
   operation,
   first,
+  onConfirm,
 }) => {
   const safe = first;
   const replay = !operation.dryRun && safe;
@@ -52,6 +60,22 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
   const diff = finished.diff(started, 'seconds');
   const runtime = formatTime(diff);
 
+  const canBeFlagged =
+    safe &&
+    (operation.opKind === Op.ScatterMove || operation.opKind === Op.GatherMove);
+
+  const onValidate = () =>
+    onConfirm({
+      kind: ConfirmationKind.ScatterValidate,
+      operation: operation,
+    });
+
+  const onReplay = () =>
+    onConfirm({
+      kind: ConfirmationKind.Replay,
+      operation: operation,
+    });
+
   return (
     <div className="flex flex-col pt-2 px-2">
       <div className="px-2 text-slate-500 dark:text-gray-500 pb-2">
@@ -77,20 +101,14 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
           </div>
           <div>
             {validate && (
-              <Button
-                variant="secondary"
-                onClick={() => console.log('validate')}
-              >
+              <Button variant="secondary" onClick={onValidate}>
                 validate
               </Button>
             )}
             {replay && (
               <>
                 <span className="pr-2" />
-                <Button
-                  variant="secondary"
-                  onClick={() => console.log('replay')}
-                >
+                <Button variant="secondary" onClick={onReplay}>
                   replay
                 </Button>
               </>
@@ -98,6 +116,26 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
           </div>
         </div>
       </div>
+      {canBeFlagged && flagged ? (
+        <div className="text-sm text-slate-500 dark:text-gray-500">
+          <p>
+            One or more commands had an execution warning/error. Check
+            /var/log/unbalance.log for additional details.
+          </p>
+          <p>
+            Due to this, the plugin hasn&apos;t deleted the source files/folders
+            for that/those commands.
+          </p>
+          <p>
+            Once you&apos;ve checked/solved the issue(s), click on the{' '}
+            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">
+              rmsrc
+            </span>{' '}
+            button to remove the source files/folders, if you wish to do so.
+          </p>
+          <div className="pb-2" />
+        </div>
+      ) : null}
       <hr className="border-slate-300 dark:border-gray-700" />
     </div>
   );

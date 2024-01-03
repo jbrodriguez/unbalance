@@ -199,3 +199,16 @@ export interface Packet {
   topic: Topic;
   payload: string;
 }
+
+export enum ConfirmationKind {
+  None = 0,
+  Replay,
+  ScatterValidate,
+  RemoveSource,
+}
+
+export interface ConfirmationParams {
+  kind: ConfirmationKind;
+  operation?: Operation;
+  command?: Command;
+}
