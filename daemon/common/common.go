@@ -44,6 +44,8 @@ const (
 	EventTransferEnded    = "transfer:ended"
 
 	EventOperationError = "operation:error"
+
+	CommandRemoveSource = "remove:source"
 )
 
 const (

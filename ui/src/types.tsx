@@ -194,6 +194,8 @@ export enum Topic {
   EventTransferEnded = 'transfer:ended',
 
   EventOperationError = 'operation:error',
+
+  CommandRemoveSource = 'remove:source',
 }
 
 export interface Packet {

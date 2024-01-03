@@ -15,7 +15,7 @@ export const History: React.FunctionComponent = () => {
   const [first, setFirst] = React.useState<boolean>(false);
   const [modal, setModal] = React.useState<boolean>(false);
   const [params, setParams] = React.useState<ConfirmationParams | null>();
-  const { scatterValidate } = useUnraidActions();
+  const { scatterValidate, removeSource } = useUnraidActions();
 
   const onSelected = (operation: IOperation, first: boolean) => {
     setSelected(operation);
@@ -45,6 +45,7 @@ export const History: React.FunctionComponent = () => {
         break;
       case ConfirmationKind.RemoveSource:
         console.log('remove source');
+        removeSource(params.operation, params.command);
         break;
       default:
         break;
@@ -104,7 +105,7 @@ export const History: React.FunctionComponent = () => {
                 />
               </svg>
               <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                Are you sure you want to delete this product?
+                Are you sure you want to proceed with this action?
               </h3>
               <button
                 type="button"

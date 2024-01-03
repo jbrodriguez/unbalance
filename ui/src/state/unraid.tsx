@@ -12,6 +12,7 @@ import {
   Packet,
   Topic,
   State,
+  Command,
 } from '~/types';
 import { getRouteFromStatus } from '~/helpers/routes';
 import { useScatterStore } from '~/state/scatter';
@@ -49,6 +50,10 @@ interface UnraidStore {
     gatherProgress: (payload: string) => void;
     gatherPlanEnded: (payload: Plan) => void;
     gatherMove: () => void;
+    removeSource: (
+      operation: Operation | undefined,
+      command: Command | undefined,
+    ) => void;
   };
 }
 
@@ -276,6 +281,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = null;
             state.logs = [];
           });
+
           const socket = get().socket;
           socket.send(
             JSON.stringify({
@@ -283,6 +289,7 @@ export const useUnraidStore = create<UnraidStore>()(
               payload: operation,
             }),
           );
+
           get().navigate?.('/scatter/transfer/operation');
         },
         transferProgress: (payload: Operation) => {
@@ -355,6 +362,33 @@ export const useUnraidStore = create<UnraidStore>()(
             }),
           );
           get().navigate?.(route);
+        },
+        removeSource: (
+          operation: Operation | undefined,
+          command: Command | undefined,
+        ) => {
+          if (!operation || !command) {
+            return;
+          }
+
+          set((state) => {
+            state.plan = null;
+            state.operation = null;
+            state.logs = [];
+          });
+
+          const socket = get().socket;
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandRemoveSource,
+              payload: { operation, command },
+            }),
+          );
+
+          const flow =
+            operation.opKind === Op.ScatterMove ? 'scatter' : 'gather';
+
+          get().navigate?.(`/${flow}/transfer/operation`);
         },
       },
     };

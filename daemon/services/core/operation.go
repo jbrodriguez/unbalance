@@ -330,7 +330,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	elapsed := lib.Round(operation.Finished.Sub(operation.Started), time.Millisecond)
 
 	// TODO: update history
-	// c.updateHistory(c.state.History, operation)
+	c.updateHistory(c.state.History, operation)
 
 	c.state.Unraid = c.refreshUnraid()
 
@@ -368,4 +368,63 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	c.state.Status = common.OpNeutral
 	c.state.Operation = nil
+}
+
+func (c *Core) removeSource(operation *domain.Operation, command *domain.Command) {
+	c.state.Status = operation.OpKind
+	c.state.Operation = operation
+	c.state.Unraid = c.refreshUnraid()
+
+	go c.performRemoveSource(operation, command)
+}
+
+func (c *Core) performRemoveSource(operation *domain.Operation, cmd *domain.Command) {
+	operation.Line = fmt.Sprintf("Removing source %s", filepath.Join(cmd.Src, cmd.Entry))
+
+	packet := &domain.Packet{Topic: common.EventTransferStarted, Payload: operation}
+	c.ctx.Hub.Pub(packet, "socket:broadcast")
+
+	for _, command := range operation.Commands {
+		if command.ID != cmd.ID {
+			continue
+		}
+
+		logger.Blue("Removing source:(%s)", filepath.Join(command.Src, command.Entry))
+
+		// status is cmdFlagged currently, let's change this to cmdSourceRemoval, so that handleItemDeletion works
+		// correctly and the UI can display a proper feedback for this command
+		command.Status = common.CmdSourceRemoval
+
+		c.handleItemDeletion(operation, command)
+
+		command.Status = common.CmdCompleted
+
+		text := "Removal completed"
+		operation.Line = text
+		logger.Blue(text)
+
+		c.state.Unraid = c.refreshUnraid()
+		c.state.History.Items[operation.ID] = operation
+
+		state := &domain.State{
+			Operation: operation,
+			History:   c.state.History,
+			Unraid:    c.state.Unraid,
+		}
+
+		packet := &domain.Packet{Topic: common.EventTransferEnded, Payload: state}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+
+		// TODO: how to handle this
+		// c.updateHistory(c.state.History, operation)
+		err := c.historyWrite(c.state.History)
+		if err != nil {
+			logger.Yellow("Unable to write history: %s", err)
+		}
+
+		c.state.Status = common.OpNeutral
+		c.state.Operation = nil
+
+		break
+	}
 }
