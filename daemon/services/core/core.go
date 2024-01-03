@@ -78,6 +78,7 @@ func Create(ctx *domain.Context) *Core {
 			common.CommandScatterCopy,
 			common.CommandGatherPlanStart,
 			common.CommandGatherMove,
+			common.CommandScatterValidate,
 		),
 	}
 }
@@ -162,6 +163,7 @@ func (c *Core) mailboxHandler() {
 				continue
 			}
 			go c.gatherPlanPrepare(setup)
+
 		case common.CommandGatherMove:
 			var plan domain.Plan
 			err := lib.Bind(packet.Payload, &plan)
@@ -170,8 +172,16 @@ func (c *Core) mailboxHandler() {
 				continue
 			}
 			go c.gatherMove(plan)
-		}
 
+		case common.CommandScatterValidate:
+			var operation domain.Operation
+			err := lib.Bind(packet.Payload, &operation)
+			if err != nil {
+				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				continue
+			}
+			go c.scatterValidate(operation)
+		}
 	}
 }
 

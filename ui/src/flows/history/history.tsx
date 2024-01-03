@@ -2,14 +2,20 @@ import React from 'react';
 
 import { Operations } from './operations';
 import { Operation } from './operation';
-import { Operation as IOperation, ConfirmationParams } from '~/types';
+import {
+  Operation as IOperation,
+  ConfirmationParams,
+  ConfirmationKind,
+} from '~/types';
 import { Modal } from '~/shared/modal/modal';
+import { useUnraidActions } from '~/state/unraid';
 
 export const History: React.FunctionComponent = () => {
   const [selected, setSelected] = React.useState<IOperation | null>(null);
   const [first, setFirst] = React.useState<boolean>(false);
   const [modal, setModal] = React.useState<boolean>(false);
   const [params, setParams] = React.useState<ConfirmationParams | null>();
+  const { scatterValidate } = useUnraidActions();
 
   const onSelected = (operation: IOperation, first: boolean) => {
     setSelected(operation);
@@ -30,6 +36,18 @@ export const History: React.FunctionComponent = () => {
   const onYes = () => {
     if (!params) {
       return;
+    }
+
+    switch (params.kind) {
+      case ConfirmationKind.ScatterValidate:
+        console.log('scatter validate');
+        scatterValidate(params.operation);
+        break;
+      case ConfirmationKind.RemoveSource:
+        console.log('remove source');
+        break;
+      default:
+        break;
     }
 
     console.log('yes ------- ', params);

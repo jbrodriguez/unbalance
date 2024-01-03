@@ -171,7 +171,7 @@ func (c *Core) scatterPlanEnd(plan *domain.Plan) {
 	// }
 }
 
-// // SCATTER TRANSFER
+// SCATTER TRANSFER
 func (c *Core) scatterMove(plan domain.Plan) {
 	c.state.Status = common.OpScatterMove
 	c.state.Unraid = c.refreshUnraid()
@@ -233,6 +233,37 @@ func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {
 				Status: common.CmdPending,
 			})
 		}
+	}
+
+	return operation
+}
+
+// SCATTER VALIDATE
+func (c *Core) scatterValidate(operation domain.Operation) {
+	c.state.Status = common.OpScatterValidate
+	c.state.Unraid = c.refreshUnraid()
+	c.state.Operation = c.createScatterValidateOperation(operation)
+
+	go c.runOperation("Validate")
+}
+
+func (c *Core) createScatterValidateOperation(original domain.Operation) *domain.Operation {
+	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
+		OpKind:          common.OpScatterValidate,
+		BytesToTransfer: original.BytesToTransfer,
+		DryRun:          false,
+	}
+
+	operation.RsyncArgs = append([]string{strings.Replace(common.RsyncArgs, "-a", "-rc", -1)}, original.RsyncArgs[1:]...)
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
+
+	operation.Commands = original.Commands
+
+	for _, command := range operation.Commands {
+		command.ID = shortid.MustGenerate()
+		command.Transferred = 0
+		command.Status = common.CmdPending
 	}
 
 	return operation

@@ -42,13 +42,13 @@ interface UnraidStore {
     scatterOperation: (
       command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
     ) => void;
+    scatterValidate: (operation: Operation | undefined) => void;
     transferProgress: (payload: Operation) => void;
     transferEnded: (payload: State) => void;
     gatherPlan: () => void;
     gatherProgress: (payload: string) => void;
     gatherPlanEnded: (payload: Plan) => void;
     gatherMove: () => void;
-    // addLine: (line: string) => void;
   };
 }
 
@@ -265,6 +265,25 @@ export const useUnraidStore = create<UnraidStore>()(
             }),
           );
           get().navigate?.(route);
+        },
+        scatterValidate: (operation: Operation | undefined) => {
+          if (!operation) {
+            return;
+          }
+
+          set((state) => {
+            state.plan = null;
+            state.operation = null;
+            state.logs = [];
+          });
+          const socket = get().socket;
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandScatterValidate,
+              payload: operation,
+            }),
+          );
+          get().navigate?.('/scatter/transfer/operation');
         },
         transferProgress: (payload: Operation) => {
           // console.log('transferProgress ', payload);

@@ -31,6 +31,7 @@ const (
 	EventScatterPlanEnded    = "scatter:plan:ended"
 	CommandScatterMove       = "scatter:move"
 	CommandScatterCopy       = "scatter:copy"
+	CommandScatterValidate   = "scatter:validate"
 
 	CommandGatherPlanStart  = "gather:plan:start"
 	EventGatherPlanStarted  = "gather:plan:started"
