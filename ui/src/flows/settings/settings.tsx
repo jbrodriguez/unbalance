@@ -7,8 +7,8 @@ import { Icon } from '~/shared/icons/icon';
 
 export const Settings: React.FunctionComponent = () => {
   return (
-    <div className="flex h-full bg-neutral-100 dark:bg-gray-950">
-      <aside className="w-64 h-full bg-gray-50 dark:bg-gray-800">
+    <div className="grid grid-cols-12 gap-2 h-full ">
+      <aside className="col-span-2 bg-gray-50 dark:bg-gray-800">
         <div className="px-3 py-4">
           <ul className="space-y-2 font-medium">
             <li>
@@ -41,39 +41,37 @@ export const Settings: React.FunctionComponent = () => {
                 Reserved Space
               </NavLink>
             </li>
+
             <li>
-              <a
-                href="#"
-                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+              <NavLink
+                to="flags"
+                className={({ isActive }) =>
+                  isActive
+                    ? 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white bg-blue-700 dark:bg-blue-700 group'
+                    : 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group'
+                }
+                // className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
               >
                 <Icon name="flag" size={24} style="fill-gray-500" />
-                <span className="flex-1 ms-3 whitespace-nowrap">
-                  Rsync Flags
-                </span>
-                <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                  1
-                </span>
-              </a>
+                <span className="pr-3" />
+                Rsync Flags
+              </NavLink>
             </li>
+
             <li>
-              <a
-                href="#"
-                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+              <NavLink
+                to="verbosity"
+                className={({ isActive }) =>
+                  isActive
+                    ? 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white bg-blue-700 dark:bg-blue-700 group'
+                    : 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group'
+                }
+                // className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
               >
                 <Icon name="log" size={24} style="fill-gray-500" />
-                <span className="flex-1 ms-3 whitespace-nowrap">
-                  Log Verbosity
-                </span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-              >
-                <Icon name="update" size={24} style="fill-gray-500" />
-                <span className="flex-1 ms-3 whitespace-nowrap">Updates</span>
-              </a>
+                <span className="pr-3" />
+                Log Verbosity
+              </NavLink>
             </li>
           </ul>
           <div className="p-4 mt-6 rounded-lg bg-gray-400 dark:bg-gray-700">
@@ -119,8 +117,7 @@ export const Settings: React.FunctionComponent = () => {
           </div>
         </div>
       </aside>
-
-      <div>
+      <div className="col-span-10 bg-neutral-100 dark:bg-gray-950">
         <Outlet />
       </div>
     </div>
