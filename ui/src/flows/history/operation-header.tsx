@@ -1,10 +1,13 @@
 import React from 'react';
 
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { Button } from '@/components/ui/button';
+import dayjs from 'dayjs';
 
 import { Operation as IOperation, Op, CommandStatus } from '~/types';
 import { Icon } from '~/shared/icons/icon';
 import { operationKindToName } from '~/helpers/operation';
+import { formatTime } from '~/helpers/units';
 
 interface Props {
   operation: IOperation;
@@ -44,6 +47,12 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
     />
   );
 
+  // calculate runtime from started and finished dates, using dayjs
+  const started = dayjs(operation.started);
+  const finished = dayjs(operation.finished);
+  const diff = finished.diff(started, 'seconds');
+  const runtime = formatTime(diff);
+
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
       <div className="flex flex-col pt-2 px-2">
@@ -54,33 +63,39 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
               {operation.dryRun ? (
                 <>
                   <span className="pr-2" />
-                  <span className="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
+                  <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
                     dry run
                   </span>
                 </>
               ) : null}
-              <div className="text-lg">
+              <span className="pr-2" />
+              <span className="text-lg">
                 {operationKindToName[operation.opKind]}
-              </div>
+              </span>
+              <span className="pr-2" />
+              <span className="text-slate-800 dark:text-gray-200 text-xl">
+                {runtime}
+              </span>
             </div>
             <div>
               {validate && (
-                <button
-                  // className={cx('btn', 'btn-primary', 'rspacer')}
-                  // onClick={this.confirm('validate', op.id)}
-                  disabled={!validate}
+                <Button
+                  variant="secondary"
+                  onClick={() => console.log('validate')}
                 >
-                  VALIDATE
-                </button>
+                  validate
+                </Button>
               )}
               {replay && (
-                <button
-                  // className={cx('btn', 'btn-primary', 'rspacer')}
-                  // onClick={this.confirm('replay', op.id)}
-                  disabled={!replay}
-                >
-                  REPLAY
-                </button>
+                <>
+                  <span className="pr-2" />
+                  <Button
+                    variant="secondary"
+                    onClick={() => console.log('replay')}
+                  >
+                    replay
+                  </Button>
+                </>
               )}
             </div>
           </div>
