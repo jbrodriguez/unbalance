@@ -1,6 +1,5 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 
@@ -54,64 +53,52 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
   const runtime = formatTime(diff);
 
   return (
-    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
-      <div className="flex flex-col pt-2 px-2">
-        <div className="text-slate-500 dark:text-gray-500 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-row items-center">
-              {operationStatus}
-              {operation.dryRun ? (
-                <>
-                  <span className="pr-2" />
-                  <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
-                    dry run
-                  </span>
-                </>
-              ) : null}
-              <span className="pr-2" />
-              <span className="text-lg">
-                {operationKindToName[operation.opKind]}
-              </span>
-              <span className="pr-2" />
-              <span className="text-slate-800 dark:text-gray-200 text-xl">
-                {runtime}
-              </span>
-            </div>
-            <div>
-              {validate && (
+    <div className="flex flex-col pt-2 px-2">
+      <div className="px-2 text-slate-500 dark:text-gray-500 pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-row items-center">
+            {operationStatus}
+            {operation.dryRun ? (
+              <>
+                <span className="pr-2" />
+                <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
+                  dry run
+                </span>
+              </>
+            ) : null}
+            <span className="pr-2" />
+            <span className="text-slate-600 dark:text-gray-400 text-lg">
+              {operationKindToName[operation.opKind]}
+            </span>
+            <span className="pr-2" />
+            <span className="text-slate-800 dark:text-gray-200 text-xl">
+              {runtime}
+            </span>
+          </div>
+          <div>
+            {validate && (
+              <Button
+                variant="secondary"
+                onClick={() => console.log('validate')}
+              >
+                validate
+              </Button>
+            )}
+            {replay && (
+              <>
+                <span className="pr-2" />
                 <Button
                   variant="secondary"
-                  onClick={() => console.log('validate')}
+                  onClick={() => console.log('replay')}
                 >
-                  validate
+                  replay
                 </Button>
-              )}
-              {replay && (
-                <>
-                  <span className="pr-2" />
-                  <Button
-                    variant="secondary"
-                    onClick={() => console.log('replay')}
-                  >
-                    replay
-                  </Button>
-                </>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
-        <hr className="border-slate-300 dark:border-gray-700" />
       </div>
-      <div className="flex-auto">
-        <AutoSizer disableWidth>
-          {({ height }) => (
-            <div
-              className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300"
-              style={{ height: `${height}px` }}
-            ></div>
-          )}
-        </AutoSizer>
-      </div>
+      <hr className="border-slate-300 dark:border-gray-700" />
     </div>
   );
 };
