@@ -80,6 +80,7 @@ func Create(ctx *domain.Context) *Core {
 			common.CommandGatherMove,
 			common.CommandScatterValidate,
 			common.CommandRemoveSource,
+			common.CommandReplay,
 		),
 	}
 }
@@ -195,6 +196,15 @@ func (c *Core) mailboxHandler() {
 			}
 			go c.removeSource(params.Operation, params.Command)
 
+		case common.CommandReplay:
+			var operation domain.Operation
+			err := lib.Bind(packet.Payload, &operation)
+			if err != nil {
+				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				continue
+			}
+
+			go c.replay(operation)
 		}
 	}
 }

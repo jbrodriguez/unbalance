@@ -15,7 +15,7 @@ export const History: React.FunctionComponent = () => {
   const [first, setFirst] = React.useState<boolean>(false);
   const [modal, setModal] = React.useState<boolean>(false);
   const [params, setParams] = React.useState<ConfirmationParams | null>();
-  const { scatterValidate, removeSource } = useUnraidActions();
+  const { scatterValidate, removeSource, replay } = useUnraidActions();
 
   const onSelected = (operation: IOperation, first: boolean) => {
     setSelected(operation);
@@ -46,6 +46,10 @@ export const History: React.FunctionComponent = () => {
       case ConfirmationKind.RemoveSource:
         console.log('remove source');
         removeSource(params.operation, params.command);
+        break;
+      case ConfirmationKind.Replay:
+        console.log('replay');
+        replay(params.operation);
         break;
       default:
         break;

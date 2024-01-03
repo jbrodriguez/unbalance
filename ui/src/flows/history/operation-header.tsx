@@ -27,9 +27,8 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
 }) => {
   const safe = first;
   const replay = !operation.dryRun && safe;
-  // const validate =
-  //   !operation.dryRun && operation.opKind === Op.ScatterCopy && safe;
-  const validate = operation.opKind === Op.ScatterCopy && safe;
+  const validate =
+    !operation.dryRun && operation.opKind === Op.ScatterCopy && safe;
 
   const flagged = operation.commands.some(
     (command) => command.status === CommandStatus.Flagged,

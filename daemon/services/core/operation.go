@@ -11,6 +11,8 @@ import (
 	"unbalance/daemon/domain"
 	"unbalance/daemon/lib"
 	"unbalance/daemon/logger"
+
+	"github.com/teris-io/shortid"
 )
 
 func (c *Core) runOperation(opName string) {
@@ -427,4 +429,39 @@ func (c *Core) performRemoveSource(operation *domain.Operation, cmd *domain.Comm
 
 		break
 	}
+}
+
+func (c *Core) replay(operation domain.Operation) {
+	c.state.Status = operation.OpKind
+	c.state.Operation = c.createReplayOperation(operation)
+	c.state.Unraid = c.refreshUnraid()
+
+	opName := "Copy"
+	if c.state.Operation.OpKind == common.OpScatterMove || c.state.Operation.OpKind == common.OpGatherMove {
+		opName = "Move"
+	}
+
+	go c.runOperation(opName)
+}
+
+func (c *Core) createReplayOperation(original domain.Operation) *domain.Operation {
+	operation := &domain.Operation{
+		ID:              shortid.MustGenerate(),
+		OpKind:          original.OpKind,
+		BytesToTransfer: original.BytesToTransfer,
+		DryRun:          false,
+	}
+
+	operation.RsyncArgs = original.RsyncArgs
+	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
+
+	operation.Commands = original.Commands
+
+	for _, command := range operation.Commands {
+		command.ID = shortid.MustGenerate()
+		command.Transferred = 0
+		command.Status = common.CmdPending
+	}
+
+	return operation
 }

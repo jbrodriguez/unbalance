@@ -46,6 +46,7 @@ const (
 	EventOperationError = "operation:error"
 
 	CommandRemoveSource = "remove:source"
+	CommandReplay       = "replay"
 )
 
 const (

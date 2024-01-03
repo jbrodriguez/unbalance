@@ -196,6 +196,7 @@ export enum Topic {
   EventOperationError = 'operation:error',
 
   CommandRemoveSource = 'remove:source',
+  CommandReplay = 'replay',
 }
 
 export interface Packet {

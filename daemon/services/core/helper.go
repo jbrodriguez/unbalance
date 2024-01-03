@@ -444,6 +444,10 @@ func getCurrentTransfer(proc, prefix string) (string, error) {
 
 func getError(line string, re *regexp.Regexp, ers map[int]string) string {
 	result := re.FindStringSubmatch(line)
+	if result == nil || len(result) < 1 {
+		return "unknown error"
+	}
+
 	status, _ := strconv.Atoi(result[1])
 	msg, ok := ers[status]
 	if !ok {

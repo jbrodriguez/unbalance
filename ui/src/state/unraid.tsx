@@ -54,6 +54,7 @@ interface UnraidStore {
       operation: Operation | undefined,
       command: Command | undefined,
     ) => void;
+    replay: (operation: Operation | undefined) => void;
   };
 }
 
@@ -387,6 +388,33 @@ export const useUnraidStore = create<UnraidStore>()(
 
           const flow =
             operation.opKind === Op.ScatterMove ? 'scatter' : 'gather';
+
+          get().navigate?.(`/${flow}/transfer/operation`);
+        },
+        replay: (operation: Operation | undefined) => {
+          if (!operation) {
+            return;
+          }
+
+          set((state) => {
+            state.plan = null;
+            state.operation = null;
+            state.logs = [];
+          });
+
+          const socket = get().socket;
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandReplay,
+              payload: operation,
+            }),
+          );
+
+          const flow =
+            operation.opKind === Op.ScatterMove ||
+            operation.opKind === Op.ScatterCopy
+              ? 'scatter'
+              : 'gather';
 
           get().navigate?.(`/${flow}/transfer/operation`);
         },
