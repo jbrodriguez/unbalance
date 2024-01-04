@@ -1,7 +1,6 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
-
+import { Panel } from '~/shared/panel/panel';
 import { useUnraidDisks } from '~/state/unraid';
 import {
   useScatterSource,
@@ -28,35 +27,18 @@ export const Targets: React.FunctionComponent = () => {
   const onCheck = (disk: IDisk) => () => toggleTarget(disk.name);
 
   return (
-    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
-      <div className="flex flex-col pt-2 px-2">
-        <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
-          Target Disk(s)
-        </h1>
-        <hr className="border-slate-300 dark:border-gray-700" />
-      </div>
-      <div className="flex-auto">
-        <AutoSizer disableWidth>
-          {({ height }) => (
-            <div
-              className="overflow-y-auto p-2"
-              style={{ height: `${height}px` }}
-            >
-              {visible &&
-                elegible.map((disk) => (
-                  <div className="flex flex-row items-center">
-                    <Checkbox
-                      checked={isChecked(disk.name, targets)}
-                      onCheck={onCheck(disk)}
-                    />
-                    <div className="pr-4" />
-                    <Disk disk={disk} />
-                  </div>
-                ))}
-            </div>
-          )}
-        </AutoSizer>
-      </div>
-    </div>
+    <Panel title="Target Disk(s)">
+      {visible &&
+        elegible.map((disk) => (
+          <div className="flex flex-row items-center">
+            <Checkbox
+              checked={isChecked(disk.name, targets)}
+              onCheck={onCheck(disk)}
+            />
+            <div className="pr-4" />
+            <Disk disk={disk} />
+          </div>
+        ))}
+    </Panel>
   );
 };

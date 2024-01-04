@@ -1,7 +1,6 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
-
+import { Panel } from '~/shared/panel/panel';
 import { useUnraidActions, useUnraidLogs } from '~/state/unraid';
 
 export const Logs: React.FunctionComponent = () => {
@@ -13,21 +12,10 @@ export const Logs: React.FunctionComponent = () => {
   }, [getLog]);
 
   return (
-    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
-      <div className="flex-auto">
-        <AutoSizer disableWidth>
-          {({ height }) => (
-            <div
-              className="overflow-y-auto p-4"
-              style={{ height: `${height}px` }}
-            >
-              {logs.map((log) => (
-                <p>{log}</p>
-              ))}
-            </div>
-          )}
-        </AutoSizer>
-      </div>
-    </div>
+    <Panel>
+      {logs.map((log) => (
+        <p>{log}</p>
+      ))}
+    </Panel>
   );
 };

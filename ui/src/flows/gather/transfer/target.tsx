@@ -1,7 +1,6 @@
 import React from 'react';
 
-import AutoSizer from 'react-virtualized-auto-sizer';
-
+import { Panel } from '~/shared/panel/panel';
 import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
 import { useGatherLocation } from '~/state/gather';
 import { Selectable } from '~/shared/selectable/selectable';
@@ -61,60 +60,41 @@ export const Target: React.FunctionComponent = () => {
   const onDiskClick = (disk: IDisk) => () => setTarget(disk.path);
 
   return (
-    <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
-      <div className="flex flex-col p-2">
-        <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
-          Target
-        </h1>
-        <hr className="border-slate-300 dark:border-gray-700" />
-      </div>
-      <div className="flex-auto">
-        <AutoSizer disableWidth>
-          {({ height }) => (
-            <div
-              className="p-2 overflow-y-auto"
-              style={{ height: `${height}px` }}
-            >
-              {targets.map((disk) => {
-                const present = getPresence(location, disk.name);
-                const fill = present
-                  ? 'fill-green-600 dark:fill-green-600'
-                  : 'fill-neutral-200 dark:fill-gray-950';
-                return (
-                  <Selectable
-                    key={disk.id}
-                    onClick={onDiskClick(disk)}
-                    selected={disk.path === target}
-                  >
-                    <div className="grid grid-cols-12 gap-1 items-center">
-                      <div className="col-span-2 flex flex-row items-center">
-                        <Icon name="star" size={20} style={fill} />
-                        <span className="pr-2" />
-                        <span className="text-slate-500 dark:text-gray-500">
-                          {humanBytes(
-                            disk.free - plan.vdisks[disk.path].plannedFree,
-                          )}
-                        </span>
-                      </div>
-                      <div className="col-span-5 flex flex-row items-center">
-                        <Disk disk={disk} />
-                        <div className="pr-2" />
-                      </div>
-                      <div className="col-span-5">
-                        <FreePanel
-                          size={disk.size}
-                          currentFree={plan.vdisks[disk.path].currentFree}
-                          plannedFree={plan.vdisks[disk.path].plannedFree}
-                        />
-                      </div>
-                    </div>
-                  </Selectable>
-                );
-              })}
+    <Panel title="Target">
+      {targets.map((disk) => {
+        const present = getPresence(location, disk.name);
+        const fill = present
+          ? 'fill-green-600 dark:fill-green-600'
+          : 'fill-neutral-200 dark:fill-gray-950';
+        return (
+          <Selectable
+            key={disk.id}
+            onClick={onDiskClick(disk)}
+            selected={disk.path === target}
+          >
+            <div className="grid grid-cols-12 gap-1 items-center">
+              <div className="col-span-2 flex flex-row items-center">
+                <Icon name="star" size={20} style={fill} />
+                <span className="pr-2" />
+                <span className="text-slate-500 dark:text-gray-500">
+                  {humanBytes(disk.free - plan.vdisks[disk.path].plannedFree)}
+                </span>
+              </div>
+              <div className="col-span-5 flex flex-row items-center">
+                <Disk disk={disk} />
+                <div className="pr-2" />
+              </div>
+              <div className="col-span-5">
+                <FreePanel
+                  size={disk.size}
+                  currentFree={plan.vdisks[disk.path].currentFree}
+                  plannedFree={plan.vdisks[disk.path].plannedFree}
+                />
+              </div>
             </div>
-          )}
-        </AutoSizer>
-      </div>
-    </div>
+          </Selectable>
+        );
+      })}
+    </Panel>
   );
 };
