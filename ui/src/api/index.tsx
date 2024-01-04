@@ -79,4 +79,32 @@ export class Api {
       console.log('toggleDryRun() error: ', e);
     }
   }
+
+  static async setNotifyPlan(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/notifyPlan`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('notifyPlan() error: ', e);
+    }
+  }
+
+  static async setNotifyTransfer(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/notifyTransfer`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('notifyTransfer() error: ', e);
+    }
+  }
 }

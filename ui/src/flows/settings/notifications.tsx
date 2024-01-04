@@ -3,7 +3,20 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
+import {
+  useConfigActions,
+  useConfigNotifyPlan,
+  useConfigNotifyTransfer,
+} from '~/state/config';
+
 export const Notifications: React.FunctionComponent = () => {
+  const notifyPlan = useConfigNotifyPlan();
+  const notifyTransfer = useConfigNotifyTransfer();
+  const { setNotifyPlan, setNotifyTransfer } = useConfigActions();
+
+  const onPlanChange = (value: string) => setNotifyPlan(+value);
+  const onTransferChange = (value: string) => setNotifyTransfer(+value);
+
   return (
     <div className="text-slate-700 dark:text-gray-300 p-4">
       <h1>
@@ -13,17 +26,21 @@ export const Notifications: React.FunctionComponent = () => {
       <div className="pb-4" />
       <h2 className="text-lg font-bold">Planning</h2>
       <div className="pb-1" />
-      <RadioGroup defaultValue="planning-no-notifications">
+      <RadioGroup
+        defaultValue={`${notifyPlan}`}
+        value={`${notifyPlan}`}
+        onValueChange={onPlanChange}
+      >
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="planning-no-notifications" id="r1" />
+          <RadioGroupItem value="0" id="r1" />
           <Label htmlFor="r1">No Notifications</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="planning-basic" id="r2" />
+          <RadioGroupItem value="1" id="r2" />
           <Label htmlFor="r2">Basic</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="planning-detailed" id="r3" />
+          <RadioGroupItem value="2" id="r3" />
           <Label htmlFor="r3">Detailed</Label>
         </div>
       </RadioGroup>
@@ -32,21 +49,25 @@ export const Notifications: React.FunctionComponent = () => {
 
       <h2 className="text-lg font-bold">Transfer</h2>
       <div className="pb-1" />
-      <RadioGroup defaultValue="transfer-detailed">
+      <RadioGroup
+        defaultValue={`${notifyTransfer}`}
+        value={`${notifyTransfer}`}
+        onValueChange={onTransferChange}
+      >
         <div className="flex items-center space-x-2">
           <RadioGroupItem
-            value="transfer-no-notifications"
+            value="0"
             id="r1"
             onClick={() => console.log('transferonot')}
           />
           <Label htmlFor="r1">No Notifications</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="transfer-basic" id="r2" />
+          <RadioGroupItem value="1" id="r2" />
           <Label htmlFor="r2">Basic</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="transfer-detailed" id="r3" />
+          <RadioGroupItem value="2" id="r3" />
           <Label htmlFor="r3">Detailed</Label>
         </div>
       </RadioGroup>

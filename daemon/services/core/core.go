@@ -251,6 +251,18 @@ func (c *Core) ToggleDryRun() bool {
 	return c.ctx.Config.DryRun
 }
 
+func (c *Core) SetNotifyPlan(value int) *domain.Config {
+	c.ctx.Config.NotifyPlan = value
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
+func (c *Core) SetNotifyTransfer(value int) *domain.Config {
+	c.ctx.Config.NotifyTransfer = value
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalance.env")
 	return lib.SaveEnv(location, c.ctx.Config)

@@ -8,7 +8,7 @@ interface ConfigStore {
   dryRun: boolean;
   notifyPlan: number;
   notifyTransfer: number;
-  reservedAmount: bigint;
+  reservedAmount: number;
   reservedUnit: string;
   rsyncArgs: string[];
   verbosity: number;
@@ -17,6 +17,8 @@ interface ConfigStore {
   actions: {
     getConfig: () => Promise<void>;
     toggleDryRun: () => Promise<void>;
+    setNotifyPlan: (value: number) => Promise<void>;
+    setNotifyTransfer: (value: number) => Promise<void>;
   };
 }
 
@@ -26,8 +28,8 @@ export const useConfigStore = create<ConfigStore>()(
     dryRun: true,
     notifyPlan: 0,
     notifyTransfer: 0,
-    reservedAmount: BigInt(0),
-    reservedUnit: 'GB',
+    reservedAmount: 512,
+    reservedUnit: 'MB',
     rsyncArgs: [],
     verbosity: 0,
     checkForUpdate: 0,
@@ -41,7 +43,7 @@ export const useConfigStore = create<ConfigStore>()(
           state.dryRun = config.dryRun;
           state.notifyPlan = config.notifyPlan;
           state.notifyTransfer = config.notifyTransfer;
-          state.reservedAmount = BigInt(config.reservedAmount);
+          state.reservedAmount = config.reservedAmount;
           state.reservedUnit = config.reservedUnit;
           state.rsyncArgs = config.rsyncArgs;
           state.verbosity = config.verbosity;
@@ -55,6 +57,18 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.toggleDryRun();
       },
+      setNotifyPlan: async (value: number) => {
+        set((state) => {
+          state.notifyPlan = value;
+        });
+        await Api.setNotifyPlan(value);
+      },
+      setNotifyTransfer: async (value: number) => {
+        set((state) => {
+          state.notifyTransfer = value;
+        });
+        await Api.setNotifyTransfer(value);
+      },
     },
   })),
 );
@@ -65,3 +79,7 @@ export const useConfigActions = () => useConfigStore((state) => state.actions);
 
 export const useConfigVersion = () => useConfigStore((state) => state.version);
 export const useConfigDryRun = () => useConfigStore((state) => state.dryRun);
+export const useConfigNotifyPlan = () =>
+  useConfigStore((state) => state.notifyPlan);
+export const useConfigNotifyTransfer = () =>
+  useConfigStore((state) => state.notifyTransfer);

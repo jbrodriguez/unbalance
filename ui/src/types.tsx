@@ -17,7 +17,7 @@ export interface Config {
   dryRun: boolean;
   notifyPlan: number;
   notifyTransfer: number;
-  reservedAmount: bigint;
+  reservedAmount: number;
   reservedUnit: string;
   rsyncArgs: string[];
   verbosity: number;

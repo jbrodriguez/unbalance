@@ -70,6 +70,8 @@ func (s *Server) Start() error {
 	api.GET("/tree/:route", s.getTree)
 	api.GET("/locate/:route", s.locate)
 	api.PUT("/config/dryRun", s.toggleDryRun)
+	api.PUT("/config/notifyPlan", s.setNotifyPlan)
+	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -207,4 +209,24 @@ func (s *Server) locate(c echo.Context) error {
 
 func (s *Server) toggleDryRun(c echo.Context) error {
 	return c.JSON(200, s.core.ToggleDryRun())
+}
+
+func (s *Server) setNotifyPlan(c echo.Context) error {
+	var value int
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetNotifyPlan(value))
+}
+
+func (s *Server) setNotifyTransfer(c echo.Context) error {
+	var value int
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetNotifyTransfer(value))
 }
