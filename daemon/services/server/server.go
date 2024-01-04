@@ -74,6 +74,7 @@ func (s *Server) Start() error {
 	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
 	api.PUT("/config/rsyncArgs", s.setRsyncArgs)
+	api.PUT("/config/verbosity", s.setVerbosity)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -254,4 +255,14 @@ func (s *Server) setRsyncArgs(c echo.Context) error {
 	}
 
 	return c.JSON(200, s.core.SetRsyncArgs(value))
+}
+
+func (s *Server) setVerbosity(c echo.Context) error {
+	var value int
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetVerbosity(value))
 }

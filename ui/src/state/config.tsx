@@ -12,7 +12,6 @@ interface ConfigStore {
   reservedUnit: string;
   rsyncArgs: string[];
   verbosity: number;
-  checkForUpdate: number;
   refreshRate: number;
   actions: {
     getConfig: () => Promise<void>;
@@ -22,6 +21,7 @@ interface ConfigStore {
     setReservedSpace: (amount: number, unit: string) => Promise<void>;
     setRsyncArgs: (flags: string[]) => Promise<void>;
     resetRsyncArgs: () => Promise<void>;
+    setVerbosity: (value: number) => Promise<void>;
   };
 }
 
@@ -50,7 +50,6 @@ export const useConfigStore = create<ConfigStore>()(
           state.reservedUnit = config.reservedUnit;
           state.rsyncArgs = config.rsyncArgs;
           state.verbosity = config.verbosity;
-          state.checkForUpdate = config.checkForUpdate;
           state.refreshRate = config.refreshRate;
         });
       },
@@ -91,11 +90,15 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setRsyncArgs(['-X']);
       },
+      setVerbosity: async (value: number) => {
+        set((state) => {
+          state.verbosity = value;
+        });
+        await Api.setVerbosity(value);
+      },
     },
   })),
 );
-
-// export const useConfigActions = useConfigStore.getState().actions;
 
 export const useConfigActions = () => useConfigStore((state) => state.actions);
 
@@ -112,3 +115,5 @@ export const useConfigReserved = () =>
   }));
 export const useConfigRsyncArgs = () =>
   useConfigStore((state) => state.rsyncArgs);
+export const useConfigVerbosity = () =>
+  useConfigStore((state) => state.verbosity);

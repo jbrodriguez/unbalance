@@ -135,4 +135,18 @@ export class Api {
       console.log('rsyncArgs() error: ', e);
     }
   }
+
+  static async setVerbosity(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/verbosity`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('verbosity() error: ', e);
+    }
+  }
 }

@@ -276,6 +276,12 @@ func (c *Core) SetRsyncArgs(value []string) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetVerbosity(value int) *domain.Config {
+	c.ctx.Config.Verbosity = value
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalance.env")
 	return lib.SaveEnv(location, c.ctx.Config)
