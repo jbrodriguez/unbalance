@@ -4,8 +4,12 @@ import { NavLink } from 'react-router-dom';
 
 import logo from '~/assets/unbalance-logo.png';
 import { ModeToggle } from '@/components/mode-toggle';
+import { Loading } from '~/shared/icons/loading';
+import { useUnraidIsBusy } from '~/state/unraid';
 
 export const Header: React.FunctionComponent = () => {
+  const busy = useUnraidIsBusy();
+
   return (
     <nav className="grid grid-cols-12 gap-2 my-4">
       <ul className="col-span-2 py-2 border bg-lime-400 dark:bg-lime-600 border-lime-300 dark:border-lime-500">
@@ -74,7 +78,8 @@ export const Header: React.FunctionComponent = () => {
             LOG
           </NavLink>
         </li>
-        <li>
+        <li className="flex flex-row items-center">
+          {busy && <Loading />}
           <ModeToggle />
           <span className="pl-2" />
         </li>
