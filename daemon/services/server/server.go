@@ -69,6 +69,7 @@ func (s *Server) Start() error {
 
 	api.GET("/tree/:route", s.getTree)
 	api.GET("/locate/:route", s.locate)
+	api.GET("/logs", s.getLog)
 	api.PUT("/config/dryRun", s.toggleDryRun)
 	api.PUT("/config/notifyPlan", s.setNotifyPlan)
 	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
@@ -208,6 +209,10 @@ func (s *Server) locate(c echo.Context) error {
 	path := filepath.Join("/", "mnt", "user", path.Clean(u.Path))
 
 	return c.JSON(200, s.core.Locate(path))
+}
+
+func (s *Server) getLog(c echo.Context) error {
+	return c.JSON(200, s.core.GetLog())
 }
 
 func (s *Server) toggleDryRun(c echo.Context) error {

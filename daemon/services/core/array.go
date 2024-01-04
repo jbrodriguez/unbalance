@@ -269,8 +269,8 @@ func (c *Core) Locate(path string) []string {
 	return locations
 }
 
-func (c *Core) getLog() []string {
-	cmd := "tail -n 100 /boot/logs/unbalance.log"
+func (c *Core) GetLog() []string {
+	cmd := "tail -n 100 /var/log/unbalance.log"
 
 	log := make([]string, 0)
 

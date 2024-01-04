@@ -67,6 +67,17 @@ export class Api {
     }
   }
 
+  static async getLog(): Promise<Array<string>> {
+    try {
+      const url = `${Api.host}/logs`;
+      const response = await fetch(url);
+      const logs = await response.json();
+      return logs;
+    } catch (e) {
+      return [];
+    }
+  }
+
   static async toggleDryRun(): Promise<void> {
     const options = {
       method: 'PUT',

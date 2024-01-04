@@ -55,6 +55,7 @@ interface UnraidStore {
       command: Command | undefined,
     ) => void;
     replay: (operation: Operation | undefined) => void;
+    getLog: () => Promise<void>;
   };
 }
 
@@ -417,6 +418,12 @@ export const useUnraidStore = create<UnraidStore>()(
               : 'gather';
 
           get().navigate?.(`/${flow}/transfer/operation`);
+        },
+        getLog: async () => {
+          const logs = await Api.getLog();
+          set((state) => {
+            state.logs = logs;
+          });
         },
       },
     };
