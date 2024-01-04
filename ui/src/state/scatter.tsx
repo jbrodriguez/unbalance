@@ -118,6 +118,8 @@ export const useScatterStore = create<ScatterStore>()(
           console.log('toggleSelected ', node);
           state.tree[node.id].checked = !state.tree[node.id].checked;
           console.log('node.id ', state.tree[node.id]);
+
+          // add or remove from selected
           const fullPath = getAbsolutePath(node, state.tree);
           const index = state.selected.indexOf(fullPath);
           if (index === -1) {
@@ -125,6 +127,37 @@ export const useScatterStore = create<ScatterStore>()(
           } else {
             state.selected.splice(index, 1);
           }
+
+          // remove parents by looping
+          let parent = state.tree[node.parent];
+          while (parent) {
+            const parentFullPath = getAbsolutePath(parent, state.tree);
+            const parentIndex = state.selected.indexOf(parentFullPath);
+            if (parentIndex !== -1) {
+              state.selected.splice(parentIndex, 1);
+              state.tree[parent.id].checked = false;
+            }
+            parent = state.tree[parent.parent];
+          }
+
+          // remove children recursively
+          const removeChildren = (node: Node) => {
+            if (!node.children) {
+              return;
+            }
+
+            node.children.forEach((childId) => {
+              const child = state.tree[childId];
+              const childFullPath = getAbsolutePath(child, state.tree);
+              const childIndex = state.selected.indexOf(childFullPath);
+              if (childIndex !== -1) {
+                state.selected.splice(childIndex, 1);
+                state.tree[child.id].checked = false;
+              }
+              removeChildren(child);
+            });
+          };
+          removeChildren(node);
         });
       },
       toggleTarget: (name: string) => {
