@@ -10,7 +10,7 @@ import {
   useScatterActions,
 } from '~/state/scatter';
 import { Checkbox } from '~/shared/checkbox/checkbox';
-import { Disk } from '~/shared/disk/base-disk';
+import { Disk } from '~/shared/disk/disk';
 import { Disk as IDisk, Targets as ITargets } from '~/types';
 
 const isChecked = (name: string, targets: ITargets) => targets[name] || false;

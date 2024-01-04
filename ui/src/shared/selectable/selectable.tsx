@@ -1,7 +1,7 @@
 import React from 'react';
 
 type SelectableProps = {
-  onClick: () => void;
+  onClick?: () => void;
   selected?: boolean;
   children?: React.ReactNode;
 };

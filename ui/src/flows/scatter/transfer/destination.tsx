@@ -3,8 +3,8 @@ import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
-import { Selectable } from '~/shared/disk/selectable-disk';
-import { Disk } from '~/shared/disk/base-disk';
+import { Selectable } from '~/shared/selectable/selectable';
+import { Disk } from '~/shared/disk/disk';
 import { FreePanel } from '~/shared/disk/free-panel';
 import { useScatterBinDisk, useScatterActions } from '~/state/scatter';
 import { Disk as IDisk } from '~/types';
@@ -15,7 +15,7 @@ export const Destination: React.FunctionComponent = () => {
   const binDisk = useScatterBinDisk();
   const { setBinDisk } = useScatterActions();
 
-  const onSelectDisk = (disk: IDisk) => setBinDisk(disk.path);
+  const onSelectDisk = (disk: IDisk) => () => setBinDisk(disk.path);
 
   if (!plan) {
     return (
@@ -49,9 +49,9 @@ export const Destination: React.FunctionComponent = () => {
             >
               {items.map((disk) => (
                 <Selectable
-                  disk={disk}
+                  key={disk.id}
+                  onClick={onSelectDisk(disk)}
                   selected={disk.path === binDisk}
-                  onSelectDisk={onSelectDisk}
                 >
                   <div className="flex flex-col">
                     <Disk disk={disk} />

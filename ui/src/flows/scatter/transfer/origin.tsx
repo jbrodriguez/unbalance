@@ -3,8 +3,8 @@ import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
-import { Selectable } from '~/shared/disk/selectable-disk';
-import { Disk } from '~/shared/disk/base-disk';
+import { Selectable } from '~/shared/selectable/selectable';
+import { Disk } from '~/shared/disk/disk';
 import { FreePanel } from '~/shared/disk/free-panel';
 
 export const Origin: React.FunctionComponent = () => {
@@ -42,7 +42,7 @@ export const Origin: React.FunctionComponent = () => {
               style={{ height: `${height}px` }}
             >
               {items.map((disk) => (
-                <Selectable disk={disk}>
+                <Selectable key={disk.id} selected>
                   <div className="flex flex-col">
                     <Disk disk={disk} />
                     <FreePanel

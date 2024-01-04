@@ -5,15 +5,15 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { useUnraidDisks } from '~/state/unraid';
 import { Disk as IDisk } from '~/types';
 import { useScatterActions, useScatterSource } from '~/state/scatter';
-import { Selectable } from '~/shared/disk/selectable-disk';
-import { Disk } from '~/shared/disk/base-disk';
+import { Selectable } from '~/shared/selectable/selectable';
+import { Disk } from '~/shared/disk/disk';
 
 export const Disks: React.FunctionComponent = () => {
   const disks = useUnraidDisks();
   const selected = useScatterSource();
   const { setSource } = useScatterActions();
 
-  const onDiskClick = (disk: IDisk) => setSource(disk.name);
+  const onDiskClick = (disk: IDisk) => () => setSource(disk.name);
 
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
@@ -32,8 +32,8 @@ export const Disks: React.FunctionComponent = () => {
             >
               {disks.map((disk) => (
                 <Selectable
-                  disk={disk}
-                  onSelectDisk={onDiskClick}
+                  key={disk.id}
+                  onClick={onDiskClick(disk)}
                   selected={disk.name === selected}
                 >
                   <Disk disk={disk} />

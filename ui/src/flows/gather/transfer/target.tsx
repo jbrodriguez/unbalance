@@ -4,9 +4,9 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 
 import { useUnraidPlan, useUnraidDisks } from '~/state/unraid';
 import { useGatherLocation } from '~/state/gather';
-import { Selectable } from '~/shared/disk/selectable-disk';
+import { Selectable } from '~/shared/selectable/selectable';
 import { Icon } from '~/shared/icons/icon';
-import { Disk } from '~/shared/disk/base-disk';
+import { Disk } from '~/shared/disk/disk';
 import { FreePanel } from '~/shared/disk/free-panel';
 import { humanBytes } from '~/helpers/units';
 import { useGatherTarget, useGatherActions } from '~/state/gather';
@@ -33,7 +33,7 @@ export const Target: React.FunctionComponent = () => {
       <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
         <div className="flex flex-col p-2">
           <h1 className="text-lg text-slate-500 dark:text-gray-500 pb-2">
-            Origin
+            Target
           </h1>
           <hr className="border-slate-300 dark:border-gray-700" />
         </div>
@@ -58,10 +58,7 @@ export const Target: React.FunctionComponent = () => {
     return 0;
   });
 
-  const onDiskClick = (disk: IDisk) => {
-    console.log('disk clicked', disk);
-    setTarget(disk.path);
-  };
+  const onDiskClick = (disk: IDisk) => () => setTarget(disk.path);
 
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
@@ -85,8 +82,8 @@ export const Target: React.FunctionComponent = () => {
                   : 'fill-neutral-200 dark:fill-gray-950';
                 return (
                   <Selectable
-                    disk={disk}
-                    onSelectDisk={onDiskClick}
+                    key={disk.id}
+                    onClick={onDiskClick(disk)}
                     selected={disk.path === target}
                   >
                     <div className="grid grid-cols-12 gap-1 items-center">
