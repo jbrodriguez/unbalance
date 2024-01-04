@@ -107,4 +107,18 @@ export class Api {
       console.log('notifyTransfer() error: ', e);
     }
   }
+
+  static async setReservedSpace(amount: number, unit: string): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, unit }),
+    };
+    try {
+      const url = `${Api.host}/config/reservedSpace`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('reservedSpace() error: ', e);
+    }
+  }
 }

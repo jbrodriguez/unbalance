@@ -19,6 +19,7 @@ interface ConfigStore {
     toggleDryRun: () => Promise<void>;
     setNotifyPlan: (value: number) => Promise<void>;
     setNotifyTransfer: (value: number) => Promise<void>;
+    setReservedSpace: (amount: number, unit: string) => Promise<void>;
   };
 }
 
@@ -69,6 +70,13 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setNotifyTransfer(value);
       },
+      setReservedSpace: async (amount: number, unit: string) => {
+        set((state) => {
+          state.reservedAmount = amount;
+          state.reservedUnit = unit;
+        });
+        await Api.setReservedSpace(amount, unit);
+      },
     },
   })),
 );
@@ -83,3 +91,8 @@ export const useConfigNotifyPlan = () =>
   useConfigStore((state) => state.notifyPlan);
 export const useConfigNotifyTransfer = () =>
   useConfigStore((state) => state.notifyTransfer);
+export const useConfigReserved = () =>
+  useConfigStore((state) => ({
+    amount: state.reservedAmount,
+    unit: state.reservedUnit,
+  }));

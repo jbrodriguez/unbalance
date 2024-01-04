@@ -11,9 +11,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/components/ui/use-toast';
+
+import { useConfigActions, useConfigReserved } from '~/state/config';
 
 export const Reserved: React.FunctionComponent = () => {
-  const [position, setPosition] = React.useState('bottom');
+  const { amount, unit } = useConfigReserved();
+  const [amountValue, setAmountValue] = React.useState(amount);
+  const [unitValue, setUnitValue] = React.useState(unit);
+  const { toast } = useToast();
+  const { setReservedSpace } = useConfigActions();
+
+  const onAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmountValue(+e.target.value);
+  };
+
+  const onApply = () => {
+    if (!Number.isInteger(amountValue) || amountValue <= 0) {
+      toast({
+        title: 'Amount value must be a positive integer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (unitValue === 'Mb' && amountValue < 512) {
+      toast({
+        title: 'Mb value must be greater or equal to 512',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // if we get here, we can save the value
+    setReservedSpace(amountValue, unitValue);
+  };
 
   return (
     <div className="text-slate-700 dark:text-gray-300 p-4">
@@ -26,28 +58,37 @@ export const Reserved: React.FunctionComponent = () => {
       <div className="pb-4" />
 
       <div className="flex flex-row items-center">
-        <Input type="number" placeholder="Size" className="w-40" />
+        <Input
+          type="number"
+          placeholder="Size"
+          className="w-40"
+          defaultValue={amount}
+          value={amountValue}
+          onChange={onAmountChange}
+        />
         <div className="pr-4" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button>{position}</Button>
+            <Button>{unitValue}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="">
             <DropdownMenuLabel>Unit</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup
-              value={position}
-              onValueChange={setPosition}
+              value={unitValue}
+              onValueChange={setUnitValue}
             >
-              <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="bottom">
-                Bottom
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="%">%</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="Mb">Mb</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="Gb">Gb</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <div className="pb-4" />
+      <Button onClick={onApply} variant="secondary">
+        Apply
+      </Button>
     </div>
   );
 };

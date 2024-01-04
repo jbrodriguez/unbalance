@@ -263,6 +263,13 @@ func (c *Core) SetNotifyTransfer(value int) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetReservedSpace(amount uint64, unit string) *domain.Config {
+	c.ctx.Config.ReservedAmount = amount
+	c.ctx.Config.ReservedUnit = unit
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalance.env")
 	return lib.SaveEnv(location, c.ctx.Config)

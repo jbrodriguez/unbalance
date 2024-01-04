@@ -72,6 +72,7 @@ func (s *Server) Start() error {
 	api.PUT("/config/dryRun", s.toggleDryRun)
 	api.PUT("/config/notifyPlan", s.setNotifyPlan)
 	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
+	api.PUT("/config/reservedSpace", s.setReservedSpace)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -229,4 +230,17 @@ func (s *Server) setNotifyTransfer(c echo.Context) error {
 	}
 
 	return c.JSON(200, s.core.SetNotifyTransfer(value))
+}
+
+func (s *Server) setReservedSpace(c echo.Context) error {
+	var params struct {
+		Amount uint64 `json:"amount"`
+		Unit   string `json:"unit"`
+	}
+	err := c.Bind(&params)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetReservedSpace(params.Amount, params.Unit))
 }
