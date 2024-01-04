@@ -3,7 +3,11 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
+import {
+  useUnraidActions,
+  useUnraidRoute,
+  useUnraidIsBusy,
+} from '~/state/unraid';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 import { Topic } from '~/types';
@@ -24,6 +28,7 @@ export const Navbar: React.FunctionComponent = () => {
   const dryRun = useConfigDryRun();
   const selected = useScatterSelected();
   const targets = useScatterTargets();
+  const busy = useUnraidIsBusy();
 
   const onNext = () => transition('next');
   const onMove = () => scatterOperation(Topic.CommandScatterMove);
@@ -31,6 +36,7 @@ export const Navbar: React.FunctionComponent = () => {
   const onDryRun = () => toggleDryRun();
 
   const nextDisabled =
+    busy ||
     route === '/scatter/transfer/validation' ||
     (route === '/scatter/select' &&
       (selected.length === 0 || Object.keys(targets).length === 0));
@@ -48,7 +54,7 @@ export const Navbar: React.FunctionComponent = () => {
               style={getFill(route !== '/scatter/select')}
             />
           }
-          disabled={route === '/scatter/select'}
+          disabled={busy || route === '/scatter/select'}
         />
       </div>
 
