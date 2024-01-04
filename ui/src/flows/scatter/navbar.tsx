@@ -22,7 +22,6 @@ const config = [
 
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
-  const currentStep = routeToStep(route);
   const { transition, scatterOperation } = useUnraidActions();
   const { toggleDryRun } = useConfigActions();
   const dryRun = useConfigDryRun();
@@ -35,6 +34,7 @@ export const Navbar: React.FunctionComponent = () => {
   const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
   const onDryRun = () => toggleDryRun();
 
+  const currentStep = routeToStep(route);
   const nextDisabled =
     busy ||
     route === '/scatter/transfer/validation' ||
