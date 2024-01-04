@@ -1,11 +1,10 @@
 import React from 'react';
 
-import { NavLink } from 'react-router-dom';
-
 import logo from '~/assets/unbalance-logo.png';
 import { ModeToggle } from '@/components/mode-toggle';
 import { Loading } from '~/shared/icons/loading';
 import { useUnraidIsBusy } from '~/state/unraid';
+import { StatefulLink } from '~/shared/stateful-link/stateful-link';
 
 export const Header: React.FunctionComponent = () => {
   const busy = useUnraidIsBusy();
@@ -23,60 +22,65 @@ export const Header: React.FunctionComponent = () => {
 
       <ul className="col-span-10 flex flex-row items-center justify-between py-2 bg-neutral-100 dark:bg-gray-800 text-sky-700 dark:text-slate-400">
         <li>
-          <NavLink
+          <StatefulLink
             to="/scatter"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
                 : 'ml-4';
             }}
+            disabled={busy}
           >
             SCATTER
-          </NavLink>
+          </StatefulLink>
 
-          <NavLink
+          <StatefulLink
             to="/gather"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
                 : 'ml-4';
             }}
+            disabled={busy}
           >
             GATHER
-          </NavLink>
+          </StatefulLink>
 
-          <NavLink
+          <StatefulLink
             to="/history"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
                 : 'ml-4';
             }}
+            disabled={busy}
           >
             HISTORY
-          </NavLink>
+          </StatefulLink>
 
-          <NavLink
+          <StatefulLink
             to="/settings"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
                 : 'ml-4';
             }}
+            disabled={busy}
           >
             SETTINGS
-          </NavLink>
+          </StatefulLink>
 
-          <NavLink
+          <StatefulLink
             to="/logs"
             className={({ isActive }) => {
               return isActive
                 ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
                 : 'ml-4';
             }}
+            disabled={busy}
           >
             LOG
-          </NavLink>
+          </StatefulLink>
         </li>
         <li className="flex flex-row items-center">
           {busy && <Loading />}
