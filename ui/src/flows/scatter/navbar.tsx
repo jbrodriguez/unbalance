@@ -8,6 +8,7 @@ import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 import { Topic } from '~/types';
 import { useConfigActions, useConfigDryRun } from '~/state/config';
+import { useScatterSelected, useScatterTargets } from '~/state/scatter';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose data' },
@@ -21,11 +22,18 @@ export const Navbar: React.FunctionComponent = () => {
   const { transition, scatterOperation } = useUnraidActions();
   const { toggleDryRun } = useConfigActions();
   const dryRun = useConfigDryRun();
+  const selected = useScatterSelected();
+  const targets = useScatterTargets();
 
   const onNext = () => transition('next');
   const onMove = () => scatterOperation(Topic.CommandScatterMove);
   const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
   const onDryRun = () => toggleDryRun();
+
+  const nextDisabled =
+    route === '/scatter/transfer/validation' ||
+    (route === '/scatter/select' &&
+      (selected.length === 0 || Object.keys(targets).length === 0));
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -90,7 +98,7 @@ export const Navbar: React.FunctionComponent = () => {
               style={getFill(route !== '/scatter/transfer/validation')}
             />
           }
-          disabled={route === '/scatter/transfer/validation'}
+          disabled={nextDisabled}
           onClick={onNext}
         />
       </div>

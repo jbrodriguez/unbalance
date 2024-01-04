@@ -162,7 +162,12 @@ export const useScatterStore = create<ScatterStore>()(
       },
       toggleTarget: (name: string) => {
         set((state) => {
-          state.targets[name] = !state.targets[name];
+          if (state.targets[name] === undefined) {
+            state.targets[name] = true;
+            return;
+          }
+
+          delete state.targets[name];
         });
       },
       setBinDisk: (binDisk: string) => {
