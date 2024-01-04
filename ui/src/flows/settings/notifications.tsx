@@ -18,7 +18,7 @@ export const Notifications: React.FunctionComponent = () => {
   const onTransferChange = (value: string) => setNotifyTransfer(+value);
 
   return (
-    <div className="text-slate-700 dark:text-gray-300 p-4">
+    <div className="p-4">
       <h1>
         Notifications rely on Unraid's notifications settings, so you need to
         set up unRAID first, in order to receive notifications from unbalanced.

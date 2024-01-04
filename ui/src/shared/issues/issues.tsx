@@ -40,52 +40,44 @@ export const Issues: React.FunctionComponent = () => {
             </div>
             <div className="pb-2" />
             <section>
-              <div>
-                <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
-                  <span>Owner</span>
-                  <span className="font-bold">{owner}</span>
-                </div>
-                <span className="text-sm">
-                  file(s)/folder(s) with an owner other than 'nobody'
-                </span>
+              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+                <span>Owner</span>
+                <span className="font-bold">{owner}</span>
               </div>
+              <span className="text-sm">
+                file(s)/folder(s) with an owner other than 'nobody'
+              </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div>
-                <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
-                  <span>Group</span>
-                  <span className="font-bold">{group}</span>
-                </div>
-                <span className="text-sm">
-                  file(s)/folder(s) with a group other than 'users'
-                </span>
+              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+                <span>Group</span>
+                <span className="font-bold">{group}</span>
               </div>
+              <span className="text-sm">
+                file(s)/folder(s) with a group other than 'users'
+              </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div>
-                <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
-                  <span>Folder permissions</span>
-                  <span className="font-bold">{folder}</span>
-                </div>
-                <span className="text-sm">
-                  folder(s) with a permission other than 'drwxrwxrwx'
-                </span>
+              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+                <span>Folder permissions</span>
+                <span className="font-bold">{folder}</span>
               </div>
+              <span className="text-sm">
+                folder(s) with a permission other than 'drwxrwxrwx'
+              </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div>
-                <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
-                  <span>File permissions</span>
-                  <span className="font-bold">{file}</span>
-                </div>
-                <span className="text-sm">
-                  files(s) with a permission other than '-rw-rw-rw-' or
-                  '-r--r--r--'
-                </span>
+              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+                <span>File permissions</span>
+                <span className="font-bold">{file}</span>
               </div>
+              <span className="text-sm">
+                files(s) with a permission other than '-rw-rw-rw-' or
+                '-r--r--r--'
+              </span>
             </section>
             {showWarning && (
               <>

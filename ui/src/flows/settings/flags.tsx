@@ -25,7 +25,7 @@ export const Flags: React.FunctionComponent = () => {
   };
 
   return (
-    <div className="text-slate-700 dark:text-gray-300 p-4">
+    <div className="p-4">
       <h1>
         Internally,{' '}
         <span className="text-lime-600 dark:text-lime-700">unbalanced</span>{' '}

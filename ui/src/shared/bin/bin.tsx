@@ -37,11 +37,7 @@ export const Bin: React.FunctionComponent<BinProps> = ({ disk = '' }) => {
             Source Disk
           </h1>
           <hr className="border-slate-300 dark:border-gray-700" />
-          <div className="flex flex-1 flex-col bg-neutral-200 dark:bg-gray-950">
-            <span className="text-gray-500 dark:text-gray-700 text-sm">
-              No items in the bin.
-            </span>
-          </div>
+          <span className="text-sm">No items in the bin.</span>
         </div>
       </div>
     );

@@ -77,14 +77,14 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
 
   return (
     <div className="flex flex-col pt-2 px-2">
-      <div className="px-2 text-slate-500 dark:text-gray-500 pb-2">
+      <div className="px-2 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex flex-row items-center">
             {operationStatus}
             {operation.dryRun ? (
               <>
                 <span className="pr-2" />
-                <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-indigo-900 dark:text-indigo-300">
+                <span className="bg-indigo-600 text-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-medium px-2.5 py-0.5 rounded ">
                   dry run
                 </span>
               </>

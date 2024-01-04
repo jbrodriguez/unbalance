@@ -48,7 +48,7 @@ export const Reserved: React.FunctionComponent = () => {
   };
 
   return (
-    <div className="text-slate-700 dark:text-gray-300 p-4">
+    <div className="p-4">
       <h1>
         unbalanced uses the threshold defined here as the minimum free space
         that should be kept available in a target disk, when planning how much

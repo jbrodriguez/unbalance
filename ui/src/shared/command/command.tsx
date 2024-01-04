@@ -20,7 +20,7 @@ export const Command: React.FunctionComponent<Props> = ({
   const onClick = () => onFlag?.(command);
 
   return (
-    <div className="grid grid-cols-12 gap-1 items-center text-sm text-gray-700 dark:text-gray-500 p-2 border-b border-slate-300 dark:border-gray-700 ">
+    <div className="grid grid-cols-12 gap-1 items-center text-sm text-gray-500 dark:text-gray-500 p-2 border-b border-slate-300 dark:border-gray-700 ">
       <div className="col-span-2 flex items-center">
         {canBeFlagged ? (
           <button onClick={onClick}>

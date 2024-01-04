@@ -10,7 +10,7 @@ export const Ticker: React.FunctionComponent = () => {
   const route = useUnraidRoute();
 
   return (
-    <div className="text-slate-700 dark:text-gray-300">
+    <div>
       {(route === '/gather/select' || route === '/gather') && (
         <SelectDescription />
       )}

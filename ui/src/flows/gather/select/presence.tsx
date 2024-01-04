@@ -20,10 +20,7 @@ export const Presence: React.FunctionComponent = () => {
       <div className="flex-auto">
         <AutoSizer disableWidth>
           {({ height }) => (
-            <div
-              className={`overflow-y-auto`}
-              style={{ height: `${height}px` }}
-            >
+            <div className="overflow-y-auto" style={{ height: `${height}px` }}>
               {Object.keys(selected).map((key) => {
                 return (
                   <div key={key} className="flex flex-row items-center p-2">
@@ -35,9 +32,7 @@ export const Presence: React.FunctionComponent = () => {
                           style="fill-blue-400 dark:fill-gray-700"
                         />
                         <span className="pr-2" />
-                        <div className="font-bold text-slate-700 dark:text-slate-200">
-                          {selected[key]}
-                        </div>
+                        <div className="font-bold">{selected[key]}</div>
                       </div>
                       <div className="pl-7 text-neutral-500 dark:text-gray-500">
                         {location[key].join(', ')}

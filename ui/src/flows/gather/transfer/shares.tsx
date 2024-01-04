@@ -19,7 +19,7 @@ export const Shares: React.FunctionComponent = () => {
         <AutoSizer disableWidth>
           {({ height }) => (
             <div
-              className="p-2 overflow-y-auto text-slate-500 dark:text-gray-500"
+              className="p-2 overflow-y-auto"
               style={{ height: `${height}px` }}
             >
               {Object.values(selected).map((share) => (

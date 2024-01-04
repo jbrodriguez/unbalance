@@ -66,7 +66,7 @@ export const Operation: React.FunctionComponent<Props> = ({
         <AutoSizer disableWidth>
           {({ height }) => (
             <div
-              className="overflow-y-auto overflow-x-auto p-2 text-slate-700 dark:text-gray-300"
+              className="overflow-y-auto overflow-x-auto p-2"
               style={{ height: `${height}px` }}
             >
               {current.commands.map((command, index) => (

@@ -79,7 +79,7 @@ export const Settings: React.FunctionComponent = () => {
                 Promo
               </span>
             </div>
-            <p className="mb-3 text-sm text-slate-700 dark:text-gray-300">
+            <p className="mb-3 text-sm">
               Donate to the support fund to encourage continuous development.
               <br />
               Receive heartfelt thanks from the developer ! 😀 🙌

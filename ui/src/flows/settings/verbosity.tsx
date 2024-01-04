@@ -12,7 +12,7 @@ export const Verbosity: React.FunctionComponent = () => {
   const onChange = (value: string) => setVerbosity(+value);
 
   return (
-    <div className="text-slate-700 dark:text-gray-300 p-4">
+    <div className="p-4">
       <h1>
         Full verbosity will affect logging in two ways: <br />- It will print
         each line generated in the transfer (rsync) phase. <br /> - It will
