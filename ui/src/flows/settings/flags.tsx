@@ -2,51 +2,63 @@ import React from 'react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+import { useConfigActions, useConfigRsyncArgs } from '~/state/config';
 
 export const Flags: React.FunctionComponent = () => {
-  const [position, setPosition] = React.useState('bottom');
+  const flags = useConfigRsyncArgs();
+  const [flagsValue, setFlagsValue] = React.useState(flags.join(' '));
+  const { setRsyncArgs, resetRsyncArgs } = useConfigActions();
+
+  const onFlagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFlagsValue(e.target.value);
+  };
+
+  const onApply = () => {
+    const flags = flagsValue.split(' ');
+    setRsyncArgs(flags);
+  };
+
+  const onReset = () => {
+    setFlagsValue('-X');
+    resetRsyncArgs();
+  };
 
   return (
     <div className="text-slate-700 dark:text-gray-300 p-4">
       <h1>
-        unbalanced uses the threshold defined here as the minimum free space
-        that should be kept available in a target disk, when planning how much
-        the disk can be filled. <br />
-        This threshold cannot be less than 512Mb (hard limit set by this app).
+        Internally,{' '}
+        <span className="text-lime-600 dark:text-lime-700">unbalanced</span>{' '}
+        uses rsync to transfer files across disks. <br />
+        By default, rsync is invoked with{' '}
+        <span className="font-bold">-avPRX</span> flags. Note that the{' '}
+        <span className="font-bold">X</span> flag is customizable, so you can
+        remove it if needed. <br />
+        You can add custom flags, except for the dry run flag which will be
+        automatically added, if needed. <br />
+        Be careful with the flags you choose, since it can drastically alter the
+        expected behaviour of rsync under{' '}
+        <span className="text-lime-600 dark:text-lime-700">unbalanced</span>.
       </h1>
       <div className="pb-4" />
 
       <div className="flex flex-row items-center">
-        <Input type="number" placeholder="Size" className="w-40" />
+        <Input
+          type="text"
+          placeholder="rsync flags"
+          className="w-40"
+          defaultValue={flags.join(' ')}
+          value={flagsValue}
+          onChange={onFlagsChange}
+        />
         <div className="pr-4" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>{position}</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="">
-            <DropdownMenuLabel>Unit</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={position}
-              onValueChange={setPosition}
-            >
-              <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="bottom">
-                Bottom
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button onClick={onApply} variant="secondary">
+          Apply
+        </Button>
+        <div className="pr-4" />
+        <Button onClick={onReset} variant="secondary">
+          Reset to Defaults
+        </Button>
       </div>
     </div>
   );

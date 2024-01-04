@@ -121,4 +121,18 @@ export class Api {
       console.log('reservedSpace() error: ', e);
     }
   }
+
+  static async setRsyncArgs(flags: string[]): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flags),
+    };
+    try {
+      const url = `${Api.host}/config/rsyncArgs`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('rsyncArgs() error: ', e);
+    }
+  }
 }

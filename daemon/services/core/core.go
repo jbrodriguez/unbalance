@@ -270,6 +270,12 @@ func (c *Core) SetReservedSpace(amount uint64, unit string) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetRsyncArgs(value []string) *domain.Config {
+	c.ctx.Config.RsyncArgs = value
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalance.env")
 	return lib.SaveEnv(location, c.ctx.Config)

@@ -73,6 +73,7 @@ func (s *Server) Start() error {
 	api.PUT("/config/notifyPlan", s.setNotifyPlan)
 	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
 	api.PUT("/config/reservedSpace", s.setReservedSpace)
+	api.PUT("/config/rsyncArgs", s.setRsyncArgs)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -243,4 +244,14 @@ func (s *Server) setReservedSpace(c echo.Context) error {
 	}
 
 	return c.JSON(200, s.core.SetReservedSpace(params.Amount, params.Unit))
+}
+
+func (s *Server) setRsyncArgs(c echo.Context) error {
+	var value []string
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetRsyncArgs(value))
 }

@@ -20,6 +20,8 @@ interface ConfigStore {
     setNotifyPlan: (value: number) => Promise<void>;
     setNotifyTransfer: (value: number) => Promise<void>;
     setReservedSpace: (amount: number, unit: string) => Promise<void>;
+    setRsyncArgs: (flags: string[]) => Promise<void>;
+    resetRsyncArgs: () => Promise<void>;
   };
 }
 
@@ -31,7 +33,7 @@ export const useConfigStore = create<ConfigStore>()(
     notifyTransfer: 0,
     reservedAmount: 512,
     reservedUnit: 'MB',
-    rsyncArgs: [],
+    rsyncArgs: ['-X'],
     verbosity: 0,
     checkForUpdate: 0,
     refreshRate: 0,
@@ -77,6 +79,18 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setReservedSpace(amount, unit);
       },
+      setRsyncArgs: async (flags: string[]) => {
+        set((state) => {
+          state.rsyncArgs = flags;
+        });
+        await Api.setRsyncArgs(flags);
+      },
+      resetRsyncArgs: async () => {
+        set((state) => {
+          state.rsyncArgs = ['-X'];
+        });
+        await Api.setRsyncArgs(['-X']);
+      },
     },
   })),
 );
@@ -96,3 +110,5 @@ export const useConfigReserved = () =>
     amount: state.reservedAmount,
     unit: state.reservedUnit,
   }));
+export const useConfigRsyncArgs = () =>
+  useConfigStore((state) => state.rsyncArgs);
