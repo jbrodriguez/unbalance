@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 
 import { useUnraidOperation } from '~/state/unraid';
 import { formatBytes, formatTime } from '~/helpers/units';
+import { Gauge } from './gauge';
 
 export const Dashboard: React.FunctionComponent = () => {
   const operation = useUnraidOperation();
@@ -36,86 +37,22 @@ export const Dashboard: React.FunctionComponent = () => {
       : operation.remaining;
 
   return (
-    <div className="grid grid-cols-6 gap-4 text-blue-600">
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {completed}
-          </span>
-          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
-            %
-          </span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Completed
-        </span>
-      </div>
+    <div className="grid grid-cols-6 gap-4 ">
+      <Gauge value={completed} unit="%" label="Completed" />
 
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {speed}
-          </span>
-          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
-            MB/s
-          </span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Speed
-        </span>
-      </div>
+      <Gauge value={speed} unit="MB/s" label="Speed" />
 
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {transferredValue}
-          </span>
-          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
-            {transferredUnit}
-          </span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Transferred
-        </span>
-      </div>
+      <Gauge
+        value={transferredValue}
+        unit={transferredUnit}
+        label="Transferred"
+      />
 
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {totalValue}
-          </span>
-          <span className="text-sm font-medium text-blue-600 dark:text-blue-900">
-            {totalUnit}
-          </span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Total
-        </span>
-      </div>
+      <Gauge value={totalValue} unit={totalUnit} label="Total" />
 
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {elapsed}
-          </span>
-          <span></span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Elapsed
-        </span>
-      </div>
+      <Gauge value={elapsed} label="Elapsed" />
 
-      <div className="border border-stroke dark:border-gray-800 border-slate-300 px-4 py-3 shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-          <span className="text-3xl dark:text-slate-400 text-slate-600">
-            {remaining}
-          </span>
-          <span></span>
-        </div>
-        <span className="text-sm font-medium dark:text-slate-600 text-slate-400">
-          Remaining
-        </span>
-      </div>
+      <Gauge value={remaining} label="Remaining" />
     </div>
   );
 };
