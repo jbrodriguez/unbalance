@@ -98,8 +98,44 @@ export const useGatherStore = create<GatherStore>()(
           state.tree[node.id].checked = !state.tree[node.id].checked;
         });
 
-        const fullPath = getAbsolutePath(node, get().tree);
-        console.log('fullPath ', fullPath);
+        set((state) => {
+          // remove parents by looping
+          let parent = state.tree[node.parent];
+          while (parent) {
+            if (state.selected[parent.id]) {
+              delete state.selected[parent.id];
+              delete state.location[parent.id];
+              state.tree[parent.id].checked = false;
+            }
+            parent = state.tree[parent.parent];
+          }
+
+          // remove children recursively
+          const removeChildren = (node: Node) => {
+            if (!node.children) {
+              return;
+            }
+
+            node.children.forEach((childId) => {
+              const child = state.tree[childId];
+              if (state.selected[child.id]) {
+                delete state.selected[child.id];
+                delete state.location[child.id];
+                state.tree[child.id].checked = false;
+              }
+              removeChildren(child);
+            });
+          };
+          removeChildren(node);
+        });
+
+        // get().location[fullPath] = location;
+
+        // const fullPath = getAbsolutePath(node, get().tree);
+        // const branch = await Api.locate(fullPath, node.id);
+        // for (const key in branch.nodes) {
+        //   decorateNode(branch.nodes[key]);
+        // }
 
         // const selected = get().selected;
         if (get().selected[node.id]) {
@@ -112,6 +148,9 @@ export const useGatherStore = create<GatherStore>()(
           return;
         }
 
+        const fullPath = getAbsolutePath(node, get().tree);
+        console.log('fullPath ', fullPath);
+
         const location = await Api.locate(fullPath);
         console.log('location ', location);
 
@@ -119,13 +158,6 @@ export const useGatherStore = create<GatherStore>()(
           state.selected[node.id] = fullPath;
           state.location[node.id] = location;
         });
-        // get().location[fullPath] = location;
-
-        // const fullPath = getAbsolutePath(node, get().tree);
-        // const branch = await Api.locate(fullPath, node.id);
-        // for (const key in branch.nodes) {
-        //   decorateNode(branch.nodes[key]);
-        // }
       },
       setTarget: (target: string) => {
         set((state) => {
