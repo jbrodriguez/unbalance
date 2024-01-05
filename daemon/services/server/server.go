@@ -50,7 +50,7 @@ func (s *Server) Start() error {
 	s.engine.Use(middleware.Recover())
 	s.engine.Use(middleware.CORS())
 	s.engine.Use(middleware.Gzip())
-	s.engine.Use(middleware.Logger())
+	// s.engine.Use(middleware.Logger())
 
 	// Define a "/" endpoint to serve index.html from the embed FS
 	s.engine.GET("/*", indexHandler)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,6 +17,8 @@ import (
 	"unbalance/daemon/lib"
 	"unbalance/daemon/logger"
 )
+
+var regStrip = regexp.MustCompile("[0-9 ]")
 
 func (c *Core) sanityCheck() error {
 	locations := []string{"/var/local/emhttp"}
@@ -78,6 +81,10 @@ func (c *Core) refreshUnraid() *domain.Unraid {
 	return newunraid
 }
 
+func stripSpacesAndNumbers(input string) string {
+	return regStrip.ReplaceAllString(input, "")
+}
+
 func getArrayData() (*domain.Unraid, error) {
 	unraid := &domain.Unraid{}
 
@@ -138,6 +145,9 @@ func getArrayData() (*domain.Unraid, error) {
 	var hasBlockSize bool
 	disks := make([]*domain.Disk, 0)
 
+	pools := make(map[string]bool)
+
+	// identify cache pools among disks
 	for _, section := range file.Sections() {
 		// DEFAULT section
 		if section.Key("name").String() == "" {
@@ -148,7 +158,34 @@ func getArrayData() (*domain.Unraid, error) {
 		diskName := section.Key("name").String()
 		diskStatus := section.Key("status").String()
 
-		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && len(diskName) > 5 || diskStatus == "DISK_NP") {
+		if !(diskType == "Cache") {
+			continue
+		}
+
+		if diskStatus == "DISK_NP" {
+			continue
+		}
+
+		name := stripSpacesAndNumbers(diskName)
+		if pools[name] {
+			continue
+		}
+
+		pools[name] = true
+	}
+
+	for _, section := range file.Sections() {
+		logger.Olive("section %s", section.Key("name").String())
+		// DEFAULT section
+		if section.Key("name").String() == "" {
+			continue
+		}
+
+		diskType := section.Key("type").String()
+		diskName := section.Key("name").String()
+		diskStatus := section.Key("status").String()
+
+		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && !pools[diskName]) {
 			continue
 		}
 
