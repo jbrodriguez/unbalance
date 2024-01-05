@@ -295,6 +295,15 @@ export const useUnraidStore = create<UnraidStore>()(
         scatterOperation: (
           command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
         ) => {
+          const machine = get().machine;
+          const route = machine.transition(get().route, 'next');
+          const socket = get().socket;
+          const plan = get().plan;
+
+          if (!plan) {
+            return;
+          }
+
           set((state) => {
             state.operation = null;
             state.logs = [];
@@ -304,11 +313,6 @@ export const useUnraidStore = create<UnraidStore>()(
                 : Op.ScatterCopy;
           });
 
-          const machine = get().machine;
-          const route = machine.transition(get().route, 'next');
-          // console.log('unraid.transition ', get().route, event, route);
-          const socket = get().socket;
-          const plan = get().plan;
           socket.send(
             JSON.stringify({
               topic: command,
@@ -406,6 +410,12 @@ export const useUnraidStore = create<UnraidStore>()(
             return;
           }
 
+          set((state) => {
+            state.operation = null;
+            state.logs = [];
+            state.status = Op.GatherMove;
+          });
+
           const target = useGatherStore.getState().target;
 
           socket.send(
@@ -414,6 +424,11 @@ export const useUnraidStore = create<UnraidStore>()(
               payload: { ...plan, target },
             }),
           );
+
+          set((state) => {
+            state.plan = null;
+          });
+
           get().navigate?.(route);
         },
         removeSource: (
