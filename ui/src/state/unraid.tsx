@@ -56,6 +56,7 @@ interface UnraidStore {
     ) => void;
     replay: (operation: Operation | undefined) => void;
     getLog: () => Promise<void>;
+    resetPlan: () => void;
   };
 }
 
@@ -119,6 +120,15 @@ export const useUnraidStore = create<UnraidStore>()(
             // get().actions.refreshUnraid();
           },
         },
+        prev: {
+          target: '/scatter/select',
+          action() {
+            console.log(
+              'transition action for "prev" in "/scatter/plan" state',
+            );
+            get().actions.resetPlan();
+          },
+        },
       },
       '/scatter/transfer/validation': {
         next: {
@@ -127,6 +137,15 @@ export const useUnraidStore = create<UnraidStore>()(
             console.log(
               'transition action for "next" in "/scatter/transfer/validation" state',
             );
+          },
+        },
+        prev: {
+          target: '/scatter/plan',
+          action() {
+            console.log(
+              'transition action for "prev" in "/scatter/transfer/validation" state',
+            );
+            // get().actions.resetPlan();
           },
         },
       },
@@ -260,6 +279,15 @@ export const useUnraidStore = create<UnraidStore>()(
         scatterOperation: (
           command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
         ) => {
+          set((state) => {
+            state.operation = null;
+            state.logs = [];
+            state.status =
+              command === Topic.CommandScatterMove
+                ? Op.ScatterMove
+                : Op.ScatterCopy;
+          });
+
           const machine = get().machine;
           const route = machine.transition(get().route, 'next');
           // console.log('unraid.transition ', get().route, event, route);
@@ -271,6 +299,11 @@ export const useUnraidStore = create<UnraidStore>()(
               payload: plan,
             }),
           );
+
+          set((state) => {
+            state.plan = null;
+          });
+
           get().navigate?.(route);
         },
         scatterValidate: (operation: Operation | undefined) => {
@@ -308,6 +341,8 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = payload.operation;
             state.history = payload.history;
           });
+
+          get().navigate?.('/history');
         },
         gatherPlan: () => {
           console.log('running gather plan');
@@ -423,6 +458,12 @@ export const useUnraidStore = create<UnraidStore>()(
           const logs = await Api.getLog();
           set((state) => {
             state.logs = logs;
+          });
+        },
+        resetPlan: () => {
+          set((state) => {
+            state.plan = null;
+            state.logs = [];
           });
         },
       },

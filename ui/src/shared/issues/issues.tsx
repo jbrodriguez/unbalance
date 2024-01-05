@@ -34,7 +34,7 @@ export const Issues: React.FunctionComponent = () => {
               <h2>ISSUES</h2>
               {plan && (
                 <span className="font-bold">
-                  run time: {formatTime(elapsed)}{' '}
+                  runtime: {formatTime(elapsed)}{' '}
                 </span>
               )}
             </div>

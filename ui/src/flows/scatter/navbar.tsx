@@ -30,6 +30,7 @@ export const Navbar: React.FunctionComponent = () => {
   const busy = useUnraidIsBusy();
 
   const onNext = () => transition('next');
+  const onPrev = () => transition('prev');
   const onMove = () => scatterOperation(Topic.CommandScatterMove);
   const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
   const onDryRun = () => toggleDryRun();
@@ -55,6 +56,7 @@ export const Navbar: React.FunctionComponent = () => {
             />
           }
           disabled={busy || route === '/scatter/select'}
+          onClick={onPrev}
         />
       </div>
 
