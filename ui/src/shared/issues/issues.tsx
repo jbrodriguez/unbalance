@@ -15,7 +15,7 @@ export const Issues: React.FunctionComponent = () => {
   const file = plan?.fileIssue ?? 'n/a';
 
   const elapsed = plan
-    ? dayjs(plan.finished).diff(dayjs(plan.started), 'second')
+    ? dayjs(plan.ended).diff(dayjs(plan.started), 'second')
     : 0;
 
   const showWarning =

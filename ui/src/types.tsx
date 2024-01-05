@@ -123,7 +123,7 @@ export interface VDisk {
 
 export interface Plan {
   started: Date;
-  finished: Date;
+  ended: Date;
   chosenFolders: string[];
   ownerIssue: number;
   groupIssue: number;
