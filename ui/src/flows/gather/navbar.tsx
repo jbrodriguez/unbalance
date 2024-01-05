@@ -3,8 +3,12 @@ import React from 'react';
 import { Button } from '~/shared/buttons/button';
 import { Icon } from '~/shared/icons/icon';
 import { Stepper } from '~/shared/stepper/stepper';
-import { useUnraidRoute, useUnraidActions } from '~/state/unraid';
-import { useGatherTarget } from '~/state/gather';
+import {
+  useUnraidActions,
+  useUnraidRoute,
+  useUnraidIsBusy,
+} from '~/state/unraid';
+import { useGatherSelected, useGatherTarget } from '~/state/gather';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 import { useConfigActions, useConfigDryRun } from '~/state/config';
@@ -21,18 +25,23 @@ const config = [
 
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
-  const currentStep = routeToStep(route);
   const { transition, gatherMove } = useUnraidActions();
   const target = useGatherTarget();
   const { toggleDryRun } = useConfigActions();
   const dryRun = useConfigDryRun();
+  const busy = useUnraidIsBusy();
+  const selected = useGatherSelected();
 
   const onNext = () => transition('next');
+  const onPrev = () => transition('prev');
   const onMove = () => gatherMove();
-  const onDryRun = () => {
-    toggleDryRun();
-    console.log('onDryRun()');
-  };
+  const onDryRun = () => toggleDryRun();
+
+  const currentStep = routeToStep(route);
+  const nextDisabled =
+    busy ||
+    route === '/gather/transfer/targets' ||
+    (route === '/gather/select' && Object.keys(selected).length === 0);
 
   return (
     <div className="flex flex-row items-center justify-between mb-4">
@@ -47,7 +56,8 @@ export const Navbar: React.FunctionComponent = () => {
               style={getFill(route !== '/gather/select')}
             />
           }
-          disabled={route === '/gather/select'}
+          disabled={busy || route === '/gather/select'}
+          onClick={onPrev}
         />
       </div>
 
@@ -94,7 +104,7 @@ export const Navbar: React.FunctionComponent = () => {
               style={getFill(route !== '/gather/transfer/targets')}
             />
           }
-          disabled={route === '/gather/transfer/targets'}
+          disabled={nextDisabled}
           onClick={onNext}
         />
       </div>

@@ -168,6 +168,13 @@ export const useUnraidStore = create<UnraidStore>()(
             // get().actions.refreshUnraid();
           },
         },
+        prev: {
+          target: '/gather/select',
+          action() {
+            console.log('transition action for "prev" in "/gather/plan" state');
+            get().actions.resetPlan();
+          },
+        },
       },
       '/gather/transfer/targets': {
         next: {
@@ -176,6 +183,15 @@ export const useUnraidStore = create<UnraidStore>()(
             console.log(
               'transition action for "next" in "/gather/transfer/targets" state',
             );
+          },
+        },
+        prev: {
+          target: '/gather/plan',
+          action() {
+            console.log(
+              'transition action for "prev" in "/gather/transfer/targets" state',
+            );
+            // get().actions.resetPlan();
           },
         },
       },
