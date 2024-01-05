@@ -80,9 +80,8 @@ export const Settings: React.FunctionComponent = () => {
               </span>
             </div>
             <p className="mb-3 text-sm">
-              Donate to the support fund to encourage continuous development.
-              <br />
-              Receive heartfelt thanks from the developer ! 😀 🙌
+              Donate to the support fund to encourage continuous development and
+              receive heartfelt thanks from the developer ! 😀 🙌
             </p>
             <a
               className="text-sm text-blue-800 underline font-medium hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

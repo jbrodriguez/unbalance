@@ -100,6 +100,10 @@ const router = createBrowserRouter([
         element: <Settings />,
         children: [
           {
+            index: true,
+            element: <Navigate to="/settings/notifications" replace />,
+          },
+          {
             path: 'notifications',
             element: <Notifications />,
           },
