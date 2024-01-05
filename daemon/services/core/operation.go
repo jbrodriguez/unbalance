@@ -331,18 +331,13 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	ffinished := operation.Finished.Format(timeFormat)
 	elapsed := lib.Round(operation.Finished.Sub(operation.Started), time.Millisecond)
 
+	c.state.Status = common.OpNeutral
+	c.state.Operation = nil
+	c.state.Unraid = c.refreshUnraid()
 	// TODO: update history
 	c.updateHistory(c.state.History, operation)
 
-	c.state.Unraid = c.refreshUnraid()
-
-	state := &domain.State{
-		Operation: operation,
-		History:   c.state.History,
-		Unraid:    c.state.Unraid,
-	}
-
-	packet := &domain.Packet{Topic: common.EventTransferEnded, Payload: state}
+	packet := &domain.Packet{Topic: common.EventTransferEnded, Payload: c.state}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s\n\n%s\n\nTransferred %s at ~ %.2f MB/s",
@@ -367,9 +362,6 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	}()
 
 	logger.Blue("\n%s\n%s", subject, message)
-
-	c.state.Status = common.OpNeutral
-	c.state.Operation = nil
 }
 
 func (c *Core) removeSource(operation *domain.Operation, command *domain.Command) {
