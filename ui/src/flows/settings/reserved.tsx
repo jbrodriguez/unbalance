@@ -53,7 +53,7 @@ export const Reserved: React.FunctionComponent = () => {
         unbalanced uses the threshold defined here as the minimum free space
         that should be kept available in a target disk, when planning how much
         the disk can be filled. <br />
-        This threshold cannot be less than 512Mb (hard limit set by this app).
+        This threshold cannot be less than 1 Gb (hard limit set by this app).
       </h1>
       <div className="pb-4" />
 

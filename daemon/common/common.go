@@ -12,7 +12,7 @@ const (
 	RsyncArgs       = "-avPR"
 )
 
-const ReservedSpace uint64 = 512 * 1024 * 1024 // 512Mb
+const ReservedSpace uint64 = 1024 * 1024 * 1024 // 1Gb
 
 const (
 	OpNeutral         = 0
