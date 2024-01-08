@@ -46,7 +46,7 @@ func main() {
 	log.Printf("cli: %+v", cli)
 
 	log.SetOutput(&lumberjack.Logger{
-		Filename:   filepath.Join(cli.LogsDir, "unbalance.log"),
+		Filename:   filepath.Join(cli.LogsDir, "unbalanced.log"),
 		MaxSize:    10, // megabytes
 		MaxBackups: 10,
 		MaxAge:     28, //days

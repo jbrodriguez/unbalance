@@ -84,7 +84,7 @@ export const Issues: React.FunctionComponent = () => {
                 <div className="pb-4" />
                 <section>
                   You can find more details about which files have issues in the
-                  log file (/var/log/unbalance.log). <br />
+                  log file (/var/log/unbalanced.log). <br />
                   At this point, you can transfer the folders/files if you want,
                   but be advised that it can cause errors in the operation.{' '}
                   <br />

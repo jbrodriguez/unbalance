@@ -19,7 +19,7 @@ const (
 	certDir    = "/boot/config/ssl/certs"
 	mailCmd    = "/usr/local/emhttp/webGui/scripts/notify"
 	timeFormat = "Jan _2, 2006 15:04:05"
-	settings   = "/boot/config/plugins/unbalance"
+	settings   = "/boot/config/plugins/unbalanced"
 )
 
 var (

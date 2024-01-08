@@ -22,7 +22,7 @@ func CreateOrchestrator(ctx *domain.Context) *Orchestrator {
 }
 
 func (o *Orchestrator) Run() error {
-	logger.Blue("starting unbalance v%s ...", o.ctx.Version)
+	logger.Blue("starting unbalanced %s ...", o.ctx.Version)
 
 	core := core.Create(o.ctx)
 	server := server.Create(o.ctx, core)

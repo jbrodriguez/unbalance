@@ -19,7 +19,7 @@ func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
 	now := time.Now()
 
 	if c.state.Status != common.OpNeutral {
-		logger.Yellow("unbalance is busy: %d", c.state.Status)
+		logger.Yellow("unbalanced is busy: %d", c.state.Status)
 		return
 	}
 

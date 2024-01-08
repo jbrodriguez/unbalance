@@ -1,13 +1,13 @@
 package common
 
 const (
-	PluginName      = "unbalance"
+	PluginName      = "unbalanced"
 	APIEndpoint     = "/api"
 	MailCmd         = "/usr/local/emhttp/webGui/scripts/notify" // MailCmd - location of notify command
-	PluginLocation  = "/boot/config/plugins/unbalance"          // PluginLocation - plugin's base config path
+	PluginLocation  = "/boot/config/plugins/unbalanced"         // PluginLocation - plugin's base config path
 	ChanCapacity    = 3
 	HistoryCapacity = 25
-	HistoryFilename = "unbalance.hist"
+	HistoryFilename = "unbalanced.hist"
 	HistoryVersion  = 2
 	RsyncArgs       = "-avPR"
 )

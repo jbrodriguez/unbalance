@@ -190,11 +190,11 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	operation.Finished = time.Now()
 	elapsed := time.Since(operation.Started)
 
-	subject := fmt.Sprintf("unBALANCE - %s operation INTERRUPTED", strings.ToUpper(opName))
+	subject := fmt.Sprintf("unbalanced - %s operation INTERRUPTED", strings.ToUpper(opName))
 	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), reRsync, rsyncErrors))
 
 	logger.Yellow(headline)
-	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/boot/logs/unbalance.log) for details.", opName)}
+	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/var/log/unbalanced.log) for details.", opName)}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	operation.BytesTransferred += cmdTransferred
@@ -315,7 +315,7 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	operation.Finished = time.Now()
 	elapsed := operation.Finished.Sub(operation.Started)
 
-	subject := fmt.Sprintf("unbalance - %s operation completed", strings.ToUpper(opName))
+	subject := fmt.Sprintf("unbalanced - %s operation completed", strings.ToUpper(opName))
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
 	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)

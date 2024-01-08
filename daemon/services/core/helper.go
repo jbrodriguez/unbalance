@@ -195,7 +195,7 @@ func (c *Core) sendTimeFeedbackToFrontend(topic, fended string, elapsed time.Dur
 }
 
 func (c *Core) sendMailFeedback(fstarted, ffinished string, elapsed time.Duration, plan *domain.Plan, notTransferred string) {
-	subject := "unbalance - PLANNING completed"
+	subject := "unbalanced - PLANNING completed"
 	message := fmt.Sprintf("\n\nStarted: %s\nEnded: %s\n\nElapsed: %s", fstarted, ffinished, elapsed)
 	if notTransferred != "" {
 		switch c.ctx.Config.NotifyPlan {
@@ -213,7 +213,7 @@ func (c *Core) sendMailFeedback(fstarted, ffinished string, elapsed time.Duratio
 			\n%d file(s)/folder(s) with a group other than 'users'
 			\n%d folder(s) with a permission other than 'drwxrwxrwx'
 			\n%d files(s) with a permission other than '-rw-rw-rw-' or '-r--r--r--'
-			\n\nCheck the log file (/boot/logs/unbalance.log) for additional information
+			\n\nCheck the log file (/var/log/unbalanced.log) for additional information
 			\n\nIt's strongly suggested to install the Fix Common Plugins and run the Docker Safe New Permissions command
 		`, plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
 	}
@@ -407,7 +407,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 		message += cmd + "\n"
 	}
 
-	subject := fmt.Sprintf("unbalance - %s operation STARTED", strings.ToUpper(opName))
+	subject := fmt.Sprintf("unbalanced - %s operation STARTED", strings.ToUpper(opName))
 
 	go func() {
 		if sendErr := sendmail(c.ctx.NotifyTransfer, subject, message, c.ctx.DryRun); sendErr != nil {
@@ -469,7 +469,7 @@ func sendmail(notify int, subject, message string, dryRun bool) (err error) {
 
 	msg := dry + message
 
-	cmd := exec.Command(mailCmd, "-e", "unBALANCE operation update", "-s", subject, "-m", msg)
+	cmd := exec.Command(mailCmd, "-e", "unbalanced operation update", "-s", subject, "-m", msg)
 	err = cmd.Run()
 
 	return

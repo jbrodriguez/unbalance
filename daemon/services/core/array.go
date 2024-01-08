@@ -306,7 +306,7 @@ func (c *Core) Locate(path string) []string {
 }
 
 func (c *Core) GetLog() []string {
-	cmd := "tail -n 100 /var/log/unbalance.log"
+	cmd := "tail -n 100 /var/log/unbalanced.log"
 
 	log := make([]string, 0)
 

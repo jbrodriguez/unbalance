@@ -119,7 +119,7 @@ export const OperationHeader: React.FunctionComponent<Props> = ({
         <div className="text-sm text-slate-500 dark:text-gray-500">
           <p>
             One or more commands had an execution warning/error. Check
-            /var/log/unbalance.log for additional details.
+            /var/log/unbalanced.log for additional details.
           </p>
           <p>
             Due to this, the plugin hasn&apos;t deleted the source files/folders
