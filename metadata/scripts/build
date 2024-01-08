@@ -2,14 +2,22 @@
 
 patch="${1:-}"
 
+name="unbalanced"
+
 # Get the current date in the specified format
 version=$(date '+%Y.%m.%d')
 
-make local
-tar -cvzf unbalanced-$version$patch.tgz unbalanced
+# make local
+cd ui && npm run build && cd ..
+go build fmt
+go build -ldflags "-X main.Version=$version$patch" -v -o $name
+
+tar -cvzf $name-$version$patch.tgz $name
 
 # Calculate the MD5 checksum for the plugin
-md5=$(md5sum unbalanced-$version$patch.tgz | awk '{print $1}')
+md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
+
+git tag
 
 # Get the latest git tag
 latest_tag=$(git describe --tags --abbrev=0)
@@ -25,9 +33,9 @@ echo "changes ... ($changes)"
 sed -e "s/##version##/$version/g" \
     -e "s/##md5##/$md5/g" \
     -e "s/##changes##/$changes/g" \
-    metadata/template/unbalanced.plg > unbalanced.plg
+    metadata/template/$name.plg > $name.plg
 
 ls -al
 
-cat unbalanced.plg
+cat $name.plg
 
