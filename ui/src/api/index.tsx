@@ -14,11 +14,10 @@ export class Api {
         dryRun: true,
         notifyPlan: 0,
         notifyTransfer: 0,
-        reservedAmount: BigInt(0),
+        reservedAmount: 1,
         reservedUnit: 'GB',
         rsyncArgs: [],
         verbosity: 0,
-        checkForUpdate: 0,
         refreshRate: 0,
       };
     }

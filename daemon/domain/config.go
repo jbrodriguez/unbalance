@@ -9,6 +9,5 @@ type Config struct {
 	ReservedUnit   string   `json:"reservedUnit"`
 	RsyncArgs      []string `json:"rsyncArgs"`
 	Verbosity      int      `json:"verbosity"`
-	CheckForUpdate int      `json:"checkForUpdate"`
 	RefreshRate    int      `json:"refreshRate"`
 }

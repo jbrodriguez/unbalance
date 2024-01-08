@@ -21,7 +21,6 @@ export interface Config {
   reservedUnit: string;
   rsyncArgs: string[];
   verbosity: number;
-  checkForUpdate: number;
   refreshRate: number;
 }
 

@@ -169,7 +169,6 @@ func LoadEnv(location string, config *domain.Config) error {
 	config.ReservedUnit = file.Section("").Key("RESERVED_UNIT").String()
 	config.RsyncArgs = file.Section("").Key("RSYNC_ARGS").Strings(",")
 	config.Verbosity, _ = file.Section("").Key("VERBOSITY").Int()
-	config.CheckForUpdate, _ = file.Section("").Key("CHECK_FOR_UPDATE").Int()
 	config.RefreshRate, _ = file.Section("").Key("REFRESH_RATE").Int()
 
 	return nil
@@ -192,7 +191,6 @@ func SaveEnv(location string, config domain.Config) error {
 	file.Section("").Key("RESERVED_UNIT").SetValue(config.ReservedUnit)
 	file.Section("").Key("RSYNC_ARGS").SetValue(strings.Join(config.RsyncArgs, ","))
 	file.Section("").Key("VERBOSITY").SetValue(strconv.Itoa(config.Verbosity))
-	file.Section("").Key("CHECK_FOR_UPDATE").SetValue(strconv.Itoa(config.CheckForUpdate))
 	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
 
 	file.SaveTo(location)
