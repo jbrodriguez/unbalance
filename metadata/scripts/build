@@ -17,6 +17,8 @@ tar -cvzf $name-$version$patch.tgz $name
 # Calculate the MD5 checksum for the plugin
 md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
 
+git fetch --tags
+
 tags=$(git tag)
 
 echo "tags ... ($tags)"
