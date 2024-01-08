@@ -2,21 +2,27 @@
 
 patch="${1:-}"
 
-# Get the latest tag in the repository
-latest_tag=$(git describe --tags --abbrev=0)
-
-# Generate the changelog using the git log command
-changelog=$(git log --oneline 30eb92a..HEAD --pretty="- %s")
-
-# Get the current date
-mb_date=$(date '+%Y.%m.%d')
-
-# Replace the placeholder in the XML template with the changelog
-sed -e "/&changes;/r /dev/stdin" -e "/&changes;/d" template.xml > output.xml <<EOF
-${changelog}
-EOF
+# Get the current date in the specified format
+version=$(date '+%Y.%m.%d')
 
 make local
-tar -cvzf unbalanced-$(mb_date)$(patch).tgz unbalanced
-md5sum unbalanced-$(mb_date)$(patch).tgz
+tar -cvzf unbalanced-$version$patch.tgz unbalanced
+
+# Calculate the MD5 checksum for the plugin
+md5=$(md5sum "$name-$version.tgz" | awk '{print $1}')
+
+# Get the latest git tag
+latest_tag=$(git describe --tags --abbrev=0)
+
+# Generate the changelog since the latest tag
+changes=$(git log --oneline "$latest_tag"..HEAD --pretty="- %s")
+
+# Replace placeholders in the template.xml and output to plugin.xml
+sed -e "s/##version##/$version/g" \
+    -e "s/##md5##/$md5/g" \
+    -e "s/##changes##/$changes/g" metadata/template/unbalanced.plg > unbalanced.plg
+
 ls -al
+
+cat unbalanced.plg
+

@@ -1,0 +1,25 @@
+<?xml version='1.0' standalone='yes'?>
+
+<!DOCTYPE PLUGIN [
+<!ENTITY name        "unbalanced">
+<!ENTITY author      "Juan B. Rodriguez">
+<!ENTITY version     "##version##">
+<!ENTITY launch      "Settings/&name;">
+<!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/&name;.plg">
+<!ENTITY bundle      "&name;-&version;.tgz">
+<!ENTITY md5         "##md5##">
+]>
+
+<PLUGIN  name="&name;"
+         author="&author;"
+         version="&version;"
+         appver="&appver;"
+         launch="&launch;"
+         pluginURL="&pluginURL;"
+>
+
+<CHANGES>
+##changes##
+</CHANGES>
+
+</PLUGIN>
