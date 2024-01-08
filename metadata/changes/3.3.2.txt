@@ -1,8 +1,0 @@
-2017-08-20 - 3.3.2
-
-This release fixes the issue with the wrong progress percentages.
-
-Also fixes the issue with the source folder not being removed.
-
-Finally, the plugin now checks for an update when starting.
-This is enabled by default, but can be turned off in the settings.

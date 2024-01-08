@@ -1,3 +1,0 @@
-2018-01-12 - 4.0.2
-
-- Revert date base plugin version

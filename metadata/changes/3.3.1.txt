@@ -1,4 +1,0 @@
-2017-08-18 - 3.3.1
-
-- Add dry-run logging
-- Add bitcoin address to the support fund
