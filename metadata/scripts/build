@@ -17,10 +17,13 @@ latest_tag=$(git describe --tags --abbrev=0)
 # Generate the changelog since the latest tag
 changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
 
+echo "changes ... ($changes)"
+
 # Replace placeholders in the template.xml and output to plugin.xml
 sed -e "s/##version##/$version/g" \
     -e "s/##md5##/$md5/g" \
-    -e "s/##changes##/$changes/g" metadata/template/unbalanced.plg > unbalanced.plg
+    -e "s/##changes##/$changes/g" \
+    metadata/template/unbalanced.plg > unbalanced.plg
 
 ls -al
 

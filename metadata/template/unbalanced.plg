@@ -13,7 +13,6 @@
 <PLUGIN  name="&name;"
          author="&author;"
          version="&version;"
-         appver="&appver;"
          launch="&launch;"
          pluginURL="&pluginURL;"
 >
@@ -21,5 +20,93 @@
 <CHANGES>
 ##changes##
 </CHANGES>
+
+<!--
+The plugin frees up space from a disk array in unRAID systems.
+-->
+
+<!--
+Get the unbalanced bundle.
+-->
+<FILE Name="/boot/config/plugins/&name;/&bundle;">
+<URL>"https://github.com/jbrodriguez/unbalance/releases/download/&version;/&bundle;"</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<!-- Install default plugin cfg  -->
+<FILE Name="/boot/config/plugins/unbalanced/unbalanced.cfg">
+<INLINE>
+<![CDATA[
+SERVICE="disable"
+PORT="7090"
+RUNAS="nobody"
+]]>
+</INLINE>
+</FILE>
+
+<!--
+Prepare for installation.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+running=$(pidof controlr | wc -w)
+
+# Remove emhttp files so we can re-install.
+rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
+
+# Remove old 'bundle' files.
+rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;')
+
+# Install the 'bundle'.
+tar -xf /boot/config/plugins/&name;/&bundle; -C /
+
+# start the plugin if it was running previously
+if [ $running -eq 1 ]; then
+	/usr/local/emhttp/plugins/&name;/scripts/start
+fi
+
+echo ""
+echo "-----------------------------------------------------------"
+echo " unbalanced has been installed."
+echo " Copyright (c) &author;"
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+/usr/local/emhttp/plugins/&name;/scripts/stop
+# Remove all plugin files.
+rm -rf /usr/local/emhttp/plugins/&name;
+rm -rf /boot/config/plugins/&name;
+
+echo ""
+echo "-----------------------------------------------------------"
+echo " unbalanced has been removed."
+echo " Copyright (c) &author;"
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/unbalanced-chkconf" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# This will check each entry in the config so nothing is missing, and if missing, sets to default
+CFGFILE=/boot/config/plugins/unbalanced/unbalanced.cfg
+[ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"disable\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"7090\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
+rm /tmp/unbalance-chkconf
+]]>
+</INLINE>
+</FILE>
 
 </PLUGIN>
