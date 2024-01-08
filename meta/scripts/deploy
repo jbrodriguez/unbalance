@@ -11,8 +11,10 @@ version=$(date '+%Y.%m.%d')
 
 # make local
 cd ui && npm run build && cd ..
+
 go build fmt
 go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
+
 cd meta/plugin
 tar --owner=root --group=root -czvf ../../$name-$version$patch.tgz .
 cd ../..
@@ -34,7 +36,7 @@ awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
     gsub(/##changes##/, changes);
     print $0;
   }
-' metadata/template/$name.plg > $name.plg
+' meta/template/$name.plg > $name.plg
 
 # release the plugin
 # Create a release with the tag name
