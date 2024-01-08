@@ -17,21 +17,11 @@ tar -cvzf $name-$version$patch.tgz $name
 # Calculate the MD5 checksum for the plugin
 md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
 
-git fetch --tags
-
-git checkout feat/ng
-
-tags=$(git tag)
-
-echo "tags ... ($tags)"
-
 # Get the latest git tag
 latest_tag=$(git describe --tags --abbrev=0)
 
-echo "latest_tag ... ($latest_tag)"
-
 # Generate the changelog since the latest tag
-changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
+changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s" | awk '{printf "%s\\n", $0}')
 
 echo "changes ... ($changes)"
 
