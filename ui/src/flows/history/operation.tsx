@@ -69,12 +69,12 @@ export const Operation: React.FunctionComponent<Props> = ({
               className="overflow-y-auto overflow-x-auto p-2"
               style={{ height: `${height}px` }}
             >
-              {current.commands.map((command, index) => (
+              {current.commands.map((command) => (
                 <Command
                   key={command.id}
                   command={command}
                   rsyncStrArgs={current.rsyncStrArgs}
-                  canBeFlagged={canBeFlagged && index === 3}
+                  canBeFlagged={canBeFlagged}
                   onFlag={onRemoveSource}
                 />
               ))}
