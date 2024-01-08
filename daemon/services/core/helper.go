@@ -218,7 +218,7 @@ func (c *Core) sendMailFeedback(fstarted, ffinished string, elapsed time.Duratio
 		`, plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
 	}
 
-	if sendErr := lib.Sendmail(common.MailCmd, c.ctx.Config.NotifyPlan, subject, message, false); sendErr != nil {
+	if sendErr := sendmail(c.ctx.Config.NotifyPlan, subject, message, false); sendErr != nil {
 		logger.Red("unable to send mail: %s", sendErr)
 	}
 }
@@ -411,7 +411,7 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 
 	go func() {
 		if sendErr := sendmail(c.ctx.NotifyTransfer, subject, message, c.ctx.DryRun); sendErr != nil {
-			logger.Red("%s", sendErr)
+			logger.Red("hp-sendmail %s", sendErr)
 		}
 	}()
 }

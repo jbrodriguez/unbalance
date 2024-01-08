@@ -357,7 +357,7 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 
 	go func() {
 		if sendErr := sendmail(c.ctx.NotifyTransfer, subject, message, c.ctx.DryRun); sendErr != nil {
-			logger.Red("%s", sendErr)
+			logger.Red("op-sendmail: %s", sendErr)
 		}
 	}()
 

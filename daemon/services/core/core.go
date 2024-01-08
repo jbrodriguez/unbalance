@@ -353,10 +353,10 @@ func (c *Core) updateHistory(history *domain.History, operation *domain.Operatio
 	if count == common.HistoryCapacity {
 		delete(history.Items, history.Order[count-1])
 		// prepend item, remove oldest item
-		history.Order = append([]string{c.state.Operation.ID}, history.Order[:count-1]...)
+		history.Order = append([]string{operation.ID}, history.Order[:count-1]...)
 	} else {
 		// prepend item
-		history.Order = append([]string{c.state.Operation.ID}, history.Order...)
+		history.Order = append([]string{operation.ID}, history.Order...)
 	}
 
 	history.Items[operation.ID] = operation
