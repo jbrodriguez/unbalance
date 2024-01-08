@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -138,22 +137,6 @@ func Min(x, y uint64) uint64 {
 		return x
 	}
 	return y
-}
-
-// GetLatestVersion  -
-func GetLatestVersion(url string) (dst string, err error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(body), nil
 }
 
 func Bind(content any, data any) error {
