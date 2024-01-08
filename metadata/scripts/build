@@ -9,13 +9,13 @@ make local
 tar -cvzf unbalanced-$version$patch.tgz unbalanced
 
 # Calculate the MD5 checksum for the plugin
-md5=$(md5sum "$name-$version.tgz" | awk '{print $1}')
+md5=$(md5sum unbalanced-$version$patch.tgz | awk '{print $1}')
 
 # Get the latest git tag
 latest_tag=$(git describe --tags --abbrev=0)
 
 # Generate the changelog since the latest tag
-changes=$(git log --oneline "$latest_tag"..HEAD --pretty="- %s")
+changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
 
 # Replace placeholders in the template.xml and output to plugin.xml
 sed -e "s/##version##/$version/g" \
