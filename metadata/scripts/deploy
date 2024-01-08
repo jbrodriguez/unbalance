@@ -23,7 +23,7 @@ md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
 latest_tag=$(git describe --tags --abbrev=0)
 
 # Generate the changelog since the latest tag
-changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s" | awk '{printf "%s\\n", $0}')
+changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
 
 # Use awk for replacements and generate plugin file
 awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
