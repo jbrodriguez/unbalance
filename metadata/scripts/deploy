@@ -7,6 +7,8 @@ name="unbalanced"
 # Get the current date in the specified format
 version=$(date '+%Y.%m.%d')
 
+# build the plugin
+
 # make local
 cd ui && npm run build && cd ..
 go build fmt
@@ -33,7 +35,14 @@ awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
   }
 ' metadata/template/$name.plg > $name.plg
 
-ls -al
+# release the plugin
+# Create a release with the tag name
+gh release create $version$patch -n $changes
 
-cat $name.plg
+# Upload the TGZ artifact
+gh release upload $version$patch ./$name-$version$patch.tgz --clobber
 
+# Upload the XML artifact
+gh release upload $version$patch ./$name.plg --clobber
+
+# gh release create $version$patch $name-$version$patch.tgz -F $name.plg
