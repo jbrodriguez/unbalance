@@ -42,4 +42,4 @@ jobs:
 
       - name: build app
         run: |
-          ./metadata/scripts/deploy ${{ inputs.patch }}
+          ./meta/scripts/deploy ${{ inputs.patch }}
