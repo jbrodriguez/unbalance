@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "npm"
+          cache-dependency-path: "ui/package-lock.json"
 
       - name: install node dependencies
         run: |
