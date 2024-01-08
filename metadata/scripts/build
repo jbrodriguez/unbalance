@@ -19,6 +19,8 @@ md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
 
 git fetch --tags
 
+git checkout feat/ng
+
 tags=$(git tag)
 
 echo "tags ... ($tags)"
