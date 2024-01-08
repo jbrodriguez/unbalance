@@ -36,4 +36,6 @@ jobs:
       - name: build app
         run: |
           make local
+          tar -cvzf unbalanced.tgz unbalanced
+          md5sum unbalanced.tgz
           ls -al
