@@ -14,6 +14,8 @@ md5=$(md5sum unbalanced-$version$patch.tgz | awk '{print $1}')
 # Get the latest git tag
 latest_tag=$(git describe --tags --abbrev=0)
 
+echo "latest_tag ... ($latest_tag)"
+
 # Generate the changelog since the latest tag
 changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
 
