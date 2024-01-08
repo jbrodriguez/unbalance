@@ -25,7 +25,7 @@ protobuf:
 	protoc --go_out=. --go_opt=paths=source_relative --go-drpc_out=. --go-drpc_opt=paths=source_relative import.proto
 
 local: clean
-	pushd ./ui && npm run build && popd
+	cd ui && npm run build && cd ..
 	go build fmt
 	go build -ldflags "-X main.Version=$(mb_date)-$(mb_hash)" -v -o ${PROG}
 
