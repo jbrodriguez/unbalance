@@ -1,6 +1,6 @@
-# unBALANCE
+# unbalanced
 
-_tl;dr_ **unBALANCE** is an [Unraid](https://unraid.net/) plugin to transfer files/folders between disks in your
+_tl;dr_ **unbalanced** is an [Unraid](https://unraid.net/) plugin to transfer files/folders between disks in your
 array.
 
 ## Support Fund
@@ -15,44 +15,44 @@ If you wish to do so, read how to [support the developer](DONATIONS.md).
 
 ## Videos
 
-Thanks to gridrunner (Unraid forum member), you can watch unBALANCE in action !
+Thanks to gridrunner (Unraid forum member), you can watch unbalanced in action !
 
 [Must Have Unraid Plugins - Part 3 Disk Utility Plugins](https://www.youtube.com/watch?v=Wz4-YlH1lTk)
 
-The discussion specific to unBALANCE starts [here](https://youtu.be/Wz4-YlH1lTk?t=859).
+The discussion specific to unbalanced starts [here](https://youtu.be/Wz4-YlH1lTk?t=859).
 
 ## Introduction
 
-unBALANCE helps you manage space in your Unraid array, via two operating modes:
+unbalanced helps you manage space in your Unraid array, via two operating modes:
 
--   **Scatter**<br/> Transfer data out of a disk, into one or more disks
+- **Scatter**<br/> Transfer data out of a disk, into one or more disks
 
--   **Gather**<br/> Consolidate data from a user share into a single disk
+- **Gather**<br/> Consolidate data from a user share into a single disk
 
 It's versatile and can serve multiple purposes, based on your needs.
 
 Some of the use cases are:
 
--   Empty a disk, in order to change filesystems (read
-    [kizer's example](https://forums.unraid.net/topic/43651-plug-in-unbalance/page/2/#comment-431428))
--   Move all seasons of a tv show into a single disk
--   Move a specific folder from a disk to another disk
--   Split your movies/tv shows/games folder from a disk to other disks
+- Empty a disk, in order to change filesystems (read
+  [kizer's example](https://forums.unraid.net/topic/43651-plug-in-unbalance/page/2/#comment-431428))
+- Move all seasons of a tv show into a single disk
+- Move a specific folder from a disk to another disk
+- Split your movies/tv shows/games folder from a disk to other disks
 
 You'll likely come up with other scenarios as you play around with it.
 
 ## Core Features
 
--   **Makes sure to fill the target disk(s) as much as possible, without running out of space**<br> If it can't transfer
-    some files/folders, it will inform you in the console and via notifications (if you set them up in the settings),
-    before any actual transfer takes place.
+- **Makes sure to fill the target disk(s) as much as possible, without running out of space**<br> If it can't transfer
+  some files/folders, it will inform you in the console and via notifications (if you set them up in the settings),
+  before any actual transfer takes place.
 
--   **Operates in the background**<br> You can close your browser while the transfer operation is ongoing. It will keep
-    transferring files on the server and show you the current progress as soon as you reopen the browser.
+- **Operates in the background**<br> You can close your browser while the transfer operation is ongoing. It will keep
+  transferring files on the server and show you the current progress as soon as you reopen the browser.
 
--   **Transfer operations work at the disk level (not at the user share level)**<br> This avoids file/folder clobbering.
+- **Transfer operations work at the disk level (not at the user share level)**<br> This avoids file/folder clobbering.
 
-**_IMPORTANT: unBALANCE needs exclusive access to disks, so disable mover and/or any dockers that write to disks._**
+**_IMPORTANT: unbalanced needs exclusive access to disks, so disable mover and/or any dockers that write to disks._**
 
 ## SCATTER Instructions
 
@@ -62,19 +62,19 @@ It involves the following steps:
 
 **1 - Plan** <br/> The logic is simple
 
--   Get the contents of the selected files/folders from the source disk
--   Order the target disks by free space available
--   For each target disk, calculate how much it can be filled up with files/folder from the source disk, leaving some
-    headroom (currently set at 512Mb).
+- Get the contents of the selected files/folders from the source disk
+- Order the target disks by free space available
+- For each target disk, calculate how much it can be filled up with files/folder from the source disk, leaving some
+  headroom (currently set at 512Mb).
 
 Additionally, it will check files/folders permissions, to warn about potential issues during the transfer stage.
 
 **2 - Transfer** <br/> You can either MOVE or COPY the files.
 
--   MOVE <br/> Will first copy the files/folders into the target disk(s), and delete them as soon as the copy is finished.
+- MOVE <br/> Will first copy the files/folders into the target disk(s), and delete them as soon as the copy is finished.
 
--   COPY <br/> Will simply transfer the files/folders into the other disk(s).<br/> **NOTE**: Beware that COPY doesn't
-    delete files/folders on the source disk, so you will be essentially duplicating the data.
+- COPY <br/> Will simply transfer the files/folders into the other disk(s).<br/> **NOTE**: Beware that COPY doesn't
+  delete files/folders on the source disk, so you will be essentially duplicating the data.
 
 ~~Internally, all move operations are handled by [diskmv](https://github.com/trinapicot/Unraid-diskmv).~~
 
@@ -92,16 +92,16 @@ When using default flags, VALIDATE rsync will be invoked as **-rcvPRX**.
 
 ### Quick Start
 
--   Click the FROM column of the disk you want to be the source of the transfer
--   Choose one or more files/folders you want to transfer
--   Click the TO column of the disks you want the files to be transferred to (the PLAN button will now be enabled)
--   Click the PLAN button<br> It will display the console showing the progress of the plan stage.<br> Once it's done, it
-    will show how much space both source and target disks will have available (PLAN column).<br> The screenshot below
-    shows the warnings from the permissions check, as well as the message console ![Plan](metadata/images/400-plan.png)
+- Click the FROM column of the disk you want to be the source of the transfer
+- Choose one or more files/folders you want to transfer
+- Click the TO column of the disks you want the files to be transferred to (the PLAN button will now be enabled)
+- Click the PLAN button<br> It will display the console showing the progress of the plan stage.<br> Once it's done, it
+  will show how much space both source and target disks will have available (PLAN column).<br> The screenshot below
+  shows the warnings from the permissions check, as well as the message console ![Plan](metadata/images/400-plan.png)
 
--   Click the MOVE or COPY button (dry-run checked/unchecked)<br> If dry-run is checked, no files/folder will be
-    transferred. Otherwise the transfer operation will actually take place.<br> In either case, you will be redirected to
-    the [Transfer](#transfer) screen, where you can monitor the progress of the operation.
+- Click the MOVE or COPY button (dry-run checked/unchecked)<br> If dry-run is checked, no files/folder will be
+  transferred. Otherwise the transfer operation will actually take place.<br> In either case, you will be redirected to
+  the [Transfer](#transfer) screen, where you can monitor the progress of the operation.
 
 ## GATHER Instructions
 
@@ -142,22 +142,22 @@ If you're ok, click PROCEED to start the transfer operation.
 
 There are 2 ways to install this application
 
--   Apps Tab (Community Application)<br/> Go to the Apps tab<br/> Click on the Plugins button (the last one)<br/> Look for
-    unBALANCE<br/> Click Install
+- Apps Tab (Community Application)<br/> Go to the Apps tab<br/> Click on the Plugins button (the last one)<br/> Look for
+  unbalanced<br/> Click Install
 
--   Plugins Tab (manual)<br/> Go to the Plugins tab<br/> Click on Install Plugin<br/> Paste the following address in the
-    input field: https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/unbalance.plg<br/> Click Install
+- Plugins Tab (manual)<br/> Go to the Plugins tab<br/> Click on Install Plugin<br/> Paste the following address in the
+  input field: https://github.com/jbrodriguez/unbalance/releases/latest/download/unbalanced.plg<br/> Click Install
 
 ## Running the app
 
 After installing the plugin, you can access the web UI, via the following methods:
 
--   Method 1<br/> Go to Settings > Utilities<br/> Click on unBALANCE<br/> Click on Open Web UI<br/>
+- Method 1<br/> Go to Settings > Utilities<br/> Click on unbalanced<br/> Click on Open Web UI<br/>
 
--   Method 2<br/> Go to Plugins > Installed Plugins<br/> Click on unBALANCE<br/> Click on Open Web UI<br/>
+- Method 2<br/> Go to Plugins > Installed Plugins<br/> Click on unbalanced<br/> Click on Open Web UI<br/>
 
--   Method 3<br/> Navigate with your browser to http(s)://Tower:6237/ (replace Tower with the address/name of your Unraid
-    server)<br/>
+- Method 3<br/> Navigate with your browser to http(s)://Tower:6237/ (replace Tower with the address/name of your Unraid
+  server)<br/>
 
 ## Other Features
 
@@ -170,13 +170,13 @@ unfold.
 
 ### History
 
-unBALANCE keeps a history of the operations you have run, showing each command that was executed.
+unbalanced keeps a history of the operations you have run, showing each command that was executed.
 
 You can replay the most recent operation (excluding dry-runs) or validate the most recent Scatter Copy.
 
 Additionally, you can review operations which contain one or more flagged rsync commands.
 
-If an rsync command has been flagged (applies to Gather and Scatter/Move operations), unBALANCE will not delete the source folders/files.
+If an rsync command has been flagged (applies to Gather and Scatter/Move operations), unbalanced will not delete the source folders/files.
 
 This allows you to check the issue in detail and take any action deemed necessary.
 
@@ -192,7 +192,7 @@ These are pretty much straigthforward.
 
 A word of caution with the custom rsync flags: it's for **power users** only.
 
-unBALANCE is optimized to work with the default flags, you must be VERY knowledgeable in rsync if you want to add any
+unbalanced is optimized to work with the default flags, you must be VERY knowledgeable in rsync if you want to add any
 flag.
 
 ### Log
@@ -209,13 +209,13 @@ The icon was graciously created by
 
 It was built with:
 
--   [Go](https://golang.org/) - Back End
--   [echo](https://github.com/labstack/echo) - REST and websocket api
--   [pubsub](https://github.com/tuxychandru/pubsub/) (slightly modified)
--   [React](https://facebook.github.io/react/) - Front End
--   [reactorx](https://github.com/jbrodriguez/reactorx) - Flux/Redux-like React framework
--   [flexboxgrid](http://flexboxgrid.com/) - CSS3 flex based grid system framework
--   [Webpack](https://webpack.github.io/) - Build toolchain
+- [Go](https://golang.org/) - Back End
+- [echo](https://github.com/labstack/echo) - REST and websocket api
+- [pubsub](https://github.com/tuxychandru/pubsub/) (slightly modified)
+- [React](https://facebook.github.io/react/) - Front End
+- [reactorx](https://github.com/jbrodriguez/reactorx) - Flux/Redux-like React framework
+- [flexboxgrid](http://flexboxgrid.com/) - CSS3 flex based grid system framework
+- [Webpack](https://webpack.github.io/) - Build toolchain
 
 ## License
 
