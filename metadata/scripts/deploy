@@ -37,7 +37,7 @@ awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
 
 # release the plugin
 # Create a release with the tag name
-gh release create $version$patch -n $changes
+gh release create $version$patch -n "$changes"
 
 # Upload the TGZ artifact
 gh release upload $version$patch ./$name-$version$patch.tgz --clobber
