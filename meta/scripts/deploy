@@ -12,9 +12,10 @@ version=$(date '+%Y.%m.%d')
 # make local
 cd ui && npm run build && cd ..
 go build fmt
-go build -ldflags "-X main.Version=$version$patch" -v -o $name
-
-tar -cvzf $name-$version$patch.tgz $name
+go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
+cd meta/plugin
+tar --owner=root --group=root -czvf ../../$name-$version$patch.tgz .
+cd ../..
 
 # Calculate the MD5 checksum for the plugin
 md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')

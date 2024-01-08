@@ -1,12 +1,14 @@
 #!/bin/bash
 # read our configuration
-source /boot/config/plugins/unbalance/unbalance.cfg
+source /boot/config/plugins/unbalanced/unbalanced.cfg
 
-prog="/usr/local/emhttp/plugins/unbalance/unbalance"
+# read our env vars
+source /boot/config/plugins/unbalanced/unbalanced.env
+
+prog="/usr/local/emhttp/plugins/unbalanced/unbalanced"
 
 # stop it if it's running
-killall unbalance > /dev/null 2>&1
+killall unbalanced > /dev/null 2>&1
 
 # run the app
-# nohup sudo -H -u $RUNAS bash -c "$prog -port $PORT" > /dev/null 2>&1 &
-nohup sudo -H bash -c "$prog -port $PORT" > /dev/null 2>&1 &
+nohup sudo -H bash -c "$prog --port $PORT" > /dev/null 2>&1 &
