@@ -28,9 +28,9 @@ jobs:
 
       - name: install node dependencies
         run: |
-          pushd ui
+          cd ui
           npm install
-          popd
+          cd ..
 
       - name: build app
         run: |
