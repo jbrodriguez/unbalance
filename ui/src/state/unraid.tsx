@@ -31,6 +31,7 @@ interface UnraidStore {
   history: History | null;
   plan: Plan | null;
   logs: Array<string>;
+  error: string;
   actions: {
     setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
@@ -57,6 +58,8 @@ interface UnraidStore {
     replay: (operation: Operation | undefined) => void;
     getLog: () => Promise<void>;
     resetPlan: () => void;
+    stop: () => void;
+    operationError: (payload: string) => void;
   };
 }
 
@@ -70,6 +73,7 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventGatherPlanStarted]: 'gatherProgress',
   [Topic.EventGatherPlanProgress]: 'gatherProgress',
   [Topic.EventGatherPlanEnded]: 'gatherPlanEnded',
+  [Topic.EventOperationError]: 'operationError',
 };
 
 export const useUnraidStore = create<UnraidStore>()(
@@ -209,6 +213,7 @@ export const useUnraidStore = create<UnraidStore>()(
       history: null,
       plan: null,
       logs: [],
+      error: '',
       actions: {
         setNavigate: (navigate: NavigateFunction) => {
           set((state) => {
@@ -261,6 +266,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.status = Op.ScatterPlan;
             state.logs = [];
             state.plan = null;
+            state.error = '';
           });
 
           const scatter = useScatterStore.getState();
@@ -289,6 +295,7 @@ export const useUnraidStore = create<UnraidStore>()(
           set((state) => {
             state.status = Op.Neutral;
             state.plan = payload;
+            state.error = '';
           });
           // get().actions.getUnraid();
         },
@@ -307,6 +314,7 @@ export const useUnraidStore = create<UnraidStore>()(
           set((state) => {
             state.operation = null;
             state.logs = [];
+            state.error = '';
             state.status =
               command === Topic.CommandScatterMove
                 ? Op.ScatterMove
@@ -335,6 +343,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.plan = null;
             state.operation = null;
             state.logs = [];
+            state.error = '';
           });
 
           const socket = get().socket;
@@ -360,6 +369,8 @@ export const useUnraidStore = create<UnraidStore>()(
             state.unraid = payload.unraid;
             state.operation = payload.operation;
             state.history = payload.history;
+            state.plan = null;
+            state.error = '';
           });
 
           get().navigate?.('/history');
@@ -370,6 +381,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.status = Op.GatherPlan;
             state.logs = [];
             state.plan = null;
+            state.error = '';
           });
 
           const gather = useGatherStore.getState();
@@ -396,6 +408,7 @@ export const useUnraidStore = create<UnraidStore>()(
           set((state) => {
             state.status = Op.Neutral;
             state.plan = payload;
+            state.error = '';
           });
           // get().actions.getUnraid();
         },
@@ -414,6 +427,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.operation = null;
             state.logs = [];
             state.status = Op.GatherMove;
+            state.error = '';
           });
 
           const target = useGatherStore.getState().target;
@@ -443,6 +457,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.plan = null;
             state.operation = null;
             state.logs = [];
+            state.error = '';
           });
 
           const socket = get().socket;
@@ -467,6 +482,7 @@ export const useUnraidStore = create<UnraidStore>()(
             state.plan = null;
             state.operation = null;
             state.logs = [];
+            state.error = '';
           });
 
           const socket = get().socket;
@@ -495,6 +511,21 @@ export const useUnraidStore = create<UnraidStore>()(
           set((state) => {
             state.plan = null;
             state.logs = [];
+            state.error = '';
+          });
+        },
+        stop: () => {
+          const socket = get().socket;
+          socket.send(
+            JSON.stringify({
+              topic: Topic.CommandStop,
+              payload: '',
+            }),
+          );
+        },
+        operationError: (payload: string) => {
+          set((state) => {
+            state.error = payload;
           });
         },
       },
@@ -522,3 +553,4 @@ export const useUnraidHistory = () =>
         state.history.order.map((id) => state.history.items[id])
       : [],
   );
+export const useUnraidError = () => useUnraidStore((state) => state.error);

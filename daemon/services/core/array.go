@@ -175,7 +175,6 @@ func getArrayData() (*domain.Unraid, error) {
 	}
 
 	for _, section := range file.Sections() {
-		logger.Olive("section %s", section.Key("name").String())
 		// DEFAULT section
 		if section.Key("name").String() == "" {
 			continue
@@ -185,7 +184,7 @@ func getArrayData() (*domain.Unraid, error) {
 		diskName := section.Key("name").String()
 		diskStatus := section.Key("status").String()
 
-		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && !pools[diskName]) {
+		if diskType == "Parity" || diskType == "Flash" || (diskType == "Cache" && !pools[diskName]) || diskStatus == "DISK_NP" {
 			continue
 		}
 

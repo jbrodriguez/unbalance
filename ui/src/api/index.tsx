@@ -160,4 +160,18 @@ export class Api {
       console.log('verbosity() error: ', e);
     }
   }
+
+  static async setRefreshRate(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/refreshRate`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('refreshRate() error: ', e);
+    }
+  }
 }

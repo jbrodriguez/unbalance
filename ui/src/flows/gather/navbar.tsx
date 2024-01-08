@@ -12,6 +12,7 @@ import { useGatherSelected, useGatherTarget } from '~/state/gather';
 import { routeToStep } from '~/helpers/routes';
 import { getVariant, getFill } from '~/helpers/styling';
 import { useConfigActions, useConfigDryRun } from '~/state/config';
+import { Actions } from '~/shared/transfer/actions';
 
 const config = [
   { navTo: 'select', title: 'Select', subtitle: 'Choose source' },
@@ -91,6 +92,7 @@ export const Navbar: React.FunctionComponent = () => {
             <span className="mx-2" />
           </div>
         )}
+        {route === '/gather/transfer/operation' && <Actions />}
       </div>
 
       <div className="flex items-center justify-end">

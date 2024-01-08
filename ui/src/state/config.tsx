@@ -22,6 +22,7 @@ interface ConfigStore {
     setRsyncArgs: (flags: string[]) => Promise<void>;
     resetRsyncArgs: () => Promise<void>;
     setVerbosity: (value: number) => Promise<void>;
+    setRefreshRate: (value: number) => Promise<void>;
   };
 }
 
@@ -31,12 +32,12 @@ export const useConfigStore = create<ConfigStore>()(
     dryRun: true,
     notifyPlan: 0,
     notifyTransfer: 0,
-    reservedAmount: 512,
-    reservedUnit: 'MB',
+    reservedAmount: 1,
+    reservedUnit: 'Gb',
     rsyncArgs: ['-X'],
     verbosity: 0,
     checkForUpdate: 0,
-    refreshRate: 0,
+    refreshRate: 1,
     actions: {
       getConfig: async () => {
         const config = await Api.getConfig();
@@ -96,6 +97,12 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setVerbosity(value);
       },
+      setRefreshRate: async (value: number) => {
+        set((state) => {
+          state.refreshRate = value;
+        });
+        await Api.setRefreshRate(value);
+      },
     },
   })),
 );
@@ -117,3 +124,5 @@ export const useConfigRsyncArgs = () =>
   useConfigStore((state) => state.rsyncArgs);
 export const useConfigVerbosity = () =>
   useConfigStore((state) => state.verbosity);
+export const useConfigRefreshRate = () =>
+  useConfigStore((state) => state.refreshRate);

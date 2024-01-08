@@ -197,6 +197,7 @@ export enum Topic {
 
   CommandRemoveSource = 'remove:source',
   CommandReplay = 'replay',
+  CommandStop = 'stop',
 }
 
 export interface Packet {

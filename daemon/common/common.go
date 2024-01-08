@@ -47,6 +47,7 @@ const (
 
 	CommandRemoveSource = "remove:source"
 	CommandReplay       = "replay"
+	CommandStop         = "stop"
 )
 
 const (

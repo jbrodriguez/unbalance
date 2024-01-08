@@ -22,9 +22,8 @@ export const Reserved: React.FunctionComponent = () => {
   const { toast } = useToast();
   const { setReservedSpace } = useConfigActions();
 
-  const onAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onAmountChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setAmountValue(+e.target.value);
-  };
 
   const onApply = () => {
     if (!Number.isInteger(amountValue) || amountValue <= 0) {
@@ -35,9 +34,9 @@ export const Reserved: React.FunctionComponent = () => {
       return;
     }
 
-    if (unitValue === 'Mb' && amountValue < 512) {
+    if (unitValue === 'Gb' && amountValue < 1) {
       toast({
-        title: 'Mb value must be greater or equal to 512',
+        title: 'Gb value must be greater or equal to 1',
         variant: 'destructive',
       });
       return;
@@ -79,7 +78,6 @@ export const Reserved: React.FunctionComponent = () => {
               onValueChange={setUnitValue}
             >
               <DropdownMenuRadioItem value="%">%</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="Mb">Mb</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="Gb">Gb</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>

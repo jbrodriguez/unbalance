@@ -81,6 +81,7 @@ func Create(ctx *domain.Context) *Core {
 			common.CommandScatterValidate,
 			common.CommandRemoveSource,
 			common.CommandReplay,
+			common.CommandStop,
 		),
 	}
 }
@@ -205,6 +206,9 @@ func (c *Core) mailboxHandler() {
 			}
 
 			go c.replay(operation)
+
+		case common.CommandStop:
+			c.stopped = true
 		}
 	}
 }
@@ -278,6 +282,12 @@ func (c *Core) SetRsyncArgs(value []string) *domain.Config {
 
 func (c *Core) SetVerbosity(value int) *domain.Config {
 	c.ctx.Config.Verbosity = value
+	c.saveSettings()
+	return &c.ctx.Config
+}
+
+func (c *Core) SetRefreshRate(value int) *domain.Config {
+	c.ctx.Config.RefreshRate = value
 	c.saveSettings()
 	return &c.ctx.Config
 }
