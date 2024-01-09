@@ -150,15 +150,8 @@ func (s *Server) onBroadcast() {
 	for msg := range s.broadcastChan {
 		message := msg.(*domain.Packet)
 
-		// packet := &domain.Packet{
-		// 	Topic:   message.Topic,
-		// 	Payload: message.Payload,
-		// }
-
-		err := s.wsWrite(message)
-		if err != nil {
-			logger.Red("unable to write websocket message: %s", err)
-		}
+		// ignore errors, browser may have disconnected
+		s.wsWrite(message)
 	}
 }
 
