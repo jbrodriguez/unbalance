@@ -15,7 +15,7 @@ export const Disks: React.FunctionComponent = () => {
   const onDiskClick = (disk: IDisk) => () => setSource(disk.name);
 
   return (
-    <Panel title="Disks">
+    <Panel title="Source Disk">
       {disks.map((disk) => (
         <Selectable
           key={disk.id}

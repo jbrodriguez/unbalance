@@ -26,7 +26,7 @@ export const Origin: React.FunctionComponent = () => {
   const items = disks.filter((disk) => plan?.vdisks[disk.path].src);
 
   return (
-    <Panel title="Origin">
+    <Panel title="Source Disk">
       {items.map((disk) => (
         <Selectable key={disk.id} selected>
           <div className="flex flex-col">

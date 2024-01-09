@@ -40,8 +40,10 @@ export const Command: React.FunctionComponent<Props> = ({
         rsync {rsyncStrArgs} &quot;{command.entry}&quot; &quot;{command.dst}
         &quot;
       </div>
-      <div className="col-span-2 flex flex-1">
-        <div className="w-full rounded bg-gray-400 dark:bg-gray-800">
+      <div className="col-span-2 flex flex-1 flex-row items-center">
+        {progress !== '100' && <span className="text-xs">{progress} %</span>}
+        <span className="px-1" />
+        <div className="flex-1 rounded bg-gray-400 dark:bg-gray-800">
           <div
             className="p-0.5 leading-none rounded bg-blue-900 "
             style={{ width: `${progress}%` }}
