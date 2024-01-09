@@ -31,14 +31,19 @@ export const Flags: React.FunctionComponent = () => {
         <span className="text-lime-600 dark:text-lime-700">unbalanced</span>{' '}
         uses rsync to transfer files across disks. <br />
         By default, rsync is invoked with{' '}
-        <span className="font-bold">-avPRX</span> flags. Note that the{' '}
-        <span className="font-bold">X</span> flag is customizable, so you can
-        remove it if needed. <br />
+        <span className="font-bold text-blue-900 dark:text-blue-600">
+          -avPRX
+        </span>{' '}
+        flags. Note that the{' '}
+        <span className="font-bold text-blue-900 dark:text-blue-600">X</span>{' '}
+        flag is customizable, so you can remove it if needed. <br />
         You can add custom flags, except for the dry run flag which will be
         automatically added, if needed. <br />
-        Be careful with the flags you choose, since it can drastically alter the
-        expected behaviour of rsync under{' '}
-        <span className="text-lime-600 dark:text-lime-700">unbalanced</span>.
+        <span className="text-red-900 dark:text-red-700 font-bold">
+          NOTE: These settings are meant to be changed by advanced users only.
+          No validation is currently performed on the flags you manually enter
+          here, so you need to know what you're doing before changing them.
+        </span>
       </h1>
       <div className="pb-4" />
 
