@@ -42,8 +42,6 @@ func main() {
 	// })
 	ctx := kong.Parse(&cli)
 
-	log.Printf("cli: %+v", cli)
-
 	log.SetOutput(&lumberjack.Logger{
 		Filename:   filepath.Join(cli.LogsDir, "unbalanced.log"),
 		MaxSize:    10, // megabytes
@@ -51,6 +49,8 @@ func main() {
 		MaxAge:     28, //days
 		// Compress:   true, // disabled by default
 	})
+
+	log.Printf("cli: %+v", cli)
 
 	err := ctx.Run(&domain.Context{
 		Port: cli.Port,
