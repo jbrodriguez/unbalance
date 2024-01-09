@@ -5,12 +5,22 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 interface PanelProps {
   title?: string;
   children: React.ReactNode;
+  scrollToTop?: boolean;
 }
 
 export const Panel: React.FunctionComponent<PanelProps> = ({
   title = '',
   children,
+  scrollToTop = false,
 }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (ref.current) {
+      ref.current.scrollTop = 0;
+    }
+  }, [scrollToTop]);
+
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
       {title.length > 0 ? (
@@ -27,6 +37,7 @@ export const Panel: React.FunctionComponent<PanelProps> = ({
             <div
               className="overflow-y-auto overflow-x-auto p-2"
               style={{ height: `${height}px` }}
+              ref={ref}
             >
               {children}
             </div>

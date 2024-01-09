@@ -4,17 +4,28 @@ import { Panel } from '~/shared/panel/panel';
 import { CheckboxTree } from '~/shared/tree/checkbox-tree';
 import { Node } from '~/types';
 import { Icon } from '~/shared/icons/icon';
-import { useScatterTree, useScatterActions } from '~/state/scatter';
+import {
+  useScatterActions,
+  useScatterTree,
+  useScatterSource,
+} from '~/state/scatter';
 
 export const FileSystem: React.FunctionComponent = () => {
   const tree = useScatterTree();
   const { loadBranch, toggleSelected } = useScatterActions();
 
+  // this is a just to force the tree to scroll to the top when the selected source changes
+  const selected = useScatterSource();
+  const [current, setCurrent] = React.useState(selected);
+  React.useEffect(() => {
+    setCurrent(selected);
+  }, [selected]);
+
   const onLoad = async (node: Node) => await loadBranch(node);
   const onCheck = (node: Node) => toggleSelected(node);
 
   return (
-    <Panel title="Folders/Files">
+    <Panel title="Folders/Files" scrollToTop={current !== selected}>
       <CheckboxTree
         nodes={tree}
         onLoad={onLoad}
