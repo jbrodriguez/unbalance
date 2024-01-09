@@ -59,7 +59,7 @@ rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&versi
 
 # Install the 'bundle'.
 mkdir -p /usr/local/emhttp/plugins/&name;
-tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins/&name;
+tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins/&name;/
 
 # start the plugin if it was running previously
 if [ $running -eq 1 ]; then
