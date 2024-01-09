@@ -197,7 +197,7 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), reRsync, rsyncErrors))
 
 	logger.Yellow(headline)
-	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/var/log/unbalanced.log) for details.", opName)}
+	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/var/log/unbalanced.log) for additional details.", opName)}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	operation.BytesTransferred += cmdTransferred
