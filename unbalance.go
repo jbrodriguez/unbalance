@@ -28,7 +28,7 @@ var cli struct {
 	ReservedUnit   string   `env:"RESERVED_UNIT" default:"Gb" help:"Reserved Amount unit: Gb or %"`
 	RsyncArgs      []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
 	Verbosity      int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
-	RefreshRate    int      `env:"REFRESH_RATE" default:"250" help:"how often to refresh the ui while running a command (in milliseconds)"`
+	RefreshRate    int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
 
 	Boot cmd.Boot `cmd:"" default:"1" help:"start processing"`
 }

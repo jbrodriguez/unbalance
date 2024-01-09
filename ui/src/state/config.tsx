@@ -36,7 +36,7 @@ export const useConfigStore = create<ConfigStore>()(
     reservedUnit: 'Gb',
     rsyncArgs: ['-X'],
     verbosity: 0,
-    refreshRate: 1,
+    refreshRate: 1000,
     actions: {
       getConfig: async () => {
         const config = await Api.getConfig();

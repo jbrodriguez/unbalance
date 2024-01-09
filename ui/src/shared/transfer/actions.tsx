@@ -15,11 +15,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { useUnraidActions, useUnraidError } from '~/state/unraid';
 import { useConfigActions, useConfigRefreshRate } from '~/state/config';
 
-const refreshDiscreteToSec: Record<number, number> = {
-  1000: 1,
-  5000: 5,
-  15000: 15,
-  30000: 30,
+const refreshDiscreteToSec: Record<number, string> = {
+  1000: '1 sec',
+  5000: '5 sec',
+  15000: '15 sec',
+  30000: '30 sec',
 };
 
 export const Actions: React.FunctionComponent = () => {
