@@ -309,7 +309,7 @@ func (c *Core) SetRefreshRate(value int) *domain.Config {
 }
 
 func (c *Core) saveSettings() error {
-	location := filepath.Join(settings, "unbalance.env")
+	location := filepath.Join(settings, "unbalanced.env")
 	return lib.SaveEnv(location, c.ctx.Config)
 }
 
