@@ -206,7 +206,7 @@ export const useUnraidStore = create<UnraidStore>()(
       navigate: null,
       machine: createMachine(machine),
       loaded: false,
-      route: '/',
+      route: '/scatter/select',
       status: Op.Neutral,
       unraid: null,
       operation: null,
@@ -224,20 +224,20 @@ export const useUnraidStore = create<UnraidStore>()(
           const array = await Api.getUnraid();
 
           console.log('useUnraidStore.getUnraid() ', array);
+
+          const route = getRouteFromStatus(array.status);
+
           set((state) => {
             state.loaded = true;
             state.status = array.status;
             state.unraid = array.unraid;
             state.operation = array.operation;
             state.history = array.history;
+            state.route = route;
           });
 
-          if (array.status === Op.Neutral) {
-            return;
-          }
-
-          console.log('navigating to ', getRouteFromStatus(array.status));
-          get().navigate?.(getRouteFromStatus(array.status));
+          console.log('navigating to ', route);
+          get().navigate?.(route);
         },
         refreshUnraid: async () => {
           const array = await Api.getUnraid();

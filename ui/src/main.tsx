@@ -32,7 +32,6 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
-      { index: true, element: <Navigate to="/scatter" replace /> },
       {
         path: '/scatter',
         element: <Scatter />,
