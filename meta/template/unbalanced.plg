@@ -44,6 +44,22 @@ RUNAS="nobody"
 </INLINE>
 </FILE>
 
+<!-- Install default plugin env  -->
+<FILE Name="/boot/config/plugins/unbalanced/unbalanced.env">
+<INLINE>
+<![CDATA[
+DRY_RUN=true
+NOTIFY_PLAN=0
+NOTIFY_TRANSFER=0
+RESERVED_AMOUNT=1
+RESERVED_UNIT=Gb
+RSYNC_ARGS=-X
+VERBOSITY=0
+REFRESH_RATE=1000
+]]>
+</INLINE>
+</FILE>
+
 <!--
 Prepare for installation.
 -->
