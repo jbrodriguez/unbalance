@@ -3,7 +3,7 @@
 source /boot/config/plugins/unbalanced/unbalanced.cfg
 
 # read our env vars
-source /boot/config/plugins/unbalanced/unbalanced.env || true
+source /boot/config/plugins/unbalanced/unbalanced.env 2> /dev/null || true
 
 prog="/usr/local/emhttp/plugins/unbalanced/unbalanced"
 
