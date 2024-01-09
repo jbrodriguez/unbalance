@@ -55,7 +55,7 @@ running=$(pidof unbalanced | wc -w)
 rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
 
 # Remove old 'bundle' files.
-rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;')
+rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;.tgz')
 
 # Install the 'bundle'.
 mkdir -p /usr/local/emhttp/plugins/&name;
@@ -104,7 +104,7 @@ CFGFILE=/boot/config/plugins/unbalanced/unbalanced.cfg
 [ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"disable\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"7090\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
-rm /tmp/unbalance-chkconf
+rm /tmp/unbalanced-chkconf
 ]]>
 </INLINE>
 </FILE>
