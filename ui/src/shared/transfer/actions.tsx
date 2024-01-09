@@ -55,7 +55,7 @@ export const Actions: React.FunctionComponent = () => {
         STOP
       </Button>
       <span className="px-1">|</span>
-      <span>Refresh Rate (sec): </span>
+      <span>Refresh Rate: </span>
       <span className="pr-2" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
