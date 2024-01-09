@@ -253,44 +253,58 @@ func (c *Core) GetHistory() *domain.History {
 
 func (c *Core) ToggleDryRun() bool {
 	c.ctx.Config.DryRun = !c.ctx.Config.DryRun
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("toggleDryRun: unable to save settings: %s", err)
+	}
 	return c.ctx.Config.DryRun
 }
 
 func (c *Core) SetNotifyPlan(value int) *domain.Config {
 	c.ctx.Config.NotifyPlan = value
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setNotifyPlan: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
 func (c *Core) SetNotifyTransfer(value int) *domain.Config {
 	c.ctx.Config.NotifyTransfer = value
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setNotifyTransfer: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
 func (c *Core) SetReservedSpace(amount uint64, unit string) *domain.Config {
 	c.ctx.Config.ReservedAmount = amount
 	c.ctx.Config.ReservedUnit = unit
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setReservedSpace: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
 func (c *Core) SetRsyncArgs(value []string) *domain.Config {
 	c.ctx.Config.RsyncArgs = value
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setRsyncArgs: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
 func (c *Core) SetVerbosity(value int) *domain.Config {
 	c.ctx.Config.Verbosity = value
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("toggleDryRun: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
 func (c *Core) SetRefreshRate(value int) *domain.Config {
 	c.ctx.Config.RefreshRate = value
-	c.saveSettings()
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setRefreshRate: unable to save settings: %s", err)
+	}
 	return &c.ctx.Config
 }
 
