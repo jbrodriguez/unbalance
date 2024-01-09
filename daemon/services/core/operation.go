@@ -169,7 +169,10 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		// update progress stats
 		transferred = lib.Min(transferred, command.Size)
 
-		percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred+transferred, time.Since(operation.Started))
+		percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred+transferred, time.Since(operation.Started))
+
+		c.updateSamples(operation, operation.BytesTransferred+transferred)
+		speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
 
 		operation.Line = current
 		operation.Completed = percent
@@ -198,7 +201,9 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	operation.BytesTransferred += cmdTransferred
-	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+
+	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
 
 	operation.Completed = percent
 	operation.Speed = speed
@@ -214,7 +219,9 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 	logger.Blue(text)
 
 	operation.BytesTransferred += command.Size
-	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
+	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
+
+	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
 
 	operation.Completed = percent
 	operation.Speed = speed
@@ -318,7 +325,10 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	subject := fmt.Sprintf("unbalanced - %s operation completed", strings.ToUpper(opName))
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
-	percent, left, speed := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+
+	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
+
 	operation.Completed = percent
 	operation.Speed = speed
 	operation.Remaining = left.String()
@@ -456,4 +466,35 @@ func (c *Core) createReplayOperation(original domain.Operation) *domain.Operatio
 	}
 
 	return operation
+}
+
+func (c *Core) updateSamples(operation *domain.Operation, transferred uint64) {
+	operation.Samples[operation.SampleIndex] = transferred - operation.PrevSample
+	operation.SampleIndex = (operation.SampleIndex + 1) % 60
+	operation.PrevSample = transferred
+}
+
+func (c *Core) calculateSpeed(operation *domain.Operation, rate time.Duration) float64 {
+	var sum uint64
+	var countNonZero int
+
+	for _, sample := range operation.Samples {
+		if sample <= 0 {
+			continue
+		}
+
+		sum += sample
+		countNonZero++
+	}
+
+	// avoid division by zero
+	if rate.Seconds() == 0 || countNonZero == 0 {
+		return 0.0
+	}
+
+	// Calculate average speed based on non-zero samples
+	averageTransferred := float64(sum) / float64(countNonZero)
+	speed := averageTransferred / rate.Seconds() / 1024 / 1024 // MB/s
+
+	return speed
 }
