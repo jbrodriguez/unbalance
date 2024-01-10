@@ -17,9 +17,10 @@ go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
 
 echo "$version$patch" > meta/plugin/VERSION
 
-cd meta/plugin
-tar --owner=root --group=root -czvf ../../$name-$version$patch.tgz .
-cd ../..
+cd meta
+mv plugin unbalanced
+tar --owner=root --group=root -czvf ../$name-$version$patch.tgz unbalanced
+cd ..
 
 # Calculate the MD5 checksum for the plugin
 md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
@@ -49,5 +50,3 @@ gh release upload $version$patch ./$name-$version$patch.tgz --clobber
 
 # Upload the XML artifact
 gh release upload $version$patch ./$name.plg --clobber
-
-# gh release create $version$patch $name-$version$patch.tgz -F $name.plg
