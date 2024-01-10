@@ -30,7 +30,7 @@ export const Footer: React.FunctionComponent = () => {
       </div>
       <div className="flex flex-row items-center">
         <a
-          href="https://github.com/jbrodriguez/unbalance/blob/main/DONATIONS.md"
+          href="https://jbrio.net/unbalanced"
           title="Support Fund"
           rel="noreferrer noopener"
           target="_blank"

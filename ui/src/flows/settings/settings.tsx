@@ -80,12 +80,14 @@ export const Settings: React.FunctionComponent = () => {
               </span>
             </div>
             <p className="mb-3 text-sm">
-              Donate to encourage continuous development and receive heartfelt
+              Sponsor continuous development of the plugin and receive heartfelt
               thanks from the developer ! 😀 🙌
             </p>
             <a
               className="text-sm text-blue-800 underline font-medium hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-              href="#"
+              rel="noreferrer noopener"
+              target="_blank"
+              href="https://jbrio.net/unbalanced"
             >
               Contribute
             </a>
