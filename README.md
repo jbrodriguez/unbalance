@@ -1,11 +1,10 @@
 # unbalanced
 
-_tl;dr_ **unbalanced** is an [Unraid](https://unraid.net/) plugin to transfer files/folders between disks in your
-array.
+_tl;dr_ **unbalanced** is an [Unraid](https://unraid.net/) plugin to transfer files/folders between disks in your array.
 
 ## Support Fund
 
-If you wish to do so, read how to [support the developer](DONATIONS.md).
+If you wish to do so, read how to [support the developer](https://jbrio.net/unbalanced).
 
 ## [Changelog](https://github.com/jbrodriguez/unbalance/releases)
 
