@@ -43,7 +43,7 @@ You'll likely come up with other scenarios as you play around with it.
 
 - **Transfer operations work at the disk level (not at the user share level)**<br> This avoids file/folder clobbering.
 
-**_IMPORTANT: I suggest giving unbalanced exclusive access to disks (disable mover and/or any dockers that write to disks), so that free space calculation are not affected. If you're only reading data (streaming, etc.), it shouldn't be issue, although the operations may run slower._**
+> IMPORTANT: I suggest giving unbalanced exclusive access to disks (disable mover and/or any dockers that write to disks), so that free space calculation are not affected. If you're only reading data (streaming, etc.), it shouldn't be issue, although the operations may run slower.
 
 ## SCATTER Instructions
 
@@ -115,7 +115,7 @@ Additionally, it will check files/folders permissions, to warn about potential i
 
 ![Plan](meta/images/gather-plan.png)
 
-**3 - Move** <br/> ![Move](metadata/images/400-move.png)
+**3 - Move** <br/>
 
 This page shows which drives have enough space to hold the contents of the folder chosen in the previous step.
 
