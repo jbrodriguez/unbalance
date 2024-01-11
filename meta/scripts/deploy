@@ -8,7 +8,7 @@ name="unbalanced"
 version=$(date '+%Y.%m.%d')
 
 # separate the tagname
-tagname = $version$patch
+tagname=$version$patch
 
 # build the plugin
 
