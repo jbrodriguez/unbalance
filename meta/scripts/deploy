@@ -1,0 +1,52 @@
+#!/bin/bash
+
+patch="${1:-}"
+
+name="unbalanced"
+
+# Get the current date in the specified format
+version=$(date '+%Y.%m.%d')
+
+# build the plugin
+
+# make local
+cd ui && npm run build && cd ..
+
+go build fmt
+go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
+
+echo "$version$patch" > meta/plugin/VERSION
+
+cd meta
+mv plugin unbalanced
+tar --owner=root --group=root -czvf ../$name-$version$patch.tgz unbalanced
+cd ..
+
+# Calculate the MD5 checksum for the plugin
+md5=$(md5sum $name-$version$patch.tgz | awk '{print $1}')
+
+# Get the latest git tag
+latest_tag=$(git describe --tags --abbrev=0)
+
+# Generate the changelog since the latest tag
+changes=$(git log --oneline $latest_tag..HEAD --pretty="- %s")
+
+# Use awk for replacements and generate plugin file
+awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
+  {
+    gsub(/##version##/, version);
+    gsub(/##md5##/, md5);
+    gsub(/##changes##/, changes);
+    print $0;
+  }
+' meta/template/$name.plg > $name.plg
+
+# release the plugin
+# Create a release with the tag name
+gh release create $version$patch -n "$changes"
+
+# Upload the TGZ artifact
+gh release upload $version$patch ./$name-$version$patch.tgz --clobber
+
+# Upload the XML artifact
+gh release upload $version$patch ./$name.plg --clobber

@@ -1,0 +1,12 @@
+#!/bin/bash
+# read our configuration
+source /boot/config/plugins/unbalanced/unbalanced.cfg
+
+vars="/boot/config/plugins/unbalanced/unbalanced.env"
+prog="/usr/local/emhttp/plugins/unbalanced/unbalanced"
+
+# stop it if it's running
+killall unbalanced > /dev/null 2>&1
+
+# run the app
+nohup sudo -H bash -c "env $(cat $vars 2> /dev/null | xargs) $prog --port $PORT" > /dev/null 2>&1 &

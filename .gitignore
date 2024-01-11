@@ -1,11 +1,5 @@
-release/
-dist/
-staging/
-log/
-art/
-archive/
-
-unbalance.plg
+unbalanced.conf
+unbalanced.hist
 
 *.tar.gz
 *.tgz
@@ -23,5 +17,4 @@ vendor
 dist
 
 # binaries
-server/server
-server/unbalance
+unbalanced

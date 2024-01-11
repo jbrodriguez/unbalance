@@ -1,0 +1,115 @@
+Menu="Utilities"
+Icon="unbalanced.png"
+Title="unbalanced"
+---
+<?php
+$sName = "unbalanced";
+$unbalanced_cfg = parse_plugin_cfg("unbalanced");
+$unbalanced_service = isset($unbalanced_cfg['SERVICE']) ? $unbalanced_cfg['SERVICE'] 	: "disable";
+$unbalanced_port = (isset($unbalanced_cfg['PORT']) && is_numeric($unbalanced_cfg['PORT']) && $unbalanced_cfg['PORT'] > 0 && $unbalanced_cfg['PORT'] < 65535 ) ? $unbalanced_cfg['PORT'] : "7090";
+$unbalanced_running = shell_exec("pidof unbalanced | wc -w");
+$unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSION | tr '\n' ' '");
+?>
+
+<script type="text/javascript">
+	var port = <?=$unbalanced_port;?>;
+	if (document.location.protocol === 'https:') {
+		var iport = +port + 1
+		port = iport.toString()
+	}
+	var url = document.location.protocol + '//' + document.location.hostname + ':' + port + '/';
+	var isRunning = <?=$unbalanced_running;?> === 1;
+	var version = '<?=$unbalanced_version;?>';
+	if (isRunning) {
+		document.write("<a style='color:green;' target='_blank' href='" + url + "' title='unbalanced plugin'><b>Open Web UI ( v" + version + ")</b></a>");
+	} else {
+		document.write("<b><font style='color:orange;'>unbalanced v" + version + "</font></b>")
+	}
+</script>
+
+<form markdown="1" name="unbalanced_settings" method="POST" action="/update.php" target="progressFrame">
+<input type="hidden" name="#file" value="unbalanced/unbalanced.cfg" />
+<input type="hidden" id="command" name="#command" value="" />
+
+Enable unbalanced server:
+: <select id="SERVICE" name="SERVICE" size="1" onChange="checkRUNNING(this.form);">
+  <?=mk_option($unbalanced_service, "disable", "No");?>
+  <?=mk_option($unbalanced_service, "enable", "Yes");?>
+  </select>
+
+Port:
+: <input id="PORT" type="text" class="stopped" name="PORT" maxlength="40" value="<?=$unbalanced_port;?>" title="port must be 0-65535" placeholder="Default Port is 6237" >
+
+<!-- Run as User:
+: <select id="USERS" class="stopped" title="select user, cannot be root" size="1" onChange="checkUSER(this.form, '<?=$unbalanced_runas;?>');">
+  <?=mk_option($unbalanced_runas, "nobody", "nobody");?>
+  <option value='other' <?=($unbalanced_runas != "root" && $unbalanced_runas != "nobody")?"selected=yes":"";?>>other</option>
+  </select>
+  <input type="hidden" name="RUNAS" style="width:222px" maxlength="40" value=<?=$unbalanced_runas;?> > -->
+
+<input id="DEFAULT" class="stopped" type="submit" value="Default" onClick="resetDATA(this.form)">
+: <input id="btnApply" type="submit" value="Apply" onClick="verifyDATA(this.form)"><input type="button" value="Done" onClick="done()">
+</form>
+
+<script type="text/javascript">
+$(function(){
+	showStatus('<?=$sName;?>');
+	checkRUNNING(document.unbalanced_settings);
+	// checkUSER(document.unbalanced_settings,'<?=$unbalanced_runas;?>');
+});
+
+function resetDATA(form) {
+	form.PORT.value = "6237";
+	// form.RUNAS.value = "nobody";
+	form.USERS.value = "nobody";
+}
+
+function checkRUNNING(form) {
+	if (<?=$unbalanced_running;?> == 1)
+	{
+		$(".stopped").prop("disabled", true);
+		form.btnApply.disabled = "disabled";
+   }
+   else
+	$(".stopped").prop("disabled", (form.SERVICE.value == "enable"));
+	if (form.SERVICE.value == "enable")
+		form.command.value = "/usr/local/emhttp/plugins/unbalanced/scripts/start";
+	else {
+		form.command.value = "/usr/local/emhttp/plugins/unbalanced/scripts/stop";
+		form.btnApply.disabled = (form.SERVICE.value == "enable");
+	}
+}
+
+// function checkUSER(form, currentUSER) {
+// 	if (form.USERS.selectedIndex < 1 ) {
+// 		form.RUNAS.value = form.USERS.options[form.USERS.selectedIndex].value;
+// 		form.RUNAS.type = "hidden";
+// 	}
+// 	else
+// 	{
+// 		form.RUNAS.value = currentUSER;
+// 		if (form.RUNAS.value == "root")
+// 			form.RUNAS.value = "nobody";
+// 		form.RUNAS.type = "text";
+// 		form.RUNAS.title = "Run As User Cannot be Root";
+// 	}
+// }
+
+function verifyDATA(form) {
+	if (isNaN(form.PORT.value)){
+		form.PORT.value = "6237";
+	} else {
+		if (form.PORT.value < 0 || form.PORT.value > 65535){
+			form.PORT.value = "6237";
+		}
+	}
+	// if (form.RUNAS.value == null || form.RUNAS.value == "" || form.RUNAS.value == "root" ){
+	// 	form.RUNAS.value = "nobody";
+	// 	$unbalanced_runas = "nobody";
+	// }
+	form.SERVICE.value = form.SERVICE.value.replace(/ /g,"_");
+	form.PORT.value = form.PORT.value.replace(/ /g,"_");
+	// form.RUNAS.value = form.RUNAS.value.replace(/ /g,"_");
+}
+
+</script>

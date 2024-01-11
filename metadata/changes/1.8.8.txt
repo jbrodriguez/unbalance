@@ -1,2 +1,0 @@
-2016-12-22 - 1.8.8
-- Fix a crash due to i/o errors

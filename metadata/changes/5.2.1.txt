@@ -1,4 +1,0 @@
-2018-06-05 - 5.2.1
-
-- Fix calculation of space in the planning stage
-- Fix wrong command icon in history screen

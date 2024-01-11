@@ -1,2 +1,0 @@
-2016-12-11 - 1.8.7
-- Fix empty plg file

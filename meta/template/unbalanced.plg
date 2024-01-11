@@ -1,0 +1,127 @@
+<?xml version='1.0' standalone='yes'?>
+
+<!DOCTYPE PLUGIN [
+<!ENTITY name        "unbalanced">
+<!ENTITY author      "Juan B. Rodriguez">
+<!ENTITY version     "##version##">
+<!ENTITY launch      "Settings/&name;">
+<!ENTITY pluginURL   "https://raw.githubusercontent.com/jbrodriguez/unraid/master/plugins/&name;.plg">
+<!ENTITY bundle      "&name;-&version;.tgz">
+<!ENTITY md5         "##md5##">
+]>
+
+<PLUGIN  name="&name;"
+         author="&author;"
+         version="&version;"
+         launch="&launch;"
+         pluginURL="&pluginURL;"
+>
+
+<CHANGES>
+##changes##
+</CHANGES>
+
+<!--
+The plugin frees up space from a disk array in unRAID systems.
+-->
+
+<!--
+Get the unbalanced bundle.
+-->
+<FILE Name="/boot/config/plugins/&name;/&bundle;">
+<URL>"https://github.com/jbrodriguez/unbalance/releases/download/&version;/&bundle;"</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<!-- Install default plugin cfg  -->
+<FILE Name="/boot/config/plugins/unbalanced/unbalanced.cfg">
+<INLINE>
+<![CDATA[
+SERVICE="disable"
+PORT="7090"
+RUNAS="nobody"
+]]>
+</INLINE>
+</FILE>
+
+<!-- Install default plugin env  -->
+<FILE Name="/boot/config/plugins/unbalanced/unbalanced.env">
+<INLINE>
+<![CDATA[
+DRY_RUN=true
+NOTIFY_PLAN=0
+NOTIFY_TRANSFER=0
+RESERVED_AMOUNT=1
+RESERVED_UNIT=Gb
+RSYNC_ARGS=-X
+VERBOSITY=0
+REFRESH_RATE=1000
+]]>
+</INLINE>
+</FILE>
+
+<!--
+Prepare for installation.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+running=$(pidof unbalanced | wc -w)
+
+# Remove emhttp files so we can re-install.
+rm -rf /usr/local/emhttp/plugins/&name;/* 2>/dev/null
+
+# Remove old 'bundle' files.
+rm -f $(ls /boot/config/plugins/&name;/&name;*.tgz 2>/dev/null | grep -v '&version;.tgz')
+
+# Install the 'bundle'.
+tar -xf /boot/config/plugins/&name;/&bundle; -C /usr/local/emhttp/plugins
+
+# start the plugin if it was running previously
+if [ $running -eq 1 ]; then
+	/usr/local/emhttp/plugins/&name;/scripts/start
+fi
+
+echo "-----------------------------------------------------------"
+echo " unbalanced has been installed."
+echo " Copyright (c) &author;"
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+/usr/local/emhttp/plugins/&name;/scripts/stop
+# Remove all plugin files.
+rm -rf /usr/local/emhttp/plugins/&name;
+rm -rf /boot/config/plugins/&name;
+
+echo ""
+echo "-----------------------------------------------------------"
+echo " unbalanced has been removed."
+echo " Copyright (c) &author;"
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/unbalanced-chkconf" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# This will check each entry in the config so nothing is missing, and if missing, sets to default
+CFGFILE=/boot/config/plugins/unbalanced/unbalanced.cfg
+[ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"disable\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"7090\"" >> "$CFGFILE"
+[ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
+rm /tmp/unbalanced-chkconf
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>

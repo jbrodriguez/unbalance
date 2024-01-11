@@ -1,6 +1,0 @@
-2016-11-11 - 1.8.0
-- Show rsync error descriptions (instead of error codes)
-- Check permissions on folders to be moved, when calculating. If issues arise, show a warning
-- Honor RunAs user setting
-- Add Show Log menu option
-- UI Layout improvements

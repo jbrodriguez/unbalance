@@ -1,2 +1,0 @@
-2016-12-01 - 1.8.4
-- Fix open UI from settings (6.2.x)

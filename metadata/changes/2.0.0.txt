@@ -1,7 +1,0 @@
-2017-01-13 - 2.0.0
-unBALANCE 2 now displays a disk explorer in its main interface,
-in order to improve the experience of choosing which files/folders
-need to be moved off of a disk.
-
-Also in this release:
-- General improvements and bug fixes

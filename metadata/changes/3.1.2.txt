@@ -1,3 +1,0 @@
-2017-07-06 - 3.1.2
-
-Before removing a file/folder on the source disk, make sure it exists on the destination disk.

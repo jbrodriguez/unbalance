@@ -1,6 +1,0 @@
-2019-10-26 - 5.6.3
-
-- Support 6.8.x
-- Add missing isNumber function
-- Upgrade some libraries
-- Switch to yarn

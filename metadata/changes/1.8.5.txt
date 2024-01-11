@@ -1,3 +1,0 @@
-2016-12-09 - 1.8.5
-- Fix logic that checks for file permissions
-- Fix notifyMove setting
