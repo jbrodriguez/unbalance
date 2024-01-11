@@ -7,6 +7,9 @@ name="unbalanced"
 # Get the current date in the specified format
 version=$(date '+%Y.%m.%d')
 
+# separate the tagname
+tagname = $version$patch
+
 # build the plugin
 
 # make local
@@ -43,7 +46,7 @@ awk -v version="$version$patch" -v md5="$md5" -v changes="$changes" '
 
 # release the plugin
 # Create a release with the tag name
-gh release create $version$patch -n "$changes"
+gh release create $tagname -n "$changes"
 
 # Upload the TGZ artifact
 gh release upload $version$patch ./$name-$version$patch.tgz --clobber
