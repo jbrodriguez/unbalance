@@ -17,7 +17,7 @@ var Version string
 // const ReservedSpace int64 = 512 * 1024 * 1024 // 512Mb
 
 var cli struct {
-	Port    string `default:"6237" help:"port to listen on"`
+	Port    string `default:"7090" help:"port to listen on"`
 	LogsDir string `default:"/var/log" help:"directory to store logs"`
 
 	// Config vars
