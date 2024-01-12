@@ -12,7 +12,7 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 ?>
 
 <script type="text/javascript">
-	// var port = <?=$unbalanced_port;?>;
+	var port = <?=$unbalanced_port;?>;
 	// if (document.location.protocol === 'https:') {
 	// 	var iport = +port + 1
 	// 	port = iport.toString()
