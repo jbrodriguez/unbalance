@@ -1,9 +1,7 @@
 #!/bin/sh
-# read our configuration
-source /boot/config/plugins/unbalance/unbalance.cfg
 
-prog="unbalance"
-running=$(pidof unbalance | wc -w)
+prog="unbalanced"
+running=$(pidof $prog | wc -w)
 
 # no-op if already running
 if [ $running -ge 1 ]; then
