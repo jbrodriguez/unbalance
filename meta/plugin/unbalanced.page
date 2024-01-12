@@ -38,7 +38,7 @@ Enable unbalanced server:
   </select>
 
 Port:
-: <input id="PORT" type="text" class="stopped" name="PORT" maxlength="40" value="<?=$unbalanced_port;?>" title="port must be 0-65535" placeholder="Default Port is 6237" >
+: <input id="PORT" type="text" class="stopped" name="PORT" maxlength="40" value="<?=$unbalanced_port;?>" title="port must be 0-65535" placeholder="Default Port is 7090" >
 
 <!-- Run as User:
 : <select id="USERS" class="stopped" title="select user, cannot be root" size="1" onChange="checkUSER(this.form, '<?=$unbalanced_runas;?>');">
@@ -59,7 +59,7 @@ $(function(){
 });
 
 function resetDATA(form) {
-	form.PORT.value = "6237";
+	form.PORT.value = "7090";
 	// form.RUNAS.value = "nobody";
 	form.USERS.value = "nobody";
 }
@@ -97,10 +97,10 @@ function checkRUNNING(form) {
 
 function verifyDATA(form) {
 	if (isNaN(form.PORT.value)){
-		form.PORT.value = "6237";
+		form.PORT.value = "7090";
 	} else {
 		if (form.PORT.value < 0 || form.PORT.value > 65535){
-			form.PORT.value = "6237";
+			form.PORT.value = "7090";
 		}
 	}
 	// if (form.RUNAS.value == null || form.RUNAS.value == "" || form.RUNAS.value == "root" ){
