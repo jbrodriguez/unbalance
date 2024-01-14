@@ -43,13 +43,15 @@ You'll likely come up with other scenarios as you play around with it.
 
 - **Transfer operations work at the disk level (not at the user share level)**<br> This avoids file/folder clobbering.
 
+> [!IMPORTANT]
 > IMPORTANT: I suggest giving unbalanced exclusive access to disks (disable mover and/or any dockers that write to disks), so that free space calculation are not affected. If you're only reading data (streaming, etc.), it shouldn't be issue, although the operations may run slower.
 
 ## SCATTER Instructions
 
 Scatter will transfer data from a source disk into one or more target disks, according to your selection, by filling the target disks, sorted by free space available, as much as possible.
 
-> NOTE: Scatter doesn't distribute data evenly across disks. It will fill up the first disk, then the second, and so on.
+> [!NOTE]
+> Scatter doesn't distribute data evenly across disks. It will fill up the first disk, then the second, and so on.
 
 It involves the following steps:
 
