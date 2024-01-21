@@ -52,11 +52,16 @@ func (s *Server) Start() error {
 	s.engine.Use(middleware.Gzip())
 	// s.engine.Use(middleware.Logger())
 
-	// Define a "/" endpoint to serve index.html from the embed FS
-	s.engine.GET("/*", indexHandler)
+	// serves index.html and favicon related assets on the root path (coming from public folder, built into dist folder)
+	s.engine.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:       "dist",       // This is the path to your SPA build folder, the folder that is created from running "npm build"
+		Index:      "index.html", // This is the default html page for your SPA
+		Browse:     false,
+		HTML5:      true,
+		Filesystem: http.FS(web.Dist),
+	}))
 
 	s.engine.GET("/assets/*", echo.WrapHandler(assetsHandler(web.Dist)))
-	// s.engine.Static("/img/*", filepath.Join(s.ctx.DataDir, "img"))
 
 	s.engine.GET("/ws", s.wsHandler)
 
@@ -92,14 +97,6 @@ func (s *Server) Start() error {
 	logger.Blue("started service server (listening http on %s) ...", port)
 
 	return nil
-}
-
-func indexHandler(c echo.Context) error {
-	data, err := web.Dist.ReadFile("dist/index.html")
-	if err != nil {
-		return err
-	}
-	return c.Blob(http.StatusOK, "text/html", data)
 }
 
 func assetsHandler(content embed.FS) http.Handler {
