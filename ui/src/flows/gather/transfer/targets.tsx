@@ -17,15 +17,15 @@ export const Targets: React.FunctionComponent = () => {
   return (
     <div className="flex flex-1">
       <ResizablePanelGroup direction="horizontal" className="flex flex-1">
-        <ResizablePanel defaultSizePercentage={20}>
+        <ResizablePanel defaultSize={20}>
           <Shares />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSizePercentage={50}>
+        <ResizablePanel defaultSize={50}>
           <Target />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSizePercentage={30}>
+        <ResizablePanel defaultSize={30}>
           <Bin disk={disk} />
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -13,11 +13,11 @@ export const Select: React.FunctionComponent = () => {
   return (
     <div className="flex flex-1">
       <ResizablePanelGroup direction="horizontal" className="flex flex-1">
-        <ResizablePanel defaultSizePercentage={50}>
+        <ResizablePanel defaultSize={50}>
           <Shares />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSizePercentage={50}>
+        <ResizablePanel defaultSize={50}>
           <Presence />
         </ResizablePanel>
       </ResizablePanelGroup>

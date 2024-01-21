@@ -13,11 +13,11 @@ export const Feedback: React.FunctionComponent = () => {
   return (
     <div className="flex flex-1">
       <ResizablePanelGroup direction="horizontal" className="flex flex-1">
-        <ResizablePanel defaultSizePercentage={60}>
+        <ResizablePanel defaultSize={60}>
           <Log />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSizePercentage={40}>
+        <ResizablePanel defaultSize={40}>
           <Issues />
         </ResizablePanel>
       </ResizablePanelGroup>
