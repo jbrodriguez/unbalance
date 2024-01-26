@@ -13,7 +13,7 @@ version=$(date '+%Y.%m.%d')
 cd ui && npm run build && cd ..
 
 go build fmt
-go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
+env CGO_ENABLED=0 go build -ldflags "-X main.Version=$version$patch" -v -o meta/plugin/$name
 
 echo "$version$patch" > meta/plugin/VERSION
 
