@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
@@ -101,7 +100,7 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
 	}
 
-	entries, err := ioutil.ReadDir(srcFolder)
+	entries, err := os.ReadDir(srcFolder)
 	if err != nil {
 		return nil, total, err
 	}
