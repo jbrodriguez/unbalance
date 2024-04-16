@@ -302,6 +302,7 @@ func (c *Core) SetVerbosity(value int) *domain.Config {
 
 func (c *Core) SetRefreshRate(value int) *domain.Config {
 	c.ctx.Config.RefreshRate = value
+	c.resetSamples(c.state.Operation)
 	if err := c.saveSettings(); err != nil {
 		logger.Yellow("setRefreshRate: unable to save settings: %s", err)
 	}
