@@ -474,6 +474,19 @@ func (c *Core) updateSamples(operation *domain.Operation, transferred uint64) {
 	operation.PrevSample = transferred
 }
 
+func (c *Core) resetSamples(operation *domain.Operation) {
+	if operation == nil {
+		return
+	}
+
+	for i := range operation.Samples {
+		operation.Samples[i] = 0
+	}
+
+	operation.SampleIndex = 0
+	operation.PrevSample = 0
+}
+
 func (c *Core) calculateSpeed(operation *domain.Operation, rate time.Duration) float64 {
 	var sum uint64
 	var countNonZero int
