@@ -26,7 +26,7 @@ export const Bin: React.FunctionComponent<BinProps> = ({ disk = '' }) => {
 
   const bin = plan.vdisks[disk].bin;
 
-  if (!bin) {
+  if (!bin || !bin.items) {
     return (
       <div className="h-full bg-neutral-100 dark:bg-gray-950">
         <div className="flex flex-col p-2">
