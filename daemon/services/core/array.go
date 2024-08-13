@@ -4,21 +4,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-
-	"gopkg.in/ini.v1"
-
 	"unbalance/daemon/domain"
 	"unbalance/daemon/lib"
 	"unbalance/daemon/logger"
-)
 
-var regStrip = regexp.MustCompile("[0-9 ]")
+	"gopkg.in/ini.v1"
+)
 
 func (c *Core) sanityCheck() error {
 	locations := []string{"/var/local/emhttp"}
@@ -81,10 +77,6 @@ func (c *Core) refreshUnraid() *domain.Unraid {
 	return newunraid
 }
 
-func stripSpacesAndNumbers(input string) string {
-	return regStrip.ReplaceAllString(input, "")
-}
-
 func getArrayData() (*domain.Unraid, error) {
 	unraid := &domain.Unraid{}
 
@@ -125,6 +117,7 @@ func getArrayData() (*domain.Unraid, error) {
 	// get free/size data
 	free := make(map[string]uint64)
 	size := make(map[string]uint64)
+	mounts := make(map[string]bool)
 
 	// err = lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
 	// 	data := strings.Fields(line)
@@ -136,6 +129,7 @@ func getArrayData() (*domain.Unraid, error) {
 		data := strings.Fields(line)
 		size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
 		free[data[5]], _ = strconv.ParseUint(data[3], 10, 64)
+		mounts[data[5]] = true
 	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to get free/size data: %w", err)
@@ -166,12 +160,11 @@ func getArrayData() (*domain.Unraid, error) {
 			continue
 		}
 
-		name := stripSpacesAndNumbers(diskName)
-		if pools[name] {
+		if _, ok := mounts["/mnt/"+diskName]; !ok {
 			continue
 		}
 
-		pools[name] = true
+		pools[diskName] = true
 	}
 
 	for _, section := range file.Sections() {
