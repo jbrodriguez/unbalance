@@ -44,7 +44,11 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
         </span>
 
         <span className="ml-1">
-          {node.leaf ? icons.leafIcon : icons.parentIcon}
+          {node.leaf
+            ? node.dir
+              ? icons.parentIcon
+              : icons.leafIcon
+            : icons.parentIcon}
         </span>
 
         <span className="ml-1">{node.label}</span>

@@ -145,6 +145,7 @@ export interface Node {
   id: string;
   label: string;
   leaf: boolean;
+  dir: boolean;
   parent: string;
   checked?: boolean;
   expanded?: boolean;

@@ -27,6 +27,7 @@ const rootNode = {
   id: 'root',
   label: '/',
   leaf: false,
+  dir: false,
   parent: '',
 };
 
@@ -70,6 +71,7 @@ export const useGatherStore = create<GatherStore>()(
             id: 'loader',
             label: 'loading ...',
             leaf: false,
+            dir: false,
             parent: node.id,
             children: [],
             checked: false,
