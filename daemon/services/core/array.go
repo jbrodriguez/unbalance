@@ -243,6 +243,7 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 		node.Label = element.Name()
 
 		if element.IsDir() {
+			node.Dir = true
 			// let's check if the folder is empty
 			// we can still get an i/o error, if that's the case
 			// we assume the folder's empty
@@ -252,11 +253,7 @@ func (c *Core) GetTree(path, id string) domain.Branch {
 				// mlog.Warning("GetTree - Unable to determine if folder is empty: %s", folder)
 				node.Leaf = true
 			} else {
-				if empty {
-					node.Leaf = true
-				} else {
-					node.Leaf = false
-				}
+				node.Leaf = empty
 			}
 		} else {
 			node.Leaf = true

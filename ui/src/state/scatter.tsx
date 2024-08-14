@@ -25,6 +25,7 @@ const rootNode = {
   id: 'root',
   label: '/',
   leaf: false,
+  dir: false,
   parent: '',
 };
 
@@ -32,6 +33,7 @@ const loaderNode = {
   id: 'loader',
   label: 'loading ...',
   leaf: false,
+  dir: false,
   parent: 'root',
 };
 
@@ -90,6 +92,7 @@ export const useScatterStore = create<ScatterStore>()(
             id: 'loader',
             label: 'loading ...',
             leaf: false,
+            dir: false,
             parent: node.id,
             children: [],
             checked: false,
