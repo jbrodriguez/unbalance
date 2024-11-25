@@ -218,53 +218,60 @@ func getArrayData() (*domain.Unraid, error) {
 		disks = append(disks, disk)
 	}
 
-	udevs, err := lib.LoadUnassignedDevices("/var/state/unassigned.devices/unassigned.devices.json")
+	udevExists, err := lib.Exists("/var/state/unassigned.devices/unassigned.devices.json")
 	if err != nil {
-		return nil, fmt.Errorf("unable to get unassigned devices", err)
+		return nil, fmt.Errorf("error while checking for udev presence", err)
 	}
 
-	id := uint64(len(disks))
-
-	for _, udev := range udevs {
-		fmt.Print(" %+v", udev)
-
-		disk := &domain.Disk{}
-
-		id += 1
-
-		disk.ID = id                                                       // 1
-		disk.Name = strings.ReplaceAll(udev.Mountpoint, "/mnt/disks/", "") // disk1, cache
-		disk.Path = udev.Mountpoint                                        // /mnt/disk1, /mnt/cache
-		disk.Device = strings.ReplaceAll(udev.Disk, "/dev/", "")           // sdp
-		disk.Type = "Data"                                                 // Flash, Parity, Data, Cache
-		disk.FsType = udev.FileSystem                                      // xfs, reiserfs, btrfs
-		disk.Free = udev.Avail
-		disk.Size = udev.Size
-		disk.Serial = udev.Serial // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
-		disk.Status = "DISK_OK"
-
-		var stat syscall.Statfs_t
-		e := syscall.Statfs(disk.Path, &stat)
-		if e == nil {
-			disk.BlocksTotal = stat.Blocks
-			disk.BlocksFree = stat.Bavail
-
-			//
-			if int64(blockSize) != stat.Bsize {
-				if !hasBlockSize {
-					blockSize = uint64(stat.Bsize)
-				} else {
-					blockSize = 0
-				}
-
-				hasBlockSize = true
-			}
+	if udevExists {
+		udevs, err := lib.LoadUnassignedDevices("/var/state/unassigned.devices/unassigned.devices.json")
+		if err != nil {
+			return nil, fmt.Errorf("unable to get unassigned devices", err)
 		}
 
-		totalSize += disk.Size
-		totalFree += disk.Free
+		id := uint64(len(disks))
 
-		disks = append(disks, disk)
+		for _, udev := range udevs {
+			fmt.Print(" %+v", udev)
+
+			disk := &domain.Disk{}
+
+			id += 1
+
+			disk.ID = id                                                       // 1
+			disk.Name = strings.ReplaceAll(udev.Mountpoint, "/mnt/disks/", "") // disk1, cache
+			disk.Path = udev.Mountpoint                                        // /mnt/disk1, /mnt/cache
+			disk.Device = strings.ReplaceAll(udev.Disk, "/dev/", "")           // sdp
+			disk.Type = "Data"                                                 // Flash, Parity, Data, Cache
+			disk.FsType = udev.FileSystem                                      // xfs, reiserfs, btrfs
+			disk.Free = udev.Avail
+			disk.Size = udev.Size
+			disk.Serial = udev.Serial // WDC_WD30EZRX-00DC0B0_WD-WMC9T204468
+			disk.Status = "DISK_OK"
+
+			var stat syscall.Statfs_t
+			e := syscall.Statfs(disk.Path, &stat)
+			if e == nil {
+				disk.BlocksTotal = stat.Blocks
+				disk.BlocksFree = stat.Bavail
+
+				//
+				if int64(blockSize) != stat.Bsize {
+					if !hasBlockSize {
+						blockSize = uint64(stat.Bsize)
+					} else {
+						blockSize = 0
+					}
+
+					hasBlockSize = true
+				}
+			}
+
+			totalSize += disk.Size
+			totalFree += disk.Free
+
+			disks = append(disks, disk)
+		}
 	}
 
 	unraid.Size = totalSize
