@@ -10,10 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unbalance/daemon/domain"
 
 	"gopkg.in/ini.v1"
-
-	"unbalance/daemon/domain"
 )
 
 // Exists - Check if File / Directory Exists
@@ -196,4 +195,38 @@ func SaveEnv(location string, config domain.Config) error {
 	file.SaveTo(location)
 
 	return nil
+}
+
+// LoadUnassignedDevices loads the JSON file and parses its contents into a slice of DiskInfo
+func LoadUnassignedDevices(filePath string) ([]domain.UnassignedDevice, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Handle case where the file contains an empty array
+	if string(data) == "[]" {
+		return []domain.UnassignedDevice{}, nil
+	}
+
+	// Parse JSON into a map of UnassignedDevice
+	var diskInfoMap map[string]domain.UnassignedDevice
+	err = json.Unmarshal(data, &diskInfoMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON: %w", err)
+	}
+
+	// Convert the map to a slice
+	diskInfoSlice := make([]domain.UnassignedDevice, 0, len(diskInfoMap))
+	for _, disk := range diskInfoMap {
+		diskInfoSlice = append(diskInfoSlice, disk)
+	}
+
+	return diskInfoSlice, nil
 }

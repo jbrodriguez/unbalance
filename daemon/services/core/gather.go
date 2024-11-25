@@ -5,14 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/teris-io/shortid"
-
 	"unbalance/daemon/algorithm"
 	"unbalance/daemon/common"
 	"unbalance/daemon/domain"
 	"unbalance/daemon/lib"
 	"unbalance/daemon/logger"
+
+	"github.com/teris-io/shortid"
 )
 
 func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
