@@ -10,20 +10,32 @@ import {
 import { Checkbox } from '~/shared/checkbox/checkbox';
 import { Disk } from '~/shared/disk/disk';
 import { Disk as IDisk } from '~/types';
+import { Toggle } from './toggle';
 
 export const Targets: React.FunctionComponent = () => {
+  const [allChecked, setAllChecked] = React.useState(false);
+
   const disks = useUnraidDisks();
   const source = useScatterSource();
   const targets = useScatterTargets();
-  const { toggleTarget } = useScatterActions();
+  const { toggleTarget, toggleAll } = useScatterActions();
 
   const visible = source !== '';
   const elegible = disks.filter((disk) => disk.name !== source);
 
   const onCheck = (disk: IDisk) => () => toggleTarget(disk.name);
+  const onToggleAll = (_checked: boolean) => () => {
+    setAllChecked(!_checked);
+    toggleAll(!_checked);
+  };
 
   return (
-    <Panel title="Target Disk(s)">
+    <Panel
+      title="Target Disk(s)"
+      subtitle={
+        <Toggle allChecked={allChecked} onCheck={onToggleAll(allChecked)} />
+      }
+    >
       {visible &&
         elegible.map((disk) => (
           <div className="flex flex-row items-center">

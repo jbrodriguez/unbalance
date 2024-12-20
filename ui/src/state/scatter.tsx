@@ -17,6 +17,7 @@ interface ScatterStore {
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
+    toggleAll: (checked: boolean) => void;
     setBinDisk: (binDisk: string) => void;
   };
 }
@@ -171,6 +172,22 @@ export const useScatterStore = create<ScatterStore>()(
           }
 
           delete state.targets[name];
+        });
+      },
+      toggleAll: (checked: boolean) => {
+        set((state) => {
+          const names = Object.keys(state.targets);
+          for (let i = 0; i < names.length; i++) {
+            if (names[i] === state.source) {
+              continue;
+            }
+
+            if (checked) {
+              state.targets[names[i]] = true;
+            } else {
+              delete state.targets[names[i]];
+            }
+          }
         });
       },
       setBinDisk: (binDisk: string) => {
