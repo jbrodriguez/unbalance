@@ -11,7 +11,7 @@ export const Toggle: React.FunctionComponent<ToggleProps> = ({
   onCheck,
 }) => {
   return (
-    <div className="flex flex-row gap-6">
+    <div className="flex flex-row items-center gap-1">
       <Checkbox checked={allChecked} onCheck={onCheck} />
       <span className="text-slate-500 dark:text-gray-500">Select All</span>
     </div>

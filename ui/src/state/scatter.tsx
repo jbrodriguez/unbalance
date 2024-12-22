@@ -12,12 +12,13 @@ interface ScatterStore {
   targets: Targets;
   tree: Nodes;
   binDisk: string;
+  allTargetsChecked: boolean;
   actions: {
     setSource: (source: string) => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => void;
     toggleTarget: (name: string) => void;
-    toggleAll: (checked: boolean) => void;
+    toggleAll: (names: string[]) => void;
     setBinDisk: (binDisk: string) => void;
   };
 }
@@ -46,6 +47,7 @@ export const useScatterStore = create<ScatterStore>()(
     tree: { root: decorateNode(rootNode as Node) },
     logs: [],
     binDisk: '',
+    allTargetsChecked: false,
     actions: {
       setSource: async (source: string) => {
         const loader = decorateNode({ ...loaderNode } as Node);
@@ -172,17 +174,19 @@ export const useScatterStore = create<ScatterStore>()(
           }
 
           delete state.targets[name];
+          state.allTargetsChecked = false;
         });
       },
-      toggleAll: (checked: boolean) => {
+      toggleAll: (names: string[]) => {
         set((state) => {
-          const names = Object.keys(state.targets);
+          state.allTargetsChecked = !state.allTargetsChecked;
+
           for (let i = 0; i < names.length; i++) {
             if (names[i] === state.source) {
               continue;
             }
 
-            if (checked) {
+            if (state.allTargetsChecked) {
               state.targets[names[i]] = true;
             } else {
               delete state.targets[names[i]];
@@ -212,3 +216,5 @@ export const useScatterTargets = () =>
   useScatterStore((state) => state.targets);
 export const useScatterBinDisk = () =>
   useScatterStore((state) => state.binDisk);
+export const useScatterAllTargetsChecked = () =>
+  useScatterStore((state) => state.allTargetsChecked);
