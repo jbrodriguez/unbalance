@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/shallow';
 import { immer } from 'zustand/middleware/immer';
 import { NavigateFunction } from 'react-router-dom';
 
@@ -547,10 +548,12 @@ export const useUnraidOperation = () =>
   useUnraidStore((state) => state.operation);
 export const useUnraidLogs = () => useUnraidStore((state) => state.logs);
 export const useUnraidHistory = () =>
-  useUnraidStore((state) =>
-    state.history
-      ? // @ts-expect-error -- TSCONVERSION
-        state.history.order.map((id) => state.history.items[id])
-      : [],
+  useUnraidStore(
+    useShallow((state) =>
+      state.history
+        ? state.history.order.map((id) => state.history?.items[id])
+        : [],
+    ),
   );
+
 export const useUnraidError = () => useUnraidStore((state) => state.error);
