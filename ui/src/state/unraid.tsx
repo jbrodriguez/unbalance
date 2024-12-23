@@ -551,7 +551,7 @@ export const useUnraidHistory = () =>
   useUnraidStore(
     useShallow((state) =>
       state.history
-        ? state.history.order.map((id) => state.history?.items[id])
+        ? state.history.order.map((id) => state.history!.items[id])
         : [],
     ),
   );
