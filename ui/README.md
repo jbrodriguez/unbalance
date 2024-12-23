@@ -1,59 +1,5 @@
 # React + TypeScript + Vite
 
-## Development environment
-
-- setup go development environment
-- setup node development environment
-- clone repository
-- make release on root folder will create unbalanced binary (with embedded website)
-- transfer binary to unraid server
-- (optional) if you want to do some ui debugging, set up a proxy on vite.config.ts
-
-### original
-
-```js
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import path from 'path';
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-});
-```
-
-### modified
-
-```js
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import path from 'path';
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http(s)://<unraid-server>:7090',
-      },
-    },
-  },
-});
-```
-
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
