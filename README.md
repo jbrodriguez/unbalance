@@ -272,6 +272,8 @@ export default defineConfig({
 });
 ```
 
+then run `npm run dev` and point your browser to the endpoint returned by this command (generally <http://localhost:5173>)
+
 ## Activity
 
 ![Alt](https://repobeats.axiom.co/api/embed/c5745d8699df25ff4e087e691f104aeeda2bd17b.svg "Repobeats analytics image")
