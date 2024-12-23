@@ -224,6 +224,7 @@ It was built with:
 - clone repository
 - make release on root folder will create unbalanced binary (with embedded website)
 - transfer binary to unraid server
+- run unbalanced on the command line (do a ps aux | grep unbalanced first, to check how to invoke it)
 - (optional) if you want to do some ui debugging, set up a proxy on vite.config.ts
 
 ### original
