@@ -136,7 +136,7 @@ There are 2 ways to install this application
   unbalanced<br/> Click Install
 
 - Plugins Tab (manual)<br/> Go to the Plugins tab<br/> Click on Install Plugin<br/> Paste the following address in the
-  input field: https://github.com/jbrodriguez/unbalance/releases/latest/download/unbalanced.plg<br/> Click Install
+  input field: <https://github.com/jbrodriguez/unbalance/releases/latest/download/unbalanced.plg><br/> Click Install
 
 ## Running the app
 
@@ -216,6 +216,63 @@ It was built with:
 - [zustand](https://github.com/pmndrs/zustand) - Flux/Redux-like React framework
 - [tailwind](https://tailwindcss.com) - Css framework
 - [vite](https://vitejs.dev) - Tooling
+
+## Development environment
+
+- setup go development environment
+- setup node development environment
+- clone repository
+- make release on root folder will create unbalanced binary (with embedded website)
+- transfer binary to unraid server
+- run unbalanced on the command line (do a ps aux | grep unbalanced first, to check how to invoke it)
+- (optional) if you want to do some ui debugging, set up a proxy on vite.config.ts
+
+### original
+
+```js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import path from "path";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+### modified
+
+```js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import path from "path";
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http(s)://<unraid-server>:7090",
+      },
+    },
+  },
+});
+```
+
+then run `npm run dev` and point your browser to the endpoint returned by this command (generally <http://localhost:5173>)
 
 ## Activity
 
