@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { useShallow } from 'zustand/shallow';
 
 import { Api } from '~/api';
 
@@ -115,10 +116,12 @@ export const useConfigNotifyPlan = () =>
 export const useConfigNotifyTransfer = () =>
   useConfigStore((state) => state.notifyTransfer);
 export const useConfigReserved = () =>
-  useConfigStore((state) => ({
-    amount: state.reservedAmount,
-    unit: state.reservedUnit,
-  }));
+  useConfigStore(
+    useShallow((state) => ({
+      amount: state.reservedAmount,
+      unit: state.reservedUnit,
+    })),
+  );
 export const useConfigRsyncArgs = () =>
   useConfigStore((state) => state.rsyncArgs);
 export const useConfigVerbosity = () =>
