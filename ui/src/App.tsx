@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
+import ErrorBoundary from '@/components/error-boundary';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
@@ -44,17 +45,19 @@ export function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <div className="container mx-auto h-screen flex flex-col">
-        <header>
-          <Header />
-        </header>
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <footer>
-          <Footer />
-        </footer>
-      </div>
+      <ErrorBoundary>
+        <div className="container mx-auto h-screen flex flex-col">
+          <header>
+            <Header />
+          </header>
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <footer>
+            <Footer />
+          </footer>
+        </div>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }
