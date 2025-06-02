@@ -211,7 +211,7 @@ It was built with:
 
 - [Go](https://golang.org/) - Back End
 - [echo](https://github.com/labstack/echo) - REST and websocket api
-- [pubsub](github.com/cskr/pubsub) - Pub/Sub implementation
+- [pubsub](https://github.com/cskr/pubsub) - Pub/Sub implementation
 - [React](https://facebook.github.io/react/) - Front End
 - [zustand](https://github.com/pmndrs/zustand) - Flux/Redux-like React framework
 - [tailwind](https://tailwindcss.com) - Css framework
