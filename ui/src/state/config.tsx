@@ -14,6 +14,7 @@ interface ConfigStore {
   rsyncArgs: string[];
   verbosity: number;
   refreshRate: number;
+  preserveHardlinks: boolean;
   actions: {
     getConfig: () => Promise<void>;
     toggleDryRun: () => Promise<void>;
@@ -24,6 +25,7 @@ interface ConfigStore {
     resetRsyncArgs: () => Promise<void>;
     setVerbosity: (value: number) => Promise<void>;
     setRefreshRate: (value: number) => Promise<void>;
+    setPreserveHardlinks: (value: boolean) => Promise<void>;
   };
 }
 
@@ -38,6 +40,7 @@ export const useConfigStore = create<ConfigStore>()(
     rsyncArgs: ['-X'],
     verbosity: 0,
     refreshRate: 1000,
+    preserveHardlinks: false,
     actions: {
       getConfig: async () => {
         const config = await Api.getConfig();
@@ -52,6 +55,7 @@ export const useConfigStore = create<ConfigStore>()(
           state.rsyncArgs = config.rsyncArgs;
           state.verbosity = config.verbosity;
           state.refreshRate = config.refreshRate;
+          state.preserveHardlinks = config.preserveHardlinks;
         });
       },
       toggleDryRun: async () => {
@@ -103,6 +107,12 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setRefreshRate(value);
       },
+      setPreserveHardlinks: async (value: boolean) => {
+        set((state) => {
+          state.preserveHardlinks = value;
+        });
+        await Api.setPreserveHardlinks(value);
+      },
     },
   })),
 );
@@ -128,3 +138,5 @@ export const useConfigVerbosity = () =>
   useConfigStore((state) => state.verbosity);
 export const useConfigRefreshRate = () =>
   useConfigStore((state) => state.refreshRate);
+export const useConfigPreserveHardlinks = () =>
+  useConfigStore((state) => state.preserveHardlinks);

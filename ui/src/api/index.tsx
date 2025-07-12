@@ -19,6 +19,7 @@ export class Api {
         rsyncArgs: [],
         verbosity: 0,
         refreshRate: 0,
+        preserveHardlinks: false,
       };
     }
   }
@@ -171,6 +172,20 @@ export class Api {
       await fetch(url, options);
     } catch (e) {
       console.log('refreshRate() error: ', e);
+    }
+  }
+
+  static async setPreserveHardlinks(value: boolean): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/preserveHardlinks`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('preserveHardlinks() error: ', e);
     }
   }
 }

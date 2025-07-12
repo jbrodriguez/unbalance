@@ -16,6 +16,20 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// safeBlockSizeComparison safely compares blockSize with stat.Bsize
+// The type of stat.Bsize varies by platform, but we can handle it generically
+func safeBlockSizeComparison(blockSize uint64, stat *syscall.Statfs_t) bool {
+	// Use the exact type conversion the syscall package expects for this platform
+	statBlockSize := uint64(stat.Bsize)
+	return blockSize == statBlockSize
+}
+
+// safeBlockSizeConversion safely converts stat.Bsize to uint64
+func safeBlockSizeConversion(stat *syscall.Statfs_t) uint64 {
+	// Use the exact type conversion the syscall package expects for this platform
+	return uint64(stat.Bsize)
+}
+
 func (c *Core) sanityCheck() error {
 	locations := []string{"/var/local/emhttp"}
 
@@ -201,9 +215,9 @@ func getArrayData() (*domain.Unraid, error) {
 			disk.BlocksFree = stat.Bavail
 
 			//
-			if int64(blockSize) != stat.Bsize {
+			if !safeBlockSizeComparison(blockSize, &stat) {
 				if !hasBlockSize {
-					blockSize = uint64(stat.Bsize)
+					blockSize = safeBlockSizeConversion(&stat)
 				} else {
 					blockSize = 0
 				}

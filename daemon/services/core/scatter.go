@@ -198,6 +198,11 @@ func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {
 
 	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.ctx.RsyncArgs...)
 
+	// Add hardlink preservation flag if enabled
+	if c.ctx.Config.PreserveHardlinks {
+		operation.RsyncArgs = append(operation.RsyncArgs, "-H")
+	}
+
 	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
 		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")
@@ -256,6 +261,12 @@ func (c *Core) createScatterValidateOperation(original domain.Operation) *domain
 	}
 
 	operation.RsyncArgs = append([]string{strings.Replace(common.RsyncArgs, "-a", "-rc", -1)}, original.RsyncArgs[1:]...)
+	
+	// Add hardlink preservation flag if enabled (for validation)
+	if c.ctx.Config.PreserveHardlinks {
+		operation.RsyncArgs = append(operation.RsyncArgs, "-H")
+	}
+	
 	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
 	operation.Commands = original.Commands

@@ -71,6 +71,20 @@ export const Settings: React.FunctionComponent = () => {
                 Log Verbosity
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="hardlinks"
+                className={({ isActive }) =>
+                  isActive
+                    ? 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white bg-blue-700 dark:bg-blue-700 group'
+                    : 'flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group'
+                }
+              >
+                <Icon name="link" size={24} style="fill-gray-500" />
+                <span className="pr-3" />
+                Hardlinks
+              </NavLink>
+            </li>
           </ul>
           <div className="pt-6" />
           <div className="p-4 rounded-lg border border-gray-400 dark:border-gray-700">

@@ -309,6 +309,14 @@ func (c *Core) SetRefreshRate(value int) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetPreserveHardlinks(value bool) *domain.Config {
+	c.ctx.Config.PreserveHardlinks = value
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setPreserveHardlinks: unable to save settings: %s", err)
+	}
+	return &c.ctx.Config
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalanced.env")
 	return lib.SaveEnv(location, c.ctx.Config)

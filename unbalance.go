@@ -21,14 +21,15 @@ var cli struct {
 	LogsDir string `default:"/var/log" help:"directory to store logs"`
 
 	// Config vars
-	DryRun         bool     `env:"DRY_RUN" default:"true" help:"perform a dry-run rather than actual work"`
-	NotifyPlan     int      `env:"NOTIFY_PLAN" default:"0" help:"notify via email after plan operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
-	NotifyTransfer int      `env:"NOTIFY_TRANSFER" default:"0" help:"notify via email after transfer operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
-	ReservedAmount uint64   `env:"RESERVED_AMOUNT" default:"1" help:"Minimun Amount of space to reserve"`
-	ReservedUnit   string   `env:"RESERVED_UNIT" default:"Gb" help:"Reserved Amount unit: Gb or %"`
-	RsyncArgs      []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
-	Verbosity      int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
-	RefreshRate    int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
+	DryRun            bool     `env:"DRY_RUN" default:"true" help:"perform a dry-run rather than actual work"`
+	NotifyPlan        int      `env:"NOTIFY_PLAN" default:"0" help:"notify via email after plan operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
+	NotifyTransfer    int      `env:"NOTIFY_TRANSFER" default:"0" help:"notify via email after transfer operation has completed (unraid notifications must be set up first): 0 - No notifications; 1 - Simple notifications; 2 - Detailed notifications"`
+	ReservedAmount    uint64   `env:"RESERVED_AMOUNT" default:"1" help:"Minimun Amount of space to reserve"`
+	ReservedUnit      string   `env:"RESERVED_UNIT" default:"Gb" help:"Reserved Amount unit: Gb or %"`
+	RsyncArgs         []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
+	Verbosity         int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
+	RefreshRate       int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
+	PreserveHardlinks bool     `env:"PRESERVE_HARDLINKS" default:"false" help:"preserve hardlinks during rsync operations (adds -H flag)"`
 
 	Boot cmd.Boot `cmd:"" default:"1" help:"start processing"`
 }
@@ -55,15 +56,16 @@ func main() {
 	err := ctx.Run(&domain.Context{
 		Port: cli.Port,
 		Config: domain.Config{
-			Version:        Version,
-			DryRun:         cli.DryRun,
-			NotifyPlan:     cli.NotifyPlan,
-			NotifyTransfer: cli.NotifyTransfer,
-			ReservedAmount: cli.ReservedAmount,
-			ReservedUnit:   cli.ReservedUnit,
-			RsyncArgs:      cli.RsyncArgs,
-			Verbosity:      cli.Verbosity,
-			RefreshRate:    cli.RefreshRate,
+			Version:           Version,
+			DryRun:            cli.DryRun,
+			NotifyPlan:        cli.NotifyPlan,
+			NotifyTransfer:    cli.NotifyTransfer,
+			ReservedAmount:    cli.ReservedAmount,
+			ReservedUnit:      cli.ReservedUnit,
+			RsyncArgs:         cli.RsyncArgs,
+			Verbosity:         cli.Verbosity,
+			RefreshRate:       cli.RefreshRate,
+			PreserveHardlinks: cli.PreserveHardlinks,
 		},
 		Hub: pubsub.New(23),
 	})

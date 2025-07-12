@@ -85,7 +85,7 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domain.Item, uint64, error) {
+func getItems(blockSize uint64, re *regexp.Regexp, src, folder string, preserveHardlinks bool) ([]*domain.Item, uint64, error) {
 	var total, blocks uint64
 	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
@@ -97,7 +97,17 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
+		item := &domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}
+		
+		// Detect hardlinks for single file
+		if hardlinkInfo, err := detectHardlinks(srcFolder); err == nil {
+			item.HardlinkInfo = hardlinkInfo
+			updateItemWithHardlinkInfo(item, preserveHardlinks)
+		} else {
+			logger.Yellow("hardlink detection failed for %s: %s", srcFolder, err)
+		}
+		
+		return []*domain.Item{item}, item.Size, nil
 	}
 
 	entries, err := os.ReadDir(srcFolder)
@@ -108,7 +118,8 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	if len(entries) == 0 {
 		// Size: 1 is a trick to allow natural processing of this empty folder: if set to zero, many comparison
 		// would misinterpret this as a pending transfer and so on
-		return []*domain.Item{&domain.Item{Name: srcFolder, Size: 1, Path: folder, Location: src}}, 0, nil
+		item := &domain.Item{Name: srcFolder, Size: 1, Path: folder, Location: src}
+		return []*domain.Item{item}, 0, nil
 	}
 
 	items := make([]*domain.Item, 0)
@@ -119,15 +130,33 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 		result := re.FindStringSubmatch(line)
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
-		total += uint64(size)
+		
+		itemPath := result[2]
+		item := &domain.Item{
+			Name:     itemPath, 
+			Size:     uint64(size), 
+			Path:     filepath.Join(folder, filepath.Base(itemPath)), 
+			Location: src,
+		}
+
+		// Detect hardlinks for each item
+		if hardlinkInfo, err := detectHardlinks(itemPath); err == nil {
+			item.HardlinkInfo = hardlinkInfo
+			updateItemWithHardlinkInfo(item, preserveHardlinks)
+		} else {
+			logger.Yellow("hardlink detection failed for %s: %s", itemPath, err)
+		}
+
+		// Update running total with effective size
+		total += item.Size
 
 		if blockSize > 0 {
-			blocks = uint64(math.Ceil(float64(size) / fBlockSize))
+			blocks = uint64(math.Ceil(float64(item.Size) / fBlockSize))
 		} else {
 			blocks = 0
 		}
+		item.BlocksUsed = blocks
 
-		item := &domain.Item{Name: result[2], Size: uint64(size), Path: filepath.Join(folder, filepath.Base(result[2])), Location: src, BlocksUsed: uint64(blocks)}
 		items = append(items, item)
 	})
 
@@ -172,7 +201,7 @@ func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *rege
 			packet = &domain.Packet{Topic: getTopic(status), Payload: "Getting items ..."}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
 
-			list, total, err := getItems(blockSize, reItems, disk.Path, path)
+			list, total, err := getItems(blockSize, reItems, disk.Path, path, c.ctx.Config.PreserveHardlinks)
 			if err != nil {
 				logger.Yellow("items:not-available:(%s)", err)
 			} else {
@@ -238,6 +267,21 @@ func (c *Core) getReservedAmount(size uint64) uint64 {
 	}
 
 	return reserved
+}
+
+func analyzeHardlinks(items []*domain.Item) (int, uint64, uint64) {
+	var hardlinkedItems int
+	var totalSharedSize, totalExpandedSize uint64
+	
+	for _, item := range items {
+		if item.HardlinkInfo != nil && item.HardlinkInfo.HasHardlinks {
+			hardlinkedItems++
+			totalSharedSize += item.HardlinkInfo.SharedSize
+			totalExpandedSize += item.HardlinkInfo.ExpandedSize
+		}
+	}
+	
+	return hardlinkedItems, totalSharedSize, totalExpandedSize
 }
 
 func (c *Core) endPlan(status uint64, plan *domain.Plan, disks []*domain.Disk, items, toBeTransferred []*domain.Item) {
@@ -311,6 +355,34 @@ func (c *Core) endPlan(status uint64, plan *domain.Plan, disks []*domain.Disk, i
 	logger.Blue("=========================================================")
 	logger.Blue("Bytes To Transfer: %s", lib.ByteSize(plan.BytesToTransfer))
 	logger.Blue("---------------------------------------------------------")
+
+	// Analyze and report hardlink impact
+	allItems := append(toBeTransferred, items...)
+	hardlinkedCount, sharedSize, expandedSize := analyzeHardlinks(allItems)
+	if hardlinkedCount > 0 {
+		logger.Blue("=========================================================")
+		logger.Blue("Hardlink Analysis:")
+		logger.Blue("Items with hardlinks: %d", hardlinkedCount)
+		logger.Blue("Shared size: %s", lib.ByteSize(sharedSize))
+		logger.Blue("Expanded size: %s", lib.ByteSize(expandedSize))
+		
+		if c.ctx.Config.PreserveHardlinks {
+			logger.Blue("Hardlink preservation: ENABLED (-H flag)")
+			spaceSaving := expandedSize - sharedSize
+			logger.Blue("Space savings from hardlinks: %s", lib.ByteSize(spaceSaving))
+			
+			packet := &domain.Packet{Topic: getTopic(status), Payload: fmt.Sprintf("Hardlinks: %d items with hardlinks detected. Preservation enabled (saves %s)", hardlinkedCount, lib.ByteSize(spaceSaving))}
+			c.ctx.Hub.Pub(packet, "socket:broadcast")
+		} else {
+			logger.Blue("Hardlink preservation: DISABLED (conservative planning)")
+			spaceIncrease := expandedSize - sharedSize
+			logger.Blue("Additional space allocated for hardlinks: %s", lib.ByteSize(spaceIncrease))
+			
+			packet := &domain.Packet{Topic: getTopic(status), Payload: fmt.Sprintf("Hardlinks: %d items with hardlinks detected. Using conservative space planning (+%s)", hardlinkedCount, lib.ByteSize(spaceIncrease))}
+			c.ctx.Hub.Pub(packet, "socket:broadcast")
+		}
+		logger.Blue("---------------------------------------------------------")
+	}
 
 	packet := &domain.Packet{Topic: getTopic(status), Payload: "Planning Ended"}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")

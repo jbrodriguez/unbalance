@@ -145,6 +145,11 @@ func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
 
 	operation.RsyncArgs = append([]string{common.RsyncArgs}, c.ctx.RsyncArgs...)
 
+	// Add hardlink preservation flag if enabled
+	if c.ctx.Config.PreserveHardlinks {
+		operation.RsyncArgs = append(operation.RsyncArgs, "-H")
+	}
+
 	// user may have changed dry-run setting, adjust for it
 	if operation.DryRun {
 		operation.RsyncArgs = append(operation.RsyncArgs, "--dry-run")

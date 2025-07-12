@@ -82,6 +82,7 @@ func (s *Server) Start() error {
 	api.PUT("/config/rsyncArgs", s.setRsyncArgs)
 	api.PUT("/config/verbosity", s.setVerbosity)
 	api.PUT("/config/refreshRate", s.setRefreshRate)
+	api.PUT("/config/preserveHardlinks", s.setPreserveHardlinks)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -271,4 +272,14 @@ func (s *Server) setRefreshRate(c echo.Context) error {
 	}
 
 	return c.JSON(200, s.core.SetRefreshRate(value))
+}
+
+func (s *Server) setPreserveHardlinks(c echo.Context) error {
+	var value bool
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetPreserveHardlinks(value))
 }
