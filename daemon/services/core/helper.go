@@ -9,7 +9,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
+
+	"github.com/cskr/pubsub"
 
 	"unbalance/daemon/common"
 	"unbalance/daemon/domain"
@@ -97,7 +100,10 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
+		item := &domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}
+		// Get hardlink info for single file
+		populateHardlinkInfo(item, srcFolder)
+		return []*domain.Item{item}, uint64(fi.Size()), nil
 	}
 
 	entries, err := os.ReadDir(srcFolder)
@@ -127,7 +133,12 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 			blocks = 0
 		}
 
-		item := &domain.Item{Name: result[2], Size: uint64(size), Path: filepath.Join(folder, filepath.Base(result[2])), Location: src, BlocksUsed: uint64(blocks)}
+		itemPath := result[2]
+		item := &domain.Item{Name: itemPath, Size: uint64(size), Path: filepath.Join(folder, filepath.Base(itemPath)), Location: src, BlocksUsed: uint64(blocks)}
+
+		// Get hardlink info for this item
+		populateHardlinkInfo(item, itemPath)
+
 		items = append(items, item)
 	})
 
@@ -136,6 +147,308 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	}
 
 	return items, total, err
+}
+
+// populateHardlinkInfo fills in the inode, device, and link count for an item
+func populateHardlinkInfo(item *domain.Item, fullPath string) {
+	fi, err := os.Lstat(fullPath)
+	if err != nil {
+		// If we can't stat, leave hardlink fields at zero (will be treated as non-hardlinked)
+		logger.Yellow("hardlink:stat-failed:path(%s):err(%s)", fullPath, err)
+		return
+	}
+
+	// Get the underlying syscall stat info
+	stat, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		// Not on a Unix-like system, leave fields at zero
+		return
+	}
+
+	item.Inode = stat.Ino
+	item.Device = uint64(stat.Dev)
+	item.LinkCount = uint64(stat.Nlink)
+
+	// For directories, Nlink includes . and .. plus subdirs, not actual hardlinks
+	// Directories generally cannot be hardlinked on most filesystems
+	// So we treat them as non-hardlinked (linkCount = 1) for our purposes
+	if fi.IsDir() {
+		item.LinkCount = 1
+	}
+}
+
+// analyzeHardlinks examines items for hardlink relationships and returns a summary
+func analyzeHardlinks(items []*domain.Item, topic string, hub *pubsub.PubSub) *domain.HardlinkSummary {
+	analyzer := domain.NewHardlinkAnalyzer()
+	summary := analyzer.Analyze(items)
+
+	// Log hardlink information
+	logger.Blue("hardlink:analysis:files(%d):groups(%d):apparent(%s):actual(%s):savings(%s)",
+		summary.TotalHardlinkedFiles,
+		summary.TotalHardlinkGroups,
+		lib.ByteSize(summary.ApparentSize),
+		lib.ByteSize(summary.ActualSize),
+		lib.ByteSize(summary.PotentialSavings))
+
+	// Send summary to frontend
+	if summary.TotalHardlinkedFiles > 0 {
+		msg := fmt.Sprintf("Hardlink analysis: %d files in %d groups (apparent: %s, actual: %s)",
+			summary.TotalHardlinkedFiles,
+			summary.TotalHardlinkGroups,
+			lib.ByteSize(summary.ApparentSize),
+			lib.ByteSize(summary.ActualSize))
+		packet := &domain.Packet{Topic: topic, Payload: msg}
+		hub.Pub(packet, "socket:broadcast")
+
+		// Log details of each hardlink group
+		for _, group := range summary.HardlinkGroups {
+			logger.Blue("hardlink:group:inode(%d):size(%s):paths(%d):%v",
+				group.Inode,
+				lib.ByteSize(group.Size),
+				len(group.Paths),
+				group.Paths)
+		}
+	} else {
+		logger.Blue("hardlink:analysis:no hardlinked files found")
+	}
+
+	// Don't include full group details in response to avoid large payloads
+	// They are logged for debugging purposes
+	summary.HardlinkGroups = nil
+
+	return summary
+}
+
+// discoverHardlinkSiblings finds all paths on a disk that share the same inode.
+// This uses `find <disk> -inum <inode>` to discover siblings not in the selected items.
+func discoverHardlinkSiblings(diskPath string, inode uint64) ([]string, error) {
+	siblings := make([]string, 0)
+
+	cmd := fmt.Sprintf(`find "%s" -inum %d 2>/dev/null`, diskPath, inode)
+
+	err := lib.Shell2(cmd, func(line string) {
+		if line != "" {
+			siblings = append(siblings, line)
+		}
+	})
+
+	if err != nil {
+		// Log but don't fail - find may return non-zero for permission issues
+		logger.Yellow("hardlink:sibling-discovery:inode(%d):err(%s)", inode, err)
+	}
+
+	return siblings, nil
+}
+
+// analyzeOrphanedHardlinks examines items for hardlink siblings that are NOT selected.
+// Returns an OrphanSummary with details about orphaned hardlinks.
+func analyzeOrphanedHardlinks(items []*domain.Item, srcDiskPath string, topic string, hub *pubsub.PubSub) *domain.OrphanSummary {
+	summary := domain.NewOrphanSummary()
+
+	// Build a set of selected paths for quick lookup
+	selectedPaths := make(map[string]bool)
+	for _, item := range items {
+		fullPath := filepath.Join(item.Location, item.Path)
+		selectedPaths[fullPath] = true
+		// Also add the Name field which may contain the full path
+		selectedPaths[item.Name] = true
+	}
+
+	// Track which inodes we've already analyzed
+	analyzedInodes := make(map[uint64]bool)
+
+	// Only analyze items that are hardlinked (LinkCount > 1)
+	for _, item := range items {
+		if !item.IsHardlinked() {
+			continue
+		}
+
+		inodeKey := item.InodeKey()
+		if analyzedInodes[inodeKey] {
+			continue
+		}
+		analyzedInodes[inodeKey] = true
+
+		// Send progress update
+		msg := fmt.Sprintf("Checking hardlink siblings for %s...", item.Path)
+		packet := &domain.Packet{Topic: topic, Payload: msg}
+		hub.Pub(packet, "socket:broadcast")
+
+		// Discover all siblings on the source disk
+		allSiblings, err := discoverHardlinkSiblings(srcDiskPath, item.Inode)
+		if err != nil {
+			logger.Yellow("hardlink:orphan-analysis:skipped:inode(%d):err(%s)", item.Inode, err)
+			continue
+		}
+
+		// Categorize siblings as selected or unselected
+		selectedSiblings := make([]string, 0)
+		unselectedSiblings := make([]string, 0)
+
+		for _, siblingPath := range allSiblings {
+			if selectedPaths[siblingPath] {
+				selectedSiblings = append(selectedSiblings, siblingPath)
+			} else {
+				unselectedSiblings = append(unselectedSiblings, siblingPath)
+			}
+		}
+
+		// If there are unselected siblings, this is an orphaned hardlink
+		if len(unselectedSiblings) > 0 {
+			orphan := &domain.OrphanedHardlink{
+				Inode:           item.Inode,
+				Device:          item.Device,
+				Size:            item.Size,
+				SelectedPaths:   selectedSiblings,
+				UnselectedPaths: unselectedSiblings,
+				TotalLinkCount:  item.LinkCount,
+				SpaceImpact:     item.Size, // Source won't free this space
+			}
+
+			summary.AddOrphan(orphan)
+
+			logger.Yellow("hardlink:orphan:inode(%d):selected(%d):unselected(%d):size(%s)",
+				item.Inode,
+				len(selectedSiblings),
+				len(unselectedSiblings),
+				lib.ByteSize(item.Size))
+		}
+	}
+
+	// Send summary to frontend if orphans were found
+	if summary.HasOrphans() {
+		msg := fmt.Sprintf("WARNING: %d file(s) have hardlink siblings that will remain on source. Space impact: %s will NOT be freed.",
+			summary.TotalOrphanedFiles,
+			lib.ByteSize(summary.TotalSpaceImpact))
+		packet := &domain.Packet{Topic: topic, Payload: msg}
+		hub.Pub(packet, "socket:broadcast")
+
+		logger.Yellow("hardlink:orphan-summary:groups(%d):files(%d):impact(%s)",
+			summary.TotalOrphanedGroups,
+			summary.TotalOrphanedFiles,
+			lib.ByteSize(summary.TotalSpaceImpact))
+	}
+
+	return summary
+}
+
+// calculateFreeableSpace returns the actual space that will be freed on source,
+// accounting for orphaned hardlinks whose inodes will remain referenced.
+func calculateFreeableSpace(bin *domain.Bin, orphanSummary *domain.OrphanSummary) uint64 {
+	if orphanSummary == nil || !orphanSummary.HasOrphans() {
+		return bin.ActualSize
+	}
+
+	// Get the set of orphaned inode keys
+	orphanedInodes := orphanSummary.GetOrphanedInodeKeys()
+
+	// Calculate freeable space (exclude orphaned inodes)
+	var freeableSpace uint64
+	countedInodes := make(map[uint64]bool)
+
+	for _, item := range bin.Items {
+		inodeKey := item.InodeKey()
+
+		// Skip if already counted
+		if countedInodes[inodeKey] {
+			continue
+		}
+		countedInodes[inodeKey] = true
+
+		// Only count if NOT orphaned (will actually free space)
+		if !orphanedInodes[inodeKey] {
+			freeableSpace += item.Size
+		}
+	}
+
+	return freeableSpace
+}
+
+// expandSelectionWithSiblings adds unselected hardlink siblings to the item list.
+// This allows moving all hardlinks together so space IS freed on source.
+func expandSelectionWithSiblings(items []*domain.Item, orphanSummary *domain.OrphanSummary, blockSize uint64) []*domain.Item {
+	if orphanSummary == nil || !orphanSummary.HasOrphans() {
+		return items
+	}
+
+	expanded := make([]*domain.Item, len(items))
+	copy(expanded, items)
+
+	fBlockSize := float64(blockSize)
+
+	for _, orphan := range orphanSummary.OrphanedHardlinks {
+		for _, path := range orphan.UnselectedPaths {
+			// Calculate blocks used
+			var blocks uint64
+			if blockSize > 0 {
+				blocks = uint64(math.Ceil(float64(orphan.Size) / fBlockSize))
+			}
+
+			// Extract the disk path (location) and relative path
+			// Path format is like /mnt/disk1/some/path
+			// We need to extract /mnt/disk1 as location and some/path as relative path
+			diskPath, relativePath := extractDiskAndRelativePath(path)
+
+			newItem := &domain.Item{
+				Name:       path,
+				Size:       orphan.Size,
+				Path:       relativePath,
+				Location:   diskPath,
+				BlocksUsed: blocks,
+				Inode:      orphan.Inode,
+				Device:     orphan.Device,
+				LinkCount:  orphan.TotalLinkCount,
+			}
+			expanded = append(expanded, newItem)
+		}
+	}
+
+	logger.Blue("hardlink:expand-selection:original(%d):expanded(%d)", len(items), len(expanded))
+
+	return expanded
+}
+
+// extractDiskAndRelativePath splits a full path into disk path and relative path.
+// For example, /mnt/disk1/media/movie.mkv becomes /mnt/disk1 and media/movie.mkv
+func extractDiskAndRelativePath(fullPath string) (diskPath string, relativePath string) {
+	// Paths are expected to be like /mnt/disk1/... or /mnt/user/...
+	parts := strings.Split(fullPath, string(filepath.Separator))
+
+	if len(parts) >= 4 && parts[1] == "mnt" {
+		// /mnt/disk1/path/to/file -> diskPath=/mnt/disk1, relativePath=path/to/file
+		diskPath = filepath.Join(string(filepath.Separator), parts[1], parts[2])
+		relativePath = filepath.Join(parts[3:]...)
+	} else {
+		// Fallback: use parent directory as location
+		diskPath = filepath.Dir(fullPath)
+		relativePath = filepath.Base(fullPath)
+	}
+
+	return diskPath, relativePath
+}
+
+// analyzeOrphanedHardlinksMultiDisk analyzes orphaned hardlinks for items from multiple source disks.
+// This is used for gather operations where items come from different disks.
+func analyzeOrphanedHardlinksMultiDisk(items []*domain.Item, topic string, hub *pubsub.PubSub) *domain.OrphanSummary {
+	summary := domain.NewOrphanSummary()
+
+	// Group items by source disk
+	itemsByDisk := make(map[string][]*domain.Item)
+	for _, item := range items {
+		itemsByDisk[item.Location] = append(itemsByDisk[item.Location], item)
+	}
+
+	// Analyze orphans for each source disk
+	for diskPath, diskItems := range itemsByDisk {
+		diskSummary := analyzeOrphanedHardlinks(diskItems, diskPath, topic, hub)
+		if diskSummary.HasOrphans() {
+			for _, orphan := range diskSummary.OrphanedHardlinks {
+				summary.AddOrphan(orphan)
+			}
+		}
+	}
+
+	return summary
 }
 
 func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {

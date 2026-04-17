@@ -27,6 +27,10 @@ type Plan struct {
 
 	// transfer section
 	BytesToTransfer uint64 `json:"bytesToTransfer"`
+
+	// hardlink section
+	HardlinkSummary *HardlinkSummary `json:"hardlinkSummary,omitempty"`
+	OrphanSummary   *OrphanSummary   `json:"orphanSummary,omitempty"`
 }
 
 // Print -

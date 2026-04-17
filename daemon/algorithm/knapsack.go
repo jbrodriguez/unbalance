@@ -50,8 +50,16 @@ func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 			remainingSpace := k.disk.Free
 
 			for i, bin := range k.Bins {
-				binSpaceUsed := bin.Size
-				binSpaceLeft := k.disk.Free - binSpaceUsed - item.Size
+				// Use ActualSize for space calculations (deduplicated)
+				binSpaceUsed := bin.ActualSize
+
+				// Check if this item's inode is already counted in this bin
+				itemActualSize := item.Size
+				if bin.IsInodeCounted(item.InodeKey()) {
+					itemActualSize = 0 // Already counted, no additional space needed
+				}
+
+				binSpaceLeft := k.disk.Free - binSpaceUsed - itemActualSize
 
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= k.buffer {
 					remainingSpace = binSpaceLeft
@@ -60,17 +68,18 @@ func (k *Knapsack) fitBytes() (bin *domain.Bin) {
 			}
 
 			if targetBin >= 0 {
-				k.Bins[targetBin].Add(item)
+				k.Bins[targetBin].AddWithHardlinkTracking(item)
 			} else {
-				newbin := &domain.Bin{}
-				newbin.Add(item)
+				newbin := domain.NewBin()
+				newbin.AddWithHardlinkTracking(item)
 				k.Bins = append(k.Bins, newbin)
 			}
 		}
 	}
 
 	if len(k.Bins) > 0 {
-		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].Size > k.Bins[j].Size })
+		// Sort by ActualSize for consistent selection
+		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].ActualSize > k.Bins[j].ActualSize })
 		bin = k.Bins[0]
 	}
 
@@ -83,52 +92,44 @@ func (k *Knapsack) fitBlocks() (bin *domain.Bin) {
 	// how many blocks used by k.buffer bytes
 	buffer := k.buffer / k.blockSize
 
-	// log.Printf("buffer %d\n", buffer)
-
 	for _, item := range k.list {
-		// log.Printf("item(%+v)\n", item)
 		if item.BlocksUsed > (k.disk.BlocksFree - buffer) {
-			// log.Println("if")
 			k.over = append(k.over, item)
 		} else {
-			// log.Println("else")
 			targetBin := -1
 			remainingSpace := k.disk.BlocksFree
 
-			// log.Printf("remspac %d\n", remainingSpace)
-
 			for i, bin := range k.Bins {
-				binSpaceUsed := bin.BlocksUsed
-				binSpaceLeft := k.disk.BlocksFree - binSpaceUsed - item.BlocksUsed
+				// Use ActualBlocksUsed for space calculations (deduplicated)
+				binSpaceUsed := bin.ActualBlocksUsed
 
-				// log.Printf("bsu(%d)-bsl(%d)\n", binSpaceUsed, binSpaceLeft)
-				// log.Printf("bsu(%d)-bsl(%d)-rs(%d)-buf(%d)\n", binSpaceUsed, binSpaceLeft, remainingSpace, buffer)
+				// Check if this item's inode is already counted in this bin
+				itemActualBlocks := item.BlocksUsed
+				if bin.IsInodeCounted(item.InodeKey()) {
+					itemActualBlocks = 0 // Already counted, no additional space needed
+				}
+
+				binSpaceLeft := k.disk.BlocksFree - binSpaceUsed - itemActualBlocks
 
 				if binSpaceLeft < remainingSpace && binSpaceLeft >= buffer {
-					// log.Println("ifcabe")
-
 					remainingSpace = binSpaceLeft
 					targetBin = i
-
-					// log.Printf("rs(%d)-tb(%d)\n", remainingSpace, i)
 				}
 			}
 
 			if targetBin >= 0 {
-				// log.Println("ifbin")
-				k.Bins[targetBin].Add(item)
+				k.Bins[targetBin].AddWithHardlinkTracking(item)
 			} else {
-				// log.Println("elsebin")
-				newbin := &domain.Bin{}
-				newbin.Add(item)
-				// log.Printf("bin(%+v)", newbin)
+				newbin := domain.NewBin()
+				newbin.AddWithHardlinkTracking(item)
 				k.Bins = append(k.Bins, newbin)
 			}
 		}
 	}
 
 	if len(k.Bins) > 0 {
-		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].BlocksUsed > k.Bins[j].BlocksUsed })
+		// Sort by ActualBlocksUsed for consistent selection
+		sort.Slice(k.Bins, func(i, j int) bool { return k.Bins[i].ActualBlocksUsed > k.Bins[j].ActualBlocksUsed })
 		bin = k.Bins[0]
 	}
 

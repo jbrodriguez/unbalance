@@ -111,6 +111,12 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 	plan.FolderIssue = folderIssue
 	plan.FileIssue = fileIssue
 
+	// Analyze hardlinks in the items
+	plan.HardlinkSummary = analyzeHardlinks(items, common.EventScatterPlanProgress, c.ctx.Hub)
+
+	// Analyze orphaned hardlinks (siblings not selected)
+	plan.OrphanSummary = analyzeOrphanedHardlinks(items, srcDisk.Path, common.EventScatterPlanProgress, c.ctx.Hub)
+
 	logger.Blue("scatterPlan:items(%d)", len(items))
 
 	for _, item := range items {
@@ -141,10 +147,14 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 		bin := packer.BestFit()
 		if bin != nil {
 			plan.VDisks[disk.Path].Bin = bin
-			plan.VDisks[disk.Path].PlannedFree -= bin.Size
-			plan.VDisks[srcDisk.Path].PlannedFree += bin.Size
+			// Use ActualSize for destination space (hardlink-deduplicated)
+			plan.VDisks[disk.Path].PlannedFree -= bin.ActualSize
 
-			plan.BytesToTransfer += bin.Size
+			// Calculate actual freeable space on source (accounting for orphaned hardlinks)
+			freeableSpace := calculateFreeableSpace(bin, plan.OrphanSummary)
+			plan.VDisks[srcDisk.Path].PlannedFree += freeableSpace
+
+			plan.BytesToTransfer += bin.ActualSize
 
 			toBeTransferred = append(toBeTransferred, bin.Items...)
 			items = removeItems(items, bin.Items)

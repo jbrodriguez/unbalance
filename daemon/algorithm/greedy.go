@@ -36,17 +36,18 @@ func (g *Greedy) FitAll() *domain.Bin {
 }
 
 func (g *Greedy) fitBytes() *domain.Bin {
-	bin := &domain.Bin{}
+	bin := domain.NewBin()
 
 	for _, entry := range g.entries {
 		// entry doesnt exist in this disk, add it to the bin which also
-		// accumulates the total size
+		// accumulates the total size (with hardlink deduplication)
 		if entry.Location != g.disk.Path {
-			bin.Add(entry)
+			bin.AddWithHardlinkTracking(entry)
 		}
 	}
 
-	if bin.Size+g.buffer > g.disk.Free {
+	// Use ActualSize for space check (deduplicated)
+	if bin.ActualSize+g.buffer > g.disk.Free {
 		return nil
 	}
 
@@ -54,20 +55,21 @@ func (g *Greedy) fitBytes() *domain.Bin {
 }
 
 func (g *Greedy) fitBlocks() *domain.Bin {
-	bin := &domain.Bin{}
+	bin := domain.NewBin()
 
 	for _, entry := range g.entries {
 		// entry doesnt exist in this disk, add it to the bin which also
-		// accumulates the total size
+		// accumulates the total size (with hardlink deduplication)
 		if entry.Location != g.disk.Path {
-			bin.Add(entry)
+			bin.AddWithHardlinkTracking(entry)
 		}
 	}
 
 	// how many blocks are used in g.buffer bytes
 	buffer := g.buffer / g.blockSize
 
-	if bin.BlocksUsed+buffer > g.disk.BlocksFree {
+	// Use ActualBlocksUsed for space check (deduplicated)
+	if bin.ActualBlocksUsed+buffer > g.disk.BlocksFree {
 		return nil
 	}
 

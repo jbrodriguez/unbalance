@@ -71,6 +71,12 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 	plan.FolderIssue = folderIssue
 	plan.FileIssue = fileIssue
 
+	// Analyze hardlinks in the items
+	plan.HardlinkSummary = analyzeHardlinks(items, common.EventGatherPlanProgress, c.ctx.Hub)
+
+	// Analyze orphaned hardlinks (siblings not selected) - multi-disk aware for gather
+	plan.OrphanSummary = analyzeOrphanedHardlinksMultiDisk(items, common.EventGatherPlanProgress, c.ctx.Hub)
+
 	logger.Blue("gatherPlan:items(%d)", len(items))
 
 	for _, item := range items {
@@ -101,9 +107,10 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 		bin := packer.FitAll()
 		if bin != nil {
 			plan.VDisks[disk.Path].Bin = bin
-			plan.VDisks[disk.Path].PlannedFree -= bin.Size
+			// Use ActualSize for accurate space projections (hardlink-deduplicated)
+			plan.VDisks[disk.Path].PlannedFree -= bin.ActualSize
 
-			plan.BytesToTransfer += bin.Size
+			plan.BytesToTransfer += bin.ActualSize
 		}
 	}
 
@@ -162,8 +169,9 @@ func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
 		}
 
 		// user chose a target disk, adjust bytestotransfer to the size of its bin, since
-		// that's the amount of data we need to transfer. Also remove bin from all other disks,
-		operation.BytesToTransfer = vdisk.Bin.Size
+		// that's the amount of data we need to transfer. Also remove bin from all other disks.
+		// Use ActualSize for accurate transfer estimate (hardlink-deduplicated)
+		operation.BytesToTransfer = vdisk.Bin.ActualSize
 
 		for _, item := range vdisk.Bin.Items {
 			var entry string
