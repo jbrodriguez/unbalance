@@ -14,12 +14,12 @@ import {
   useAuthenticated,
   useAuthCSRFToken,
   useAuthEnabled,
+  useAuthFailed,
   useAuthLoaded,
 } from './state/auth';
 import {
   useUnraidActions,
   useUnraidLoaded,
-  useUnraidRoute,
 } from './state/unraid';
 
 export function App() {
@@ -29,9 +29,9 @@ export function App() {
     useUnraidActions();
   const isLoaded = useUnraidLoaded();
   const version = useConfigVersion();
-  const route = useUnraidRoute();
   const authLoaded = useAuthLoaded();
   const authEnabled = useAuthEnabled();
+  const authFailed = useAuthFailed();
   const authenticated = useAuthenticated();
   const csrfToken = useAuthCSRFToken();
   const navigate = useNavigate();
@@ -42,7 +42,6 @@ export function App() {
   }, [load]);
 
   React.useEffect(() => {
-    console.log('setting navigation.,... ');
     setNavigate(navigate);
   }, [setNavigate, navigate]);
 
@@ -56,11 +55,14 @@ export function App() {
   }, [csrfToken]);
 
   React.useEffect(() => {
+    const shouldBlockForAuth =
+      authFailed || (authLoaded && !authenticated && (authEnabled || csrfToken === ''));
+
     if (!authLoaded) {
       return;
     }
 
-    if (authEnabled && !authenticated) {
+    if (shouldBlockForAuth) {
       disconnectSocket();
       return;
     }
@@ -82,7 +84,10 @@ export function App() {
     return null;
   }
 
-  if (authEnabled && !authenticated) {
+  const shouldShowAuthGate =
+    authFailed || (authLoaded && !authenticated && (authEnabled || csrfToken === ''));
+
+  if (shouldShowAuthGate) {
     return (
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <AuthGate />
@@ -93,8 +98,6 @@ export function App() {
   if (!(isLoaded && version !== '')) {
     return null;
   }
-
-  console.log('rendering App() ', route);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

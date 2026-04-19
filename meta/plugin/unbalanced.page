@@ -7,9 +7,9 @@ $sName = "unbalanced";
 $unbalanced_cfg = parse_plugin_cfg("unbalanced");
 $unbalanced_service = isset($unbalanced_cfg['SERVICE']) ? $unbalanced_cfg['SERVICE'] 	: "disable";
 $unbalanced_port = (isset($unbalanced_cfg['PORT']) && is_numeric($unbalanced_cfg['PORT']) && $unbalanced_cfg['PORT'] > 0 && $unbalanced_cfg['PORT'] < 65535 ) ? $unbalanced_cfg['PORT'] : "7090";
-$unbalanced_env = @parse_ini_file("/boot/config/plugins/unbalanced/unbalanced.env");
-$unbalanced_auth_enabled = (isset($unbalanced_env['AUTH_ENABLED']) && ($unbalanced_env['AUTH_ENABLED'] === true || $unbalanced_env['AUTH_ENABLED'] === "true")) ? "true" : "false";
-$unbalanced_auth_username = isset($unbalanced_env['AUTH_USERNAME']) && trim($unbalanced_env['AUTH_USERNAME']) !== "" ? $unbalanced_env['AUTH_USERNAME'] : "admin";
+$unbalanced_auth_env = @parse_ini_file("/boot/config/plugins/unbalanced/unbalanced.auth.env");
+$unbalanced_auth_enabled = (isset($unbalanced_auth_env['AUTH_ENABLED']) && ($unbalanced_auth_env['AUTH_ENABLED'] === true || $unbalanced_auth_env['AUTH_ENABLED'] === "true")) ? "true" : "false";
+$unbalanced_auth_username = isset($unbalanced_auth_env['AUTH_USERNAME']) && trim($unbalanced_auth_env['AUTH_USERNAME']) !== "" ? $unbalanced_auth_env['AUTH_USERNAME'] : "admin";
 $unbalanced_running = shell_exec("pidof unbalanced | wc -w");
 $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSION | tr '\n' ' '");
 ?>
@@ -56,7 +56,7 @@ Port:
 </form>
 
 <form markdown="1" name="unbalanced_auth" method="POST" action="/update.php" target="progressFrame">
-<input type="hidden" name="#file" value="unbalanced/unbalanced.env" />
+<input type="hidden" name="#file" value="unbalanced/unbalanced.auth.env" />
 
 Authentication:
 : <select id="AUTH_ENABLED" name="AUTH_ENABLED" size="1">
@@ -71,6 +71,11 @@ Password Setup:
 : When authentication is enabled, open unbalanced and complete the one-time password setup screen.
 
 : Restart unbalanced after changing these settings so the daemon reloads them.
+
+Recovery:
+: Authentication settings are stored in /boot/config/plugins/unbalanced/unbalanced.auth.env.
+
+: To reset access, clear AUTH_PASSWORD_HASH or set AUTH_ENABLED=false, then restart unbalanced.
 
 : <input type="submit" value="Save Auth Settings"><input type="button" value="Done" onClick="done()">
 </form>

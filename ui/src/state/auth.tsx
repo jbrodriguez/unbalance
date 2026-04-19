@@ -5,6 +5,7 @@ import { Api } from '~/api';
 
 interface AuthStore {
   loaded: boolean;
+  failed: boolean;
   enabled: boolean;
   configured: boolean;
   authenticated: boolean;
@@ -23,6 +24,7 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>()(
   immer((set) => ({
     loaded: false,
+    failed: false,
     enabled: false,
     configured: false,
     authenticated: false,
@@ -35,6 +37,7 @@ export const useAuthStore = create<AuthStore>()(
           const status = await Api.getAuthStatus();
           set((state) => {
             state.loaded = true;
+            state.failed = false;
             state.enabled = status.enabled;
             state.configured = status.configured;
             state.authenticated = status.authenticated;
@@ -45,6 +48,8 @@ export const useAuthStore = create<AuthStore>()(
         } catch (e) {
           set((state) => {
             state.loaded = true;
+            state.failed = true;
+            state.enabled = true;
             state.error = 'Unable to load authentication state';
           });
         }
@@ -109,6 +114,7 @@ export const useAuthStore = create<AuthStore>()(
 export const useAuthActions = () => useAuthStore((state) => state.actions);
 export const useAuthLoaded = () => useAuthStore((state) => state.loaded);
 export const useAuthEnabled = () => useAuthStore((state) => state.enabled);
+export const useAuthFailed = () => useAuthStore((state) => state.failed);
 export const useAuthConfigured = () =>
   useAuthStore((state) => state.configured);
 export const useAuthenticated = () =>

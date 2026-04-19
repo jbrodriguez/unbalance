@@ -239,9 +239,11 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         disconnectSocket: () => {
           const socket = get().socket;
-          if (socket) {
-            socket.close();
+          if (!socket) {
+            return;
           }
+
+          socket.close();
 
           set((state) => {
             state.socket = null;

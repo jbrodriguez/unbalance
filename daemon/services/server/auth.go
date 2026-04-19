@@ -20,7 +20,8 @@ import (
 
 const (
 	sessionCookieName = "unbalanced_session"
-	sessionDuration   = 24 * time.Hour
+	sessionDuration   = 180 * 24 * time.Hour
+	sessionRefreshAge = 24 * time.Hour
 	maxLoginAttempts  = 5
 	loginLockDuration = 5 * time.Minute
 	pruneInterval     = 15 * time.Minute
@@ -60,7 +61,7 @@ func (s *Server) authRequired() bool {
 
 func (s *Server) authStatus(c echo.Context) error {
 	info, ok := s.currentSession(c)
-	username := ""
+	username := s.ctx.AuthUsername
 	csrfToken := ""
 	if ok {
 		username = info.Username
@@ -280,6 +281,10 @@ func (s *Server) validateWebsocketRequest(c echo.Context) error {
 }
 
 func (s *Server) currentSession(c echo.Context) (session, bool) {
+	if !s.authConfigured() {
+		return session{}, false
+	}
+
 	cookie, err := c.Cookie(sessionCookieName)
 	if err != nil {
 		return session{}, false
@@ -296,6 +301,15 @@ func (s *Server) currentSession(c echo.Context) (session, bool) {
 	if time.Now().After(info.Expires) {
 		delete(s.sessions, cookie.Value)
 		return session{}, false
+	}
+
+	lastRefresh := info.Expires.Add(-sessionDuration)
+	if time.Since(lastRefresh) >= sessionRefreshAge {
+		info.Expires = time.Now().Add(sessionDuration)
+		s.sessions[cookie.Value] = info
+		if err := s.saveSessionsLocked(); err != nil {
+			logger.Red("unable to refresh persisted auth session: %s", err)
+		}
 	}
 
 	return info, true
@@ -509,6 +523,10 @@ func (s *Server) loadSessions() error {
 	s.sessionMu.Lock()
 	s.sessions = store.Items
 	s.sessionMu.Unlock()
+
+	if !s.authConfigured() {
+		s.clearAllSessions()
+	}
 
 	return nil
 }

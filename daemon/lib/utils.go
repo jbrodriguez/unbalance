@@ -170,9 +170,6 @@ func LoadEnv(location string, config *domain.Config) error {
 	config.RsyncArgs = file.Section("").Key("RSYNC_ARGS").Strings(",")
 	config.Verbosity, _ = file.Section("").Key("VERBOSITY").Int()
 	config.RefreshRate, _ = file.Section("").Key("REFRESH_RATE").Int()
-	config.AuthEnabled, _ = file.Section("").Key("AUTH_ENABLED").Bool()
-	config.AuthUsername = file.Section("").Key("AUTH_USERNAME").String()
-	config.AuthPassword = file.Section("").Key("AUTH_PASSWORD_HASH").String()
 
 	return nil
 }
@@ -195,6 +192,33 @@ func SaveEnv(location string, config domain.Config) error {
 	file.Section("").Key("RSYNC_ARGS").SetValue(strings.Join(config.RsyncArgs, ","))
 	file.Section("").Key("VERBOSITY").SetValue(strconv.Itoa(config.Verbosity))
 	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
+
+	file.SaveTo(location)
+
+	return nil
+}
+
+func LoadAuthEnv(location string, config *domain.Config) error {
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	config.AuthEnabled, _ = file.Section("").Key("AUTH_ENABLED").Bool()
+	config.AuthUsername = file.Section("").Key("AUTH_USERNAME").String()
+	config.AuthPassword = file.Section("").Key("AUTH_PASSWORD_HASH").String()
+
+	return nil
+}
+
+func SaveAuthEnv(location string, config domain.Config) error {
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	ini.PrettyFormat = false
+
 	file.Section("").Key("AUTH_ENABLED").SetValue(strconv.FormatBool(config.AuthEnabled))
 	file.Section("").Key("AUTH_USERNAME").SetValue(config.AuthUsername)
 	file.Section("").Key("AUTH_PASSWORD_HASH").SetValue(config.AuthPassword)
