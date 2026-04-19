@@ -9,6 +9,7 @@ interface AuthStore {
   configured: boolean;
   authenticated: boolean;
   username: string;
+  csrfToken: string;
   error: string;
   actions: {
     load: () => Promise<void>;
@@ -26,6 +27,7 @@ export const useAuthStore = create<AuthStore>()(
     configured: false,
     authenticated: false,
     username: 'admin',
+    csrfToken: '',
     error: '',
     actions: {
       load: async () => {
@@ -37,6 +39,7 @@ export const useAuthStore = create<AuthStore>()(
             state.configured = status.configured;
             state.authenticated = status.authenticated;
             state.username = status.username || 'admin';
+            state.csrfToken = status.csrfToken || '';
             state.error = '';
           });
         } catch (e) {
@@ -54,6 +57,7 @@ export const useAuthStore = create<AuthStore>()(
             state.configured = status.configured;
             state.authenticated = status.authenticated;
             state.username = status.username || username;
+            state.csrfToken = status.csrfToken || '';
             state.error = '';
           });
           return true;
@@ -73,6 +77,7 @@ export const useAuthStore = create<AuthStore>()(
             state.configured = status.configured;
             state.authenticated = status.authenticated;
             state.username = status.username || username;
+            state.csrfToken = status.csrfToken || '';
             state.error = '';
           });
           return true;
@@ -88,6 +93,7 @@ export const useAuthStore = create<AuthStore>()(
         await Api.logout();
         set((state) => {
           state.authenticated = false;
+          state.csrfToken = '';
           state.error = '';
         });
       },
@@ -108,4 +114,5 @@ export const useAuthConfigured = () =>
 export const useAuthenticated = () =>
   useAuthStore((state) => state.authenticated);
 export const useAuthUsername = () => useAuthStore((state) => state.username);
+export const useAuthCSRFToken = () => useAuthStore((state) => state.csrfToken);
 export const useAuthError = () => useAuthStore((state) => state.error);

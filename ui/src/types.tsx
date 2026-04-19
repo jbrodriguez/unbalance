@@ -31,6 +31,7 @@ export interface AuthStatus {
   configured: boolean;
   authenticated: boolean;
   username: string;
+  csrfToken: string;
 }
 
 export interface Unraid {

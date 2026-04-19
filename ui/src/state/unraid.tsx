@@ -207,7 +207,10 @@ export const useUnraidStore = create<UnraidStore>()(
 
           const protocol =
             document.location.protocol === 'https:' ? 'wss://' : 'ws://';
-          const socket = new WebSocket(`${protocol}${document.location.host}/ws`);
+          const token = encodeURIComponent(Api.csrfToken);
+          const socket = new WebSocket(
+            `${protocol}${document.location.host}/ws?csrf=${token}`,
+          );
 
           socket.onopen = function (event) {
             console.log('Socket opened ', event);

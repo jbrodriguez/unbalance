@@ -35,6 +35,8 @@ type Server struct {
 	broadcastChan chan any
 	sessions      map[string]session
 	sessionMu     sync.Mutex
+	limiter       map[string]loginAttempt
+	limiterMu     sync.Mutex
 }
 
 func Create(ctx *domain.Context, core *core.Core) *Server {
@@ -43,10 +45,15 @@ func Create(ctx *domain.Context, core *core.Core) *Server {
 		core:          core,
 		broadcastChan: ctx.Hub.Sub("socket:broadcast"),
 		sessions:      newSessionStore(),
+		limiter:       newLoginLimiter(),
 	}
 }
 
 func (s *Server) Start() error {
+	if err := s.loadSessions(); err != nil {
+		logger.Yellow("unable to load auth sessions: %s", err)
+	}
+
 	s.engine = echo.New()
 
 	s.engine.HideBanner = true
@@ -73,7 +80,7 @@ func (s *Server) Start() error {
 	api.GET("/auth/status", s.authStatus)
 	api.POST("/auth/login", s.login)
 	api.POST("/auth/setup", s.setup)
-	api.POST("/auth/logout", s.logout, s.requireAuth)
+	api.POST("/auth/logout", s.logout, s.requireAuth, s.requireCSRF)
 
 	protected := s.engine.Group(common.APIEndpoint, s.requireAuth)
 	protected.GET("/config", s.getConfig)
@@ -85,13 +92,13 @@ func (s *Server) Start() error {
 	protected.GET("/tree/:route", s.getTree)
 	protected.GET("/locate/:route", s.locate)
 	protected.GET("/logs", s.getLog)
-	protected.PUT("/config/dryRun", s.toggleDryRun)
-	protected.PUT("/config/notifyPlan", s.setNotifyPlan)
-	protected.PUT("/config/notifyTransfer", s.setNotifyTransfer)
-	protected.PUT("/config/reservedSpace", s.setReservedSpace)
-	protected.PUT("/config/rsyncArgs", s.setRsyncArgs)
-	protected.PUT("/config/verbosity", s.setVerbosity)
-	protected.PUT("/config/refreshRate", s.setRefreshRate)
+	protected.PUT("/config/dryRun", s.toggleDryRun, s.requireCSRF)
+	protected.PUT("/config/notifyPlan", s.setNotifyPlan, s.requireCSRF)
+	protected.PUT("/config/notifyTransfer", s.setNotifyTransfer, s.requireCSRF)
+	protected.PUT("/config/reservedSpace", s.setReservedSpace, s.requireCSRF)
+	protected.PUT("/config/rsyncArgs", s.setRsyncArgs, s.requireCSRF)
+	protected.PUT("/config/verbosity", s.setVerbosity, s.requireCSRF)
+	protected.PUT("/config/refreshRate", s.setRefreshRate, s.requireCSRF)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -103,6 +110,7 @@ func (s *Server) Start() error {
 	}()
 
 	go s.onBroadcast()
+	go s.pruneSessions()
 
 	logger.Blue("started service server (listening http on %s) ...", port)
 

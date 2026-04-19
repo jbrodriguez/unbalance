@@ -4,6 +4,7 @@ import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import ErrorBoundary from '@/components/error-boundary';
 import { AuthGate } from '@/components/auth-gate';
+import { Api } from '~/api';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
@@ -11,6 +12,7 @@ import { useConfigActions, useConfigVersion } from './state/config';
 import {
   useAuthActions,
   useAuthenticated,
+  useAuthCSRFToken,
   useAuthEnabled,
   useAuthLoaded,
 } from './state/auth';
@@ -31,6 +33,7 @@ export function App() {
   const authLoaded = useAuthLoaded();
   const authEnabled = useAuthEnabled();
   const authenticated = useAuthenticated();
+  const csrfToken = useAuthCSRFToken();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,6 +50,10 @@ export function App() {
     // console.log('sync location >>>>>>>>>>>>> ', location);
     syncRoute(location.pathname);
   }, [location, syncRoute]);
+
+  React.useEffect(() => {
+    Api.setCSRFToken(csrfToken);
+  }, [csrfToken]);
 
   React.useEffect(() => {
     if (!authLoaded) {
