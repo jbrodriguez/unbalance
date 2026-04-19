@@ -309,6 +309,12 @@ func (c *Core) SetRefreshRate(value int) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetAuth(username, passwordHash string) error {
+	c.ctx.Config.AuthUsername = username
+	c.ctx.Config.AuthPassword = passwordHash
+	return c.saveSettings()
+}
+
 func (c *Core) saveSettings() error {
 	location := filepath.Join(settings, "unbalanced.env")
 	return lib.SaveEnv(location, c.ctx.Config)

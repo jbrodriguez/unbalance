@@ -21,7 +21,7 @@ import { useGatherStore } from '~/state/gather';
 import { createMachine, StateMachine } from '~/helpers/sm';
 
 interface UnraidStore {
-  socket: WebSocket;
+  socket: WebSocket | null;
   navigate: NavigateFunction | null;
   machine: StateMachine;
   loaded: boolean;
@@ -34,6 +34,8 @@ interface UnraidStore {
   logs: Array<string>;
   error: string;
   actions: {
+    connectSocket: () => void;
+    disconnectSocket: () => void;
     setNavigate: (navigate: NavigateFunction) => void;
     getUnraid: () => Promise<void>;
     refreshUnraid: () => Promise<void>;
@@ -79,29 +81,6 @@ const mapEventToAction: { [x: string]: string } = {
 
 export const useUnraidStore = create<UnraidStore>()(
   immer((set, get) => {
-    const protocol =
-      document.location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-    const socket = new WebSocket(`${protocol}${document.location.host}/ws`);
-
-    socket.onopen = function (event) {
-      console.log('Socket opened ', event);
-    };
-
-    socket.onmessage = function (event) {
-      const packet: Packet = JSON.parse(event.data);
-      const action = mapEventToAction[packet.topic];
-      if (!action) {
-        return;
-      }
-      // @ts-expect-error -- TSCONVERSION
-      get().actions[action](packet.payload);
-    };
-
-    socket.onclose = function (event) {
-      console.log('Socket closed ', event);
-    };
-
     const machine = {
       initialState: '/',
       '/scatter/select': {
@@ -203,7 +182,7 @@ export const useUnraidStore = create<UnraidStore>()(
     };
 
     return {
-      socket,
+      socket: null,
       navigate: null,
       machine: createMachine(machine),
       loaded: false,
@@ -216,6 +195,55 @@ export const useUnraidStore = create<UnraidStore>()(
       logs: [],
       error: '',
       actions: {
+        connectSocket: () => {
+          const current = get().socket;
+          if (
+            current &&
+            (current.readyState === WebSocket.OPEN ||
+              current.readyState === WebSocket.CONNECTING)
+          ) {
+            return;
+          }
+
+          const protocol =
+            document.location.protocol === 'https:' ? 'wss://' : 'ws://';
+          const socket = new WebSocket(`${protocol}${document.location.host}/ws`);
+
+          socket.onopen = function (event) {
+            console.log('Socket opened ', event);
+          };
+
+          socket.onmessage = function (event) {
+            const packet: Packet = JSON.parse(event.data);
+            const action = mapEventToAction[packet.topic];
+            if (!action) {
+              return;
+            }
+            // @ts-expect-error -- TSCONVERSION
+            get().actions[action](packet.payload);
+          };
+
+          socket.onclose = function (event) {
+            console.log('Socket closed ', event);
+            set((state) => {
+              state.socket = null;
+            });
+          };
+
+          set((state) => {
+            state.socket = socket;
+          });
+        },
+        disconnectSocket: () => {
+          const socket = get().socket;
+          if (socket) {
+            socket.close();
+          }
+
+          set((state) => {
+            state.socket = null;
+          });
+        },
         setNavigate: (navigate: NavigateFunction) => {
           set((state) => {
             state.navigate = navigate;
@@ -276,6 +304,10 @@ export const useUnraidStore = create<UnraidStore>()(
             targets: Object.keys(scatter.targets),
             selected: scatter.selected,
           };
+          const socket = get().socket;
+          if (!socket) {
+            return;
+          }
 
           socket.send(
             JSON.stringify({
@@ -308,7 +340,7 @@ export const useUnraidStore = create<UnraidStore>()(
           const socket = get().socket;
           const plan = get().plan;
 
-          if (!plan) {
+          if (!plan || !socket) {
             return;
           }
 
@@ -348,6 +380,9 @@ export const useUnraidStore = create<UnraidStore>()(
           });
 
           const socket = get().socket;
+          if (!socket) {
+            return;
+          }
           socket.send(
             JSON.stringify({
               topic: Topic.CommandScatterValidate,
@@ -389,6 +424,10 @@ export const useUnraidStore = create<UnraidStore>()(
           const config = {
             selected: Object.values(gather.selected),
           };
+          const socket = get().socket;
+          if (!socket) {
+            return;
+          }
 
           socket.send(
             JSON.stringify({
@@ -420,7 +459,7 @@ export const useUnraidStore = create<UnraidStore>()(
           const socket = get().socket;
           const plan = get().plan;
 
-          if (!plan) {
+          if (!plan || !socket) {
             return;
           }
 
@@ -462,6 +501,9 @@ export const useUnraidStore = create<UnraidStore>()(
           });
 
           const socket = get().socket;
+          if (!socket) {
+            return;
+          }
           socket.send(
             JSON.stringify({
               topic: Topic.CommandRemoveSource,
@@ -487,6 +529,9 @@ export const useUnraidStore = create<UnraidStore>()(
           });
 
           const socket = get().socket;
+          if (!socket) {
+            return;
+          }
           socket.send(
             JSON.stringify({
               topic: Topic.CommandReplay,
@@ -517,6 +562,9 @@ export const useUnraidStore = create<UnraidStore>()(
         },
         stop: () => {
           const socket = get().socket;
+          if (!socket) {
+            return;
+          }
           socket.send(
             JSON.stringify({
               topic: Topic.CommandStop,

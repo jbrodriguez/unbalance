@@ -7,6 +7,9 @@ $sName = "unbalanced";
 $unbalanced_cfg = parse_plugin_cfg("unbalanced");
 $unbalanced_service = isset($unbalanced_cfg['SERVICE']) ? $unbalanced_cfg['SERVICE'] 	: "disable";
 $unbalanced_port = (isset($unbalanced_cfg['PORT']) && is_numeric($unbalanced_cfg['PORT']) && $unbalanced_cfg['PORT'] > 0 && $unbalanced_cfg['PORT'] < 65535 ) ? $unbalanced_cfg['PORT'] : "7090";
+$unbalanced_env = @parse_ini_file("/boot/config/plugins/unbalanced/unbalanced.env");
+$unbalanced_auth_enabled = (isset($unbalanced_env['AUTH_ENABLED']) && ($unbalanced_env['AUTH_ENABLED'] === true || $unbalanced_env['AUTH_ENABLED'] === "true")) ? "true" : "false";
+$unbalanced_auth_username = isset($unbalanced_env['AUTH_USERNAME']) && trim($unbalanced_env['AUTH_USERNAME']) !== "" ? $unbalanced_env['AUTH_USERNAME'] : "admin";
 $unbalanced_running = shell_exec("pidof unbalanced | wc -w");
 $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSION | tr '\n' ' '");
 ?>
@@ -50,6 +53,26 @@ Port:
 
 <input id="DEFAULT" class="stopped" type="submit" value="Default" onClick="resetDATA(this.form)">
 : <input id="btnApply" type="submit" value="Apply" onClick="verifyDATA(this.form)"><input type="button" value="Done" onClick="done()">
+</form>
+
+<form markdown="1" name="unbalanced_auth" method="POST" action="/update.php" target="progressFrame">
+<input type="hidden" name="#file" value="unbalanced/unbalanced.env" />
+
+Authentication:
+: <select id="AUTH_ENABLED" name="AUTH_ENABLED" size="1">
+  <?=mk_option($unbalanced_auth_enabled, "false", "Disabled");?>
+  <?=mk_option($unbalanced_auth_enabled, "true", "Enabled");?>
+  </select>
+
+Admin Username:
+: <input id="AUTH_USERNAME" type="text" name="AUTH_USERNAME" maxlength="40" value="<?=$unbalanced_auth_username;?>" placeholder="admin" >
+
+Password Setup:
+: When authentication is enabled, open unbalanced and complete the one-time password setup screen.
+
+: Restart unbalanced after changing these settings so the daemon reloads them.
+
+: <input type="submit" value="Save Auth Settings"><input type="button" value="Done" onClick="done()">
 </form>
 
 <script type="text/javascript">

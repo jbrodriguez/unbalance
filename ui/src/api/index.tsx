@@ -1,4 +1,4 @@
-import { State, Op, Branch } from '~/types';
+import { State, Op, Branch, AuthStatus } from '~/types';
 
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
@@ -19,8 +19,62 @@ export class Api {
         rsyncArgs: [],
         verbosity: 0,
         refreshRate: 0,
+        authEnabled: false,
+        authUsername: 'admin',
       };
     }
+  }
+
+  static async getAuthStatus(): Promise<AuthStatus> {
+    const response = await fetch(`${Api.host}/auth/status`, {
+      credentials: 'same-origin',
+    });
+
+    return response.json();
+  }
+
+  static async login(username: string, password: string): Promise<AuthStatus> {
+    const response = await fetch(`${Api.host}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Invalid username or password');
+    }
+
+    return response.json();
+  }
+
+  static async setup(username: string, password: string): Promise<AuthStatus> {
+    const response = await fetch(`${Api.host}/auth/setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      throw new Error(payload?.message || 'Unable to set admin password');
+    }
+
+    return response.json();
+  }
+
+  static async logout(): Promise<AuthStatus> {
+    const response = await fetch(`${Api.host}/auth/logout`, {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to log out');
+    }
+
+    return response.json();
   }
 
   static async getUnraid(): Promise<State> {
