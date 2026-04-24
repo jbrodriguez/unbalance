@@ -55,8 +55,7 @@ export function App() {
   }, [csrfToken]);
 
   React.useEffect(() => {
-    const shouldBlockForAuth =
-      authFailed || (authLoaded && !authenticated && (authEnabled || csrfToken === ''));
+    const shouldBlockForAuth = authFailed || (authLoaded && authEnabled && !authenticated);
 
     if (!authLoaded) {
       return;
@@ -71,6 +70,7 @@ export function App() {
     getConfig();
     getUnraid();
   }, [
+    authFailed,
     authLoaded,
     authEnabled,
     authenticated,
@@ -85,7 +85,7 @@ export function App() {
   }
 
   const shouldShowAuthGate =
-    authFailed || (authLoaded && !authenticated && (authEnabled || csrfToken === ''));
+    authFailed || (authLoaded && authEnabled && !authenticated);
 
   if (shouldShowAuthGate) {
     return (
