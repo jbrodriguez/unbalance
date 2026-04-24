@@ -56,6 +56,17 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 	padding-top: 6px;
 	line-height: 1.45;
 }
+.unbalanced-settings-panel .info-block {
+	grid-column: 2 / -1;
+	margin-top: 14px;
+}
+.unbalanced-settings-panel .info-title {
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+.unbalanced-settings-panel .info-content {
+	line-height: 1.5;
+}
 .unbalanced-settings-actions {
 	display: flex;
 	gap: 12px;
@@ -96,17 +107,21 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 		<input id="AUTH_USERNAME" type="text" name="AUTH_USERNAME" form="unbalanced_auth" maxlength="40" value="<?=$unbalanced_auth_username;?>" placeholder="admin" >
 	</div>
 
-	<div class="label">Password Setup:</div>
-	<div class="help-text">When authentication is enabled, open unbalanced and complete the one-time password setup screen.</div>
+	<div class="info-block">
+		<div class="info-title">Password Setup</div>
+		<div class="info-content">When authentication is enabled, open unbalanced and complete the one-time password setup screen.</div>
+	</div>
 
-	<div class="label">Restart Required:</div>
-	<div class="help-text">Restart unbalanced after changing these settings so the daemon reloads them.</div>
+	<div class="info-block">
+		<div class="info-title">Restart Required</div>
+		<div class="info-content">Restart unbalanced after changing these settings so the daemon reloads them.</div>
+	</div>
 
-	<div class="label">Recovery:</div>
-	<div class="help-text">Authentication settings are stored in /boot/config/plugins/unbalanced/unbalanced.auth.env.</div>
-
-	<div class="label"></div>
-	<div class="help-text">To reset access, clear AUTH_PASSWORD_HASH or set AUTH_ENABLED=false, then restart unbalanced.</div>
+	<div class="info-block">
+		<div class="info-title">Recovery</div>
+		<div class="info-content">Authentication settings are stored in /boot/config/plugins/unbalanced/unbalanced.auth.env.</div>
+		<div class="info-content" style="margin-top:6px;">To reset access, clear AUTH_PASSWORD_HASH or set AUTH_ENABLED=false, then restart unbalanced.</div>
+	</div>
 </div>
 
 <div class="unbalanced-settings-actions">
