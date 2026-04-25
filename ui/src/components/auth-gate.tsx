@@ -19,16 +19,21 @@ export function AuthGate() {
   const storedUsername = useAuthUsername();
   const { login, setup, clearError } = useAuthActions();
 
-  const [username, setUsername] = React.useState(storedUsername || 'admin');
+  const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
 
-  React.useEffect(() => {
-    setUsername(storedUsername || 'admin');
-  }, [storedUsername]);
-
   const isSetup = enabled && !configured;
+
+  // Only pre-fill the username during setup (where it's read-only anyway).
+  // On the login screen we deliberately leave it blank so we don't reveal
+  // which username is configured to whoever opens the page.
+  React.useEffect(() => {
+    if (isSetup) {
+      setUsername(storedUsername || 'admin');
+    }
+  }, [isSetup, storedUsername]);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,7 +91,8 @@ export function AuthGate() {
               autoComplete="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              disabled={submitting}
+              disabled={submitting || isSetup}
+              readOnly={isSetup}
               className="h-11 border-transparent bg-[#2b3850] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_0_0_1px_rgba(18,24,38,0.35)] text-lg text-slate-100 placeholder:text-slate-500 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-blue-400"
             />
           </div>
