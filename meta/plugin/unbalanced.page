@@ -109,6 +109,7 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 	<div class="info-block">
 		<div class="info-title">Password Setup</div>
 		<div class="info-content">When authentication is enabled, open unbalanced and complete the one-time password setup screen.</div>
+		<div class="info-content" style="margin-top:6px;">Passwords must be 8-256 characters. Special characters are allowed, and there are no uppercase, number, or symbol requirements.</div>
 	</div>
 
 	<div class="info-block">

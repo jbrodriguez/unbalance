@@ -149,6 +149,19 @@ After installing the plugin, you can access the web UI, via the following method
 - Method 3<br/> Navigate with your browser to http(s)://Tower:7090/ (replace Tower with the address/name of your Unraid
   server)<br/>
 
+## Authentication
+
+When authentication is enabled, the first administrator to open the web UI completes a one-time password setup.
+
+Password requirements:
+
+- Minimum length: 8 characters
+- Maximum length: 256 characters
+- Special characters: allowed
+- Complexity rules: none (no uppercase, number, or symbol requirement)
+
+New passwords are stored with Argon2id. Existing bcrypt hashes remain supported and are automatically upgraded to Argon2id after the next successful login.
+
 ## Other Features
 
 ### Transfer

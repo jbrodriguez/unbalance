@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/bcrypt"
 
 	"unbalance/daemon/common"
 	"unbalance/daemon/logger"
@@ -111,9 +110,28 @@ func (s *Server) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(s.ctx.AuthPassword), []byte(payload.Password)); err != nil {
+	ok, needsRehash, err := verifyPassword(s.ctx.AuthPassword, payload.Password)
+	if err != nil {
+		logger.Red("unable to verify auth password: %s", err)
 		s.recordLoginFailure(clientKey)
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+	}
+	if !ok {
+		s.recordLoginFailure(clientKey)
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+	}
+
+	if needsRehash {
+		upgradedHash, err := hashPassword(payload.Password)
+		if err != nil {
+			logger.Red("unable to re-hash auth password: %s", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "unable to upgrade password")
+		}
+		if err := s.core.SetAuth(upgradedHash); err != nil {
+			logger.Red("unable to persist upgraded auth password: %s", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "unable to upgrade password")
+		}
+		s.ctx.AuthPassword = upgradedHash
 	}
 
 	s.clearLoginFailures(clientKey)
@@ -161,21 +179,22 @@ func (s *Server) setup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusConflict, "authentication is already configured")
 	}
 
-	if len(payload.Password) < 8 {
-		return echo.NewHTTPError(http.StatusBadRequest, "password must be at least 8 characters")
+	if err := validatePassword(payload.Password); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	hash, err := hashPassword(payload.Password)
 	if err != nil {
 		logger.Red("unable to hash auth password: %s", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to save password")
 	}
 
-	if err := s.core.SetAuth(string(hash)); err != nil {
+	if err := s.core.SetAuth(hash); err != nil {
 		logger.Red("unable to persist auth credentials: %s", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to persist password")
 	}
 
+	s.ctx.AuthPassword = hash
 	s.clearAllSessions()
 
 	sess, err := s.createSession(c, s.ctx.AuthUsername)

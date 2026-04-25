@@ -75,6 +75,8 @@ export function AuthGate() {
           <p className="text-sm leading-6 text-slate-300">
             Authentication is enabled, but no admin password has been created
             yet. The first administrator to open the app must complete setup.
+            Passwords must be 8-256 characters. Special characters are allowed,
+            and there are no uppercase, number, or symbol requirements.
           </p>
         )}
 
