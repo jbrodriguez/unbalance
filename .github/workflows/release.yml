@@ -30,14 +30,14 @@ jobs:
       - name: set up node
         uses: actions/setup-node@v4
         with:
-          node-version: 21.x
+          node-version: 22.x
           cache: "npm"
           cache-dependency-path: "ui/package-lock.json"
 
       - name: install node dependencies
         run: |
           cd ui
-          npm install
+          npm ci
           cd ..
 
       - name: build app
