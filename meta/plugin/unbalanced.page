@@ -7,9 +7,8 @@ $sName = "unbalanced";
 $unbalanced_cfg = parse_plugin_cfg("unbalanced");
 $unbalanced_service = isset($unbalanced_cfg['SERVICE']) ? $unbalanced_cfg['SERVICE'] 	: "disable";
 $unbalanced_port = (isset($unbalanced_cfg['PORT']) && is_numeric($unbalanced_cfg['PORT']) && $unbalanced_cfg['PORT'] > 0 && $unbalanced_cfg['PORT'] < 65535 ) ? $unbalanced_cfg['PORT'] : "7090";
-$unbalanced_auth_env = @parse_ini_file("/boot/config/plugins/unbalanced/unbalanced.auth.env");
-$unbalanced_auth_enabled = (isset($unbalanced_auth_env['AUTH_ENABLED']) && ($unbalanced_auth_env['AUTH_ENABLED'] === true || $unbalanced_auth_env['AUTH_ENABLED'] === "true")) ? "true" : "false";
-$unbalanced_auth_username = isset($unbalanced_auth_env['AUTH_USERNAME']) && trim($unbalanced_auth_env['AUTH_USERNAME']) !== "" ? $unbalanced_auth_env['AUTH_USERNAME'] : "admin";
+$unbalanced_auth_enabled = (isset($unbalanced_cfg['AUTH_ENABLED']) && strtolower($unbalanced_cfg['AUTH_ENABLED']) === "true") ? "true" : "false";
+$unbalanced_auth_username = isset($unbalanced_cfg['AUTH_USERNAME']) && trim($unbalanced_cfg['AUTH_USERNAME']) !== "" ? $unbalanced_cfg['AUTH_USERNAME'] : "admin";
 $unbalanced_running = shell_exec("pidof unbalanced | wc -w");
 $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSION | tr '\n' ' '");
 ?>
@@ -96,7 +95,7 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 
 	<div class="label">Authentication:</div>
 	<div class="field">
-		<select id="AUTH_ENABLED" name="AUTH_ENABLED" form="unbalanced_auth" size="1">
+		<select id="AUTH_ENABLED" name="AUTH_ENABLED" size="1">
 		  <?=mk_option($unbalanced_auth_enabled, "false", "Disabled");?>
 		  <?=mk_option($unbalanced_auth_enabled, "true", "Enabled");?>
 		</select>
@@ -104,7 +103,7 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 
 	<div class="label">Admin Username:</div>
 	<div class="field">
-		<input id="AUTH_USERNAME" type="text" name="AUTH_USERNAME" form="unbalanced_auth" maxlength="40" value="<?=$unbalanced_auth_username;?>" placeholder="admin" >
+		<input id="AUTH_USERNAME" type="text" name="AUTH_USERNAME" maxlength="40" value="<?=$unbalanced_auth_username;?>" placeholder="admin" >
 	</div>
 
 	<div class="info-block">
@@ -119,45 +118,37 @@ $unbalanced_version = shell_exec("cat /usr/local/emhttp/plugins/unbalanced/VERSI
 
 	<div class="info-block">
 		<div class="info-title">Recovery</div>
-		<div class="info-content">Authentication settings are stored in /boot/config/plugins/unbalanced/unbalanced.auth.env.</div>
-		<div class="info-content" style="margin-top:6px;">To reset access, clear AUTH_PASSWORD_HASH or set AUTH_ENABLED=false, then restart unbalanced.</div>
+		<div class="info-content">The admin password hash is stored in /boot/config/plugins/unbalanced/unbalanced.env (AUTH_PASSWORD_HASH).</div>
+		<div class="info-content" style="margin-top:6px;">To reset access, clear AUTH_PASSWORD_HASH there or set Authentication to Disabled above, then restart unbalanced.</div>
 	</div>
 </div>
 
 <div class="unbalanced-settings-actions">
-	<input id="DEFAULT" class="stopped" type="button" value="Default" onClick="resetDATA(this.form)">
-	<input id="btnApplyAll" type="button" value="Apply Settings" onClick="applyAllSettings()">
+	<input id="btnApply" type="button" value="Apply" onClick="applyDATA(document.unbalanced_settings)">
 	<input type="button" value="Done" onClick="done()">
 </div>
-</form>
-
-<form id="unbalanced_auth" name="unbalanced_auth" method="POST" action="/update.php" target="progressFrame">
-<input type="hidden" name="#file" value="unbalanced/unbalanced.auth.env" />
 </form>
 
 <script type="text/javascript">
 $(function(){
 	showStatus('<?=$sName;?>');
 	checkRUNNING(document.unbalanced_settings);
-	// checkUSER(document.unbalanced_settings,'<?=$unbalanced_runas;?>');
 });
 
-function resetDATA(form) {
-	form.PORT.value = "7090";
-	// form.RUNAS.value = "nobody";
-	form.USERS.value = "nobody";
-}
-
 function checkRUNNING(form) {
-	if (<?=$unbalanced_running;?> == 1)
-	{
+	// PORT (.stopped) is only editable when the daemon is stopped. SERVICE and the
+	// auth fields can always be edited; Apply is always enabled because every
+	// permutation has something the form can legitimately submit:
+	//   running   + enable  → restart with new env (start does killall+launch)
+	//   running   + disable → run stop script
+	//   stopped   + enable  → run start script
+	//   stopped   + disable → save cfg, stop is a no-op
+	if (<?=$unbalanced_running;?> == 1) {
 		$(".stopped").prop("disabled", true);
-		form.btnApplyAll.disabled = true;
-   }
-   else {
+	} else {
 		$(".stopped").prop("disabled", (form.SERVICE.value == "enable"));
-		form.btnApplyAll.disabled = false;
-   }
+	}
+	form.btnApply.disabled = false;
 	if (form.SERVICE.value == "enable")
 		form.command.value = "/usr/local/emhttp/plugins/unbalanced/scripts/start";
 	else
@@ -187,26 +178,15 @@ function verifyDATA(form) {
 			form.PORT.value = "7090";
 		}
 	}
-	// if (form.RUNAS.value == null || form.RUNAS.value == "" || form.RUNAS.value == "root" ){
-	// 	form.RUNAS.value = "nobody";
-	// 	$unbalanced_runas = "nobody";
-	// }
 	form.SERVICE.value = form.SERVICE.value.replace(/ /g,"_");
 	form.PORT.value = form.PORT.value.replace(/ /g,"_");
-	var authForm = document.unbalanced_auth;
-	authForm.AUTH_ENABLED.value = authForm.AUTH_ENABLED.value.replace(/ /g,"_");
-	authForm.AUTH_USERNAME.value = authForm.AUTH_USERNAME.value.replace(/ /g,"_");
-	// form.RUNAS.value = form.RUNAS.value.replace(/ /g,"_");
+	form.AUTH_ENABLED.value = form.AUTH_ENABLED.value.replace(/ /g,"_");
+	form.AUTH_USERNAME.value = form.AUTH_USERNAME.value.replace(/ /g,"_");
 }
 
-function applyAllSettings() {
-	var settingsForm = document.unbalanced_settings;
-	var authForm = document.unbalanced_auth;
-	verifyDATA(settingsForm);
-	authForm.submit();
-	setTimeout(function() {
-		settingsForm.submit();
-	}, 150);
+function applyDATA(form) {
+	verifyDATA(form);
+	form.submit();
 }
 
 </script>

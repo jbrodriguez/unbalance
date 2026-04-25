@@ -9,7 +9,9 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"unbalance/daemon/cmd"
+	"unbalance/daemon/common"
 	"unbalance/daemon/domain"
+	"unbalance/daemon/lib"
 )
 
 var Version string
@@ -52,6 +54,16 @@ func main() {
 		MaxAge:     28, //days
 		// Compress:   true, // disabled by default
 	})
+
+	// Read AUTH_PASSWORD_HASH directly from disk to sidestep bash's mangling
+	// of $-characters in the bcrypt hash when the start script sources the
+	// env file. Kong's env-driven value is intentionally overridden.
+	envPath := filepath.Join(common.PluginLocation, "unbalanced.env")
+	if hash, err := lib.LoadAuthHash(envPath); err != nil {
+		log.Printf("warning: unable to read auth hash from %s: %s", envPath, err)
+	} else {
+		cli.AuthPassword = hash
+	}
 
 	log.Printf("cli: %+v", cli)
 

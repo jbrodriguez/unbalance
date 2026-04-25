@@ -40,7 +40,8 @@ type loginAttempt struct {
 }
 
 type sessionStore struct {
-	Items map[string]session `json:"items"`
+	Items       map[string]session `json:"items"`
+	LastEnabled bool               `json:"last_enabled"`
 }
 
 type authStatus struct {
@@ -117,19 +118,18 @@ func (s *Server) login(c echo.Context) error {
 
 	s.clearLoginFailures(clientKey)
 
-	if err := s.createSession(c, payload.Username); err != nil {
+	sess, err := s.createSession(c, payload.Username)
+	if err != nil {
 		logger.Red("unable to create auth session: %s", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to create session")
 	}
-
-	info, _ := s.currentSession(c)
 
 	return c.JSON(http.StatusOK, authStatus{
 		Enabled:       true,
 		Configured:    true,
 		Authenticated: true,
 		Username:      payload.Username,
-		CSRFToken:     info.CSRF,
+		CSRFToken:     sess.CSRF,
 	})
 }
 
@@ -146,7 +146,6 @@ func (s *Server) logout(c echo.Context) error {
 
 func (s *Server) setup(c echo.Context) error {
 	var payload struct {
-		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
@@ -162,14 +161,6 @@ func (s *Server) setup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusConflict, "authentication is already configured")
 	}
 
-	if payload.Username == "" {
-		payload.Username = s.ctx.AuthUsername
-	}
-
-	if payload.Username == "" {
-		payload.Username = "admin"
-	}
-
 	if len(payload.Password) < 8 {
 		return echo.NewHTTPError(http.StatusBadRequest, "password must be at least 8 characters")
 	}
@@ -180,26 +171,25 @@ func (s *Server) setup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to save password")
 	}
 
-	if err := s.core.SetAuth(payload.Username, string(hash)); err != nil {
+	if err := s.core.SetAuth(string(hash)); err != nil {
 		logger.Red("unable to persist auth credentials: %s", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to persist password")
 	}
 
 	s.clearAllSessions()
 
-	if err := s.createSession(c, payload.Username); err != nil {
+	sess, err := s.createSession(c, s.ctx.AuthUsername)
+	if err != nil {
 		logger.Red("unable to create setup session: %s", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to create session")
 	}
-
-	info, _ := s.currentSession(c)
 
 	return c.JSON(http.StatusOK, authStatus{
 		Enabled:       true,
 		Configured:    true,
 		Authenticated: true,
-		Username:      payload.Username,
-		CSRFToken:     info.CSRF,
+		Username:      s.ctx.AuthUsername,
+		CSRFToken:     sess.CSRF,
 	})
 }
 
@@ -315,29 +305,30 @@ func (s *Server) currentSession(c echo.Context) (session, bool) {
 	return info, true
 }
 
-func (s *Server) createSession(c echo.Context, username string) error {
+func (s *Server) createSession(c echo.Context, username string) (session, error) {
 	id, err := randomToken(32)
 	if err != nil {
-		return err
+		return session{}, err
 	}
 
 	csrfToken, err := randomToken(32)
 	if err != nil {
-		return err
+		return session{}, err
 	}
 
 	expiry := time.Now().Add(sessionDuration)
-
-	s.sessionMu.Lock()
-	s.sessions[id] = session{
+	sess := session{
 		Username: username,
 		CSRF:     csrfToken,
 		Expires:  expiry,
 	}
+
+	s.sessionMu.Lock()
+	s.sessions[id] = sess
 	err = s.saveSessionsLocked()
 	s.sessionMu.Unlock()
 	if err != nil {
-		return err
+		return session{}, err
 	}
 
 	c.SetCookie(&http.Cookie{
@@ -350,7 +341,7 @@ func (s *Server) createSession(c echo.Context, username string) error {
 		Secure:   c.IsTLS(),
 	})
 
-	return nil
+	return sess, nil
 }
 
 func (s *Server) clearSession(c echo.Context) {
@@ -524,7 +515,12 @@ func (s *Server) loadSessions() error {
 	s.sessions = store.Items
 	s.sessionMu.Unlock()
 
-	if !s.authConfigured() {
+	// Drop persisted sessions if either: no password is configured (sessions
+	// are meaningless without a credential to bind to), or AUTH_ENABLED has
+	// toggled since the file was written. Sessions minted under a different
+	// auth regime must not auto-authenticate the user when the gate comes
+	// back on.
+	if !s.authConfigured() || store.LastEnabled != s.authRequired() {
 		s.clearAllSessions()
 	}
 
@@ -541,7 +537,8 @@ func (s *Server) saveSessionsLocked() error {
 	}
 
 	store := sessionStore{
-		Items: s.sessions,
+		Items:       s.sessions,
+		LastEnabled: s.authRequired(),
 	}
 
 	encoder := json.NewEncoder(file)

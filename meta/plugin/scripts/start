@@ -1,13 +1,13 @@
 #!/bin/bash
 # read our configuration
-source /boot/config/plugins/unbalanced/unbalanced.cfg
-
+cfg="/boot/config/plugins/unbalanced/unbalanced.cfg"
 vars="/boot/config/plugins/unbalanced/unbalanced.env"
-auth_vars="/boot/config/plugins/unbalanced/unbalanced.auth.env"
 prog="/usr/local/emhttp/plugins/unbalanced/unbalanced"
+
+source "$cfg"
 
 # stop it if it's running
 killall unbalanced > /dev/null 2>&1
 
-# run the app
-nohup sudo -H bash -c "set -a; source \"$vars\"; [ -f \"$auth_vars\" ] && source \"$auth_vars\"; set +a; \"$prog\" --port \"$PORT\"" > /dev/null 2>&1 &
+# run the app — cfg holds AUTH_ENABLED/AUTH_USERNAME, env holds AUTH_PASSWORD_HASH and the rest
+nohup sudo -H bash -c "set -a; source \"$cfg\"; source \"$vars\"; set +a; \"$prog\" --port \"$PORT\"" > /dev/null 2>&1 &
