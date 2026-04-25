@@ -33,7 +33,7 @@ var cli struct {
 	RefreshRate    int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
 	AuthEnabled    bool     `env:"AUTH_ENABLED" default:"false" help:"require login before using the web ui"`
 	AuthUsername   string   `env:"AUTH_USERNAME" default:"admin" help:"admin username used to log into the web ui"`
-	AuthPassword   string   `env:"AUTH_PASSWORD_HASH" default:"" help:"bcrypt hash for the admin password"`
+	AuthPassword   string   `env:"AUTH_PASSWORD_HASH" default:"" help:"stored admin password hash (Argon2id for new passwords; bcrypt remains supported for migration)"`
 
 	Boot cmd.Boot `cmd:"" default:"1" help:"start processing"`
 }
@@ -56,7 +56,7 @@ func main() {
 	})
 
 	// Read AUTH_PASSWORD_HASH directly from disk to sidestep bash's mangling
-	// of $-characters in the bcrypt hash when the start script sources the
+	// of $-characters in password hashes when the start script sources the
 	// env file. Kong's env-driven value is intentionally overridden.
 	envPath := filepath.Join(common.PluginLocation, "unbalanced.env")
 	if hash, err := lib.LoadAuthHash(envPath); err != nil {

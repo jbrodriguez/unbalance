@@ -155,9 +155,10 @@ func Bind(content any, data any) error {
 }
 
 // LoadAuthHash reads AUTH_PASSWORD_HASH directly from the env file via the ini
-// library. We bypass the start script's bash sourcing because bcrypt hashes
-// contain $-prefixed segments (e.g. $2a$10$...) that bash treats as parameter
-// expansion, mangling the value before the daemon ever sees it.
+// library. We bypass the start script's bash sourcing because password hashes
+// contain $-prefixed segments (for example bcrypt and Argon2id PHC strings)
+// that bash treats as parameter expansion, mangling the value before the daemon
+// ever sees it.
 func LoadAuthHash(location string) (string, error) {
 	file, err := ini.Load(location)
 	if err != nil {
