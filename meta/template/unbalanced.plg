@@ -60,6 +60,17 @@ REFRESH_RATE=1000
 </INLINE>
 </FILE>
 
+<!-- Install default plugin auth env  -->
+<FILE Name="/boot/config/plugins/unbalanced/unbalanced.auth.env">
+<INLINE>
+<![CDATA[
+AUTH_ENABLED=false
+AUTH_USERNAME=admin
+AUTH_PASSWORD_HASH=
+]]>
+</INLINE>
+</FILE>
+
 <!--
 Prepare for installation.
 -->
@@ -116,9 +127,15 @@ echo ""
 #!/bin/sh
 # This will check each entry in the config so nothing is missing, and if missing, sets to default
 CFGFILE=/boot/config/plugins/unbalanced/unbalanced.cfg
+AUTHFILE=/boot/config/plugins/unbalanced/unbalanced.auth.env
 [ ! `cat "$CFGFILE" | grep SERVICE` ] && echo "SERVICE=\"disable\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep ^PORT` ] && echo "PORT=\"7090\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
+[ ! -f "$AUTHFILE" ] && cat >"$AUTHFILE" <<'EOF'
+AUTH_ENABLED=false
+AUTH_USERNAME=admin
+AUTH_PASSWORD_HASH=
+EOF
 rm /tmp/unbalanced-chkconf
 ]]>
 </INLINE>

@@ -9,6 +9,8 @@ const (
 	HistoryCapacity = 25
 	HistoryFilename = "unbalanced.hist"
 	HistoryVersion  = 2
+	SessionFilename = "unbalanced.sessions"
+	AuthFilename    = "unbalanced.auth.env"
 	RsyncArgs       = "-avPR"
 )
 

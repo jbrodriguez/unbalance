@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -32,6 +33,10 @@ type Server struct {
 	engine        *echo.Echo
 	ws            *websocket.Conn
 	broadcastChan chan any
+	sessions      map[string]session
+	sessionMu     sync.Mutex
+	limiter       map[string]loginAttempt
+	limiterMu     sync.Mutex
 }
 
 func Create(ctx *domain.Context, core *core.Core) *Server {
@@ -39,10 +44,16 @@ func Create(ctx *domain.Context, core *core.Core) *Server {
 		ctx:           ctx,
 		core:          core,
 		broadcastChan: ctx.Hub.Sub("socket:broadcast"),
+		sessions:      newSessionStore(),
+		limiter:       newLoginLimiter(),
 	}
 }
 
 func (s *Server) Start() error {
+	if err := s.loadSessions(); err != nil {
+		logger.Yellow("unable to load auth sessions: %s", err)
+	}
+
 	s.engine = echo.New()
 
 	s.engine.HideBanner = true
@@ -66,22 +77,28 @@ func (s *Server) Start() error {
 	s.engine.GET("/ws", s.wsHandler)
 
 	api := s.engine.Group(common.APIEndpoint)
-	api.GET("/config", s.getConfig)
-	api.GET("/state", s.getState)
-	api.GET("/storage", s.getStorage)
-	api.GET("/operation", s.getOperation)
-	api.GET("/history", s.getHistory)
+	api.GET("/auth/status", s.authStatus)
+	api.POST("/auth/login", s.login)
+	api.POST("/auth/setup", s.setup)
+	api.POST("/auth/logout", s.logout, s.requireAuth, s.requireCSRF)
 
-	api.GET("/tree/:route", s.getTree)
-	api.GET("/locate/:route", s.locate)
-	api.GET("/logs", s.getLog)
-	api.PUT("/config/dryRun", s.toggleDryRun)
-	api.PUT("/config/notifyPlan", s.setNotifyPlan)
-	api.PUT("/config/notifyTransfer", s.setNotifyTransfer)
-	api.PUT("/config/reservedSpace", s.setReservedSpace)
-	api.PUT("/config/rsyncArgs", s.setRsyncArgs)
-	api.PUT("/config/verbosity", s.setVerbosity)
-	api.PUT("/config/refreshRate", s.setRefreshRate)
+	protected := s.engine.Group(common.APIEndpoint, s.requireAuth)
+	protected.GET("/config", s.getConfig)
+	protected.GET("/state", s.getState)
+	protected.GET("/storage", s.getStorage)
+	protected.GET("/operation", s.getOperation)
+	protected.GET("/history", s.getHistory)
+
+	protected.GET("/tree/:route", s.getTree)
+	protected.GET("/locate/:route", s.locate)
+	protected.GET("/logs", s.getLog)
+	protected.PUT("/config/dryRun", s.toggleDryRun, s.requireCSRF)
+	protected.PUT("/config/notifyPlan", s.setNotifyPlan, s.requireCSRF)
+	protected.PUT("/config/notifyTransfer", s.setNotifyTransfer, s.requireCSRF)
+	protected.PUT("/config/reservedSpace", s.setReservedSpace, s.requireCSRF)
+	protected.PUT("/config/rsyncArgs", s.setRsyncArgs, s.requireCSRF)
+	protected.PUT("/config/verbosity", s.setVerbosity, s.requireCSRF)
+	protected.PUT("/config/refreshRate", s.setRefreshRate, s.requireCSRF)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -93,6 +110,7 @@ func (s *Server) Start() error {
 	}()
 
 	go s.onBroadcast()
+	go s.pruneSessions()
 
 	logger.Blue("started service server (listening http on %s) ...", port)
 
@@ -108,6 +126,10 @@ func assetsHandler(content embed.FS) http.Handler {
 }
 
 func (s *Server) wsHandler(c echo.Context) error {
+	if err := s.validateWebsocketRequest(c); err != nil {
+		return err
+	}
+
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		logger.Red("unable to upgrade websocket: %s", err)

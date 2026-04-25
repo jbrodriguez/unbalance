@@ -197,3 +197,33 @@ func SaveEnv(location string, config domain.Config) error {
 
 	return nil
 }
+
+func LoadAuthEnv(location string, config *domain.Config) error {
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	config.AuthEnabled, _ = file.Section("").Key("AUTH_ENABLED").Bool()
+	config.AuthUsername = file.Section("").Key("AUTH_USERNAME").String()
+	config.AuthPassword = file.Section("").Key("AUTH_PASSWORD_HASH").String()
+
+	return nil
+}
+
+func SaveAuthEnv(location string, config domain.Config) error {
+	file, err := ini.Load(location)
+	if err != nil {
+		return err
+	}
+
+	ini.PrettyFormat = false
+
+	file.Section("").Key("AUTH_ENABLED").SetValue(strconv.FormatBool(config.AuthEnabled))
+	file.Section("").Key("AUTH_USERNAME").SetValue(config.AuthUsername)
+	file.Section("").Key("AUTH_PASSWORD_HASH").SetValue(config.AuthPassword)
+
+	file.SaveTo(location)
+
+	return nil
+}

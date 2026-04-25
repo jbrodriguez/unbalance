@@ -22,6 +22,16 @@ export interface Config {
   rsyncArgs: string[];
   verbosity: number;
   refreshRate: number;
+  authEnabled: boolean;
+  authUsername: string;
+}
+
+export interface AuthStatus {
+  enabled: boolean;
+  configured: boolean;
+  authenticated: boolean;
+  username: string;
+  csrfToken: string;
 }
 
 export interface Unraid {

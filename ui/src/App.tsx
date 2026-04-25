@@ -3,27 +3,45 @@ import React from 'react';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import ErrorBoundary from '@/components/error-boundary';
+import { AuthGate } from '@/components/auth-gate';
+import { Api } from '~/api';
 
 import { Header } from './shared/header/header';
 import { Footer } from './shared/footer/footer';
 import { useConfigActions, useConfigVersion } from './state/config';
 import {
+  useAuthActions,
+  useAuthenticated,
+  useAuthCSRFToken,
+  useAuthEnabled,
+  useAuthFailed,
+  useAuthLoaded,
+} from './state/auth';
+import {
   useUnraidActions,
   useUnraidLoaded,
-  useUnraidRoute,
 } from './state/unraid';
 
 export function App() {
   const { getConfig } = useConfigActions();
-  const { setNavigate, getUnraid, syncRoute } = useUnraidActions();
+  const { load } = useAuthActions();
+  const { setNavigate, getUnraid, syncRoute, connectSocket, disconnectSocket } =
+    useUnraidActions();
   const isLoaded = useUnraidLoaded();
   const version = useConfigVersion();
-  const route = useUnraidRoute();
+  const authLoaded = useAuthLoaded();
+  const authEnabled = useAuthEnabled();
+  const authFailed = useAuthFailed();
+  const authenticated = useAuthenticated();
+  const csrfToken = useAuthCSRFToken();
   const navigate = useNavigate();
   const location = useLocation();
 
   React.useEffect(() => {
-    console.log('setting navigation.,... ');
+    load();
+  }, [load]);
+
+  React.useEffect(() => {
     setNavigate(navigate);
   }, [setNavigate, navigate]);
 
@@ -33,15 +51,53 @@ export function App() {
   }, [location, syncRoute]);
 
   React.useEffect(() => {
+    Api.setCSRFToken(csrfToken);
+  }, [csrfToken]);
+
+  React.useEffect(() => {
+    const shouldBlockForAuth = authFailed || (authLoaded && authEnabled && !authenticated);
+
+    if (!authLoaded) {
+      return;
+    }
+
+    if (shouldBlockForAuth) {
+      disconnectSocket();
+      return;
+    }
+
+    connectSocket();
     getConfig();
     getUnraid();
-  }, [getConfig, getUnraid]);
+  }, [
+    authFailed,
+    authLoaded,
+    authEnabled,
+    authenticated,
+    connectSocket,
+    disconnectSocket,
+    getConfig,
+    getUnraid,
+  ]);
+
+  if (!authLoaded) {
+    return null;
+  }
+
+  const shouldShowAuthGate =
+    authFailed || (authLoaded && authEnabled && !authenticated);
+
+  if (shouldShowAuthGate) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthGate />
+      </ThemeProvider>
+    );
+  }
 
   if (!(isLoaded && version !== '')) {
     return null;
   }
-
-  console.log('rendering App() ', route);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

@@ -29,6 +29,9 @@ var cli struct {
 	RsyncArgs      []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
 	Verbosity      int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
 	RefreshRate    int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
+	AuthEnabled    bool     `env:"AUTH_ENABLED" default:"false" help:"require login before using the web ui"`
+	AuthUsername   string   `env:"AUTH_USERNAME" default:"admin" help:"admin username used to log into the web ui"`
+	AuthPassword   string   `env:"AUTH_PASSWORD_HASH" default:"" help:"bcrypt hash for the admin password"`
 
 	Boot cmd.Boot `cmd:"" default:"1" help:"start processing"`
 }
@@ -64,6 +67,9 @@ func main() {
 			RsyncArgs:      cli.RsyncArgs,
 			Verbosity:      cli.Verbosity,
 			RefreshRate:    cli.RefreshRate,
+			AuthEnabled:    cli.AuthEnabled,
+			AuthUsername:   cli.AuthUsername,
+			AuthPassword:   cli.AuthPassword,
 		},
 		Hub: pubsub.New(23),
 	})
