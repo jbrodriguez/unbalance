@@ -478,9 +478,9 @@ func showPotentiallyPrunedItems(operation *domain.Operation, command *domain.Com
 	if operation.DryRun && operation.OpKind == common.OpGatherMove {
 		parent := filepath.Dir(command.Entry)
 		if parent != "." {
-			logger.Blue(`Would delete empty folders starting from (%s) - (find "%s" -type d -empty -prune -exec rm -rf {} \;) `, filepath.Join(command.Src, parent), filepath.Join(command.Src, parent))
+			logger.Blue("Would prune empty parent folders starting from (%s)", filepath.Join(command.Src, parent))
 		} else {
-			logger.Blue(`WONT DELETE: find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
+			logger.Blue("WONT PRUNE: (%s)", filepath.Join(command.Src, parent))
 		}
 	}
 }
