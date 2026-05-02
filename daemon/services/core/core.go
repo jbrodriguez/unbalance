@@ -285,12 +285,19 @@ func (c *Core) SetReservedSpace(amount uint64, unit string) *domain.Config {
 	return &c.ctx.Config
 }
 
-func (c *Core) SetRsyncArgs(value []string) *domain.Config {
+func (c *Core) SetRsyncArgs(value []string) (*domain.Config, error) {
+	value = cleanRsyncArgs(value)
+	if err := validateRsyncArgs(value); err != nil {
+		logger.Yellow("setRsyncArgs: rejected args %v: %s", value, err)
+		return &c.ctx.Config, err
+	}
+
 	c.ctx.Config.RsyncArgs = value
 	if err := c.saveSettings(); err != nil {
 		logger.Yellow("setRsyncArgs: unable to save settings: %s", err)
+		return &c.ctx.Config, err
 	}
-	return &c.ctx.Config
+	return &c.ctx.Config, nil
 }
 
 func (c *Core) SetVerbosity(value int) *domain.Config {

@@ -272,7 +272,12 @@ func (s *Server) setRsyncArgs(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(200, s.core.SetRsyncArgs(value))
+	config, err := s.core.SetRsyncArgs(value)
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+
+	return c.JSON(200, config)
 }
 
 func (s *Server) setVerbosity(c echo.Context) error {
