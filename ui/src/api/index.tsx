@@ -207,11 +207,11 @@ export class Api {
       headers: { 'Content-Type': 'application/json', ...Api.authHeaders() },
       body: JSON.stringify(flags),
     };
-    try {
-      const url = `${Api.host}/config/rsyncArgs`;
-      await fetch(url, options);
-    } catch (e) {
-      console.log('rsyncArgs() error: ', e);
+    const url = `${Api.host}/config/rsyncArgs`;
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || response.statusText);
     }
   }
 

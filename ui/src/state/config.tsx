@@ -80,16 +80,16 @@ export const useConfigStore = create<ConfigStore>()(
         await Api.setReservedSpace(amount, unit);
       },
       setRsyncArgs: async (flags: string[]) => {
+        await Api.setRsyncArgs(flags);
         set((state) => {
           state.rsyncArgs = flags;
         });
-        await Api.setRsyncArgs(flags);
       },
       resetRsyncArgs: async () => {
+        await Api.setRsyncArgs(['-X']);
         set((state) => {
           state.rsyncArgs = ['-X'];
         });
-        await Api.setRsyncArgs(['-X']);
       },
       setVerbosity: async (value: number) => {
         set((state) => {

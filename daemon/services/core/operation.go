@@ -19,6 +19,14 @@ func (c *Core) runOperation(opName string) {
 	logger.Blue("running %s operation ...", opName)
 
 	operation := c.state.Operation
+	if err := validateRsyncArgs(operation.RsyncArgs); err != nil {
+		logger.Yellow("operation:rsync-args:blocked:%s", err)
+		c.publishOperationError("unable to start %s operation: %s", opName, err)
+		c.state.Status = common.OpNeutral
+		c.state.Operation = nil
+		return
+	}
+
 	operation.Started = time.Now()
 
 	if c.ctx.NotifyTransfer == 2 {

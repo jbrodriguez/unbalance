@@ -8,20 +8,31 @@ import { useConfigActions, useConfigRsyncArgs } from '~/state/config';
 export const Flags: React.FunctionComponent = () => {
   const flags = useConfigRsyncArgs();
   const [flagsValue, setFlagsValue] = React.useState(flags.join(' '));
+  const [error, setError] = React.useState('');
   const { setRsyncArgs, resetRsyncArgs } = useConfigActions();
 
   const onFlagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFlagsValue(e.target.value);
   };
 
-  const onApply = () => {
-    const flags = flagsValue.split(' ');
-    setRsyncArgs(flags);
+  const onApply = async () => {
+    const flags = flagsValue.split(/\s+/).filter(Boolean);
+    try {
+      await setRsyncArgs(flags);
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to save rsync flags');
+    }
   };
 
-  const onReset = () => {
+  const onReset = async () => {
     setFlagsValue('-X');
-    resetRsyncArgs();
+    try {
+      await resetRsyncArgs();
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to reset rsync flags');
+    }
   };
 
   return (
@@ -41,8 +52,8 @@ export const Flags: React.FunctionComponent = () => {
         automatically added, if needed. <br />
         <span className="text-red-900 dark:text-red-700 font-bold">
           NOTE: These settings are meant to be changed by advanced users only.
-          No validation is currently performed on the flags you manually enter
-          here, so you need to know what you're doing before changing them.
+          Destructive or remote-execution rsync options are blocked because
+          unbalanced manages source deletion and local transfer behavior itself.
         </span>
       </h1>
       <div className="pb-4" />
@@ -65,6 +76,9 @@ export const Flags: React.FunctionComponent = () => {
           Reset to Defaults
         </Button>
       </div>
+      {error !== '' && (
+        <p className="pt-3 text-sm text-red-900 dark:text-red-700">{error}</p>
+      )}
     </div>
   );
 };
