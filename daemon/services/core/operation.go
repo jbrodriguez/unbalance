@@ -196,7 +196,7 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	subject := fmt.Sprintf("unbalanced - %s operation INTERRUPTED", strings.ToUpper(opName))
 	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), reRsync, rsyncErrors))
 
-	logger.Yellow(headline)
+	logger.Yellow("%s", headline)
 	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/var/log/unbalanced.log) for additional details.", opName)}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
@@ -216,7 +216,7 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 
 func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Command) {
 	text := "Command Finished"
-	logger.Blue(text)
+	logger.Blue("%s", text)
 
 	operation.BytesTransferred += command.Size
 	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
@@ -252,68 +252,31 @@ func (c *Core) handleItemDeletion(operation *domain.Operation, command *domain.C
 
 			packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
-			logger.Yellow(msg)
+			logger.Yellow("%s", msg)
 
 			return
 		}
 
-		exists, _ := lib.Exists(filepath.Join(command.Dst, command.Entry))
-		if exists {
-			rmrf := fmt.Sprintf("rm -rf \"%s\"", filepath.Join(command.Src, command.Entry))
-			operation.Line = fmt.Sprintf("Removing source %s", filepath.Join(command.Src, command.Entry))
+		operation.Line = fmt.Sprintf("Removing source %s", filepath.Join(command.Src, command.Entry))
+
+		packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+
+		removed, pruned, err := removeTransferredSource(command, operation.OpKind == common.OpGatherMove)
+		if err != nil {
+			msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
+			operation.Line = msg
 
 			packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
-			logger.Blue("removing:(%s)", rmrf)
 
-			err := lib.Shell(rmrf, "", func(line string) {
-				logger.Blue(line)
-			})
+			logger.Yellow("%s", msg)
+			return
+		}
 
-			if err != nil {
-				msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
-				operation.Line = msg
-
-				packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
-				c.ctx.Hub.Pub(packet, "socket:broadcast")
-
-				logger.Yellow(msg)
-			}
-
-			if operation.OpKind == common.OpGatherMove {
-				parent := filepath.Dir(command.Entry)
-				// if entry is a user share (tvshows), Dir returns ".", so we won't touch it
-				// if entry is a top-level children of a user share (tvshows/Billions), Dir returns "tvshows"
-				// if entry is a nested children (tvshows/Billions/Season 01), Dir returns "tvshows/Billions"
-				// in the first 2 cases no "/" is present in parent, so I won't prune them
-				if strings.Contains(parent, "/") {
-					rmdir := fmt.Sprintf(`find "%s" -type d -empty -prune -exec rm -rf {} \;`, filepath.Join(command.Src, parent))
-					operation.Line = fmt.Sprintf("Pruning parent %s", filepath.Join(command.Src, parent))
-
-					packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
-					c.ctx.Hub.Pub(packet, "socket:broadcast")
-
-					logger.Blue("pruning:(%s)", rmdir)
-
-					err = lib.Shell(rmdir, "", func(line string) {
-						logger.Blue(line)
-					})
-
-					if err != nil {
-						msg := fmt.Sprintf("Unable to remove parent folder (%s): %s", filepath.Join(command.Src, parent), err)
-						operation.Line = msg
-
-						packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
-						c.ctx.Hub.Pub(packet, "socket:broadcast")
-
-						logger.Yellow(msg)
-					}
-				} else {
-					logger.Yellow("skipping:prune:(%s)", filepath.Join(command.Src, parent))
-				}
-			}
-		} else {
-			logger.Yellow("skipping:deletion:(file/folder not present in destination):(%s)", filepath.Join(command.Dst, command.Entry))
+		logger.Blue("removed:(%s)", removed)
+		for _, parent := range pruned {
+			logger.Blue("pruned:(%s)", parent)
 		}
 	}
 }
@@ -405,7 +368,7 @@ func (c *Core) performRemoveSource(operation *domain.Operation, cmd *domain.Comm
 
 		text := "Removal completed"
 		operation.Line = text
-		logger.Blue(text)
+		logger.Blue("%s", text)
 
 		c.state.Unraid = c.refreshUnraid()
 		c.state.History.Items[operation.ID] = operation
