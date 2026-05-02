@@ -446,15 +446,20 @@ func (c *Core) createReplayOperation(original domain.Operation) *domain.Operatio
 		DryRun:          false,
 	}
 
-	operation.RsyncArgs = original.RsyncArgs
+	operation.RsyncArgs = append([]string(nil), original.RsyncArgs...)
 	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
-	operation.Commands = original.Commands
+	operation.Commands = make([]*domain.Command, 0, len(original.Commands))
+	for _, originalCommand := range original.Commands {
+		if originalCommand == nil {
+			continue
+		}
 
-	for _, command := range operation.Commands {
+		command := *originalCommand
 		command.ID = shortid.MustGenerate()
 		command.Transferred = 0
 		command.Status = common.CmdPending
+		operation.Commands = append(operation.Commands, &command)
 	}
 
 	return operation
