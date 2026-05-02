@@ -65,7 +65,6 @@ func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
 
 func (c *Core) scatterPlan(plan *domain.Plan) {
 	c.scatterPlanStart(plan)
-	c.scatterPlanEnd(plan)
 }
 
 func (c *Core) scatterPlanStart(plan *domain.Plan) {
@@ -159,7 +158,14 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 func (c *Core) scatterPlanEnd(plan *domain.Plan) {
 	c.state.Status = common.OpNeutral
 
-	packet := &domain.Packet{Topic: common.EventScatterPlanEnded, Payload: plan}
+	planView, err := c.storePendingPlan(planFlowScatter, plan)
+	if err != nil {
+		logger.Red("unable to store scatter plan: %s", err)
+		c.publishOperationError("unable to store scatter plan: %s", err)
+		return
+	}
+
+	packet := &domain.Packet{Topic: common.EventScatterPlanEnded, Payload: planView}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	// TODO: finish implementation
@@ -172,7 +178,14 @@ func (c *Core) scatterPlanEnd(plan *domain.Plan) {
 }
 
 // SCATTER TRANSFER
-func (c *Core) scatterMove(plan domain.Plan) {
+func (c *Core) scatterMove(planID string) {
+	plan, err := c.takePendingPlan(planID, planFlowScatter)
+	if err != nil {
+		logger.Yellow("scatterMove: %s", err)
+		c.publishOperationError("unable to start scatter move: %s", err)
+		return
+	}
+
 	c.state.Status = common.OpScatterMove
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createScatterOperation(plan)
@@ -180,7 +193,14 @@ func (c *Core) scatterMove(plan domain.Plan) {
 	go c.runOperation("Move")
 }
 
-func (c *Core) scatterCopy(plan domain.Plan) {
+func (c *Core) scatterCopy(planID string) {
+	plan, err := c.takePendingPlan(planID, planFlowScatter)
+	if err != nil {
+		logger.Yellow("scatterCopy: %s", err)
+		c.publishOperationError("unable to start scatter copy: %s", err)
+		return
+	}
+
 	c.state.Status = common.OpScatterCopy
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createScatterOperation(plan)
@@ -208,6 +228,9 @@ func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {
 
 	for _, disk := range c.state.Unraid.Disks {
 		vdisk := plan.VDisks[disk.Path]
+		if vdisk == nil {
+			continue
+		}
 
 		if vdisk.Bin == nil || vdisk.Src {
 			continue
@@ -239,7 +262,14 @@ func (c *Core) createScatterOperation(plan domain.Plan) *domain.Operation {
 }
 
 // SCATTER VALIDATE
-func (c *Core) scatterValidate(operation domain.Operation) {
+func (c *Core) scatterValidate(operationID string) {
+	operation, err := c.historyOperation(operationID)
+	if err != nil {
+		logger.Yellow("scatterValidate: %s", err)
+		c.publishOperationError("unable to start scatter validate: %s", err)
+		return
+	}
+
 	c.state.Status = common.OpScatterValidate
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createScatterValidateOperation(operation)
@@ -255,7 +285,10 @@ func (c *Core) createScatterValidateOperation(original domain.Operation) *domain
 		DryRun:          false,
 	}
 
-	operation.RsyncArgs = append([]string{strings.Replace(common.RsyncArgs, "-a", "-rc", -1)}, original.RsyncArgs[1:]...)
+	operation.RsyncArgs = []string{strings.Replace(common.RsyncArgs, "-a", "-rc", -1)}
+	if len(original.RsyncArgs) > 1 {
+		operation.RsyncArgs = append(operation.RsyncArgs, original.RsyncArgs[1:]...)
+	}
 	operation.RsyncStrArgs = strings.Join(operation.RsyncArgs, " ")
 
 	operation.Commands = original.Commands

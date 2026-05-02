@@ -131,6 +131,7 @@ export interface VDisk {
 }
 
 export interface Plan {
+  id: string;
   started: Date;
   ended: Date;
   chosenFolders: string[];
@@ -212,7 +213,7 @@ export enum Topic {
 
 export interface Packet {
   topic: Topic;
-  payload: string;
+  payload: unknown;
 }
 
 export enum ConfirmationKind {

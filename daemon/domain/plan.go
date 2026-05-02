@@ -13,6 +13,7 @@ import (
 // OpScatterPlan
 // OpGatherPlan
 type Plan struct {
+	ID      string    `json:"id"`
 	Started time.Time `json:"started"`
 	Ended   time.Time `json:"ended"`
 
