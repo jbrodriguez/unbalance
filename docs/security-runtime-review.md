@@ -177,4 +177,3 @@ Given Unraid constraints, the worker split is probably more realistic than tryin
 3. Replace shell deletion with validated Go deletion/pruning.
 4. Change websocket command payloads to use IDs rather than full executable `Operation` objects for execute/replay/remove-source.
 5. Then evaluate a privileged-worker split once the trust boundary is explicit.
-
