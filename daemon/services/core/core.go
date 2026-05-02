@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/teris-io/shortid"
@@ -62,6 +63,9 @@ type Core struct {
 
 	mailbox chan any
 
+	pendingPlans   map[string]*planTicket
+	pendingPlansMu sync.Mutex
+
 	stopped bool
 }
 
@@ -72,6 +76,7 @@ func Create(ctx *domain.Context) *Core {
 		state: &domain.State{
 			Status: common.OpNeutral,
 		},
+		pendingPlans: make(map[string]*planTicket),
 		mailbox: ctx.Hub.Sub(
 			common.CommandScatterPlanStart,
 			common.CommandScatterMove,
@@ -142,22 +147,21 @@ func (c *Core) mailboxHandler() {
 			}
 			go c.scatterPlanPrepare(setup)
 		case common.CommandScatterMove:
-			var plan domain.Plan
-			err := lib.Bind(packet.Payload, &plan)
+			var ref planRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			logger.Olive("%+v", plan)
-			go c.scatterMove(plan)
+			go c.scatterMove(ref.PlanID)
 		case common.CommandScatterCopy:
-			var plan domain.Plan
-			err := lib.Bind(packet.Payload, &plan)
+			var ref planRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			go c.scatterCopy(plan)
+			go c.scatterCopy(ref.PlanID)
 
 		case common.CommandGatherPlanStart:
 			var setup domain.GatherSetup
@@ -169,44 +173,41 @@ func (c *Core) mailboxHandler() {
 			go c.gatherPlanPrepare(setup)
 
 		case common.CommandGatherMove:
-			var plan domain.Plan
-			err := lib.Bind(packet.Payload, &plan)
+			var ref planRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			go c.gatherMove(plan)
+			go c.gatherMove(ref.PlanID, ref.Target)
 
 		case common.CommandScatterValidate:
-			var operation domain.Operation
-			err := lib.Bind(packet.Payload, &operation)
+			var ref operationRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			go c.scatterValidate(operation)
+			go c.scatterValidate(ref.OperationID)
 
 		case common.CommandRemoveSource:
-			var params struct {
-				Operation *domain.Operation `json:"operation"`
-				Command   *domain.Command   `json:"command"`
-			}
-			err := lib.Bind(packet.Payload, &params)
+			var ref commandRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
-			go c.removeSource(params.Operation, params.Command)
+			go c.removeSourceByID(ref.OperationID, ref.CommandID)
 
 		case common.CommandReplay:
-			var operation domain.Operation
-			err := lib.Bind(packet.Payload, &operation)
+			var ref operationRef
+			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
 				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
 				continue
 			}
 
-			go c.replay(operation)
+			go c.replay(ref.OperationID)
 
 		case common.CommandStop:
 			c.stopped = true

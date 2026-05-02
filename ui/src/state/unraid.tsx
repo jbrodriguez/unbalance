@@ -362,7 +362,7 @@ export const useUnraidStore = create<UnraidStore>()(
           socket.send(
             JSON.stringify({
               topic: command,
-              payload: plan,
+              payload: { planID: plan.id },
             }),
           );
 
@@ -391,7 +391,7 @@ export const useUnraidStore = create<UnraidStore>()(
           socket.send(
             JSON.stringify({
               topic: Topic.CommandScatterValidate,
-              payload: operation,
+              payload: { operationID: operation.id },
             }),
           );
 
@@ -480,7 +480,7 @@ export const useUnraidStore = create<UnraidStore>()(
           socket.send(
             JSON.stringify({
               topic: Topic.CommandGatherMove,
-              payload: { ...plan, target },
+              payload: { planID: plan.id, target },
             }),
           );
 
@@ -512,7 +512,7 @@ export const useUnraidStore = create<UnraidStore>()(
           socket.send(
             JSON.stringify({
               topic: Topic.CommandRemoveSource,
-              payload: { operation, command },
+              payload: { operationID: operation.id, commandID: command.id },
             }),
           );
 
@@ -540,7 +540,7 @@ export const useUnraidStore = create<UnraidStore>()(
           socket.send(
             JSON.stringify({
               topic: Topic.CommandReplay,
-              payload: operation,
+              payload: { operationID: operation.id },
             }),
           );
 

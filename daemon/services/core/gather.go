@@ -46,7 +46,6 @@ func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
 
 func (c *Core) gatherPlan(plan *domain.Plan) {
 	c.gatherPlanStart(plan)
-	c.gatherPlanEnd(plan)
 }
 
 func (c *Core) gatherPlanStart(plan *domain.Plan) {
@@ -115,7 +114,14 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 func (c *Core) gatherPlanEnd(plan *domain.Plan) {
 	c.state.Status = common.OpNeutral
 
-	packet := &domain.Packet{Topic: common.EventGatherPlanEnded, Payload: plan}
+	planView, err := c.storePendingPlan(planFlowGather, plan)
+	if err != nil {
+		logger.Red("unable to store gather plan: %s", err)
+		c.publishOperationError("unable to store gather plan: %s", err)
+		return
+	}
+
+	packet := &domain.Packet{Topic: common.EventGatherPlanEnded, Payload: planView}
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	// TODO: finish this implementation
@@ -128,7 +134,25 @@ func (c *Core) gatherPlanEnd(plan *domain.Plan) {
 }
 
 // // GATHER TRANSFER
-func (c *Core) gatherMove(plan domain.Plan) {
+func (c *Core) gatherMove(planID, target string) {
+	plan, err := c.takePendingPlan(planID, planFlowGather)
+	if err != nil {
+		logger.Yellow("gatherMove: %s", err)
+		c.publishOperationError("unable to start gather move: %s", err)
+		return
+	}
+	if target == "" {
+		logger.Yellow("gatherMove: missing target")
+		c.publishOperationError("unable to start gather move: missing target")
+		return
+	}
+	if _, ok := plan.VDisks[target]; !ok {
+		logger.Yellow("gatherMove: invalid target %s", target)
+		c.publishOperationError("unable to start gather move: invalid target")
+		return
+	}
+	plan.Target = target
+
 	c.state.Status = common.OpGatherMove
 	c.state.Unraid = c.refreshUnraid()
 	c.state.Operation = c.createGatherOperation(plan)
@@ -155,9 +179,15 @@ func (c *Core) createGatherOperation(plan domain.Plan) *domain.Operation {
 
 	for _, disk := range c.state.Unraid.Disks {
 		vdisk := plan.VDisks[disk.Path]
+		if vdisk == nil {
+			continue
+		}
 
 		// only one disk will be destination (target)
 		if vdisk.Path != plan.Target {
+			continue
+		}
+		if vdisk.Bin == nil {
 			continue
 		}
 

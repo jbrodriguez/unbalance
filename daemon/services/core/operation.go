@@ -337,12 +337,26 @@ func (c *Core) endOperation(subject, headline string, commands []string, operati
 	logger.Blue("\n%s\n%s", subject, message)
 }
 
-func (c *Core) removeSource(operation *domain.Operation, command *domain.Command) {
+func (c *Core) removeSourceByID(operationID, commandID string) {
+	operation, err := c.historyOperation(operationID)
+	if err != nil {
+		logger.Yellow("removeSource: %s", err)
+		c.publishOperationError("unable to remove source: %s", err)
+		return
+	}
+
+	command, err := findCommand(&operation, commandID)
+	if err != nil {
+		logger.Yellow("removeSource: %s", err)
+		c.publishOperationError("unable to remove source: %s", err)
+		return
+	}
+
 	c.state.Status = operation.OpKind
-	c.state.Operation = operation
+	c.state.Operation = &operation
 	c.state.Unraid = c.refreshUnraid()
 
-	go c.performRemoveSource(operation, command)
+	go c.performRemoveSource(&operation, command)
 }
 
 func (c *Core) performRemoveSource(operation *domain.Operation, cmd *domain.Command) {
@@ -396,7 +410,14 @@ func (c *Core) performRemoveSource(operation *domain.Operation, cmd *domain.Comm
 	}
 }
 
-func (c *Core) replay(operation domain.Operation) {
+func (c *Core) replay(operationID string) {
+	operation, err := c.historyOperation(operationID)
+	if err != nil {
+		logger.Yellow("replay: %s", err)
+		c.publishOperationError("unable to replay operation: %s", err)
+		return
+	}
+
 	c.state.Status = operation.OpKind
 	c.state.Operation = c.createReplayOperation(operation)
 	c.state.Unraid = c.refreshUnraid()
