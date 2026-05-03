@@ -173,6 +173,7 @@ func LoadEnv(location string, config *domain.Config) error {
 	if err != nil {
 		return err
 	}
+	_ = os.Chmod(location, 0o600)
 
 	// fill data
 	config.DryRun, _ = file.Section("").Key("DRY_RUN").Bool()
@@ -208,7 +209,18 @@ func SaveEnv(location string, config domain.Config) error {
 	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
 	file.Section("").Key("AUTH_PASSWORD_HASH").SetValue(config.AuthPassword)
 
-	file.SaveTo(location)
+	tmpName := location + ".tmp"
+	if err := file.SaveTo(tmpName); err != nil {
+		return err
+	}
+	if err := os.Chmod(tmpName, 0o600); err != nil {
+		_ = os.Remove(tmpName)
+		return err
+	}
+	if err := os.Rename(tmpName, location); err != nil {
+		_ = os.Remove(tmpName)
+		return err
+	}
 
-	return nil
+	return os.Chmod(location, 0o600)
 }
