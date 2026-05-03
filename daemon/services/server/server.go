@@ -190,7 +190,7 @@ func (s *Server) wsRead(conn *websocket.Conn, sessionID string) (err error) {
 			return nil
 		}
 
-		logger.Green("packet %+v", packet)
+		logger.Green("packet topic:%s", packet.Topic)
 
 		s.ctx.Hub.Pub(packet, packet.Topic)
 	}

@@ -582,6 +582,7 @@ func (s *Server) loadSessions() error {
 		return err
 	}
 	defer file.Close()
+	_ = os.Chmod(location, 0o600)
 
 	var store sessionStore
 	if err := json.NewDecoder(file).Decode(&store); err != nil {
@@ -612,7 +613,7 @@ func (s *Server) saveSessionsLocked() error {
 	location := s.sessionFile()
 	tmpName := location + ".tmp"
 
-	file, err := os.Create(tmpName)
+	file, err := os.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
@@ -632,5 +633,9 @@ func (s *Server) saveSessionsLocked() error {
 		return err
 	}
 
-	return os.Rename(tmpName, location)
+	if err := os.Rename(tmpName, location); err != nil {
+		return err
+	}
+
+	return os.Chmod(location, 0o600)
 }

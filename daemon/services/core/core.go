@@ -142,7 +142,7 @@ func (c *Core) mailboxHandler() {
 			var setup domain.ScatterSetup
 			err := lib.Bind(packet.Payload, &setup)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.scatterPlanPrepare(setup)
@@ -150,7 +150,7 @@ func (c *Core) mailboxHandler() {
 			var ref planRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.scatterMove(ref.PlanID)
@@ -158,7 +158,7 @@ func (c *Core) mailboxHandler() {
 			var ref planRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.scatterCopy(ref.PlanID)
@@ -167,7 +167,7 @@ func (c *Core) mailboxHandler() {
 			var setup domain.GatherSetup
 			err := lib.Bind(packet.Payload, &setup)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.gatherPlanPrepare(setup)
@@ -176,7 +176,7 @@ func (c *Core) mailboxHandler() {
 			var ref planRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.gatherMove(ref.PlanID, ref.Target)
@@ -185,7 +185,7 @@ func (c *Core) mailboxHandler() {
 			var ref operationRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.scatterValidate(ref.OperationID)
@@ -194,7 +194,7 @@ func (c *Core) mailboxHandler() {
 			var ref commandRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 			go c.removeSourceByID(ref.OperationID, ref.CommandID)
@@ -203,7 +203,7 @@ func (c *Core) mailboxHandler() {
 			var ref operationRef
 			err := lib.Bind(packet.Payload, &ref)
 			if err != nil {
-				logger.Red("unable to unmarshal packet: %+v (%s)", packet.Payload, err)
+				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
 
