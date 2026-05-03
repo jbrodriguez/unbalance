@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +26,22 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	// Reject browsers that don't send Origin and any cross-host upgrade
+	// attempt regardless of the auth state. We only compare hosts (not
+	// schemes) so a TLS-terminating reverse proxy that strips the scheme
+	// still works; the per-request validateWebsocketRequest check in auth.go
+	// is what enforces session+CSRF when auth is enabled.
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return false
+		}
+		u, err := url.Parse(origin)
+		if err != nil || u.Host == "" {
+			return false
+		}
+		return strings.EqualFold(u.Host, r.Host)
+	},
 }
 
 type Server struct {
@@ -32,6 +49,8 @@ type Server struct {
 	core          *core.Core
 	engine        *echo.Echo
 	ws            *websocket.Conn
+	wsSession     string
+	wsMu          sync.Mutex
 	broadcastChan chan any
 	sessions      map[string]session
 	sessionMu     sync.Mutex
@@ -130,6 +149,15 @@ func (s *Server) wsHandler(c echo.Context) error {
 		return err
 	}
 
+	// Capture the session id from the cookie so the read loop and the
+	// session-revocation hooks can identify which connection belongs to
+	// which session. Empty when auth is disabled — sessionStillValid skips
+	// the per-message check in that case.
+	var sessionID string
+	if cookie, err := c.Cookie(sessionCookieName); err == nil {
+		sessionID = cookie.Value
+	}
+
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		logger.Red("unable to upgrade websocket: %s", err)
@@ -137,18 +165,29 @@ func (s *Server) wsHandler(c echo.Context) error {
 	}
 	defer conn.Close()
 
+	s.wsMu.Lock()
 	s.ws = conn
+	s.wsSession = sessionID
+	s.wsMu.Unlock()
 
-	return s.wsRead()
+	return s.wsRead(conn, sessionID)
 }
 
-func (s *Server) wsRead() (err error) {
+func (s *Server) wsRead(conn *websocket.Conn, sessionID string) (err error) {
 	for {
 		var packet domain.Packet
-		err = s.ws.ReadJSON(&packet)
+		err = conn.ReadJSON(&packet)
 		if err != nil {
 			logger.Red("unable to read websocket message: %s", err)
 			return err
+		}
+
+		// Re-check the session on every inbound packet so an expired,
+		// logged-out, or revoked session can't keep driving destructive
+		// operations through an already-upgraded connection.
+		if s.authRequired() && !s.sessionStillValid(sessionID) {
+			logger.Yellow("websocket session no longer valid; closing connection")
+			return nil
 		}
 
 		logger.Green("packet %+v", packet)
@@ -158,10 +197,14 @@ func (s *Server) wsRead() (err error) {
 }
 
 func (s *Server) wsWrite(packet *domain.Packet) (err error) {
-	if (s.ws == nil) || (s.ws.RemoteAddr() == nil) {
+	s.wsMu.Lock()
+	conn := s.ws
+	s.wsMu.Unlock()
+
+	if conn == nil || conn.RemoteAddr() == nil {
 		return
 	}
-	err = s.ws.WriteJSON(packet)
+	err = conn.WriteJSON(packet)
 	return
 }
 

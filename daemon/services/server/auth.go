@@ -364,14 +364,20 @@ func (s *Server) createSession(c echo.Context, username string) (session, error)
 }
 
 func (s *Server) clearSession(c echo.Context) {
+	var clearedID string
 	cookie, err := c.Cookie(sessionCookieName)
 	if err == nil {
+		clearedID = cookie.Value
 		s.sessionMu.Lock()
 		delete(s.sessions, cookie.Value)
 		if saveErr := s.saveSessionsLocked(); saveErr != nil {
 			logger.Red("unable to persist cleared auth session: %s", saveErr)
 		}
 		s.sessionMu.Unlock()
+	}
+
+	if clearedID != "" {
+		s.closeWebsocketIfSession(clearedID)
 	}
 
 	c.SetCookie(&http.Cookie{
@@ -392,6 +398,58 @@ func (s *Server) clearAllSessions() {
 		logger.Red("unable to clear persisted auth sessions: %s", err)
 	}
 	s.sessionMu.Unlock()
+
+	s.closeAnyWebsocket()
+}
+
+// sessionStillValid reports whether the session id is currently in the store
+// and not yet expired. Used by the websocket read loop to revalidate after
+// upgrade so a logged-out or expired session cannot keep publishing commands.
+func (s *Server) sessionStillValid(sessionID string) bool {
+	if sessionID == "" {
+		return false
+	}
+
+	s.sessionMu.Lock()
+	defer s.sessionMu.Unlock()
+
+	info, ok := s.sessions[sessionID]
+	if !ok {
+		return false
+	}
+
+	return time.Now().Before(info.Expires)
+}
+
+// closeWebsocketIfSession closes the active websocket if it was upgraded by
+// the given session. The read loop's ReadJSON returns an error on close and
+// the goroutine exits via the existing error path.
+func (s *Server) closeWebsocketIfSession(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+
+	s.wsMu.Lock()
+	defer s.wsMu.Unlock()
+
+	if s.ws != nil && s.wsSession == sessionID {
+		_ = s.ws.Close()
+		s.ws = nil
+		s.wsSession = ""
+	}
+}
+
+// closeAnyWebsocket forcibly closes the active websocket regardless of which
+// session opened it; called when every session is being invalidated.
+func (s *Server) closeAnyWebsocket() {
+	s.wsMu.Lock()
+	defer s.wsMu.Unlock()
+
+	if s.ws != nil {
+		_ = s.ws.Close()
+		s.ws = nil
+		s.wsSession = ""
+	}
 }
 
 func (s *Server) pruneSessions() {
@@ -401,20 +459,24 @@ func (s *Server) pruneSessions() {
 	for range ticker.C {
 		now := time.Now()
 
+		var pruned []string
 		s.sessionMu.Lock()
-		dirty := false
 		for key, info := range s.sessions {
 			if now.After(info.Expires) {
 				delete(s.sessions, key)
-				dirty = true
+				pruned = append(pruned, key)
 			}
 		}
-		if dirty {
+		if len(pruned) > 0 {
 			if err := s.saveSessionsLocked(); err != nil {
 				logger.Red("unable to prune persisted auth sessions: %s", err)
 			}
 		}
 		s.sessionMu.Unlock()
+
+		for _, key := range pruned {
+			s.closeWebsocketIfSession(key)
+		}
 
 		s.limiterMu.Lock()
 		for key, attempt := range s.limiter {
