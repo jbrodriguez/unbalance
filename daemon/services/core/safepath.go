@@ -96,6 +96,10 @@ type safeTransferPaths struct {
 }
 
 func safeCommandPaths(command *domain.Command) (safeTransferPaths, error) {
+	return safeCommandPathsWithin(command, nil)
+}
+
+func safeCommandPathsWithin(command *domain.Command, allowedRoots []string) (safeTransferPaths, error) {
 	if command == nil {
 		return safeTransferPaths{}, fmt.Errorf("missing command")
 	}
@@ -120,6 +124,16 @@ func safeCommandPaths(command *domain.Command) (safeTransferPaths, error) {
 		return safeTransferPaths{}, fmt.Errorf("source and destination roots must differ")
 	}
 
+	if len(allowedRoots) > 0 {
+		if !rootIsAllowed(srcRoot, allowedRoots) {
+			return safeTransferPaths{}, fmt.Errorf("source root is not an allowed disk root: %s", srcRoot)
+		}
+
+		if !rootIsAllowed(dstRoot, allowedRoots) {
+			return safeTransferPaths{}, fmt.Errorf("destination root is not an allowed disk root: %s", dstRoot)
+		}
+	}
+
 	return safeTransferPaths{
 		SrcRoot: srcRoot,
 		DstRoot: dstRoot,
@@ -127,6 +141,110 @@ func safeCommandPaths(command *domain.Command) (safeTransferPaths, error) {
 		SrcPath: srcPath,
 		DstPath: dstPath,
 	}, nil
+}
+
+func rootIsAllowed(root string, allowedRoots []string) bool {
+	cleanedRoot, err := cleanRoot(root)
+	if err != nil {
+		return false
+	}
+
+	for _, allowed := range allowedRoots {
+		cleanedAllowed, err := cleanRoot(allowed)
+		if err != nil {
+			continue
+		}
+
+		if cleanedRoot == cleanedAllowed {
+			return true
+		}
+	}
+
+	return false
+}
+
+func validateExistingPathBoundary(root, target string) error {
+	if err := validateSymlinkBoundary(root, target); err != nil {
+		return err
+	}
+
+	if _, err := os.Lstat(target); err != nil {
+		return fmt.Errorf("unable to inspect path %s: %w", target, err)
+	}
+
+	return nil
+}
+
+func validateCreatablePathBoundary(root, target string) error {
+	root, err := cleanRoot(root)
+	if err != nil {
+		return err
+	}
+
+	target = filepath.Clean(target)
+	if !pathIsInside(root, target) {
+		return fmt.Errorf("path escapes root: %s", target)
+	}
+
+	current := target
+	for {
+		_, statErr := os.Lstat(current)
+		if statErr == nil {
+			return validateSymlinkBoundary(root, current)
+		}
+
+		if !os.IsNotExist(statErr) {
+			return fmt.Errorf("unable to inspect path %s: %w", current, statErr)
+		}
+
+		if current == root {
+			return fmt.Errorf("root does not exist: %s", root)
+		}
+
+		current = filepath.Dir(current)
+	}
+}
+
+func validateCommandForExecution(command *domain.Command, allowedRoots []string) (safeTransferPaths, error) {
+	if len(allowedRoots) == 0 {
+		return safeTransferPaths{}, fmt.Errorf("no allowed disk roots available")
+	}
+
+	paths, err := safeCommandPathsWithin(command, allowedRoots)
+	if err != nil {
+		return safeTransferPaths{}, err
+	}
+
+	if err := validateExistingPathBoundary(paths.SrcRoot, paths.SrcPath); err != nil {
+		return paths, fmt.Errorf("invalid source path: %w", err)
+	}
+
+	if err := validateCreatablePathBoundary(paths.DstRoot, paths.DstPath); err != nil {
+		return paths, fmt.Errorf("invalid destination path: %w", err)
+	}
+
+	return paths, nil
+}
+
+func (c *Core) allowedTransferRoots() []string {
+	if c == nil || c.state == nil || c.state.Unraid == nil {
+		return nil
+	}
+
+	roots := make([]string, 0, len(c.state.Unraid.Disks))
+	for _, disk := range c.state.Unraid.Disks {
+		if disk == nil || disk.Path == "" {
+			continue
+		}
+
+		roots = append(roots, disk.Path)
+	}
+
+	return roots
+}
+
+func (c *Core) validateCommandForExecution(command *domain.Command) (safeTransferPaths, error) {
+	return validateCommandForExecution(command, c.allowedTransferRoots())
 }
 
 func removeTransferredSource(command *domain.Command, pruneParents bool) (string, []string, error) {
