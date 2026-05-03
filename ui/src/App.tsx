@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { useLocation, useNavigate, Outlet, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/components/theme-provider';
 import ErrorBoundary from '@/components/error-boundary';
 import { AuthGate } from '@/components/auth-gate';
@@ -17,18 +17,34 @@ import {
   useAuthFailed,
   useAuthLoaded,
 } from './state/auth';
-import {
-  useUnraidActions,
-  useUnraidLoaded,
-} from './state/unraid';
+import { useUnraidActions, useUnraidLoaded } from './state/unraid';
+
+const DEFAULT_AUTHENTICATED_ROUTE = '/scatter/select';
+
+interface LoginLocationState {
+  from?: {
+    pathname?: string;
+    search?: string;
+    hash?: string;
+  };
+}
+
+function getReturnPath(state: unknown) {
+  const locationState = state as LoginLocationState | null;
+  const from = locationState?.from;
+
+  if (!from?.pathname || from.pathname === '/login') {
+    return DEFAULT_AUTHENTICATED_ROUTE;
+  }
+
+  return `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`;
+}
 
 export function App() {
   const { getConfig } = useConfigActions();
   const { load } = useAuthActions();
   const { setNavigate, getUnraid, syncRoute, connectSocket, disconnectSocket } =
     useUnraidActions();
-  const isLoaded = useUnraidLoaded();
-  const version = useConfigVersion();
   const authLoaded = useAuthLoaded();
   const authEnabled = useAuthEnabled();
   const authFailed = useAuthFailed();
@@ -46,7 +62,6 @@ export function App() {
   }, [setNavigate, navigate]);
 
   React.useEffect(() => {
-    // console.log('sync location >>>>>>>>>>>>> ', location);
     syncRoute(location.pathname);
   }, [location, syncRoute]);
 
@@ -55,7 +70,8 @@ export function App() {
   }, [csrfToken]);
 
   React.useEffect(() => {
-    const shouldBlockForAuth = authFailed || (authLoaded && authEnabled && !authenticated);
+    const shouldBlockForAuth =
+      authFailed || (authLoaded && authEnabled && !authenticated);
 
     if (!authLoaded) {
       return;
@@ -80,19 +96,56 @@ export function App() {
     getUnraid,
   ]);
 
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
+    </ThemeProvider>
+  );
+}
+
+export function LoginPage() {
+  const authLoaded = useAuthLoaded();
+  const authFailed = useAuthFailed();
+  const authEnabled = useAuthEnabled();
+  const authenticated = useAuthenticated();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const returnPath = getReturnPath(location.state);
+
   if (!authLoaded) {
     return null;
   }
 
-  const shouldShowAuthGate =
-    authFailed || (authLoaded && authEnabled && !authenticated);
+  if (!authFailed && (!authEnabled || authenticated)) {
+    return <Navigate to={returnPath} replace />;
+  }
 
-  if (shouldShowAuthGate) {
-    return (
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <AuthGate />
-      </ThemeProvider>
-    );
+  return (
+    <AuthGate
+      onAuthenticated={() => {
+        navigate(returnPath, { replace: true });
+      }}
+    />
+  );
+}
+
+export function ProtectedLayout() {
+  const isLoaded = useUnraidLoaded();
+  const version = useConfigVersion();
+  const authLoaded = useAuthLoaded();
+  const authEnabled = useAuthEnabled();
+  const authFailed = useAuthFailed();
+  const authenticated = useAuthenticated();
+  const location = useLocation();
+
+  if (!authLoaded) {
+    return null;
+  }
+
+  if (authFailed || (authEnabled && !authenticated)) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   if (!(isLoaded && version !== '')) {
@@ -100,20 +153,16 @@ export function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <ErrorBoundary>
-        <div className="container mx-auto h-screen flex flex-col">
-          <header>
-            <Header />
-          </header>
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <footer>
-            <Footer />
-          </footer>
-        </div>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <div className="container mx-auto h-screen flex flex-col">
+      <header>
+        <Header />
+      </header>
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <footer>
+        <Footer />
+      </footer>
+    </div>
   );
 }
