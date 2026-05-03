@@ -83,9 +83,12 @@ func scanLinesEx(data []byte, atEOF bool) (advance int, token []byte, err error)
 	return 0, nil, nil
 }
 
-func Shell2(command string, callback Callback) error {
-	args := append([]string{"-c"}, command)
-	cmd := exec.Command("/bin/sh", args...)
+// Stream runs name with args directly (no shell), invoking callback for each
+// stdout line. It is the no-shell replacement for the legacy Shell2 helper:
+// arguments are passed as argv tokens, so caller-supplied paths cannot be
+// interpreted as shell metacharacters.
+func Stream(name string, args []string, callback Callback) error {
+	cmd := exec.Command(name, args...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -102,7 +105,6 @@ func Shell2(command string, callback Callback) error {
 		callback(scanner.Text())
 	}
 
-	// Wait for the result of the command; also closes our end of the pipe
 	return cmd.Wait()
 }
 
