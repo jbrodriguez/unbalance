@@ -45,9 +45,9 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	}
 
 	scanFolder := folder + "/."
-	cmd := fmt.Sprintf(`find "%s" -exec stat --format "%%A|%%U:%%G|%%F|%%n" {} \;`, scanFolder)
+	findArgs := []string{scanFolder, "-exec", "stat", "--format=%A|%U:%G|%F|%n", "{}", ";"}
 
-	err := lib.Shell2(cmd, func(line string) {
+	err := lib.Stream("find", findArgs, func(line string) {
 		result := re.FindStringSubmatch(line)
 		if result == nil {
 			return
@@ -113,9 +113,9 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 
 	items := make([]*domain.Item, 0)
 
-	cmd := fmt.Sprintf(`find "%s" ! -name . -prune -exec du -bs {} +`, srcFolder+"/.")
+	findArgs := []string{srcFolder + "/.", "!", "-name", ".", "-prune", "-exec", "du", "-bs", "{}", "+"}
 
-	err = lib.Shell2(cmd, func(line string) {
+	err = lib.Stream("find", findArgs, func(line string) {
 		result := re.FindStringSubmatch(line)
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
