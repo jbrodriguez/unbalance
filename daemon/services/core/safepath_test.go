@@ -44,6 +44,120 @@ func TestSafeJoinAllowsRelativeEntries(t *testing.T) {
 	}
 }
 
+func TestValidateCommandForExecutionAllowsContainedTransfer(t *testing.T) {
+	tmp := t.TempDir()
+	srcRoot := filepath.Join(tmp, "disk1")
+	dstRoot := filepath.Join(tmp, "disk2")
+	entry := filepath.Join("share", "movie", "file.mkv")
+
+	mustMkdirAll(t, filepath.Dir(filepath.Join(srcRoot, entry)))
+	mustWriteFile(t, filepath.Join(srcRoot, entry), "source")
+	mustMkdirAll(t, dstRoot)
+
+	paths, err := validateCommandForExecution(&domain.Command{
+		Src:   srcRoot + string(filepath.Separator),
+		Dst:   dstRoot,
+		Entry: entry,
+	}, []string{srcRoot, dstRoot})
+	if err != nil {
+		t.Fatalf("validateCommandForExecution returned error: %s", err)
+	}
+
+	if paths.SrcRoot != srcRoot || paths.DstRoot != dstRoot || paths.Entry != entry {
+		t.Fatalf("paths = %+v", paths)
+	}
+}
+
+func TestValidateCommandForExecutionRejectsRootsOutsideDisks(t *testing.T) {
+	tmp := t.TempDir()
+	srcRoot := filepath.Join(tmp, "disk1")
+	dstRoot := filepath.Join(tmp, "disk2")
+	outsideRoot := filepath.Join(tmp, "not-a-disk")
+	entry := filepath.Join("share", "movie")
+
+	mustMkdirAll(t, filepath.Join(outsideRoot, entry))
+	mustMkdirAll(t, dstRoot)
+
+	_, err := validateCommandForExecution(&domain.Command{
+		Src:   outsideRoot,
+		Dst:   dstRoot,
+		Entry: entry,
+	}, []string{srcRoot, dstRoot})
+	if err == nil {
+		t.Fatalf("expected non-disk source root to be rejected")
+	}
+}
+
+func TestValidateCommandForExecutionRejectsSourceSymlinkEscape(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink behavior differs on windows")
+	}
+
+	tmp := t.TempDir()
+	srcRoot := filepath.Join(tmp, "disk1")
+	dstRoot := filepath.Join(tmp, "disk2")
+	outside := filepath.Join(tmp, "outside")
+	entry := filepath.Join("share", "escape")
+
+	mustMkdirAll(t, filepath.Join(srcRoot, "share"))
+	mustMkdirAll(t, dstRoot)
+	mustMkdirAll(t, outside)
+
+	if err := os.Symlink(outside, filepath.Join(srcRoot, entry)); err != nil {
+		t.Fatalf("unable to create symlink: %s", err)
+	}
+
+	_, err := validateCommandForExecution(&domain.Command{
+		Src:   srcRoot,
+		Dst:   dstRoot,
+		Entry: entry,
+	}, []string{srcRoot, dstRoot})
+	if err == nil {
+		t.Fatalf("expected source symlink escape to be rejected")
+	}
+}
+
+func TestValidateCommandForExecutionRejectsDestinationSymlinkEscape(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink behavior differs on windows")
+	}
+
+	tmp := t.TempDir()
+	srcRoot := filepath.Join(tmp, "disk1")
+	dstRoot := filepath.Join(tmp, "disk2")
+	outside := filepath.Join(tmp, "outside")
+	entry := filepath.Join("share", "escape", "file.mkv")
+
+	mustMkdirAll(t, filepath.Dir(filepath.Join(srcRoot, entry)))
+	mustWriteFile(t, filepath.Join(srcRoot, entry), "source")
+	mustMkdirAll(t, filepath.Join(dstRoot, "share"))
+	mustMkdirAll(t, outside)
+
+	if err := os.Symlink(outside, filepath.Join(dstRoot, "share", "escape")); err != nil {
+		t.Fatalf("unable to create symlink: %s", err)
+	}
+
+	_, err := validateCommandForExecution(&domain.Command{
+		Src:   srcRoot,
+		Dst:   dstRoot,
+		Entry: entry,
+	}, []string{srcRoot, dstRoot})
+	if err == nil {
+		t.Fatalf("expected destination symlink escape to be rejected")
+	}
+}
+
+func TestValidateCommandForExecutionRequiresAllowedRoots(t *testing.T) {
+	_, err := validateCommandForExecution(&domain.Command{
+		Src:   filepath.Join(string(filepath.Separator), "mnt", "disk1"),
+		Dst:   filepath.Join(string(filepath.Separator), "mnt", "disk2"),
+		Entry: filepath.Join("share", "movie"),
+	}, nil)
+	if err == nil {
+		t.Fatalf("expected missing allowed roots to be rejected")
+	}
+}
+
 func TestRemoveTransferredSourceRemovesOnlyValidatedSource(t *testing.T) {
 	tmp := t.TempDir()
 	srcRoot := filepath.Join(tmp, "disk1")

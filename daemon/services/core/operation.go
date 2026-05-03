@@ -40,20 +40,25 @@ func (c *Core) runOperation(opName string) {
 	commandsExecuted := make([]string, 0)
 
 	for _, command := range operation.Commands {
-		args := append(
-			operation.RsyncArgs,
-			command.Entry,
-			command.Dst,
-		)
+		paths, err := c.validateCommandForExecution(command)
+		if err != nil {
+			cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
+			c.commandInterrupted(opName, operation, command, cmd, fmt.Errorf("unsafe command path: %w", err), 0, commandsExecuted)
+			return
+		}
 
-		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
-		logger.Blue("command started: (src: %s) %s ", command.Src, cmd)
+		command.Src = paths.SrcRoot
+		command.Dst = paths.DstRoot
+		command.Entry = paths.Entry
+
+		cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(paths.Entry), strconv.Quote(paths.DstRoot))
+		logger.Blue("command started: (src: %s) %s ", paths.SrcRoot, cmd)
 
 		operation.Line = cmd
 		packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
 		c.ctx.Hub.Pub(packet, "socket:broadcast")
 
-		cmdTransferred, err := c.runCommand(operation, command, args)
+		cmdTransferred, err := c.runCommand(operation, command)
 		if err != nil {
 			c.commandInterrupted(opName, operation, command, cmd, err, cmdTransferred, commandsExecuted)
 			return
@@ -67,12 +72,27 @@ func (c *Core) runOperation(opName string) {
 	c.operationCompleted(opName, operation, commandsExecuted)
 }
 
-func (c *Core) runCommand(operation *domain.Operation, command *domain.Command, args []string) (uint64, error) {
+func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) (uint64, error) {
+	paths, err := c.validateCommandForExecution(command)
+	if err != nil {
+		return 0, fmt.Errorf("unsafe command path: %w", err)
+	}
+
+	command.Src = paths.SrcRoot
+	command.Dst = paths.DstRoot
+	command.Entry = paths.Entry
+
+	args := append(
+		operation.RsyncArgs,
+		paths.Entry,
+		paths.DstRoot,
+	)
+
 	// make sure the command will run
 	c.stopped = false
 
 	// start rsync command
-	cmd, err := lib.StartRsync(command.Src, args...)
+	cmd, err := lib.StartRsync(paths.SrcRoot, args...)
 	if err != nil {
 		return 0, err
 	}
