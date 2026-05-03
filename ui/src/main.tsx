@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 
-import { App } from './App.tsx';
+import { App, LoginPage, ProtectedLayout } from './App.tsx';
 import './index.css';
 import { Scatter } from '~/flows/scatter/scatter';
 import { Select as ScatterSelect } from '~/flows/scatter/select/select';
@@ -33,96 +33,115 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: '/scatter',
-        element: <Scatter />,
+        index: true,
+        element: <Navigate to="/scatter/select" replace />,
+      },
+      {
+        path: '/login',
+        element: <LoginPage />,
+      },
+      {
+        element: <ProtectedLayout />,
         children: [
-          { index: true, element: <Navigate to="/scatter/select" replace /> },
           {
-            path: 'select',
-            element: <ScatterSelect />,
-          },
-          {
-            path: 'plan',
-            element: <Feedback />,
-          },
-          {
-            path: 'transfer',
-            element: <Outlet />,
+            path: '/scatter',
+            element: <Scatter />,
             children: [
               {
-                path: 'validation',
-                element: <ScatterValidation />,
+                index: true,
+                element: <Navigate to="/scatter/select" replace />,
               },
               {
-                path: 'operation',
-                element: <Transfer />,
+                path: 'select',
+                element: <ScatterSelect />,
+              },
+              {
+                path: 'plan',
+                element: <Feedback />,
+              },
+              {
+                path: 'transfer',
+                element: <Outlet />,
+                children: [
+                  {
+                    path: 'validation',
+                    element: <ScatterValidation />,
+                  },
+                  {
+                    path: 'operation',
+                    element: <Transfer />,
+                  },
+                ],
               },
             ],
           },
-        ],
-      },
-      {
-        path: '/gather',
-        element: <Gather />,
-        children: [
-          { index: true, element: <Navigate to="/gather/select" replace /> },
           {
-            path: 'select',
-            element: <GatherSelect />,
-          },
-          {
-            path: 'plan',
-            element: <Feedback />,
-          },
-          {
-            path: 'transfer',
-            element: <Outlet />,
+            path: '/gather',
+            element: <Gather />,
             children: [
               {
-                path: 'targets',
-                element: <Targets />,
+                index: true,
+                element: <Navigate to="/gather/select" replace />,
               },
               {
-                path: 'operation',
-                element: <Transfer />,
+                path: 'select',
+                element: <GatherSelect />,
+              },
+              {
+                path: 'plan',
+                element: <Feedback />,
+              },
+              {
+                path: 'transfer',
+                element: <Outlet />,
+                children: [
+                  {
+                    path: 'targets',
+                    element: <Targets />,
+                  },
+                  {
+                    path: 'operation',
+                    element: <Transfer />,
+                  },
+                ],
               },
             ],
           },
+          {
+            path: '/history',
+            element: <History />,
+          },
+          {
+            path: '/settings',
+            element: <Settings />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/settings/notifications" replace />,
+              },
+              {
+                path: 'notifications',
+                element: <Notifications />,
+              },
+              {
+                path: 'reserved',
+                element: <Reserved />,
+              },
+              {
+                path: 'flags',
+                element: <Flags />,
+              },
+              {
+                path: 'verbosity',
+                element: <Verbosity />,
+              },
+            ],
+          },
+          {
+            path: '/logs',
+            element: <Logs />,
+          },
         ],
-      },
-      {
-        path: '/history',
-        element: <History />,
-      },
-      {
-        path: '/settings',
-        element: <Settings />,
-        children: [
-          {
-            index: true,
-            element: <Navigate to="/settings/notifications" replace />,
-          },
-          {
-            path: 'notifications',
-            element: <Notifications />,
-          },
-          {
-            path: 'reserved',
-            element: <Reserved />,
-          },
-          {
-            path: 'flags',
-            element: <Flags />,
-          },
-          {
-            path: 'verbosity',
-            element: <Verbosity />,
-          },
-        ],
-      },
-      {
-        path: '/logs',
-        element: <Logs />,
       },
     ],
   },

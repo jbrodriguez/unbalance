@@ -12,7 +12,11 @@ import {
   useAuthUsername,
 } from '~/state/auth';
 
-export function AuthGate() {
+interface AuthGateProps {
+  onAuthenticated?: () => void;
+}
+
+export function AuthGate({ onAuthenticated }: AuthGateProps) {
   const enabled = useAuthEnabled();
   const configured = useAuthConfigured();
   const authError = useAuthError();
@@ -45,15 +49,17 @@ export function AuthGate() {
 
     setSubmitting(true);
 
-    if (isSetup) {
-      await setup(username, password);
-    } else {
-      await login(username, password);
-    }
+    const authenticated = isSetup
+      ? await setup(username, password)
+      : await login(username, password);
 
     setSubmitting(false);
     setPassword('');
     setConfirmPassword('');
+
+    if (authenticated) {
+      onAuthenticated?.();
+    }
   };
 
   return (
@@ -135,17 +141,13 @@ export function AuthGate() {
                 className="h-11 border-transparent bg-[#2b3850] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_0_0_1px_rgba(18,24,38,0.35)] text-lg text-slate-100 placeholder:text-slate-500 focus-visible:border-transparent focus-visible:ring-1 focus-visible:ring-blue-400"
               />
               {confirmPassword !== '' && confirmPassword !== password && (
-                <p className="text-sm text-red-400">
-                  Passwords do not match.
-                </p>
+                <p className="text-sm text-red-400">Passwords do not match.</p>
               )}
             </div>
           )}
 
           {authError !== '' && (
-            <p className="text-sm text-red-400">
-              {authError}
-            </p>
+            <p className="text-sm text-red-400">{authError}</p>
           )}
 
           <Button
@@ -155,7 +157,8 @@ export function AuthGate() {
               submitting ||
               username.trim() === '' ||
               password === '' ||
-              (isSetup && (confirmPassword === '' || confirmPassword !== password))
+              (isSetup &&
+                (confirmPassword === '' || confirmPassword !== password))
             }
           >
             {isSetup ? 'Create Password' : 'Sign In'}
