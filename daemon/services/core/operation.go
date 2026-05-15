@@ -91,6 +91,10 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	// make sure the command will run
 	c.stopped = false
 
+	// reset speed samples: /proc/<pid>/io starts at 0 for each new rsync pid,
+	// so PrevSample must be cleared or the uint64 delta wraps to a huge value.
+	c.resetSamples(operation)
+
 	// start rsync command
 	cmd, err := lib.StartRsync(paths.SrcRoot, args...)
 	if err != nil {
