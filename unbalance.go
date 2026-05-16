@@ -31,6 +31,7 @@ var cli struct {
 	RsyncArgs      []string `env:"RSYNC_ARGS" default:"-X" help:"custom rsync arguments"`
 	Verbosity      int      `env:"VERBOSITY" default:"0" help:"include rsync output in log files: 0 (default) - include; 1 - do not include"`
 	RefreshRate    int      `env:"REFRESH_RATE" default:"1000" help:"how often to refresh the ui while running a command (in milliseconds)"`
+	SpeedWindow    string   `env:"SPEED_WINDOW" default:"90s" help:"time window used to calculate recent transfer speed"`
 	AuthEnabled    bool     `env:"AUTH_ENABLED" default:"false" help:"require login before using the web ui"`
 	AuthUsername   string   `env:"AUTH_USERNAME" default:"admin" help:"admin username used to log into the web ui"`
 	AuthPassword   string   `env:"AUTH_PASSWORD_HASH" default:"" help:"stored admin password hash (Argon2id for new passwords; bcrypt remains supported for migration)"`
@@ -79,6 +80,7 @@ func main() {
 			RsyncArgs:      cli.RsyncArgs,
 			Verbosity:      cli.Verbosity,
 			RefreshRate:    cli.RefreshRate,
+			SpeedWindow:    cli.SpeedWindow,
 			AuthEnabled:    cli.AuthEnabled,
 			AuthUsername:   cli.AuthUsername,
 			AuthPassword:   cli.AuthPassword,

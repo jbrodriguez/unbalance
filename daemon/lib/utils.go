@@ -184,6 +184,7 @@ func LoadEnv(location string, config *domain.Config) error {
 	config.RsyncArgs = file.Section("").Key("RSYNC_ARGS").Strings(",")
 	config.Verbosity, _ = file.Section("").Key("VERBOSITY").Int()
 	config.RefreshRate, _ = file.Section("").Key("REFRESH_RATE").Int()
+	config.SpeedWindow = file.Section("").Key("SPEED_WINDOW").MustString("90s")
 	config.AuthPassword = file.Section("").Key("AUTH_PASSWORD_HASH").String()
 
 	return nil
@@ -207,6 +208,10 @@ func SaveEnv(location string, config domain.Config) error {
 	file.Section("").Key("RSYNC_ARGS").SetValue(strings.Join(config.RsyncArgs, ","))
 	file.Section("").Key("VERBOSITY").SetValue(strconv.Itoa(config.Verbosity))
 	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
+	if config.SpeedWindow == "" {
+		config.SpeedWindow = "90s"
+	}
+	file.Section("").Key("SPEED_WINDOW").SetValue(config.SpeedWindow)
 	file.Section("").Key("AUTH_PASSWORD_HASH").SetValue(config.AuthPassword)
 
 	tmpName := location + ".tmp"

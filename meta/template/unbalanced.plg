@@ -58,6 +58,7 @@ RESERVED_UNIT=Gb
 RSYNC_ARGS=-X
 VERBOSITY=0
 REFRESH_RATE=1000
+SPEED_WINDOW=90s
 AUTH_PASSWORD_HASH=
 ]]>
 </INLINE>
@@ -125,6 +126,7 @@ ENVFILE=/boot/config/plugins/unbalanced/unbalanced.env
 [ ! `cat "$CFGFILE" | grep RUNAS` ] && echo "RUNAS=\"nobody\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep AUTH_ENABLED` ] && echo "AUTH_ENABLED=\"false\"" >> "$CFGFILE"
 [ ! `cat "$CFGFILE" | grep AUTH_USERNAME` ] && echo "AUTH_USERNAME=\"admin\"" >> "$CFGFILE"
+[ ! `cat "$ENVFILE" | grep SPEED_WINDOW` ] && echo "SPEED_WINDOW=90s" >> "$ENVFILE"
 [ ! `cat "$ENVFILE" | grep AUTH_PASSWORD_HASH` ] && echo "AUTH_PASSWORD_HASH=" >> "$ENVFILE"
 rm /tmp/unbalanced-chkconf
 ]]>

@@ -10,6 +10,7 @@ type Config struct {
 	RsyncArgs      []string `json:"rsyncArgs"`
 	Verbosity      int      `json:"verbosity"`
 	RefreshRate    int      `json:"refreshRate"`
+	SpeedWindow    string   `json:"speedWindow"`
 	AuthEnabled    bool     `json:"authEnabled"`
 	AuthUsername   string   `json:"authUsername"`
 	AuthPassword   string   `json:"-"`

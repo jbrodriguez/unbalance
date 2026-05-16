@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -13,6 +14,11 @@ import (
 	"unbalance/daemon/logger"
 
 	"github.com/teris-io/shortid"
+)
+
+const (
+	defaultSpeedWindow = 90 * time.Second
+	maxSpeedWindow     = 10 * time.Minute
 )
 
 func (c *Core) runOperation(opName string) {
@@ -90,10 +96,6 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 
 	// make sure the command will run
 	c.stopped = false
-
-	// reset speed samples: /proc/<pid>/io starts at 0 for each new rsync pid,
-	// so PrevSample must be cleared or the uint64 delta wraps to a huge value.
-	c.resetSamples(operation)
 
 	// start rsync command
 	cmd, err := lib.StartRsync(paths.SrcRoot, args...)
@@ -201,15 +203,16 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 		// update progress stats
 		transferred = lib.Min(transferred, command.Size)
 
-		percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred+transferred, time.Since(operation.Started))
+		bytesTransferred := operation.BytesTransferred + transferred
+		percent, _, _ := progress(operation.BytesToTransfer, bytesTransferred, time.Since(operation.Started))
 
-		c.updateSamples(operation, operation.BytesTransferred+transferred)
-		speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
+		c.updateSamples(operation, bytesTransferred)
+		speed := c.calculateSpeed(operation)
 
 		operation.Line = current
 		operation.Completed = percent
 		operation.Speed = speed
-		operation.Remaining = left.String()
+		operation.Remaining = remainingAtSpeed(operation.BytesToTransfer, bytesTransferred, speed)
 		operation.DeltaTransfer = transferred
 		command.Transferred = transferred
 		command.Status = common.CmdInProgress
@@ -233,13 +236,13 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 	operation.BytesTransferred += cmdTransferred
-	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	percent, _, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
+	speed := c.calculateSpeed(operation)
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = left.String()
+	operation.Remaining = remainingAtSpeed(operation.BytesToTransfer, operation.BytesTransferred, speed)
 	operation.DeltaTransfer = cmdTransferred
 	command.Transferred = cmdTransferred
 
@@ -251,13 +254,15 @@ func (c *Core) commandCompleted(operation *domain.Operation, command *domain.Com
 	logger.Blue("%s", text)
 
 	operation.BytesTransferred += command.Size
-	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
+	c.updateSamples(operation, operation.BytesTransferred)
 
-	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
+	percent, _, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, time.Since(operation.Started))
+
+	speed := c.calculateSpeed(operation)
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = left.String()
+	operation.Remaining = remainingAtSpeed(operation.BytesToTransfer, operation.BytesTransferred, speed)
 	operation.DeltaTransfer = 0
 	operation.Line = text
 	command.Transferred = command.Size
@@ -320,13 +325,13 @@ func (c *Core) operationCompleted(opName string, operation *domain.Operation, co
 	subject := fmt.Sprintf("unbalanced - %s operation completed", strings.ToUpper(opName))
 	headline := fmt.Sprintf("%s operation has finished", opName)
 
-	percent, left, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
+	percent, _, _ := progress(operation.BytesToTransfer, operation.BytesTransferred, elapsed)
 
-	speed := c.calculateSpeed(operation, time.Duration(c.ctx.RefreshRate)*time.Millisecond)
+	speed := c.calculateSpeed(operation)
 
 	operation.Completed = percent
 	operation.Speed = speed
-	operation.Remaining = left.String()
+	operation.Remaining = remainingAtSpeed(operation.BytesToTransfer, operation.BytesTransferred, speed)
 
 	c.endOperation(subject, headline, commandsExecuted, operation)
 }
@@ -490,9 +495,38 @@ func (c *Core) createReplayOperation(original domain.Operation) *domain.Operatio
 }
 
 func (c *Core) updateSamples(operation *domain.Operation, transferred uint64) {
-	operation.Samples[operation.SampleIndex] = transferred - operation.PrevSample
-	operation.SampleIndex = (operation.SampleIndex + 1) % 60
+	c.updateSamplesAt(operation, transferred, time.Now())
+}
+
+func (c *Core) updateSamplesAt(operation *domain.Operation, transferred uint64, sampledAt time.Time) {
+	if transferred < operation.PrevSample {
+		operation.PrevSample = transferred
+		operation.PrevSampleAt = sampledAt
+		return
+	}
+
+	elapsedFrom := operation.PrevSampleAt
+	if elapsedFrom.IsZero() {
+		elapsedFrom = operation.Started
+	}
+	if elapsedFrom.IsZero() {
+		elapsedFrom = sampledAt
+	}
+
+	if !sampledAt.After(elapsedFrom) {
+		operation.PrevSample = transferred
+		operation.PrevSampleAt = sampledAt
+		return
+	}
+
+	operation.Samples = append(operation.Samples, domain.SpeedSample{
+		Bytes:     transferred,
+		SampledAt: sampledAt,
+	})
+	operation.Samples = c.pruneSpeedSamples(operation.Samples, sampledAt)
+	operation.SampleIndex = len(operation.Samples)
 	operation.PrevSample = transferred
+	operation.PrevSampleAt = sampledAt
 }
 
 func (c *Core) resetSamples(operation *domain.Operation) {
@@ -500,35 +534,101 @@ func (c *Core) resetSamples(operation *domain.Operation) {
 		return
 	}
 
-	for i := range operation.Samples {
-		operation.Samples[i] = 0
-	}
-
+	operation.Samples = nil
 	operation.SampleIndex = 0
 	operation.PrevSample = 0
+	operation.PrevSampleAt = time.Time{}
 }
 
-func (c *Core) calculateSpeed(operation *domain.Operation, rate time.Duration) float64 {
-	var sum uint64
-	var countNonZero int
+func (c *Core) calculateSpeed(operation *domain.Operation) float64 {
+	window := c.speedWindow()
+	cutoff := time.Now().Add(-window)
+	var samples []domain.SpeedSample
 
 	for _, sample := range operation.Samples {
-		if sample <= 0 {
+		if sample.SampledAt.IsZero() || sample.SampledAt.Before(cutoff) {
 			continue
 		}
-
-		sum += sample
-		countNonZero++
+		samples = append(samples, sample)
 	}
 
-	// avoid division by zero
-	if rate.Seconds() == 0 || countNonZero == 0 {
+	if len(samples) < 2 {
 		return 0.0
 	}
 
-	// Calculate average speed based on non-zero samples
-	averageTransferred := float64(sum) / float64(countNonZero)
-	speed := averageTransferred / rate.Seconds() / 1024 / 1024 // MB/s
+	oldest := samples[0]
+	latest := samples[len(samples)-1]
+	elapsed := latest.SampledAt.Sub(oldest.SampledAt)
+	if elapsed <= 0 || latest.Bytes <= oldest.Bytes {
+		return 0.0
+	}
+
+	speed := float64(latest.Bytes-oldest.Bytes) / elapsed.Seconds() / 1024 / 1024 // MB/s
 
 	return speed
+}
+
+func (c *Core) pruneSpeedSamples(samples []domain.SpeedSample, now time.Time) []domain.SpeedSample {
+	window := c.speedWindow()
+	cutoff := now.Add(-window)
+	keepFrom := 0
+	for keepFrom < len(samples) && samples[keepFrom].SampledAt.Before(cutoff) {
+		keepFrom++
+	}
+	if keepFrom == 0 {
+		return samples
+	}
+	return samples[keepFrom:]
+}
+
+func (c *Core) speedWindow() time.Duration {
+	if c == nil || c.ctx == nil || c.ctx.Config.SpeedWindow == "" {
+		return defaultSpeedWindow
+	}
+
+	window, err := time.ParseDuration(strings.TrimSpace(c.ctx.Config.SpeedWindow))
+	if err != nil || window <= 0 {
+		return defaultSpeedWindow
+	}
+	if window > maxSpeedWindow {
+		return maxSpeedWindow
+	}
+	return window
+}
+
+func remainingAtSpeed(bytesToTransfer, bytesTransferred uint64, speed float64) string {
+	if bytesTransferred >= bytesToTransfer {
+		return "0s"
+	}
+	if speed <= 0 {
+		return "unknown"
+	}
+
+	bytesPerSec := speed * 1024 * 1024
+	left := time.Duration(float64(bytesToTransfer-bytesTransferred) / bytesPerSec * float64(time.Second))
+	return formatRemainingDuration(left)
+}
+
+func formatRemainingDuration(duration time.Duration) string {
+	seconds := int64(math.Ceil(duration.Seconds()))
+	if seconds <= 0 {
+		return "0s"
+	}
+
+	hours := seconds / 3600
+	minutes := (seconds - hours*3600) / 60
+	seconds = seconds - hours*3600 - minutes*60
+
+	var parts []string
+	if hours > 0 {
+		parts = append(parts, fmt.Sprintf("%dh", hours))
+	}
+	if minutes > 0 {
+		parts = append(parts, fmt.Sprintf("%dm", minutes))
+	}
+	if seconds > 0 {
+		parts = append(parts, fmt.Sprintf("%ds", seconds))
+	}
+
+	return strings.Join(parts, " ")
 }
