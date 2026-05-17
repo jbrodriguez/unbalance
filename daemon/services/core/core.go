@@ -66,6 +66,8 @@ type Core struct {
 	pendingPlans   map[string]*planTicket
 	pendingPlansMu sync.Mutex
 
+	executor transferExecutor
+
 	stopped bool
 }
 
@@ -77,6 +79,7 @@ func Create(ctx *domain.Context) *Core {
 			Status: common.OpNeutral,
 		},
 		pendingPlans: make(map[string]*planTicket),
+		executor:     newInProcessExecutor(),
 		mailbox: ctx.Hub.Sub(
 			common.CommandScatterPlanStart,
 			common.CommandScatterMove,
@@ -89,6 +92,14 @@ func Create(ctx *domain.Context) *Core {
 			common.CommandStop,
 		),
 	}
+}
+
+func (c *Core) transferExecutor() transferExecutor {
+	if c.executor == nil {
+		c.executor = newInProcessExecutor()
+	}
+
+	return c.executor
 }
 
 func (c *Core) Start() error {

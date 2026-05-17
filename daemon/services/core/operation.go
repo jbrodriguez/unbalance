@@ -46,7 +46,7 @@ func (c *Core) runOperation(opName string) {
 	commandsExecuted := make([]string, 0)
 
 	for _, command := range operation.Commands {
-		paths, err := c.validateCommandForExecution(command)
+		paths, err := c.prepareCommandForExecution(command)
 		if err != nil {
 			cmd := fmt.Sprintf(`rsync %s %s %s`, operation.RsyncStrArgs, strconv.Quote(command.Entry), strconv.Quote(command.Dst))
 			c.commandInterrupted(opName, operation, command, cmd, fmt.Errorf("unsafe command path: %w", err), 0, commandsExecuted)
@@ -79,7 +79,7 @@ func (c *Core) runOperation(opName string) {
 }
 
 func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) (uint64, error) {
-	paths, err := c.validateCommandForExecution(command)
+	paths, err := c.prepareCommandForExecution(command)
 	if err != nil {
 		return 0, fmt.Errorf("unsafe command path: %w", err)
 	}
@@ -98,7 +98,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	c.stopped = false
 
 	// start rsync command
-	cmd, err := lib.StartRsync(paths.SrcRoot, args...)
+	cmd, err := c.transferExecutor().StartRsync(paths.SrcRoot, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -107,12 +107,12 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	time.Sleep(500 * time.Millisecond)
 
 	// monitor rsync progress
-	retcode, transferred := c.monitorRsync(operation, command, cmd.Process.Pid)
+	retcode, transferred := c.monitorRsync(operation, command, cmd.PID())
 
 	// 99 is a magic number meaning the user clicked on the stop operation button
 	if retcode == 99 {
 		logger.Blue("command:received:StopCommand")
-		err = lib.KillRsync(cmd)
+		err = cmd.Kill()
 		if err != nil {
 			logger.Yellow("command:kill:error(%s)", err)
 		}
@@ -124,7 +124,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	command.Status = common.CmdCompleted
 
 	// end rsync process
-	exitCode, err := lib.EndRsync(cmd)
+	exitCode, err := cmd.Wait()
 	if err != nil {
 		logger.Yellow("command:end:error(%s)", err)
 		command.Status = common.CmdStopped
@@ -299,7 +299,7 @@ func (c *Core) handleItemDeletion(operation *domain.Operation, command *domain.C
 		packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
 		c.ctx.Hub.Pub(packet, "socket:broadcast")
 
-		removed, pruned, err := removeTransferredSource(command, operation.OpKind == common.OpGatherMove)
+		removed, pruned, err := c.transferExecutor().RemoveTransferredSource(command, operation.OpKind == common.OpGatherMove)
 		if err != nil {
 			msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
 			operation.Line = msg
