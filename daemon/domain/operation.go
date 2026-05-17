@@ -31,8 +31,14 @@ type Operation struct {
 	DeltaTransfer uint64  `json:"deltaTransfer"`
 	Line          string  `json:"line"`
 
-	// 60 samples of transferred bytes to calculate speed
-	Samples     [60]uint64 `json:"-"`
-	SampleIndex int        `json:"-"`
-	PrevSample  uint64     `json:"-"`
+	// recent lifetime progress samples used to calculate speed
+	Samples      []SpeedSample `json:"-"`
+	SampleIndex  int           `json:"-"`
+	PrevSample   uint64        `json:"-"`
+	PrevSampleAt time.Time     `json:"-"`
+}
+
+type SpeedSample struct {
+	Bytes     uint64
+	SampledAt time.Time
 }

@@ -33,6 +33,7 @@ export class Api {
         rsyncArgs: [],
         verbosity: 0,
         refreshRate: 0,
+        speedWindow: '90s',
         authEnabled: false,
         authUsername: 'admin',
       };
