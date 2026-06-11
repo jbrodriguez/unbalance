@@ -94,7 +94,7 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 		reserved := c.getReservedAmount(disk.Size)
 
 		ceil := lib.Max(common.ReservedSpace, reserved)
-		logger.Blue("scatterPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
+		logger.Blue("gatherPlan:ItemsLeft(%d):ReservedSpace(%d)", len(items), ceil)
 
 		packer := algorithm.NewGreedy(disk, items, ceil, c.state.Unraid.BlockSize)
 		bin := packer.FitAll()
