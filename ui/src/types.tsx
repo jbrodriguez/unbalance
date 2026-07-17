@@ -81,6 +81,7 @@ export interface Command {
   size: number;
   transferred: number;
   status: CommandStatus;
+  reason: string;
 }
 
 export interface Operation {

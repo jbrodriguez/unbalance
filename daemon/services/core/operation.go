@@ -118,6 +118,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 		}
 
 		command.Status = common.CmdStopped
+		command.Reason = "stopped by the user"
 		return transferred, fmt.Errorf("exit status %d", retcode)
 	}
 
@@ -128,6 +129,11 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	if err != nil {
 		logger.Yellow("command:end:error(%s)", err)
 		command.Status = common.CmdStopped
+		if exitCode != 0 {
+			command.Reason = rsyncExitReason(exitCode)
+		} else {
+			command.Reason = err.Error()
+		}
 	}
 
 	logger.Blue("command:retcode(%d):exitcode(%d)", retcode, exitCode)
@@ -137,6 +143,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	if exitCode == 23 || exitCode == 13 {
 		err = nil
 		command.Status = common.CmdFlagged
+		command.Reason = rsyncExitReason(exitCode)
 	}
 
 	return transferred, err
@@ -229,7 +236,15 @@ func (c *Core) commandInterrupted(opName string, operation *domain.Operation, co
 	elapsed := time.Since(operation.Started)
 
 	subject := fmt.Sprintf("unbalanced - %s operation INTERRUPTED", strings.ToUpper(opName))
-	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, err.Error()+" : "+getError(err.Error(), reRsync, rsyncErrors))
+	reason := err.Error() + " : " + getError(err.Error(), reRsync, rsyncErrors)
+	headline := fmt.Sprintf("Command Interrupted: %s (%s)", cmd, reason)
+
+	// persist the reason, so history can show why the command failed
+	if command.Reason == "" {
+		command.Reason = reason
+	}
+
+	command.Status = common.CmdStopped
 
 	logger.Yellow("%s", headline)
 	packet := &domain.Packet{Topic: common.EventOperationError, Payload: fmt.Sprintf("%s operation was interrupted. Check log (/var/log/unbalanced.log) for additional details.", opName)}
@@ -303,6 +318,7 @@ func (c *Core) handleItemDeletion(operation *domain.Operation, command *domain.C
 		if err != nil {
 			msg := fmt.Sprintf("Unable to remove source folder (%s): %s", filepath.Join(command.Src, command.Entry), err)
 			operation.Line = msg
+			command.Reason = msg
 
 			packet := &domain.Packet{Topic: common.EventTransferProgress, Payload: operation}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")

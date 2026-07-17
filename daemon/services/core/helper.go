@@ -456,6 +456,15 @@ func getError(line string, re *regexp.Regexp, ers map[int]string) string {
 	return msg
 }
 
+func rsyncExitReason(code int) string {
+	msg, ok := rsyncErrors[code]
+	if !ok {
+		msg = "unknown error"
+	}
+
+	return fmt.Sprintf("%s (rsync exit code %d)", msg, code)
+}
+
 func sendmail(notify int, subject, message string, dryRun bool) (err error) {
 	if notify == 0 {
 		return nil
