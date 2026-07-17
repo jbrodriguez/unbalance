@@ -146,6 +146,12 @@ func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *rege
 	// Get items to be transferred
 	for _, disk := range disks {
 		for _, path := range folders {
+			// the user cancelled the plan, no point in scanning any further
+			if c.stopped {
+				logger.Blue("planner:cancelled:scan abandoned")
+				return items, ownerIssue, groupIssue, folderIssue, fileIssue
+			}
+
 			// logging
 			logger.Blue("scanning:disk(%s):folder(%s)", disk.Path, path)
 
@@ -338,6 +344,15 @@ func getTopic(status uint64) string {
 	}
 
 	return common.EventGatherPlanProgress
+}
+
+func (c *Core) planCancelled(topic string) {
+	c.state.Status = common.OpNeutral
+
+	logger.Blue("planning cancelled by the user")
+
+	packet := &domain.Packet{Topic: topic, Payload: "Planning cancelled by the user"}
+	c.ctx.Hub.Pub(packet, "socket:broadcast")
 }
 
 func removeItems(items, list []*domain.Item) []*domain.Item {

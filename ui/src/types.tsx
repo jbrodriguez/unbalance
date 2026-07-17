@@ -191,6 +191,7 @@ export enum Topic {
   EventScatterPlanStarted = 'scatter:plan:started',
   EventScatterPlanProgress = 'scatter:plan:progress',
   EventScatterPlanEnded = 'scatter:plan:ended',
+  EventScatterPlanCancelled = 'scatter:plan:cancelled',
   CommandScatterMove = 'scatter:move',
   CommandScatterCopy = 'scatter:copy',
   CommandScatterValidate = 'scatter:validate',
@@ -199,6 +200,7 @@ export enum Topic {
   EventGatherPlanStarted = 'gather:plan:started',
   EventGatherPlanProgress = 'gather:plan:progress',
   EventGatherPlanEnded = 'gather:plan:ended',
+  EventGatherPlanCancelled = 'gather:plan:cancelled',
   CommandGatherMove = 'gather:move',
 
   EventTransferStarted = 'transfer:started',

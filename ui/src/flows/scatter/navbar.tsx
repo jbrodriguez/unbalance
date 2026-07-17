@@ -23,7 +23,7 @@ const config = [
 
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
-  const { transition, scatterOperation } = useUnraidActions();
+  const { transition, scatterOperation, stop } = useUnraidActions();
   const { toggleDryRun } = useConfigActions();
   const dryRun = useConfigDryRun();
   const selected = useScatterSelected();
@@ -35,6 +35,7 @@ export const Navbar: React.FunctionComponent = () => {
   const onMove = () => scatterOperation(Topic.CommandScatterMove);
   const onCopy = () => scatterOperation(Topic.CommandScatterCopy);
   const onDryRun = () => toggleDryRun();
+  const onStopPlan = () => stop();
 
   const currentStep = routeToStep(route);
   const nextDisabled =
@@ -66,6 +67,13 @@ export const Navbar: React.FunctionComponent = () => {
           <span className="mx-2" />
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
+
+        {route === '/scatter/plan' && busy && (
+          <div className="flex flex-row items-center justify-end">
+            <Button label="STOP" variant="primary" onClick={onStopPlan} />
+            <span className="mx-2" />
+          </div>
+        )}
 
         {route === '/scatter/transfer/validation' && (
           <div className="flex flex-row items-center justify-end">

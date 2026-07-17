@@ -44,6 +44,7 @@ interface UnraidStore {
     scatterPlan: () => void;
     scatterProgress: (payload: string) => void;
     scatterPlanEnded: (payload: Plan) => void;
+    scatterPlanCancelled: (payload: string) => void;
     scatterOperation: (
       command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
     ) => void;
@@ -53,6 +54,7 @@ interface UnraidStore {
     gatherPlan: () => void;
     gatherProgress: (payload: string) => void;
     gatherPlanEnded: (payload: Plan) => void;
+    gatherPlanCancelled: (payload: string) => void;
     gatherMove: () => void;
     removeSource: (
       operation: Operation | undefined,
@@ -70,12 +72,14 @@ const mapEventToAction: { [x: string]: string } = {
   [Topic.EventScatterPlanStarted]: 'scatterProgress',
   [Topic.EventScatterPlanProgress]: 'scatterProgress',
   [Topic.EventScatterPlanEnded]: 'scatterPlanEnded',
+  [Topic.EventScatterPlanCancelled]: 'scatterPlanCancelled',
   [Topic.EventTransferStarted]: 'transferProgress',
   [Topic.EventTransferProgress]: 'transferProgress',
   [Topic.EventTransferEnded]: 'transferEnded',
   [Topic.EventGatherPlanStarted]: 'gatherProgress',
   [Topic.EventGatherPlanProgress]: 'gatherProgress',
   [Topic.EventGatherPlanEnded]: 'gatherPlanEnded',
+  [Topic.EventGatherPlanCancelled]: 'gatherPlanCancelled',
   [Topic.EventOperationError]: 'operationError',
 };
 
@@ -337,6 +341,16 @@ export const useUnraidStore = create<UnraidStore>()(
           });
           // get().actions.getUnraid();
         },
+        scatterPlanCancelled: (payload: string) => {
+          console.log('scatterPlanCancelled ', payload);
+          set((state) => {
+            state.status = Op.Neutral;
+            state.plan = null;
+            state.logs.push(payload);
+          });
+
+          get().navigate?.('/scatter/select');
+        },
         scatterOperation: (
           command: Topic.CommandScatterMove | Topic.CommandScatterCopy,
         ) => {
@@ -456,6 +470,16 @@ export const useUnraidStore = create<UnraidStore>()(
             state.error = '';
           });
           // get().actions.getUnraid();
+        },
+        gatherPlanCancelled: (payload: string) => {
+          console.log('gatherPlanCancelled ', payload);
+          set((state) => {
+            state.status = Op.Neutral;
+            state.plan = null;
+            state.logs.push(payload);
+          });
+
+          get().navigate?.('/gather/select');
         },
         gatherMove: () => {
           const machine = get().machine;

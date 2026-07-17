@@ -26,7 +26,7 @@ const config = [
 
 export const Navbar: React.FunctionComponent = () => {
   const route = useUnraidRoute();
-  const { transition, gatherMove } = useUnraidActions();
+  const { transition, gatherMove, stop } = useUnraidActions();
   const target = useGatherTarget();
   const { toggleDryRun } = useConfigActions();
   const dryRun = useConfigDryRun();
@@ -37,6 +37,7 @@ export const Navbar: React.FunctionComponent = () => {
   const onPrev = () => transition('prev');
   const onMove = () => gatherMove();
   const onDryRun = () => toggleDryRun();
+  const onStopPlan = () => stop();
 
   const currentStep = routeToStep(route);
   const nextDisabled =
@@ -67,6 +68,13 @@ export const Navbar: React.FunctionComponent = () => {
           <span className="mx-2" />
           <Stepper steps={3} currentStep={currentStep} config={config} />
         </div>
+
+        {route === '/gather/plan' && busy && (
+          <div className="flex flex-row items-center justify-end">
+            <Button label="STOP" variant="primary" onClick={onStopPlan} />
+            <span className="mx-2" />
+          </div>
+        )}
 
         {route === '/gather/transfer/targets' && target !== '' && (
           <div className="flex flex-row items-center justify-end">

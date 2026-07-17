@@ -29,6 +29,9 @@ func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
 	c.state.Status = common.OpScatterPlan
 	c.state.Unraid = c.refreshUnraid()
 
+	// make sure a previous stop request doesn't cancel this plan
+	c.stopped = false
+
 	plan := &domain.Plan{
 		Started:       now,
 		ChosenFolders: setup.Selected,
@@ -95,6 +98,11 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 	c.printDisks(c.state.Unraid.Disks, c.state.Unraid.BlockSize)
 
 	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
+
+	if c.stopped {
+		c.planCancelled(common.EventScatterPlanCancelled)
+		return
+	}
 
 	toBeTransferred := make([]*domain.Item, 0)
 

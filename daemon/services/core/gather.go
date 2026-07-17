@@ -26,6 +26,9 @@ func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
 	c.state.Status = common.OpGatherPlan
 	c.state.Unraid = c.refreshUnraid()
 
+	// make sure a previous stop request doesn't cancel this plan
+	c.stopped = false
+
 	plan := &domain.Plan{
 		Started:       now,
 		ChosenFolders: setup.Selected,
@@ -57,6 +60,11 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 	c.printDisks(c.state.Unraid.Disks, c.state.Unraid.BlockSize)
 
 	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, c.state.Unraid.Disks, plan.ChosenFolders)
+
+	if c.stopped {
+		c.planCancelled(common.EventGatherPlanCancelled)
+		return
+	}
 
 	// // no items found, no sense going on, just end this planning
 	// if len(items) == 0 {
