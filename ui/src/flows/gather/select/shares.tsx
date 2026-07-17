@@ -15,7 +15,8 @@ export const Shares: React.FunctionComponent = () => {
   }, [loadShares]);
 
   const onLoad = async (node: Node) => await loadBranch(node);
-  const onCheck = (node: Node) => toggleSelected(node);
+  const onCheck = (node: Node, shiftKey: boolean) =>
+    toggleSelected(node, shiftKey);
 
   return (
     <Panel title="Shares">

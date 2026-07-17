@@ -4,7 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { Targets, Nodes, Node } from '~/types';
 import { Api } from '~/api';
 import { decorateNode } from '~/shared/tree/utils';
-import { isParent, getAbsolutePath } from '~/helpers/tree';
+import { isParent, getAbsolutePath, getSiblingRange } from '~/helpers/tree';
 
 interface ScatterStore {
   source: string;
@@ -12,11 +12,12 @@ interface ScatterStore {
   targets: Targets;
   tree: Nodes;
   binDisk: string;
+  lastChecked: string;
   allTargetsChecked: boolean;
   actions: {
     setSource: (source: string) => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
-    toggleSelected: (node: Node) => void;
+    toggleSelected: (node: Node, shiftKey?: boolean) => void;
     toggleTarget: (name: string) => void;
     toggleAll: (names: string[]) => void;
     setBinDisk: (binDisk: string) => void;
@@ -47,6 +48,7 @@ export const useScatterStore = create<ScatterStore>()(
     tree: { root: decorateNode(rootNode as Node) },
     logs: [],
     binDisk: '',
+    lastChecked: '',
     allTargetsChecked: false,
     actions: {
       setSource: async (source: string) => {
@@ -57,6 +59,7 @@ export const useScatterStore = create<ScatterStore>()(
           state.source = source;
           state.targets = {};
           state.selected = [];
+          state.lastChecked = '';
           state.tree.root.children = ['loader'];
           state.tree = { ...state.tree, loader };
         });
@@ -119,51 +122,65 @@ export const useScatterStore = create<ScatterStore>()(
           state.tree[node.id].children = branch.order;
         });
       },
-      toggleSelected: (node: Node) => {
+      toggleSelected: (node: Node, shiftKey = false) => {
+        // shift-click extends the check/uncheck to every sibling between
+        // the previously clicked node and this one
+        const range = shiftKey
+          ? getSiblingRange(get().lastChecked, node.id, get().tree)
+          : null;
+        const nodes = range ?? [node];
+
         set((state) => {
           console.log('toggleSelected ', node);
-          state.tree[node.id].checked = !state.tree[node.id].checked;
-          console.log('node.id ', state.tree[node.id]);
+          const checked = !state.tree[node.id].checked;
+          state.lastChecked = node.id;
 
-          // add or remove from selected
-          const fullPath = getAbsolutePath(node, state.tree);
-          const index = state.selected.indexOf(fullPath);
-          if (index === -1) {
-            state.selected.push(fullPath);
-          } else {
-            state.selected.splice(index, 1);
-          }
-
-          // remove parents by looping
-          let parent = state.tree[node.parent];
-          while (parent) {
-            const parentFullPath = getAbsolutePath(parent, state.tree);
-            const parentIndex = state.selected.indexOf(parentFullPath);
-            if (parentIndex !== -1) {
-              state.selected.splice(parentIndex, 1);
-              state.tree[parent.id].checked = false;
+          for (const target of nodes) {
+            if (!!state.tree[target.id].checked === checked) {
+              continue;
             }
-            parent = state.tree[parent.parent];
-          }
+            state.tree[target.id].checked = checked;
 
-          // remove children recursively
-          const removeChildren = (node: Node) => {
-            if (!node.children) {
-              return;
+            // add or remove from selected
+            const fullPath = getAbsolutePath(target, state.tree);
+            const index = state.selected.indexOf(fullPath);
+            if (index === -1) {
+              state.selected.push(fullPath);
+            } else {
+              state.selected.splice(index, 1);
             }
 
-            node.children.forEach((childId) => {
-              const child = state.tree[childId];
-              const childFullPath = getAbsolutePath(child, state.tree);
-              const childIndex = state.selected.indexOf(childFullPath);
-              if (childIndex !== -1) {
-                state.selected.splice(childIndex, 1);
-                state.tree[child.id].checked = false;
+            // remove parents by looping
+            let parent = state.tree[target.parent];
+            while (parent) {
+              const parentFullPath = getAbsolutePath(parent, state.tree);
+              const parentIndex = state.selected.indexOf(parentFullPath);
+              if (parentIndex !== -1) {
+                state.selected.splice(parentIndex, 1);
+                state.tree[parent.id].checked = false;
               }
-              removeChildren(child);
-            });
-          };
-          removeChildren(node);
+              parent = state.tree[parent.parent];
+            }
+
+            // remove children recursively
+            const removeChildren = (node: Node) => {
+              if (!node.children) {
+                return;
+              }
+
+              node.children.forEach((childId) => {
+                const child = state.tree[childId];
+                const childFullPath = getAbsolutePath(child, state.tree);
+                const childIndex = state.selected.indexOf(childFullPath);
+                if (childIndex !== -1) {
+                  state.selected.splice(childIndex, 1);
+                  state.tree[child.id].checked = false;
+                }
+                removeChildren(child);
+              });
+            };
+            removeChildren(target);
+          }
         });
       },
       toggleTarget: (name: string) => {

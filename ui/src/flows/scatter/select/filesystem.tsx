@@ -22,7 +22,8 @@ export const FileSystem: React.FunctionComponent = () => {
   }, [selected]);
 
   const onLoad = async (node: Node) => await loadBranch(node);
-  const onCheck = (node: Node) => toggleSelected(node);
+  const onCheck = (node: Node, shiftKey: boolean) =>
+    toggleSelected(node, shiftKey);
 
   return (
     <Panel title="Folders/Files" scrollToTop={current !== selected}>

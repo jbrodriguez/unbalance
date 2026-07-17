@@ -4,7 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { Nodes, Node, Sizes } from '~/types';
 import { Api } from '~/api';
 import { decorateNode } from '~/shared/tree/utils';
-import { isParent, getAbsolutePath } from '~/helpers/tree';
+import { isParent, getAbsolutePath, getSiblingRange } from '~/helpers/tree';
 
 interface GatherStore {
   source: string;
@@ -13,10 +13,11 @@ interface GatherStore {
   location: Record<string, Array<string>>;
   sizes: Record<string, Sizes | null>;
   target: string;
+  lastChecked: string;
   actions: {
     loadShares: () => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
-    toggleSelected: (node: Node) => Promise<void>;
+    toggleSelected: (node: Node, shiftKey?: boolean) => Promise<void>;
     loadSize: (id: string, path: string) => Promise<void>;
     setTarget: (target: string) => void;
     // loadBranch: (node: Node) => Promise<void>;
@@ -50,6 +51,7 @@ export const useGatherStore = create<GatherStore>()(
     location: {},
     sizes: {},
     target: '',
+    lastChecked: '',
 
     actions: {
       loadShares: async () => {
@@ -98,71 +100,80 @@ export const useGatherStore = create<GatherStore>()(
           state.tree[node.id].children = branch.order;
         });
       },
-      toggleSelected: async (node: Node) => {
-        set((state) => {
-          state.tree[node.id].checked = !state.tree[node.id].checked;
-        });
+      toggleSelected: async (node: Node, shiftKey = false) => {
+        // shift-click extends the check/uncheck to every sibling between
+        // the previously clicked node and this one
+        const range = shiftKey
+          ? getSiblingRange(get().lastChecked, node.id, get().tree)
+          : null;
+        const nodes = range ?? [node];
+        const checked = !get().tree[node.id].checked;
 
         set((state) => {
-          // remove parents by looping
-          let parent = state.tree[node.parent];
-          while (parent) {
-            if (state.selected[parent.id]) {
-              delete state.selected[parent.id];
-              delete state.location[parent.id];
-              state.tree[parent.id].checked = false;
-            }
-            parent = state.tree[parent.parent];
+          state.lastChecked = node.id;
+        });
+
+        for (const target of nodes) {
+          // the tree may have changed while awaiting a previous locate
+          const current = get().tree[target.id];
+          if (!current || !!current.checked === checked) {
+            continue;
           }
 
-          // remove children recursively
-          const removeChildren = (node: Node) => {
-            if (!node.children) {
-              return;
+          set((state) => {
+            state.tree[target.id].checked = checked;
+
+            // remove parents by looping
+            let parent = state.tree[target.parent];
+            while (parent) {
+              if (state.selected[parent.id]) {
+                delete state.selected[parent.id];
+                delete state.location[parent.id];
+                state.tree[parent.id].checked = false;
+              }
+              parent = state.tree[parent.parent];
             }
 
-            node.children.forEach((childId) => {
-              const child = state.tree[childId];
-              if (state.selected[child.id]) {
-                delete state.selected[child.id];
-                delete state.location[child.id];
-                state.tree[child.id].checked = false;
+            // remove children recursively
+            const removeChildren = (node: Node) => {
+              if (!node.children) {
+                return;
               }
-              removeChildren(child);
-            });
-          };
-          removeChildren(node);
-        });
 
-        // get().location[fullPath] = location;
-
-        // const fullPath = getAbsolutePath(node, get().tree);
-        // const branch = await Api.locate(fullPath, node.id);
-        // for (const key in branch.nodes) {
-        //   decorateNode(branch.nodes[key]);
-        // }
-
-        // const selected = get().selected;
-        if (get().selected[node.id]) {
-          set((state) => {
-            delete state.selected[node.id];
-            delete state.location[node.id];
-            state.selected = { ...state.selected };
-            state.location = { ...state.location };
+              node.children.forEach((childId) => {
+                const child = state.tree[childId];
+                if (state.selected[child.id]) {
+                  delete state.selected[child.id];
+                  delete state.location[child.id];
+                  state.tree[child.id].checked = false;
+                }
+                removeChildren(child);
+              });
+            };
+            removeChildren(target);
           });
-          return;
+
+          if (!checked) {
+            set((state) => {
+              delete state.selected[target.id];
+              delete state.location[target.id];
+              state.selected = { ...state.selected };
+              state.location = { ...state.location };
+            });
+            continue;
+          }
+
+          const fullPath = getAbsolutePath(target, get().tree);
+          console.log('fullPath ', fullPath);
+
+          const location = await Api.locate(fullPath);
+          console.log('location ', location);
+
+          set((state) => {
+            state.selected[target.id] = fullPath;
+            state.location[target.id] = location;
+          });
         }
-
-        const fullPath = getAbsolutePath(node, get().tree);
-        console.log('fullPath ', fullPath);
-
-        const location = await Api.locate(fullPath);
-        console.log('location ', location);
-
-        set((state) => {
-          state.selected[node.id] = fullPath;
-          state.location[node.id] = location;
-        });
       },
       loadSize: async (id: string, path: string) => {
         // null marks an in-flight request, so each entry is fetched once

@@ -6,7 +6,7 @@ interface TreeNodeProps {
   node: Node;
   getChildNodes: (node: Node) => Node[];
   onExpandCollapse: (node: Node) => void;
-  onCheckUncheck: (node: Node) => void;
+  onCheckUncheck: (node: Node, shiftKey: boolean) => void;
   icons: Icons;
   level: number;
 }
@@ -39,7 +39,11 @@ export const TreeNode: React.FunctionComponent<TreeNodeProps> = ({
           <span>{icons.hiddenIcon}</span>
         )}
 
-        <span className="ml-1" onClick={() => onCheckUncheck(node)}>
+        <span
+          className="ml-1"
+          onMouseDown={(e) => e.shiftKey && e.preventDefault()}
+          onClick={(e) => onCheckUncheck(node, e.shiftKey)}
+        >
           {node.checked ? icons.checkedIcon : icons.uncheckedIcon}
         </span>
 
