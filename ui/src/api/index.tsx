@@ -1,4 +1,4 @@
-import { State, Op, Branch, AuthStatus } from '~/types';
+import { State, Op, Branch, AuthStatus, Sizes } from '~/types';
 
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
@@ -133,6 +133,18 @@ export class Api {
       return location;
     } catch (e) {
       return [];
+    }
+  }
+
+  static async size(path: string): Promise<Sizes | null> {
+    const encodedPath = encodeURIComponent(path);
+    try {
+      const url = `${Api.host}/size/${encodedPath}`;
+      const response = await fetch(url);
+      const sizes = await response.json();
+      return sizes;
+    } catch (e) {
+      return null;
     }
   }
 

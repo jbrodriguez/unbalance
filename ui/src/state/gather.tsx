@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 
-import { Nodes, Node } from '~/types';
+import { Nodes, Node, Sizes } from '~/types';
 import { Api } from '~/api';
 import { decorateNode } from '~/shared/tree/utils';
 import { isParent, getAbsolutePath } from '~/helpers/tree';
@@ -11,11 +11,13 @@ interface GatherStore {
   tree: Nodes;
   selected: Record<string, string>;
   location: Record<string, Array<string>>;
+  sizes: Record<string, Sizes | null>;
   target: string;
   actions: {
     loadShares: () => Promise<void>;
     loadBranch: (node: Node) => Promise<void>;
     toggleSelected: (node: Node) => Promise<void>;
+    loadSize: (id: string, path: string) => Promise<void>;
     setTarget: (target: string) => void;
     // loadBranch: (node: Node) => Promise<void>;
     // toggleSelected: (node: Node) => void;
@@ -46,6 +48,7 @@ export const useGatherStore = create<GatherStore>()(
     tree: { root: decorateNode(rootNode as Node) },
     selected: {},
     location: {},
+    sizes: {},
     target: '',
 
     actions: {
@@ -161,6 +164,27 @@ export const useGatherStore = create<GatherStore>()(
           state.location[node.id] = location;
         });
       },
+      loadSize: async (id: string, path: string) => {
+        // null marks an in-flight request, so each entry is fetched once
+        if (get().sizes[id] !== undefined) {
+          return;
+        }
+
+        set((state) => {
+          state.sizes[id] = null;
+        });
+
+        const sizes = await Api.size(path);
+
+        set((state) => {
+          if (sizes === null) {
+            // allow a retry on the next selection change
+            delete state.sizes[id];
+            return;
+          }
+          state.sizes[id] = sizes;
+        });
+      },
       setTarget: (target: string) => {
         set((state) => {
           state.target = target;
@@ -177,4 +201,5 @@ export const useGatherSelected = () =>
   useGatherStore((state) => state.selected);
 export const useGatherLocation = () =>
   useGatherStore((state) => state.location);
+export const useGatherSizes = () => useGatherStore((state) => state.sizes);
 export const useGatherTarget = () => useGatherStore((state) => state.target);

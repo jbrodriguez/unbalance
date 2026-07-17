@@ -183,6 +183,11 @@ export interface Branch {
   order: string[];
 }
 
+export interface Sizes {
+  disks: Record<string, number>;
+  total: number;
+}
+
 export type Chosen = Record<string, boolean>;
 export type Targets = Record<string, boolean>;
 

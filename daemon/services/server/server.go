@@ -110,6 +110,7 @@ func (s *Server) Start() error {
 
 	protected.GET("/tree/:route", s.getTree)
 	protected.GET("/locate/:route", s.locate)
+	protected.GET("/size/:route", s.size)
 	protected.GET("/logs", s.getLog)
 	protected.PUT("/config/dryRun", s.toggleDryRun, s.requireCSRF)
 	protected.PUT("/config/notifyPlan", s.setNotifyPlan, s.requireCSRF)
@@ -265,6 +266,18 @@ func (s *Server) locate(c echo.Context) error {
 	path := filepath.Join("/", "mnt", "user", path.Clean(u.Path))
 
 	return c.JSON(200, s.core.Locate(path))
+}
+
+func (s *Server) size(c echo.Context) error {
+	param := c.Param("route")
+	u, err := url.Parse(param)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join("/", "mnt", "user", path.Clean(u.Path))
+
+	return c.JSON(200, s.core.Size(path))
 }
 
 func (s *Server) getLog(c echo.Context) error {
