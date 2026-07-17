@@ -153,6 +153,14 @@ export interface State {
   // plan: Plan | null;
 }
 
+export interface PendingPlan {
+  id: string;
+  flow: string;
+  createdAt: Date;
+  expiresAt: Date;
+  plan: Plan;
+}
+
 export interface Node {
   id: string;
   label: string;

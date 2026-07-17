@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,19 +37,32 @@ func planTestCore(t *testing.T) (*Core, *domain.Disk) {
 func TestGetItemsAndIssuesStopsWhenCancelled(t *testing.T) {
 	c, disk := planTestCore(t)
 
-	c.stopped = true
+	c.stopped.Store(true)
 
-	items, _, _, _, _ := c.getItemsAndIssues(common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
+	items, _, _, _, _ := c.getItemsAndIssues(context.Background(), common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
 
 	if len(items) != 0 {
 		t.Fatalf("expected no items after cancellation, got %d", len(items))
 	}
 }
 
+func TestGetItemsAndIssuesAbortsOnContextCancel(t *testing.T) {
+	c, disk := planTestCore(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	items, _, _, _, _ := c.getItemsAndIssues(ctx, common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
+
+	if len(items) != 0 {
+		t.Fatalf("expected no items after context cancellation, got %d", len(items))
+	}
+}
+
 func TestGetItemsAndIssuesScansWhenNotCancelled(t *testing.T) {
 	c, disk := planTestCore(t)
 
-	items, _, _, _, _ := c.getItemsAndIssues(common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
+	items, _, _, _, _ := c.getItemsAndIssues(context.Background(), common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
 
 	if len(items) == 0 {
 		t.Fatalf("expected items from an uncancelled scan")
@@ -62,5 +76,21 @@ func TestPlanCancelledResetsStatus(t *testing.T) {
 
 	if c.state.Status != common.OpNeutral {
 		t.Fatalf("expected neutral status, got %d", c.state.Status)
+	}
+}
+
+func TestCancelPlanContextKillsScan(t *testing.T) {
+	c, disk := planTestCore(t)
+
+	ctx := c.newPlanContext()
+
+	// simulate the user pressing stop while the scan is in flight
+	c.stopped.Store(true)
+	c.cancelPlanContext()
+
+	items, _, _, _, _ := c.getItemsAndIssues(ctx, common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
+
+	if len(items) != 0 {
+		t.Fatalf("expected no items after stop, got %d", len(items))
 	}
 }

@@ -1,7 +1,9 @@
 package core
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -23,11 +25,31 @@ func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
 		return
 	}
 
+	unraid := c.refreshUnraid()
+
+	// fail fast on an invalid selection, before going busy: every chosen
+	// folder must exist on at least one disk
+	for _, folder := range setup.Selected {
+		found := false
+		for _, disk := range unraid.Disks {
+			if _, err := os.Stat(filepath.Join(disk.Path, folder)); err == nil {
+				found = true
+				break
+			}
+		}
+		if !found {
+			logger.Yellow("gatherPlan:invalid selection (%s): not present on any disk", folder)
+			c.publishOperationError("unable to plan: %q was not found on any disk", folder)
+			return
+		}
+	}
+
 	c.state.Status = common.OpGatherPlan
-	c.state.Unraid = c.refreshUnraid()
+	c.state.Unraid = unraid
 
 	// make sure a previous stop request doesn't cancel this plan
-	c.stopped = false
+	c.stopped.Store(false)
+	ctx := c.newPlanContext()
 
 	plan := &domain.Plan{
 		Started:       now,
@@ -44,14 +66,14 @@ func (c *Core) gatherPlanPrepare(setup domain.GatherSetup) {
 		}
 	}
 
-	go c.gatherPlan(plan)
+	go c.gatherPlan(ctx, plan)
 }
 
-func (c *Core) gatherPlan(plan *domain.Plan) {
-	c.gatherPlanStart(plan)
+func (c *Core) gatherPlan(ctx context.Context, plan *domain.Plan) {
+	c.gatherPlanStart(ctx, plan)
 }
 
-func (c *Core) gatherPlanStart(plan *domain.Plan) {
+func (c *Core) gatherPlanStart(ctx context.Context, plan *domain.Plan) {
 	logger.Blue("Running gather planner ...")
 
 	packet := &domain.Packet{Topic: common.EventGatherPlanStarted, Payload: "Planning started"}
@@ -59,9 +81,9 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 
 	c.printDisks(c.state.Unraid.Disks, c.state.Unraid.BlockSize)
 
-	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, c.state.Unraid.Disks, plan.ChosenFolders)
+	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(ctx, c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, c.state.Unraid.Disks, plan.ChosenFolders)
 
-	if c.stopped {
+	if c.stopped.Load() {
 		c.planCancelled(common.EventGatherPlanCancelled)
 		return
 	}
@@ -80,13 +102,7 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 
 	logger.Blue("gatherPlan:items(%d)", len(items))
 
-	for _, item := range items {
-		logger.Blue("gatherPlan:found(%s):size(%d)", filepath.Join(item.Location, item.Path), item.Size)
-
-		msg := fmt.Sprintf("Found %s (%s)", filepath.Join(item.Location, item.Path), lib.ByteSize(item.Size))
-		packet = &domain.Packet{Topic: common.EventGatherPlanProgress, Payload: msg}
-		c.ctx.Hub.Pub(packet, "socket:broadcast")
-	}
+	c.publishFoundItems(common.EventGatherPlanProgress, items)
 
 	logger.Blue("gatherPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
 
@@ -106,7 +122,7 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 
 		packer := algorithm.NewGreedy(disk, items, ceil, c.state.Unraid.BlockSize)
 		bin := packer.FitAll()
-		if bin != nil {
+		if bin != nil && len(bin.Items) > 0 {
 			plan.VDisks[disk.Path].Bin = bin
 			plan.VDisks[disk.Path].PlannedFree -= bin.Size
 
@@ -121,6 +137,7 @@ func (c *Core) gatherPlanStart(plan *domain.Plan) {
 
 func (c *Core) gatherPlanEnd(plan *domain.Plan) {
 	c.state.Status = common.OpNeutral
+	c.clearPlanContext()
 
 	planView, err := c.storePendingPlan(planFlowGather, plan)
 	if err != nil {

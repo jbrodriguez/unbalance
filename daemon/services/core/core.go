@@ -1,11 +1,13 @@
 package core
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/teris-io/shortid"
@@ -66,7 +68,10 @@ type Core struct {
 	pendingPlans   map[string]*planTicket
 	pendingPlansMu sync.Mutex
 
-	stopped bool
+	stopped atomic.Bool
+
+	planMu     sync.Mutex
+	planCancel context.CancelFunc
 }
 
 func Create(ctx *domain.Context) *Core {
@@ -134,6 +139,7 @@ func (c *Core) mailboxHandler() {
 
 		if c.state.Status != common.OpNeutral && packet.Topic != common.CommandStop {
 			logger.Yellow("unbalance is busy: %d", c.state.Status)
+			c.publishOperationError("unbalanced is busy: %s is running", getName(c.state.Status))
 			continue
 		}
 
@@ -145,7 +151,10 @@ func (c *Core) mailboxHandler() {
 				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
-			go c.scatterPlanPrepare(setup)
+			// prepare runs synchronously so the busy check and the status
+			// flip can't race a second plan command; the scan itself is
+			// backgrounded inside prepare
+			c.scatterPlanPrepare(setup)
 		case common.CommandScatterMove:
 			var ref planRef
 			err := lib.Bind(packet.Payload, &ref)
@@ -170,7 +179,7 @@ func (c *Core) mailboxHandler() {
 				logger.Red("unable to unmarshal %s packet: %s", packet.Topic, err)
 				continue
 			}
-			go c.gatherPlanPrepare(setup)
+			c.gatherPlanPrepare(setup)
 
 		case common.CommandGatherMove:
 			var ref planRef
@@ -210,7 +219,10 @@ func (c *Core) mailboxHandler() {
 			go c.replay(ref.OperationID)
 
 		case common.CommandStop:
-			c.stopped = true
+			c.stopped.Store(true)
+			// kill any in-flight scan process, so a running plan stops
+			// immediately instead of at the next folder boundary
+			c.cancelPlanContext()
 
 		}
 	}

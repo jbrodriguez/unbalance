@@ -40,6 +40,13 @@ func (k *Knapsack) BestFit() *domain.Bin {
 }
 
 func (k *Knapsack) fitBytes() (bin *domain.Bin) {
+	// a disk with less free space than the reserve can't take anything;
+	// without this guard the unsigned subtraction below wraps around and
+	// every item "fits"
+	if k.disk.Free <= k.buffer {
+		return nil
+	}
+
 	sort.Slice(k.list, func(i, j int) bool { return k.list[i].Size > k.list[j].Size })
 
 	for _, item := range k.list {
@@ -82,6 +89,13 @@ func (k *Knapsack) fitBlocks() (bin *domain.Bin) {
 
 	// how many blocks used by k.buffer bytes
 	buffer := k.buffer / k.blockSize
+
+	// a disk with fewer free blocks than the reserve can't take anything;
+	// without this guard the unsigned subtraction below wraps around and
+	// every item "fits"
+	if k.disk.BlocksFree <= buffer {
+		return nil
+	}
 
 	// log.Printf("buffer %d\n", buffer)
 

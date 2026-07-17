@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -114,24 +115,52 @@ func getArrayData() (*domain.Unraid, error) {
 		return nil, fmt.Errorf("unable to load disks.ini: %w", err)
 	}
 
-	// get free/size data
+	// get free/size data for the array disks and pools listed in disks.ini;
+	// deliberately NOT df /mnt/* — that would also stat remote/fuse mounts
+	// (e.g. /mnt/remotes), and a single stale one blocks forever
+	paths := make([]string, 0)
+	for _, section := range file.Sections() {
+		diskName := section.Key("name").String()
+		if diskName == "" {
+			continue
+		}
+
+		diskType := section.Key("type").String()
+		if diskType == "Parity" || diskType == "Flash" || section.Key("status").String() == "DISK_NP" {
+			continue
+		}
+
+		paths = append(paths, "/mnt/"+diskName)
+	}
+
+	if len(paths) == 0 {
+		return nil, fmt.Errorf("no array disks found in disks.ini")
+	}
+
 	free := make(map[string]uint64)
 	size := make(map[string]uint64)
 	mounts := make(map[string]bool)
 
-	// err = lib.Shell("df --block-size=1 /mnt/*", mlog.Warning, "Refresh error:", "", func(line string) {
-	// 	data := strings.Fields(line)
-	// 	size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
-	// 	free[data[5]], _ = strconv.ParseUint(data[3], 10, 64)
-	// })
+	// a disk stuck in uninterruptible I/O must degrade the result, not hang
+	// the app: kill df after a grace period and work with what it reported
+	dfCtx, dfCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer dfCancel()
 
-	err = lib.Shell("df --block-size=1 /mnt/*", "", func(line string) {
+	err = lib.StreamContext(dfCtx, "df", append([]string{"--block-size=1"}, paths...), func(line string) {
 		data := strings.Fields(line)
+		if len(data) < 6 {
+			return
+		}
 		size[data[5]], _ = strconv.ParseUint(data[1], 10, 64)
 		free[data[5]], _ = strconv.ParseUint(data[3], 10, 64)
 		mounts[data[5]] = true
 	})
 	if err != nil {
+		// df exits nonzero when any of the paths isn't mounted; the lines it
+		// did print are already parsed, so keep going with those
+		logger.Yellow("unable to get free/size data for some mounts: %s", err)
+	}
+	if len(mounts) == 0 {
 		return nil, fmt.Errorf("unable to get free/size data: %w", err)
 	}
 

@@ -1,4 +1,4 @@
-import { State, Op, Branch, AuthStatus } from '~/types';
+import { State, Op, Branch, AuthStatus, PendingPlan } from '~/types';
 
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
@@ -131,6 +131,17 @@ export class Api {
       const response = await fetch(url);
       const location = await response.json();
       return location;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static async getPlans(): Promise<Array<PendingPlan>> {
+    try {
+      const url = `${Api.host}/plans`;
+      const response = await fetch(url);
+      const plans = await response.json();
+      return plans;
     } catch (e) {
       return [];
     }

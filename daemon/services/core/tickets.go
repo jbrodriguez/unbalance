@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/teris-io/shortid"
@@ -80,6 +81,45 @@ func (c *Core) storePendingPlan(flow planFlow, plan *domain.Plan) (*domain.Plan,
 	}
 
 	return &view, nil
+}
+
+// PendingPlanView is the read-only projection of a stored plan ticket,
+// served by GET /api/plans so a reloaded browser can recover a plan that
+// finished while it was disconnected.
+type PendingPlanView struct {
+	ID        string      `json:"id"`
+	Flow      string      `json:"flow"`
+	CreatedAt time.Time   `json:"createdAt"`
+	ExpiresAt time.Time   `json:"expiresAt"`
+	Plan      domain.Plan `json:"plan"`
+}
+
+func (c *Core) GetPendingPlans() []PendingPlanView {
+	now := time.Now()
+
+	c.pendingPlansMu.Lock()
+	defer c.pendingPlansMu.Unlock()
+	c.pruneExpiredPendingPlansLocked(now)
+
+	views := make([]PendingPlanView, 0, len(c.pendingPlans))
+	for _, ticket := range c.pendingPlans {
+		plan, err := clonePlan(ticket.Plan)
+		if err != nil {
+			continue
+		}
+
+		views = append(views, PendingPlanView{
+			ID:        ticket.ID,
+			Flow:      string(ticket.Flow),
+			CreatedAt: ticket.CreatedAt,
+			ExpiresAt: ticket.ExpiresAt,
+			Plan:      plan,
+		})
+	}
+
+	sort.Slice(views, func(i, j int) bool { return views[i].CreatedAt.After(views[j].CreatedAt) })
+
+	return views
 }
 
 func (c *Core) takePendingPlan(id string, flow planFlow) (domain.Plan, error) {

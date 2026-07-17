@@ -276,6 +276,21 @@ export const useUnraidStore = create<UnraidStore>()(
 
           console.log('navigating to ', route);
           get().navigate?.(route);
+
+          // a plan that finished while the browser was disconnected still
+          // lives on the server; recover it so the user doesn't rescan
+          const plans = await Api.getPlans();
+          if (plans.length > 0 && !get().plan) {
+            const recovered = plans[0];
+            set((state) => {
+              state.plan = recovered.plan;
+              state.logs.push(
+                `Recovered a finished ${recovered.flow} plan from ${new Date(
+                  recovered.createdAt,
+                ).toLocaleTimeString()} — open the ${recovered.flow} Plan step and press Next to continue.`,
+              );
+            });
+          }
         },
         refreshUnraid: async () => {
           const array = await Api.getUnraid();
@@ -329,7 +344,12 @@ export const useUnraidStore = create<UnraidStore>()(
           // console.log('scatterProgress ', payload);
           // useScatterStore.getState().actions.addLine(payload);
           set((state) => {
-            state.logs.push(payload);
+            // the daemon batches lines into one packet, joined with newlines;
+            // cap the retained lines so huge plans don't drown the browser
+            state.logs.push(...payload.split('\n'));
+            if (state.logs.length > 2000) {
+              state.logs.splice(0, state.logs.length - 2000);
+            }
           });
         },
         scatterPlanEnded: (payload: Plan) => {
@@ -459,7 +479,10 @@ export const useUnraidStore = create<UnraidStore>()(
           // console.log('scatterProgress ', payload);
           // useGatherStore.getState().actions.addLine(payload);
           set((state) => {
-            state.logs.push(payload);
+            state.logs.push(...payload.split('\n'));
+            if (state.logs.length > 2000) {
+              state.logs.splice(0, state.logs.length - 2000);
+            }
           });
         },
         gatherPlanEnded: (payload: Plan) => {

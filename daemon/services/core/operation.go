@@ -95,7 +95,7 @@ func (c *Core) runCommand(operation *domain.Operation, command *domain.Command) 
 	)
 
 	// make sure the command will run
-	c.stopped = false
+	c.stopped.Store(false)
 
 	// start rsync command
 	cmd, err := lib.StartRsync(paths.SrcRoot, args...)
@@ -160,7 +160,7 @@ func (c *Core) monitorRsync(operation *domain.Operation, command *domain.Command
 
 	for {
 		// c.stopped will be true if the user has stopped the command via the gui
-		if c.stopped {
+		if c.stopped.Load() {
 			retcode = 99
 			break
 		}

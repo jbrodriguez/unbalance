@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -35,19 +36,23 @@ func getSourceAndDestinationDisks(disks []*domain.Disk, plan *domain.Plan) (*dom
 	return srcDisk, dstDisks
 }
 
-func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64, int64, int64, error) {
+func getIssues(ctx context.Context, re *regexp.Regexp, disk *domain.Disk, path string, tick func(int)) (int64, int64, int64, int64, error) {
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 
 	folder := filepath.Join(disk.Path, path)
 
-	if _, err := os.Stat(folder); os.IsNotExist(err) {
+	if _, err := os.Stat(folder); err != nil {
 		return ownerIssue, groupIssue, folderIssue, fileIssue, err
 	}
 
 	scanFolder := folder + "/."
-	findArgs := []string{scanFolder, "-exec", "stat", "--format=%A|%U:%G|%F|%n", "{}", ";"}
+	// '+' batches many files per stat invocation; ';' would fork one stat
+	// process per file, which dominates scan time on large trees
+	findArgs := []string{scanFolder, "-exec", "stat", "--format=%A|%U:%G|%F|%n", "{}", "+"}
 
-	err := lib.Stream("find", findArgs, func(line string) {
+	err := lib.StreamContext(ctx, "find", findArgs, func(line string) {
+		tick(1)
+
 		result := re.FindStringSubmatch(line)
 		if result == nil {
 			return
@@ -85,19 +90,23 @@ func getIssues(re *regexp.Regexp, disk *domain.Disk, path string) (int64, int64,
 	return ownerIssue, groupIssue, folderIssue, fileIssue, err
 }
 
-func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domain.Item, uint64, error) {
+func getItems(ctx context.Context, blockSize uint64, re *regexp.Regexp, src, folder string, tick func(int)) ([]*domain.Item, uint64, error) {
 	var total, blocks uint64
 	fBlockSize := float64(blockSize)
 	srcFolder := filepath.Join(src, folder)
 
 	var fi os.FileInfo
 	var err error
-	if fi, err = os.Stat(srcFolder); os.IsNotExist(err) {
+	if fi, err = os.Stat(srcFolder); err != nil {
 		return nil, total, err
 	}
 
 	if !fi.IsDir() {
-		return []*domain.Item{&domain.Item{Name: folder, Size: uint64(fi.Size()), Path: folder, Location: src}}, uint64(fi.Size()), nil
+		size := uint64(fi.Size())
+		if blockSize > 0 {
+			blocks = uint64(math.Ceil(float64(size) / fBlockSize))
+		}
+		return []*domain.Item{&domain.Item{Name: folder, Size: size, Path: folder, Location: src, BlocksUsed: blocks}}, size, nil
 	}
 
 	entries, err := os.ReadDir(srcFolder)
@@ -108,15 +117,23 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	if len(entries) == 0 {
 		// Size: 1 is a trick to allow natural processing of this empty folder: if set to zero, many comparison
 		// would misinterpret this as a pending transfer and so on
-		return []*domain.Item{&domain.Item{Name: srcFolder, Size: 1, Path: folder, Location: src}}, 0, nil
+		return []*domain.Item{&domain.Item{Name: srcFolder, Size: 1, Path: folder, Location: src, BlocksUsed: 1}}, 0, nil
 	}
 
 	items := make([]*domain.Item, 0)
 
 	findArgs := []string{srcFolder + "/.", "!", "-name", ".", "-prune", "-exec", "du", "-bs", "{}", "+"}
 
-	err = lib.Stream("find", findArgs, func(line string) {
+	err = lib.StreamContext(ctx, "find", findArgs, func(line string) {
+		tick(1)
+
 		result := re.FindStringSubmatch(line)
+		if result == nil {
+			// du output can carry lines that don't parse (e.g. names with
+			// embedded newlines); skip them instead of crashing the daemon
+			logger.Yellow("items:unparseable du output line, skipping: %q", line)
+			return
+		}
 
 		size, _ := strconv.ParseInt(result[1], 10, 64)
 		total += uint64(size)
@@ -138,16 +155,30 @@ func getItems(blockSize uint64, re *regexp.Regexp, src, folder string) ([]*domai
 	return items, total, err
 }
 
-func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
+func (c *Core) getItemsAndIssues(ctx context.Context, status, blockSize uint64, reItems, reStat *regexp.Regexp, disks []*domain.Disk, folders []string) ([]*domain.Item, int64, int64, int64, int64) {
 	var ownerIssue, groupIssue, folderIssue, fileIssue int64
 	items := make([]*domain.Item, 0)
+
+	// heartbeat: let the frontend know the scan is alive during long walks,
+	// at most one packet every few seconds
+	var scanned int64
+	lastBeat := time.Now()
+	tick := func(n int) {
+		scanned += int64(n)
+		if time.Since(lastBeat) < 2*time.Second {
+			return
+		}
+		lastBeat = time.Now()
+		packet := &domain.Packet{Topic: getTopic(status), Payload: fmt.Sprintf("Scanning ... %d entries so far", scanned)}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+	}
 
 	// Get owner/permission issues
 	// Get items to be transferred
 	for _, disk := range disks {
 		for _, path := range folders {
 			// the user cancelled the plan, no point in scanning any further
-			if c.stopped {
+			if c.stopped.Load() || ctx.Err() != nil {
 				logger.Blue("planner:cancelled:scan abandoned")
 				return items, ownerIssue, groupIssue, folderIssue, fileIssue
 			}
@@ -162,7 +193,7 @@ func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *rege
 			packet = &domain.Packet{Topic: getTopic(status), Payload: "Checking issues ..."}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
 
-			ownIssue, grpIssue, fldIssue, filIssue, err := getIssues(reStat, disk, path)
+			ownIssue, grpIssue, fldIssue, filIssue, err := getIssues(ctx, reStat, disk, path, tick)
 			if err != nil {
 				logger.Yellow("issues:not-available:(%s)", err)
 			} else {
@@ -178,7 +209,7 @@ func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *rege
 			packet = &domain.Packet{Topic: getTopic(status), Payload: "Getting items ..."}
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
 
-			list, total, err := getItems(blockSize, reItems, disk.Path, path)
+			list, total, err := getItems(ctx, blockSize, reItems, disk.Path, path, tick)
 			if err != nil {
 				logger.Yellow("items:not-available:(%s)", err)
 			} else {
@@ -189,6 +220,32 @@ func (c *Core) getItemsAndIssues(status, blockSize uint64, reItems, reStat *rege
 	}
 
 	return items, ownerIssue, groupIssue, folderIssue, fileIssue
+}
+
+// publishFoundItems streams the discovered items to the frontend in chunks,
+// so a large plan doesn't flood the websocket with one packet per item.
+func (c *Core) publishFoundItems(topic string, items []*domain.Item) {
+	const chunkSize = 200
+
+	lines := make([]string, 0, chunkSize)
+	flush := func() {
+		if len(lines) == 0 {
+			return
+		}
+		packet := &domain.Packet{Topic: topic, Payload: strings.Join(lines, "\n")}
+		c.ctx.Hub.Pub(packet, "socket:broadcast")
+		lines = lines[:0]
+	}
+
+	for _, item := range items {
+		logger.Blue("planner:found(%s):size(%d)", filepath.Join(item.Location, item.Path), item.Size)
+
+		lines = append(lines, fmt.Sprintf("Found %s (%s)", filepath.Join(item.Location, item.Path), lib.ByteSize(item.Size)))
+		if len(lines) == chunkSize {
+			flush()
+		}
+	}
+	flush()
 }
 
 func (c *Core) sendTimeFeedbackToFrontend(topic, fended string, elapsed time.Duration) {
@@ -277,18 +334,46 @@ func (c *Core) endPlan(status uint64, plan *domain.Plan, disks []*domain.Disk, i
 			c.ctx.Hub.Pub(packet, "socket:broadcast")
 
 			logger.Blue("%s:%d items will NOT be transferred.", getName(status), len(items))
-			for _, item := range items {
-				notTransferred += item.Path + "\n"
 
-				packet = &domain.Packet{Topic: getTopic(status), Payload: item.Path}
-				c.ctx.Hub.Pub(packet, "socket:broadcast")
+			const chunkSize = 200
+			var sb strings.Builder
+			lines := make([]string, 0, chunkSize)
+			for _, item := range items {
+				sb.WriteString(item.Path)
+				sb.WriteByte('\n')
+
+				lines = append(lines, item.Path)
+				if len(lines) == chunkSize {
+					packet = &domain.Packet{Topic: getTopic(status), Payload: strings.Join(lines, "\n")}
+					c.ctx.Hub.Pub(packet, "socket:broadcast")
+					lines = lines[:0]
+				}
 				logger.Blue("%s:notTransferred(%s)", getName(status), item.Path)
 			}
+			if len(lines) > 0 {
+				packet = &domain.Packet{Topic: getTopic(status), Payload: strings.Join(lines, "\n")}
+				c.ctx.Hub.Pub(packet, "socket:broadcast")
+			}
+
+			notTransferred = sb.String()
 		}
 	}
 
-	// send mail according to user preferences
-	c.sendMailFeedback(fstarted, fended, elapsed, plan, notTransferred)
+	// the notification email can't hold an unbounded list: a single exec
+	// argument is limited to 128KiB on Linux, so truncate what gets mailed
+	const maxMailList = 64 * 1024
+	if len(notTransferred) > maxMailList {
+		kept := strings.LastIndexByte(notTransferred[:maxMailList], '\n')
+		if kept < 0 {
+			kept = maxMailList
+		}
+		omitted := strings.Count(notTransferred[kept:], "\n")
+		notTransferred = notTransferred[:kept] + fmt.Sprintf("\n... and %d more items (see /var/log/unbalanced.log)\n", omitted)
+	}
+
+	// send mail according to user preferences, without holding up the plan:
+	// a stuck notify script must not keep the app busy
+	go c.sendMailFeedback(fstarted, fended, elapsed, plan, notTransferred)
 
 	// some local logging
 	logger.Blue("%s:ItemsLeft(%d)", getName(status), len(items))
@@ -348,6 +433,7 @@ func getTopic(status uint64) string {
 
 func (c *Core) planCancelled(topic string) {
 	c.state.Status = common.OpNeutral
+	c.clearPlanContext()
 
 	logger.Blue("planning cancelled by the user")
 
@@ -356,14 +442,16 @@ func (c *Core) planCancelled(topic string) {
 }
 
 func removeItems(items, list []*domain.Item) []*domain.Item {
+	remove := make(map[string]struct{}, len(list))
+	for _, itm := range list {
+		remove[itm.Name] = struct{}{}
+	}
+
 	w := 0 // write index
 
-loop:
 	for _, item := range items {
-		for _, itm := range list {
-			if itm.Name == item.Name {
-				continue loop
-			}
+		if _, ok := remove[item.Name]; ok {
+			continue
 		}
 		items[w] = item
 		w++
@@ -431,12 +519,23 @@ func (c *Core) notifyCommandsToRun(opName string, operation *domain.Operation) {
 }
 
 func progress(bytesToTransfer, bytesTransferred uint64, elapsed time.Duration) (percent float64, left time.Duration, speed float64) {
+	// guard against NaN/Inf: they poison the operation and history since the
+	// JSON encoder refuses non-finite floats
+	if bytesToTransfer == 0 || elapsed <= 0 {
+		return 0, 0, 0
+	}
+	if bytesTransferred > bytesToTransfer {
+		bytesTransferred = bytesToTransfer
+	}
+
 	bytesPerSec := float64(bytesTransferred) / elapsed.Seconds()
 	speed = bytesPerSec / 1024 / 1024 // MB/s
 
 	percent = (float64(bytesTransferred) / float64(bytesToTransfer)) * 100 // %
 
-	left = time.Duration(float64(bytesToTransfer-bytesTransferred)/bytesPerSec) * time.Second
+	if bytesPerSec > 0 {
+		left = time.Duration(float64(bytesToTransfer-bytesTransferred)/bytesPerSec) * time.Second
+	}
 
 	return
 }

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,13 +36,13 @@ func TestHelperSecurityProbe(t *testing.T) {
 
 	t.Logf("probe disk=%s sub=%s full=%s", diskPath, subPath, full)
 
-	ownerIssue, groupIssue, folderIssue, fileIssue, err := getIssues(reStat, disk, subPath)
+	ownerIssue, groupIssue, folderIssue, fileIssue, err := getIssues(context.Background(), reStat, disk, subPath, func(int) {})
 	if err != nil {
 		t.Fatalf("getIssues error: %v", err)
 	}
 	t.Logf("issues: owner=%d group=%d folder=%d file=%d", ownerIssue, groupIssue, folderIssue, fileIssue)
 
-	items, total, err := getItems(0, reItems, diskPath, subPath)
+	items, total, err := getItems(context.Background(), 0, reItems, diskPath, subPath, func(int) {})
 	if err != nil {
 		t.Fatalf("getItems error: %v", err)
 	}

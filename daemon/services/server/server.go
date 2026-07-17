@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -107,6 +108,7 @@ func (s *Server) Start() error {
 	protected.GET("/storage", s.getStorage)
 	protected.GET("/operation", s.getOperation)
 	protected.GET("/history", s.getHistory)
+	protected.GET("/plans", s.getPlans)
 
 	protected.GET("/tree/:route", s.getTree)
 	protected.GET("/locate/:route", s.locate)
@@ -204,7 +206,22 @@ func (s *Server) wsWrite(packet *domain.Packet) (err error) {
 	if conn == nil || conn.RemoteAddr() == nil {
 		return
 	}
+
+	// a peer that stops draining (suspended laptop, dead route) must not
+	// block the broadcast loop forever: give the write a deadline and drop
+	// the connection when it can't complete
+	_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	err = conn.WriteJSON(packet)
+	if err != nil {
+		_ = conn.Close()
+
+		s.wsMu.Lock()
+		if s.ws == conn {
+			s.ws = nil
+			s.wsSession = ""
+		}
+		s.wsMu.Unlock()
+	}
 	return
 }
 
@@ -235,6 +252,10 @@ func (s *Server) getOperation(c echo.Context) error {
 
 func (s *Server) getHistory(c echo.Context) error {
 	return c.JSON(200, s.core.GetHistory())
+}
+
+func (s *Server) getPlans(c echo.Context) error {
+	return c.JSON(200, s.core.GetPendingPlans())
 }
 
 type QueryPath struct {

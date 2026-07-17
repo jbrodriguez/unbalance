@@ -3,6 +3,9 @@ package lib
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"syscall"
@@ -10,22 +13,24 @@ import (
 
 const cRsyncBin = "/usr/bin/rsync"
 
+// maxLineSize bounds a single output line; anything beyond aborts the scan
+// instead of deadlocking the pipe (see runCmd)
+const maxLineSize = 1024 * 1024
+
 // Callback -
 type Callback func(line string)
 
-func Shell(command string, workDir string, callback Callback) error {
-	args := append([]string{"-c"}, command)
-	cmd := exec.Command("/bin/sh", args...)
-	if workDir != "" {
-		cmd.Dir = workDir
-	}
-	cmd.Stderr = os.Stdout
-
+// runCmd streams the command's stdout line by line into callback. If the
+// scanner aborts (line too long, read error), the pipe keeps getting drained
+// so the child can exit and Wait can never deadlock against a full pipe.
+func runCmd(cmd *exec.Cmd, callback Callback) error {
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+
 	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 0, 64*1024), maxLineSize)
 
 	if err = cmd.Start(); err != nil {
 		return err
@@ -35,14 +40,28 @@ func Shell(command string, workDir string, callback Callback) error {
 		callback(scanner.Text())
 	}
 
-	// Wait for the result of the command; also closes our end of the pipe
-	err = cmd.Wait()
-	if err != nil {
-		// writer("%s: waitError: %s", prefix, err)
-		return err
+	scanErr := scanner.Err()
+	if scanErr != nil {
+		go func() { _, _ = io.Copy(io.Discard, stdout) }()
 	}
 
-	return nil
+	return errors.Join(scanErr, cmd.Wait())
+}
+
+func Shell(command string, workDir string, callback Callback) error {
+	return ShellContext(context.Background(), command, workDir, callback)
+}
+
+// ShellContext is Shell with cancellation: the child is killed when ctx is
+// cancelled or times out.
+func ShellContext(ctx context.Context, command string, workDir string, callback Callback) error {
+	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", command)
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
+	cmd.Stderr = os.Stdout
+
+	return runCmd(cmd, callback)
 }
 
 // dropCR drops a terminal \r from the data.
@@ -88,24 +107,13 @@ func scanLinesEx(data []byte, atEOF bool) (advance int, token []byte, err error)
 // arguments are passed as argv tokens, so caller-supplied paths cannot be
 // interpreted as shell metacharacters.
 func Stream(name string, args []string, callback Callback) error {
-	cmd := exec.Command(name, args...)
+	return StreamContext(context.Background(), name, args, callback)
+}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	scanner := bufio.NewScanner(stdout)
-
-	if err = cmd.Start(); err != nil {
-		return err
-	}
-
-	for scanner.Scan() {
-		callback(scanner.Text())
-	}
-
-	return cmd.Wait()
+// StreamContext is Stream with cancellation: the child is killed when ctx is
+// cancelled or times out.
+func StreamContext(ctx context.Context, name string, args []string, callback Callback) error {
+	return runCmd(exec.CommandContext(ctx, name, args...), callback)
 }
 
 // StartRsync -

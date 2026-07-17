@@ -1,7 +1,9 @@
 package core
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -26,11 +28,30 @@ func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
 		return
 	}
 
+	unraid := c.refreshUnraid()
+
+	// fail fast on an invalid selection, before going busy
+	srcPath := filepath.Join("/", "mnt", setup.Source)
+	if !slices.ContainsFunc(unraid.Disks, func(disk *domain.Disk) bool { return disk.Path == srcPath }) {
+		logger.Yellow("scatterPlan:invalid source disk (%s)", setup.Source)
+		c.publishOperationError("unable to plan: source disk %q is not part of the array", setup.Source)
+		return
+	}
+
+	for _, folder := range setup.Selected {
+		if _, err := os.Stat(filepath.Join(srcPath, folder)); err != nil {
+			logger.Yellow("scatterPlan:invalid selection (%s): %s", folder, err)
+			c.publishOperationError("unable to plan: %q is not accessible on %s (%s)", folder, setup.Source, err)
+			return
+		}
+	}
+
 	c.state.Status = common.OpScatterPlan
-	c.state.Unraid = c.refreshUnraid()
+	c.state.Unraid = unraid
 
 	// make sure a previous stop request doesn't cancel this plan
-	c.stopped = false
+	c.stopped.Store(false)
+	ctx := c.newPlanContext()
 
 	plan := &domain.Plan{
 		Started:       now,
@@ -49,28 +70,19 @@ func (c *Core) scatterPlanPrepare(setup domain.ScatterSetup) {
 			CurrentFree: disk.Free,
 			PlannedFree: disk.Free,
 			Bin:         nil,
-			Src:         filepath.Join("/", "mnt", setup.Source) == disk.Path,
+			Src:         srcPath == disk.Path,
 			Dst:         slices.Contains(targets, disk.Path),
 		}
 	}
 
-	// logger.Green("%+v", c.state.Plan)
-	// for _, disk := range c.state.Unraid.Disks {
-	// 	logger.Green("%+v", c.state.Plan.VDisks[disk.Path])
-	// }
-
-	// c.bus.Pub(&pubsub.Message{Payload: c.state.Plan}, common.IntScatterPlanStarted)
-	// c.bus.Pub(&pubsub.Message{Payload: c.state}, common.IntScatterPlanStarted)
-
-	// c.actor.Tell(common.IntScatterPlan, c.state)
-	go c.scatterPlan(plan)
+	go c.scatterPlan(ctx, plan)
 }
 
-func (c *Core) scatterPlan(plan *domain.Plan) {
-	c.scatterPlanStart(plan)
+func (c *Core) scatterPlan(ctx context.Context, plan *domain.Plan) {
+	c.scatterPlanStart(ctx, plan)
 }
 
-func (c *Core) scatterPlanStart(plan *domain.Plan) {
+func (c *Core) scatterPlanStart(ctx context.Context, plan *domain.Plan) {
 	logger.Blue("Running scatter planner ...")
 
 	// plan := c.state.Plan
@@ -97,9 +109,9 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 
 	c.printDisks(c.state.Unraid.Disks, c.state.Unraid.BlockSize)
 
-	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
+	items, ownerIssue, groupIssue, folderIssue, fileIssue := c.getItemsAndIssues(ctx, c.state.Status, c.state.Unraid.BlockSize, reItems, reStat, []*domain.Disk{srcDisk}, plan.ChosenFolders)
 
-	if c.stopped {
+	if c.stopped.Load() {
 		c.planCancelled(common.EventScatterPlanCancelled)
 		return
 	}
@@ -120,13 +132,7 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 
 	logger.Blue("scatterPlan:items(%d)", len(items))
 
-	for _, item := range items {
-		logger.Blue("scatterPlan:found(%s):size(%d)", filepath.Join(item.Location, item.Path), item.Size)
-
-		msg := fmt.Sprintf("Found %s (%s)", filepath.Join(item.Location, item.Path), lib.ByteSize(item.Size))
-		packet = &domain.Packet{Topic: common.EventScatterPlanProgress, Payload: msg}
-		c.ctx.Hub.Pub(packet, "socket:broadcast")
-	}
+	c.publishFoundItems(common.EventScatterPlanProgress, items)
 
 	logger.Blue("scatterPlan:issues:owner(%d),group(%d),folder(%d),file(%d)", plan.OwnerIssue, plan.GroupIssue, plan.FolderIssue, plan.FileIssue)
 
@@ -146,7 +152,7 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 
 		packer := algorithm.NewKnapsack(disk, items, ceil, c.state.Unraid.BlockSize)
 		bin := packer.BestFit()
-		if bin != nil {
+		if bin != nil && len(bin.Items) > 0 {
 			plan.VDisks[disk.Path].Bin = bin
 			plan.VDisks[disk.Path].PlannedFree -= bin.Size
 			plan.VDisks[srcDisk.Path].PlannedFree += bin.Size
@@ -165,6 +171,7 @@ func (c *Core) scatterPlanStart(plan *domain.Plan) {
 
 func (c *Core) scatterPlanEnd(plan *domain.Plan) {
 	c.state.Status = common.OpNeutral
+	c.clearPlanContext()
 
 	planView, err := c.storePendingPlan(planFlowScatter, plan)
 	if err != nil {
