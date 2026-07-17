@@ -317,6 +317,14 @@ func (c *Core) SetRefreshRate(value int) *domain.Config {
 	return &c.ctx.Config
 }
 
+func (c *Core) SetLogLines(value int) *domain.Config {
+	c.ctx.Config.LogLines = clampLogLines(value)
+	if err := c.saveSettings(); err != nil {
+		logger.Yellow("setLogLines: unable to save settings: %s", err)
+	}
+	return &c.ctx.Config
+}
+
 func (c *Core) SetAuth(passwordHash string) error {
 	c.ctx.Config.AuthPassword = passwordHash
 	return c.saveSettings()

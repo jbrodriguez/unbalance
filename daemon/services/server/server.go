@@ -118,6 +118,7 @@ func (s *Server) Start() error {
 	protected.PUT("/config/rsyncArgs", s.setRsyncArgs, s.requireCSRF)
 	protected.PUT("/config/verbosity", s.setVerbosity, s.requireCSRF)
 	protected.PUT("/config/refreshRate", s.setRefreshRate, s.requireCSRF)
+	protected.PUT("/config/logLines", s.setLogLines, s.requireCSRF)
 
 	port := fmt.Sprintf(":%s", s.ctx.Port)
 	go func() {
@@ -331,6 +332,16 @@ func (s *Server) setVerbosity(c echo.Context) error {
 	}
 
 	return c.JSON(200, s.core.SetVerbosity(value))
+}
+
+func (s *Server) setLogLines(c echo.Context) error {
+	var value int
+	err := c.Bind(&value)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, s.core.SetLogLines(value))
 }
 
 func (s *Server) setRefreshRate(c echo.Context) error {

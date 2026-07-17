@@ -230,6 +230,20 @@ export class Api {
     }
   }
 
+  static async setLogLines(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...Api.authHeaders() },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/logLines`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('logLines() error: ', e);
+    }
+  }
+
   static async setRefreshRate(value: number): Promise<void> {
     const options = {
       method: 'PUT',

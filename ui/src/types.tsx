@@ -22,6 +22,7 @@ export interface Config {
   rsyncArgs: string[];
   verbosity: number;
   refreshRate: number;
+  logLines: number;
   speedWindow: string;
   authEnabled: boolean;
   authUsername: string;

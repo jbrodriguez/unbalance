@@ -208,6 +208,7 @@ func SaveEnv(location string, config domain.Config) error {
 	file.Section("").Key("RSYNC_ARGS").SetValue(strings.Join(config.RsyncArgs, ","))
 	file.Section("").Key("VERBOSITY").SetValue(strconv.Itoa(config.Verbosity))
 	file.Section("").Key("REFRESH_RATE").SetValue(strconv.Itoa(config.RefreshRate))
+	file.Section("").Key("LOG_LINES").SetValue(strconv.Itoa(config.LogLines))
 	if config.SpeedWindow == "" {
 		config.SpeedWindow = "90s"
 	}

@@ -23,6 +23,7 @@ import { Notifications } from '~/flows/settings/notifications';
 import { Reserved } from '~/flows/settings/reserved';
 import { Flags } from '~/flows/settings/flags';
 import { Verbosity } from '~/flows/settings/verbosity';
+import { Logging } from '~/flows/settings/logging';
 import { Logs } from '~/flows/logs/logs';
 import { Transfer } from '~/shared/transfer/transfer';
 import { Feedback } from '~/shared/feedback/feedback';
@@ -134,6 +135,10 @@ const router = createBrowserRouter([
               {
                 path: 'verbosity',
                 element: <Verbosity />,
+              },
+              {
+                path: 'logging',
+                element: <Logging />,
               },
             ],
           },

@@ -295,8 +295,27 @@ func (c *Core) Locate(path string) []string {
 	return locations
 }
 
+const (
+	minLogLines     = 10
+	maxLogLines     = 10000
+	defaultLogLines = 100
+)
+
+func clampLogLines(value int) int {
+	if value <= 0 {
+		return defaultLogLines
+	}
+	if value < minLogLines {
+		return minLogLines
+	}
+	if value > maxLogLines {
+		return maxLogLines
+	}
+	return value
+}
+
 func (c *Core) GetLog() []string {
-	cmd := "tail -n 100 /var/log/unbalanced.log"
+	cmd := fmt.Sprintf("tail -n %d /var/log/unbalanced.log", clampLogLines(c.ctx.LogLines))
 
 	log := make([]string, 0)
 
