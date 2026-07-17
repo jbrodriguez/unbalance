@@ -27,6 +27,9 @@ export const Logging: React.FunctionComponent = () => {
 
       <h2 className="text-lg font-bold">Log lines</h2>
       <div className="pb-1" />
+      <p className="text-sm text-gray-500 dark:text-gray-500 pb-2">
+        currently loading the last {logLines} lines
+      </p>
       <RadioGroup
         defaultValue={`${logLines}`}
         value={`${logLines}`}
