@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/cskr/pubsub"
@@ -61,10 +60,6 @@ func TestGetItemsAndIssuesAbortsOnContextCancel(t *testing.T) {
 }
 
 func TestGetItemsAndIssuesScansWhenNotCancelled(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("getItemsAndIssues uses GNU find/stat/du output")
-	}
-
 	c, disk := planTestCore(t)
 
 	items, _, _, _, _ := c.getItemsAndIssues(context.Background(), common.OpScatterPlan, 4096, reItems, reStat, []*domain.Disk{disk}, []string{"films"})
