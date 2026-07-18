@@ -50,6 +50,11 @@ export const Command: React.FunctionComponent<Props> = ({
           ></div>
         </div>
       </div>
+      {command.reason && (
+        <div className="col-span-12 text-xs text-yellow-600 dark:text-yellow-600">
+          {command.reason}
+        </div>
+      )}
     </div>
   );
 };

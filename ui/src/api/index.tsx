@@ -1,4 +1,4 @@
-import { State, Op, Branch, AuthStatus, PendingPlan } from '~/types';
+import { State, Op, Branch, AuthStatus, PendingPlan, Sizes } from '~/types';
 
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
@@ -33,6 +33,7 @@ export class Api {
         rsyncArgs: [],
         verbosity: 0,
         refreshRate: 0,
+        logLines: 100,
         speedWindow: '90s',
         authEnabled: false,
         authUsername: 'admin',
@@ -147,6 +148,18 @@ export class Api {
     }
   }
 
+  static async size(path: string): Promise<Sizes | null> {
+    const encodedPath = encodeURIComponent(path);
+    try {
+      const url = `${Api.host}/size/${encodedPath}`;
+      const response = await fetch(url);
+      const sizes = await response.json();
+      return sizes;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static async getLog(): Promise<Array<string>> {
     try {
       const url = `${Api.host}/logs`;
@@ -238,6 +251,20 @@ export class Api {
       await fetch(url, options);
     } catch (e) {
       console.log('verbosity() error: ', e);
+    }
+  }
+
+  static async setLogLines(value: number): Promise<void> {
+    const options = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...Api.authHeaders() },
+      body: JSON.stringify(value),
+    };
+    try {
+      const url = `${Api.host}/config/logLines`;
+      await fetch(url, options);
+    } catch (e) {
+      console.log('logLines() error: ', e);
     }
   }
 

@@ -14,6 +14,7 @@ interface ConfigStore {
   rsyncArgs: string[];
   verbosity: number;
   refreshRate: number;
+  logLines: number;
   speedWindow: string;
   actions: {
     getConfig: () => Promise<void>;
@@ -25,6 +26,7 @@ interface ConfigStore {
     resetRsyncArgs: () => Promise<void>;
     setVerbosity: (value: number) => Promise<void>;
     setRefreshRate: (value: number) => Promise<void>;
+    setLogLines: (value: number) => Promise<void>;
   };
 }
 
@@ -39,6 +41,7 @@ export const useConfigStore = create<ConfigStore>()(
     rsyncArgs: ['-X'],
     verbosity: 0,
     refreshRate: 1000,
+    logLines: 100,
     speedWindow: '90s',
     actions: {
       getConfig: async () => {
@@ -54,6 +57,7 @@ export const useConfigStore = create<ConfigStore>()(
           state.rsyncArgs = config.rsyncArgs;
           state.verbosity = config.verbosity;
           state.refreshRate = config.refreshRate;
+          state.logLines = config.logLines;
           state.speedWindow = config.speedWindow;
         });
       },
@@ -106,6 +110,12 @@ export const useConfigStore = create<ConfigStore>()(
         });
         await Api.setRefreshRate(value);
       },
+      setLogLines: async (value: number) => {
+        set((state) => {
+          state.logLines = value;
+        });
+        await Api.setLogLines(value);
+      },
     },
   })),
 );
@@ -131,3 +141,5 @@ export const useConfigVerbosity = () =>
   useConfigStore((state) => state.verbosity);
 export const useConfigRefreshRate = () =>
   useConfigStore((state) => state.refreshRate);
+export const useConfigLogLines = () =>
+  useConfigStore((state) => state.logLines);

@@ -22,6 +22,7 @@ export interface Config {
   rsyncArgs: string[];
   verbosity: number;
   refreshRate: number;
+  logLines: number;
   speedWindow: string;
   authEnabled: boolean;
   authUsername: string;
@@ -81,6 +82,7 @@ export interface Command {
   size: number;
   transferred: number;
   status: CommandStatus;
+  reason: string;
 }
 
 export interface Operation {
@@ -189,6 +191,11 @@ export interface Icons {
 export interface Branch {
   nodes: Nodes;
   order: string[];
+}
+
+export interface Sizes {
+  disks: Record<string, number>;
+  total: number;
 }
 
 export type Chosen = Record<string, boolean>;
