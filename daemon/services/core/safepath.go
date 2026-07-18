@@ -243,8 +243,8 @@ func (c *Core) allowedTransferRoots() []string {
 	return roots
 }
 
-func (c *Core) validateCommandForExecution(command *domain.Command) (safeTransferPaths, error) {
-	return validateCommandForExecution(command, c.allowedTransferRoots())
+func (c *Core) prepareCommandForExecution(command *domain.Command) (safeTransferPaths, error) {
+	return c.transferExecutor().PrepareCommand(command, c.allowedTransferRoots())
 }
 
 func removeTransferredSource(command *domain.Command, pruneParents bool) (string, []string, error) {
