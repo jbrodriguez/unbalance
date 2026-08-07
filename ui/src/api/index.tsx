@@ -1,5 +1,45 @@
 import { State, Op, Branch, AuthStatus, Sizes } from '~/types';
 
+// Enable mock mode when no backend is running (for responsive testing)
+const MOCK_MODE = import.meta.env.DEV;
+
+const mockAuthStatus: AuthStatus = {
+  enabled: false,
+  configured: true,
+  authenticated: true,
+  username: 'admin',
+  csrfToken: 'mock-token',
+};
+
+const mockState: State = {
+  status: Op.Neutral,
+  unraid: {
+    version: '1.0.0-test',
+    disks: [
+      {
+        id: '1',
+        name: 'disk1',
+        path: '/mnt/disk1',
+        size: 1099511627776,
+        free: 549755813888,
+        pool: false,
+      },
+      {
+        id: '2',
+        name: 'disk2',
+        path: '/mnt/disk2',
+        size: 2199023255552,
+        free: 1099511627776,
+        pool: false,
+      },
+    ],
+    shares: [],
+    pools: [],
+  },
+  operation: null,
+  history: null,
+};
+
 export class Api {
   static host = `${document.location.protocol}//${document.location.host}/api`;
   static csrfToken = '';
@@ -24,7 +64,7 @@ export class Api {
       return config;
     } catch (e) {
       return {
-        version: '0.0.1',
+        version: '0.0.1-test',
         dryRun: true,
         notifyPlan: 0,
         notifyTransfer: 0,
@@ -42,6 +82,12 @@ export class Api {
   }
 
   static async getAuthStatus(): Promise<AuthStatus> {
+    if (MOCK_MODE) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(mockAuthStatus), 100);
+      });
+    }
+
     const response = await fetch(`${Api.host}/auth/status`, {
       credentials: 'same-origin',
     });
@@ -65,6 +111,12 @@ export class Api {
   }
 
   static async setup(username: string, password: string): Promise<AuthStatus> {
+    if (MOCK_MODE) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(mockAuthStatus), 100);
+      });
+    }
+
     const response = await fetch(`${Api.host}/auth/setup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -95,6 +147,12 @@ export class Api {
   }
 
   static async getUnraid(): Promise<State> {
+    if (MOCK_MODE) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(mockState), 100);
+      });
+    }
+
     try {
       const response = await fetch(`${Api.host}/state`);
       const unraid = await response.json();

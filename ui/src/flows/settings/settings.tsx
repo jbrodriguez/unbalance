@@ -7,8 +7,8 @@ import { Icon } from '~/shared/icons/icon';
 
 export const Settings: React.FunctionComponent = () => {
   return (
-    <div className="grid grid-cols-12 gap-2 h-full ">
-      <aside className="col-span-2 bg-gray-50 dark:bg-gray-800">
+    <div className="grid grid-cols-1 gap-2 h-full lg:grid-cols-12">
+      <aside className="col-span-1 lg:col-span-2 bg-gray-50 dark:bg-gray-800">
         <div className="px-3 py-4">
           <ul className="space-y-2 font-medium">
             <li>
@@ -108,7 +108,7 @@ export const Settings: React.FunctionComponent = () => {
           </div>
         </div>
       </aside>
-      <div className="col-span-10 bg-neutral-100 dark:bg-gray-950">
+      <div className="col-span-1 lg:col-span-10 bg-neutral-100 dark:bg-gray-950">
         <Outlet />
       </div>
     </div>

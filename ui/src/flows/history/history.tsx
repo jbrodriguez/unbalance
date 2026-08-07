@@ -129,11 +129,11 @@ export const History: React.FunctionComponent = () => {
           </div>
         </div>
       </Modal>
-      <div className="grid grid-cols-12 gap-1 h-full">
-        <div className="col-span-3 flex flex-col flex-1">
+      <div className="grid grid-cols-1 gap-1 h-full lg:grid-cols-12">
+        <div className="col-span-1 lg:col-span-3 flex flex-col flex-1">
           <Operations current={selected} onSelected={onSelected} />
         </div>
-        <div className="col-span-9 flex flex-col flex-1">
+        <div className="col-span-1 lg:col-span-9 flex flex-col flex-1">
           <Operation current={selected} first={first} onConfirm={onConfirm} />
         </div>
       </div>

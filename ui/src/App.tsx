@@ -153,7 +153,7 @@ export function ProtectedLayout() {
   }
 
   return (
-    <div className="container mx-auto h-screen flex flex-col">
+    <div className="w-full min-h-screen mx-auto px-1 lg:px-2 lg:max-w-7xl flex flex-col">
       <header>
         <Header />
       </header>
