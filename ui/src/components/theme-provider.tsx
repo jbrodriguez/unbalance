@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
+import type React from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -18,6 +19,7 @@ const initialState: ThemeProviderState = {
   setTheme: () => null,
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ThemeProviderContext =
   createContext<ThemeProviderState>(initialState);
 

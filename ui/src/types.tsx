@@ -167,6 +167,8 @@ export interface Node {
   children: string[];
 }
 
+import React from 'react';
+
 export type Nodes = Record<string, Node>;
 
 export interface Icons {

@@ -62,7 +62,7 @@ export class Api {
       const response = await fetch(`${Api.host}/config`);
       const config = await response.json();
       return config;
-    } catch (e) {
+    } catch {
       return {
         version: '0.0.1-test',
         dryRun: true,
@@ -157,7 +157,7 @@ export class Api {
       const response = await fetch(`${Api.host}/state`);
       const unraid = await response.json();
       return unraid;
-    } catch (e) {
+    } catch {
       return {
         status: Op.Neutral,
         unraid: null,
@@ -175,7 +175,7 @@ export class Api {
       const response = await fetch(url);
       const branch = await response.json();
       return branch;
-    } catch (e) {
+    } catch {
       return {
         nodes: {},
         order: [],
@@ -190,7 +190,7 @@ export class Api {
       const response = await fetch(url);
       const location = await response.json();
       return location;
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -202,7 +202,7 @@ export class Api {
       const response = await fetch(url);
       const sizes = await response.json();
       return sizes;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -213,7 +213,7 @@ export class Api {
       const response = await fetch(url);
       const logs = await response.json();
       return logs;
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -329,3 +329,5 @@ export class Api {
     }
   }
 }
+
+
