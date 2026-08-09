@@ -108,20 +108,20 @@ export const useGatherStore = create<GatherStore>()(
           : null;
         const nodes = range ?? [node];
         const checked = !get().tree[node.id].checked;
+        const pending: Array<{ id: string; fullPath: string }> = [];
+        let removed = false;
 
+        // the whole range flips in a single pass, so every box ticks on at
+        // once instead of trailing its own lookup below
         set((state) => {
           state.lastChecked = node.id;
-        });
 
-        for (const target of nodes) {
-          // the tree may have changed while awaiting a previous locate
-          const current = get().tree[target.id];
-          if (!current || !!current.checked === checked) {
-            continue;
-          }
-
-          set((state) => {
-            state.tree[target.id].checked = checked;
+          for (const target of nodes) {
+            const current = state.tree[target.id];
+            if (!current || !!current.checked === checked) {
+              continue;
+            }
+            current.checked = checked;
 
             // remove parents by looping
             let parent = state.tree[target.parent];
@@ -151,29 +151,53 @@ export const useGatherStore = create<GatherStore>()(
               });
             };
             removeChildren(target);
-          });
 
-          if (!checked) {
-            set((state) => {
+            if (!checked) {
               delete state.selected[target.id];
               delete state.location[target.id];
-              state.selected = { ...state.selected };
-              state.location = { ...state.location };
+              removed = true;
+              continue;
+            }
+
+            pending.push({
+              id: target.id,
+              fullPath: getAbsolutePath(current, state.tree),
             });
-            continue;
           }
 
-          const fullPath = getAbsolutePath(target, get().tree);
-          console.log('fullPath ', fullPath);
+          if (removed) {
+            state.selected = { ...state.selected };
+            state.location = { ...state.location };
+          }
+        });
 
-          const location = await Api.locate(fullPath);
-          console.log('location ', location);
+        // the lookups are independent, so a range costs one round trip
+        // rather than one per entry
+        const located = await Promise.all(
+          pending.map(async ({ id, fullPath }) => {
+            console.log('fullPath ', fullPath);
 
-          set((state) => {
-            state.selected[target.id] = fullPath;
-            state.location[target.id] = location;
-          });
-        }
+            const location = await Api.locate(fullPath);
+            console.log('location ', location);
+
+            return { id, fullPath, location };
+          }),
+        );
+
+        // committing them together keeps a range from reaching selected
+        // piecemeal, which would let Next enable on a partial selection
+        set((state) => {
+          for (const { id, fullPath, location } of located) {
+            // a click landing while the lookups were in flight may have
+            // unchecked the entry again
+            if (!state.tree[id]?.checked) {
+              continue;
+            }
+
+            state.selected[id] = fullPath;
+            state.location[id] = location;
+          }
+        });
       },
       loadSize: async (id: string, path: string) => {
         // null marks an in-flight request, so each entry is fetched once
