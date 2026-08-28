@@ -28,10 +28,8 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	// Reject browsers that don't send Origin and any cross-host upgrade
-	// attempt regardless of the auth state. We only compare hosts (not
-	// schemes) so a TLS-terminating reverse proxy that strips the scheme
-	// still works; the per-request validateWebsocketRequest check in auth.go
-	// is what enforces session+CSRF when auth is enabled.
+	// attempt regardless of the auth state. Proxy-forwarded host headers are
+	// honored so TLS-terminating reverse proxies can preserve the public host.
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		if origin == "" {
@@ -41,7 +39,7 @@ var upgrader = websocket.Upgrader{
 		if err != nil || u.Host == "" {
 			return false
 		}
-		return strings.EqualFold(u.Host, r.Host)
+		return strings.EqualFold(u.Host, requestExternalHost(r))
 	},
 }
 
@@ -146,6 +144,85 @@ func assetsHandler(content embed.FS) http.Handler {
 		panic(err)
 	}
 	return http.FileServer(http.FS(fsys))
+}
+
+func requestExternalOrigin(r *http.Request) string {
+	host := requestExternalHost(r)
+	if host == "" {
+		return ""
+	}
+
+	return requestExternalProto(r) + "://" + host
+}
+
+func requestExternalHost(r *http.Request) string {
+	if host := firstHeaderValue(r.Header.Get("X-Forwarded-Host")); host != "" {
+		return host
+	}
+
+	if host := forwardedParam(r.Header.Get("Forwarded"), "host"); host != "" {
+		return host
+	}
+
+	return r.Host
+}
+
+func requestExternalProto(r *http.Request) string {
+	if proto := normalizeRequestProto(firstHeaderValue(r.Header.Get("X-Forwarded-Proto"))); proto != "" {
+		return proto
+	}
+
+	if proto := normalizeRequestProto(forwardedParam(r.Header.Get("Forwarded"), "proto")); proto != "" {
+		return proto
+	}
+
+	if r.TLS != nil {
+		return "https"
+	}
+
+	return "http"
+}
+
+func requestExternalSecure(r *http.Request) bool {
+	return requestExternalProto(r) == "https"
+}
+
+func firstHeaderValue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	value = strings.Split(value, ",")[0]
+	return strings.Trim(strings.TrimSpace(value), "\"")
+}
+
+func forwardedParam(value string, key string) string {
+	value = firstHeaderValue(value)
+	if value == "" {
+		return ""
+	}
+
+	key = strings.ToLower(key)
+	for _, part := range strings.Split(value, ";") {
+		name, val, ok := strings.Cut(strings.TrimSpace(part), "=")
+		if !ok || strings.ToLower(strings.TrimSpace(name)) != key {
+			continue
+		}
+
+		return strings.Trim(strings.TrimSpace(val), "\"")
+	}
+
+	return ""
+}
+
+func normalizeRequestProto(proto string) string {
+	switch strings.ToLower(strings.TrimSpace(proto)) {
+	case "http", "https":
+		return strings.ToLower(strings.TrimSpace(proto))
+	default:
+		return ""
+	}
 }
 
 func (s *Server) wsHandler(c echo.Context) error {
