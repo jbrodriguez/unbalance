@@ -6,7 +6,7 @@ import { TreeNode } from './node';
 export interface CheckboxTreeProps {
   nodes: Nodes;
   onLoad: (node: Node) => void;
-  onCheck: (node: Node) => void;
+  onCheck: (node: Node, shiftKey: boolean) => void;
   icons: Icons;
 }
 
@@ -26,7 +26,8 @@ export const CheckboxTree: React.FunctionComponent<CheckboxTreeProps> = ({
 
   const onExpandCollapse = (node: Node) => onLoad(node);
 
-  const onCheckUncheck = (node: Node) => onCheck(node);
+  const onCheckUncheck = (node: Node, shiftKey: boolean) =>
+    onCheck(node, shiftKey);
 
   return (
     <>
