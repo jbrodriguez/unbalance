@@ -262,10 +262,7 @@ func (s *Server) validateWebsocketRequest(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "authentication setup is incomplete")
 	}
 
-	allowedOrigin := "http://" + c.Request().Host
-	if c.IsTLS() {
-		allowedOrigin = "https://" + c.Request().Host
-	}
+	allowedOrigin := requestExternalOrigin(c.Request())
 
 	origin := c.Request().Header.Get("Origin")
 	if origin == "" {
@@ -357,7 +354,7 @@ func (s *Server) createSession(c echo.Context, username string) (session, error)
 		Expires:  expiry,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Secure:   c.IsTLS(),
+		Secure:   requestExternalSecure(c.Request()),
 	})
 
 	return sess, nil
@@ -387,7 +384,7 @@ func (s *Server) clearSession(c echo.Context) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Secure:   c.IsTLS(),
+		Secure:   requestExternalSecure(c.Request()),
 	})
 }
 
