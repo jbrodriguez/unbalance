@@ -20,8 +20,8 @@ export const Header: React.FunctionComponent = () => {
   };
 
   return (
-    <nav className="grid grid-cols-12 gap-2 my-4">
-      <ul className="col-span-2 py-2 border bg-lime-400 dark:bg-lime-600 border-lime-300 dark:border-lime-500">
+    <nav className="grid grid-cols-1 gap-2 my-4 md:grid-cols-12">
+      <ul className="col-span-1 md:col-span-2 py-2 border bg-lime-400 dark:bg-lime-600 border-lime-300 dark:border-lime-500">
         <li className="flex items-center justify-center">
           <img src={logo} alt="logo" className="h-8 mr-2" />
           <span className="text-slate-900 dark:text-slate-900 font-medium">
@@ -30,14 +30,14 @@ export const Header: React.FunctionComponent = () => {
         </li>
       </ul>
 
-      <ul className="col-span-10 flex flex-row items-center justify-between py-2 bg-neutral-100 dark:bg-gray-800 text-sky-700 dark:text-slate-400">
-        <li>
+      <ul className="col-span-1 md:col-span-10 flex flex-wrap gap-2 md:gap-0 md:flex-nowrap items-center justify-between py-2 bg-neutral-100 dark:bg-gray-800 text-sky-700 dark:text-slate-400">
+        <li className="flex flex-wrap gap-1 items-center lg:gap-0">
           <StatefulLink
             to="/scatter"
             className={({ isActive }) => {
               return isActive
-                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
-                : 'ml-4';
+                ? 'px-2 py-1 underline underline-offset-8 font-medium dark:text-white text-sky-900 text-sm md:text-base md:ml-4'
+                : 'px-2 py-1 text-sm md:text-base md:ml-4';
             }}
             disabled={busy}
           >
@@ -48,8 +48,8 @@ export const Header: React.FunctionComponent = () => {
             to="/gather"
             className={({ isActive }) => {
               return isActive
-                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
-                : 'ml-4';
+                ? 'px-2 py-1 underline underline-offset-8 font-medium dark:text-white text-sky-900 text-sm md:text-base md:ml-4'
+                : 'px-2 py-1 text-sm md:text-base md:ml-4';
             }}
             disabled={busy}
           >
@@ -60,8 +60,8 @@ export const Header: React.FunctionComponent = () => {
             to="/history"
             className={({ isActive }) => {
               return isActive
-                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
-                : 'ml-4';
+                ? 'px-2 py-1 underline underline-offset-8 font-medium dark:text-white text-sky-900 text-sm md:text-base md:ml-4'
+                : 'px-2 py-1 text-sm md:text-base md:ml-4';
             }}
             disabled={busy}
           >
@@ -72,8 +72,8 @@ export const Header: React.FunctionComponent = () => {
             to="/settings"
             className={({ isActive }) => {
               return isActive
-                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
-                : 'ml-4';
+                ? 'px-2 py-1 underline underline-offset-8 font-medium dark:text-white text-sky-900 text-sm md:text-base md:ml-4'
+                : 'px-2 py-1 text-sm md:text-base md:ml-4';
             }}
             disabled={busy}
           >
@@ -84,18 +84,18 @@ export const Header: React.FunctionComponent = () => {
             to="/logs"
             className={({ isActive }) => {
               return isActive
-                ? 'ml-4 underline underline-offset-8 font-medium dark:text-white text-sky-900'
-                : 'ml-4';
+                ? 'px-2 py-1 underline underline-offset-8 font-medium dark:text-white text-sky-900 text-sm md:text-base md:ml-4'
+                : 'px-2 py-1 text-sm md:text-base md:ml-4';
             }}
             disabled={busy}
           >
             LOG
           </StatefulLink>
         </li>
-        <li className="flex flex-row items-center">
+        <li className="flex flex-row gap-2 items-center">
           {busy && <Loading />}
           {authEnabled && (
-            <button className="mr-4 text-sm" onClick={() => void onLogout()}>
+            <button className="text-xs md:text-sm" onClick={() => void onLogout()}>
               Log Out
             </button>
           )}
@@ -106,3 +106,4 @@ export const Header: React.FunctionComponent = () => {
     </nav>
   );
 };
+

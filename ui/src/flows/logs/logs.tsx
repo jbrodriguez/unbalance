@@ -46,23 +46,25 @@ export const Logs: React.FunctionComponent = () => {
     value === 'all' ? parsed.length : counts[value];
 
   const subtitle = (
-    <div className="flex flex-1 flex-row items-center gap-2">
-      {filters.map((value) => (
-        <button
-          key={value}
-          onClick={() => setFilter(value)}
-          className={
-            filter === value
-              ? 'px-2 py-0.5 text-xs rounded bg-blue-700 text-white'
-              : 'px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700'
-          }
-        >
-          {value} ({count(value)})
-        </button>
-      ))}
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-2">
+      <div className="flex flex-wrap gap-1">
+        {filters.map((value) => (
+          <button
+            key={value}
+            onClick={() => setFilter(value)}
+            className={
+              filter === value
+                ? 'px-2 py-0.5 text-xs rounded bg-blue-700 text-white whitespace-nowrap'
+                : 'px-2 py-0.5 text-xs rounded bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700 whitespace-nowrap'
+            }
+          >
+            {value} ({count(value)})
+          </button>
+        ))}
+      </div>
       <div className="flex-1" />
       <Input
-        className="h-7 w-64"
+        className="h-7 w-full lg:w-64"
         placeholder="filter messages ..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}

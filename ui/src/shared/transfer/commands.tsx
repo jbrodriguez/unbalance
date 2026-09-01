@@ -16,8 +16,8 @@ export const Commands: React.FunctionComponent = () => {
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-gray-950">
       <div className="flex flex-col px-2 pt-2">
-        <div className="grid grid-cols-12 gap-1 items-center text-lg text-slate-500 dark:text-gray-500 pb-2">
-          <div className="col-span-2 flex items-center">
+        <div className="grid grid-cols-1 gap-1 items-center text-lg text-slate-500 dark:text-gray-500 pb-2 lg:grid-cols-12">
+          <div className="col-span-1 lg:col-span-2 flex items-center text-sm lg:text-lg">
             <Icon
               name="loading"
               size={14}
@@ -26,8 +26,8 @@ export const Commands: React.FunctionComponent = () => {
             <span className="px-2" />
             Source
           </div>
-          <div className="col-span-8">Command</div>
-          <div className="col-span-2">Progress</div>
+          <div className="col-span-1 lg:col-span-8 text-sm lg:text-lg">Command</div>
+          <div className="col-span-1 lg:col-span-2 text-sm lg:text-lg">Progress</div>
         </div>
         <hr className="border-slate-300 dark:border-gray-700" />
       </div>

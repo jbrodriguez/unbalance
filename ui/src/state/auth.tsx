@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthStore>()(
             state.csrfToken = status.csrfToken || '';
             state.error = '';
           });
-        } catch (e) {
+        } catch {
           set((state) => {
             state.loaded = true;
             state.failed = true;
@@ -122,3 +122,5 @@ export const useAuthenticated = () =>
 export const useAuthUsername = () => useAuthStore((state) => state.username);
 export const useAuthCSRFToken = () => useAuthStore((state) => state.csrfToken);
 export const useAuthError = () => useAuthStore((state) => state.error);
+
+

@@ -37,7 +37,7 @@ export const Dashboard: React.FunctionComponent = () => {
       : operation.remaining;
 
   return (
-    <div className="grid grid-cols-6 gap-4 ">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-6 lg:gap-4">
       <Gauge value={completed} unit="%" label="Completed" />
 
       <Gauge value={speed} unit="MB/s" label="Speed" />
