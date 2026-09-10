@@ -259,6 +259,7 @@ func (s *Server) validateWebsocketRequest(c echo.Context) error {
 	}
 
 	if !s.authConfigured() {
+		s.logWebsocketAuthRejection(c, "authentication setup is incomplete", nil)
 		return echo.NewHTTPError(http.StatusUnauthorized, "authentication setup is incomplete")
 	}
 
@@ -266,24 +267,54 @@ func (s *Server) validateWebsocketRequest(c echo.Context) error {
 
 	origin := c.Request().Header.Get("Origin")
 	if origin == "" {
+		s.logWebsocketAuthRejection(c, "missing websocket origin", nil)
 		return echo.NewHTTPError(http.StatusForbidden, "missing websocket origin")
 	}
 
 	if origin != allowedOrigin {
+		s.logWebsocketAuthRejection(c, "invalid websocket origin", nil)
 		return echo.NewHTTPError(http.StatusForbidden, "invalid websocket origin")
 	}
 
 	info, ok := s.currentSession(c)
 	if !ok {
+		s.logWebsocketAuthRejection(c, "authentication required", nil)
 		return echo.NewHTTPError(http.StatusUnauthorized, "authentication required")
 	}
 
 	token := c.QueryParam("csrf")
 	if token == "" || token != info.CSRF {
+		s.logWebsocketAuthRejection(c, "invalid websocket csrf token", &info)
 		return echo.NewHTTPError(http.StatusForbidden, "invalid websocket csrf token")
 	}
 
 	return nil
+}
+
+func (s *Server) logWebsocketAuthRejection(c echo.Context, reason string, info *session) {
+	req := c.Request()
+
+	_, cookieErr := c.Cookie(sessionCookieName)
+	token := c.QueryParam("csrf")
+	csrfMatches := false
+	if info != nil {
+		csrfMatches = token != "" && token == info.CSRF
+	}
+
+	logger.Yellow(
+		"rejected websocket auth: reason=%q origin=%q allowedOrigin=%q host=%q forwardedHost=%q forwardedProto=%q forwarded=%q remoteAddr=%q sessionCookie=%t csrfPresent=%t csrfMatches=%t",
+		reason,
+		req.Header.Get("Origin"),
+		requestExternalOrigin(req),
+		req.Host,
+		req.Header.Get("X-Forwarded-Host"),
+		req.Header.Get("X-Forwarded-Proto"),
+		req.Header.Get("Forwarded"),
+		req.RemoteAddr,
+		cookieErr == nil,
+		token != "",
+		csrfMatches,
+	)
 }
 
 func (s *Server) currentSession(c echo.Context) (session, bool) {
