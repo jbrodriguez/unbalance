@@ -105,11 +105,61 @@ func TestValidateWebsocketRequestAllowsForwardedHTTPSOrigin(t *testing.T) {
 	}
 }
 
+func TestValidateWebsocketRequestAllowsForwardedWSSOrigin(t *testing.T) {
+	s := &Server{
+		ctx: &domain.Context{
+			Config: domain.Config{
+				AuthEnabled:  true,
+				AuthUsername: "admin",
+				AuthPassword: "configured",
+			},
+		},
+		sessions: newSessionStore(),
+	}
+	s.sessions["sid"] = session{Username: "admin", CSRF: "token", Expires: time.Now().Add(time.Hour)}
+
+	req := httptest.NewRequest(http.MethodGet, "/ws?csrf=token", nil)
+	req.Host = "unbalanced.unraid.lan"
+	req.Header.Set("Origin", "https://unbalanced.unraid.lan")
+	req.Header.Set("X-Forwarded-Host", "unbalanced.unraid.lan")
+	req.Header.Set("X-Forwarded-Proto", "wss")
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "sid"})
+	rec := httptest.NewRecorder()
+	c := echo.New().NewContext(req, rec)
+
+	if err := s.validateWebsocketRequest(c); err != nil {
+		t.Fatalf("validateWebsocketRequest() returned error: %v", err)
+	}
+}
+
 func TestRequestExternalSecureHonorsForwardedProto(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", nil)
 	req.Header.Set("X-Forwarded-Proto", "https")
 
 	if !requestExternalSecure(req) {
 		t.Fatal("requestExternalSecure() did not honor X-Forwarded-Proto=https")
+	}
+}
+
+func TestRequestExternalProtoNormalizesWebsocketSchemes(t *testing.T) {
+	cases := []struct {
+		proto string
+		want  string
+	}{
+		{"ws", "http"},
+		{"wss", "https"},
+		{"WS", "http"},
+		{"WSS", "https"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.proto, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("X-Forwarded-Proto", tc.proto)
+
+			if got := requestExternalProto(req); got != tc.want {
+				t.Fatalf("requestExternalProto() = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
