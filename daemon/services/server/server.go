@@ -220,6 +220,10 @@ func normalizeRequestProto(proto string) string {
 	switch strings.ToLower(strings.TrimSpace(proto)) {
 	case "http", "https":
 		return strings.ToLower(strings.TrimSpace(proto))
+	case "ws":
+		return "http"
+	case "wss":
+		return "https"
 	default:
 		return ""
 	}
