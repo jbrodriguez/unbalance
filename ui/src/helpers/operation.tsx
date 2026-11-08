@@ -1,3 +1,4 @@
+import React from 'react';
 import { Op, CommandStatus } from '../types';
 
 import { Icon } from '~/shared/icons/icon';

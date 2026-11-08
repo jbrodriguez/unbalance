@@ -20,8 +20,8 @@ export const Command: React.FunctionComponent<Props> = ({
   const onClick = () => onFlag?.(command);
 
   return (
-    <div className="grid grid-cols-12 gap-1 items-center text-sm text-gray-500 dark:text-gray-500 p-2 border-b border-slate-300 dark:border-gray-700 ">
-      <div className="col-span-2 flex items-center">
+    <div className="grid grid-cols-1 gap-1 items-start lg:grid-cols-12 text-sm text-gray-500 dark:text-gray-500 p-2 border-b border-slate-300 dark:border-gray-700">
+      <div className="col-span-1 lg:col-span-2 flex items-center flex-wrap">
         {(command.status === CommandStatus.SourceRemoval ||
           command.status === CommandStatus.Flagged) &&
         canBeFlagged ? (
@@ -34,24 +34,23 @@ export const Command: React.FunctionComponent<Props> = ({
           getCommandStatus(command.status)
         )}
         <span className="pr-2" />
-        {command.src}
+        <span className="text-xs lg:text-sm truncate">{command.src}</span>
       </div>
-      <div className="col-span-8">
+      <div className="col-span-1 lg:col-span-8 text-xs lg:text-sm break-all lg:break-normal">
         rsync {rsyncStrArgs} &quot;{command.entry}&quot; &quot;{command.dst}
         &quot;
       </div>
-      <div className="col-span-2 flex flex-1 flex-row items-center">
+      <div className="col-span-1 lg:col-span-2 flex flex-row items-center gap-1">
         {progress !== '100' && <span className="text-xs">{progress} %</span>}
-        <span className="px-1" />
-        <div className="flex-1 rounded bg-gray-400 dark:bg-gray-800">
+        <div className="flex-1 rounded bg-gray-400 dark:bg-gray-800 min-w-[50px]">
           <div
-            className="p-0.5 leading-none rounded bg-blue-900 "
+            className="p-0.5 leading-none rounded bg-blue-900"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
       </div>
       {command.reason && (
-        <div className="col-span-12 text-xs text-yellow-600 dark:text-yellow-600">
+        <div className="col-span-1 lg:col-span-12 text-xs text-yellow-600 dark:text-yellow-600">
           {command.reason}
         </div>
       )}

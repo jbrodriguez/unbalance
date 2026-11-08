@@ -30,51 +30,51 @@ export const Issues: React.FunctionComponent = () => {
             className="overflow-y-auto p-2 text-base text-gray-700 dark:text-gray-500"
             style={{ height: `${height}px` }}
           >
-            <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <h2>ISSUES</h2>
               {plan && (
-                <span className="font-bold">
+                <span className="font-bold text-sm lg:text-base">
                   runtime: {formatTime(elapsed)}{' '}
                 </span>
               )}
             </div>
             <div className="pb-2" />
             <section>
-              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+              <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between text-xl lg:text-2xl text-gray-900 dark:text-gray-400">
                 <span>Owner</span>
-                <span className="font-bold">{owner}</span>
+                <span className="font-bold text-lg lg:text-2xl">{owner}</span>
               </div>
-              <span className="text-sm">
+              <span className="text-xs lg:text-sm">
                 file(s)/folder(s) with an owner other than 'nobody'
               </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+              <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between text-xl lg:text-2xl text-gray-900 dark:text-gray-400">
                 <span>Group</span>
-                <span className="font-bold">{group}</span>
+                <span className="font-bold text-lg lg:text-2xl">{group}</span>
               </div>
-              <span className="text-sm">
+              <span className="text-xs lg:text-sm">
                 file(s)/folder(s) with a group other than 'users'
               </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+              <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between text-xl lg:text-2xl text-gray-900 dark:text-gray-400">
                 <span>Folder permissions</span>
-                <span className="font-bold">{folder}</span>
+                <span className="font-bold text-lg lg:text-2xl">{folder}</span>
               </div>
-              <span className="text-sm">
+              <span className="text-xs lg:text-sm">
                 folder(s) with a permission other than 'drwxrwxrwx'
               </span>
             </section>
             <div className="pb-4" />
             <section>
-              <div className="flex flex-row items-center justify-between text-2xl text-gray-900 dark:text-gray-400">
+              <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between text-xl lg:text-2xl text-gray-900 dark:text-gray-400">
                 <span>File permissions</span>
-                <span className="font-bold">{file}</span>
+                <span className="font-bold text-lg lg:text-2xl">{file}</span>
               </div>
-              <span className="text-sm">
+              <span className="text-xs lg:text-sm">
                 files(s) with a permission other than '-rw-rw-rw-' or
                 '-r--r--r--'
               </span>
